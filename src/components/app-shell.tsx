@@ -129,23 +129,24 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <main
-          className="flex-1 p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden"
+          className="flex-1 p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden smooth-scroll"
           style={{
             paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
             paddingRight: "max(0.75rem, env(safe-area-inset-right))",
-            paddingBottom: "calc(6rem + env(safe-area-inset-bottom) + 20px)",
+            paddingBottom: "calc(7rem + env(safe-area-inset-bottom))",
           }}
         >
           <div className="mx-auto max-w-6xl fade-in">{children}</div>
         </main>
 
-        {/* Mobile bottom nav — فوق شريط التنقل الخاص بالنظام */}
+        {/* Mobile bottom nav — يرتفع فوق أزرار النظام (Back / Home / Recents) */}
         <nav
-          className="lg:hidden fixed inset-x-0 z-40 border-t bg-background/95 backdrop-blur rounded-t-2xl shadow-lg"
+          className="lg:hidden fixed inset-x-2 z-40 border bg-background/95 backdrop-blur rounded-2xl shadow-lg"
           style={{
-            bottom: "calc(env(safe-area-inset-bottom) + 12px)",
+            bottom: "max(env(safe-area-inset-bottom), 14px)",
             paddingLeft: "env(safe-area-inset-left)",
             paddingRight: "env(safe-area-inset-right)",
+            marginBottom: "6px",
           }}
         >
           <div className="grid grid-cols-4 h-16">
