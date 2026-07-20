@@ -19,14 +19,43 @@ function safeFileName(name: string): string {
 }
 
 /**
- * Open an HTML document in a new window (Web fallback) that auto-prints.
- * Users can then choose "Save as PDF" or a printer from the browser dialog.
+ * Open a PDF Blob in a new browser tab (native browser PDF viewer with
+ * built-in Print / Save buttons). Falls back to the HTML print flow if
+ * the browser blocks the tab or Blob URL creation fails.
+ */
+function openPdfBlobInNewTab(blob: Blob, filename: string): boolean {
+  try {
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    if (!w) {
+      // popup blocked → fall back to <a> download-like open using anchor click
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.setAttribute("aria-label", filename);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+    // Revoke later so the tab has time to load.
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    return true;
+  } catch (err) {
+    console.error("[openPdfBlobInNewTab] failed:", err);
+    return false;
+  }
+}
+
+/**
+ * Web fallback: open the HTML in a new tab with a visible print toolbar.
+ * Used only when PDF rendering fails.
  */
 function openHtmlForPrintWeb(html: string) {
   try {
     const w = window.open("", "_blank");
     if (!w) {
-      alert("يرجى السماح بالنوافذ المنبثقة للطباعة");
+      alert("يرجى السماح بالنوافذ المنبثقة لعرض الملف");
       return;
     }
     w.document.open();
