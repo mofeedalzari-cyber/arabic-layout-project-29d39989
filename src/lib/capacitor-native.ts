@@ -34,6 +34,16 @@ export async function initCapacitorNative(router: Router<any, any>) {
 
   if (!isNative()) return;
 
+  document.documentElement.classList.add("capacitor-native");
+
+  const applyNativeSafeArea = async (StatusBar?: { getInfo?: () => Promise<{ height?: number }> }) => {
+    const statusInfo = await StatusBar?.getInfo?.().catch(() => undefined);
+    const statusHeight = Math.max(statusInfo?.height ?? 0, 30);
+
+    document.documentElement.style.setProperty("--app-safe-top", `${statusHeight}px`);
+    document.documentElement.style.setProperty("--app-safe-bottom", "48px");
+  };
+
   try {
     const { SplashScreen } = await import("@capacitor/splash-screen");
     const { StatusBar, Style } = await import("@capacitor/status-bar");
@@ -44,7 +54,11 @@ export async function initCapacitorNative(router: Router<any, any>) {
       await StatusBar.setOverlaysWebView({ overlay: true });
       await StatusBar.setBackgroundColor({ color: "#00968800" });
       await StatusBar.setStyle({ style: Style.Dark });
+      await applyNativeSafeArea(StatusBar);
     } catch {}
+
+    window.addEventListener("resize", () => { applyNativeSafeArea(StatusBar).catch(() => {}); });
+    window.visualViewport?.addEventListener("resize", () => { applyNativeSafeArea(StatusBar).catch(() => {}); });
 
     // Hide splash after the app is ready
     setTimeout(() => {
