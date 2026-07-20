@@ -45,28 +45,48 @@ function openHtmlForPrintWeb(html: string) {
 async function htmlToPdfBlob(html: string): Promise<Blob> {
   const html2pdf: any = (await import("html2pdf.js")).default;
 
-  // Extract body content to avoid double <html> nesting
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
   const inner = bodyMatch ? bodyMatch[1] : html;
   const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
   const styles = styleMatch ? styleMatch.join("\n") : "";
 
+  // Render inside a real on-screen (but invisible) container so Android WebView
+  // gives html2canvas non-zero dimensions.
   const container = document.createElement("div");
   container.setAttribute("dir", "rtl");
   container.style.cssText =
-    "position:fixed;left:-99999px;top:0;width:800px;background:#fff;color:#111;font-family:Cairo,Tahoma,Arial,sans-serif;";
+    "position:fixed;left:0;top:0;width:800px;min-height:1000px;z-index:-1;opacity:0;pointer-events:none;background:#fff;color:#111;font-family:Cairo,Tahoma,Arial,sans-serif;";
   container.innerHTML = styles + inner;
   document.body.appendChild(container);
+
+  // Wait for images/fonts to load before rasterizing
+  try {
+    const imgs = Array.from(container.querySelectorAll("img"));
+    await Promise.all(
+      imgs.map((img) =>
+        img.complete ? null : new Promise((r) => { img.onload = img.onerror = () => r(null); }),
+      ),
+    );
+    if ((document as any).fonts?.ready) await (document as any).fonts.ready;
+  } catch {}
 
   try {
     const opt = {
       margin: [8, 8, 8, 8],
       filename: "document.pdf",
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+      image: { type: "jpeg", quality: 0.95 },
+      html2canvas: {
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css", "legacy"] },
     };
     const blob: Blob = await html2pdf().set(opt).from(container).outputPdf("blob");
+    if (!blob || blob.size < 100) throw new Error("PDF blob is empty");
     return blob;
   } finally {
     container.remove();

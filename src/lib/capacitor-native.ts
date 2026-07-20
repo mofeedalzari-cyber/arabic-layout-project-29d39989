@@ -64,12 +64,37 @@ export async function initCapacitorNative(router: Router<any, any>) {
       }
     });
 
-    // Handle Android back button — go back in history, otherwise minimize
-    App.addListener("backButton", ({ canGoBack }) => {
-      if (canGoBack) {
+    // Android back button — go back in history, otherwise "press again to exit"
+    let lastBackPress = 0;
+    App.addListener("backButton", async ({ canGoBack }) => {
+      const openOverlay = document.querySelector(
+        '[data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]',
+      );
+      if (openOverlay) {
+        const closeBtn = openOverlay.querySelector<HTMLElement>('[data-dismiss], [aria-label="Close"], [aria-label="إغلاق"]');
+        if (closeBtn) closeBtn.click();
+        else window.history.back();
+        return;
+      }
+      if (canGoBack && window.history.length > 1) {
         window.history.back();
+        return;
+      }
+      const now = Date.now();
+      if (now - lastBackPress < 2000) {
+        App.exitApp().catch(() => App.minimizeApp().catch(() => {}));
       } else {
-        App.minimizeApp().catch(() => {});
+        lastBackPress = now;
+        // Lightweight in-app hint (no extra plugin required)
+        try {
+          const hint = document.createElement("div");
+          hint.textContent = "اضغط مرة أخرى للخروج";
+          hint.style.cssText =
+            "position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 90px);transform:translateX(-50%);background:#111c;color:#fff;padding:8px 16px;border-radius:999px;font:600 13px Cairo,Tahoma,sans-serif;z-index:9999;pointer-events:none;transition:opacity .3s;";
+          document.body.appendChild(hint);
+          setTimeout(() => { hint.style.opacity = "0"; }, 1500);
+          setTimeout(() => hint.remove(), 1900);
+        } catch {}
       }
     });
   } catch (err) {
