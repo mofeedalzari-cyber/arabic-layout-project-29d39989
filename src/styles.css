@@ -241,6 +241,14 @@
   }
 }
 
+@utility smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  will-change: scroll-position;
+  transform: translateZ(0);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
