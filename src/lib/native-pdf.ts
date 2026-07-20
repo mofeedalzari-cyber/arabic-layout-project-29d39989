@@ -214,10 +214,11 @@ export async function sharePdfOrPrint(opts: {
 
     // 4️⃣ Open PDF with system viewer (Drive/Adobe/etc.)
     try {
-      await FileOpener.openFile({
-        path: writtenUri,
-        mimeType: "application/pdf",
-      });
+      await FileOpener.open({
+        filePath: writtenUri,
+        contentType: "application/pdf",
+        openWithDefault: true,
+      } as any);
       return;
     } catch (openErr) {
       console.error("[sharePdfOrPrint] FileOpener failed, falling back to Share:", openErr);
