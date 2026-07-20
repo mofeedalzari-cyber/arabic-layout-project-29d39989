@@ -103,6 +103,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   top: "calc(var(--app-safe-top, env(safe-area-inset-top)) + 8px)",
                   bottom: "calc(var(--app-safe-bottom, env(safe-area-inset-bottom)) + 8px)",
                   height: "auto",
+                  "--sheet-close-top": "14px",
                   paddingTop: "10px",
                   paddingBottom: "10px",
                   paddingRight: "env(safe-area-inset-right)",
@@ -138,7 +139,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           style={{
             paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
             paddingRight: "max(0.75rem, env(safe-area-inset-right))",
-            paddingBottom: "calc(7rem + env(safe-area-inset-bottom))",
+            paddingBottom: "calc(7rem + var(--app-safe-bottom, env(safe-area-inset-bottom)))",
             touchAction: "pan-y",
           }}
         >
@@ -149,7 +150,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav
           className="lg:hidden fixed inset-x-2 z-40 border bg-background/95 backdrop-blur rounded-2xl shadow-lg"
           style={{
-            bottom: "max(env(safe-area-inset-bottom), 14px)",
+            bottom: "max(var(--app-safe-bottom, env(safe-area-inset-bottom)), 14px)",
             paddingLeft: "env(safe-area-inset-left)",
             paddingRight: "env(safe-area-inset-right)",
             marginBottom: "6px",
