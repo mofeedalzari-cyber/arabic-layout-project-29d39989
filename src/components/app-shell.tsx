@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh flex bg-background w-full max-w-full overflow-x-hidden" dir="rtl">
+    <div className="h-dvh max-h-dvh flex bg-background w-full max-w-full overflow-hidden" dir="rtl">
 
       {/* Desktop sidebar (toggleable) */}
       {sidebarOpen && (
@@ -71,10 +71,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </aside>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0 max-w-full">
+      <div className="flex-1 flex h-full min-h-0 flex-col min-w-0 max-w-full overflow-hidden">
         {/* Top bar — يمتد خلف شريط الحالة على أندرويد ويستخدم safe-area-inset-top */}
         <header
-          className="sticky top-0 z-40 bg-background/90 backdrop-blur border-b flex items-center justify-between"
+          className="sticky top-0 z-40 shrink-0 bg-background/90 backdrop-blur border-b flex items-center justify-between"
           style={{
             paddingTop: "calc(env(safe-area-inset-top) + 12px)",
             paddingLeft: "max(1rem, env(safe-area-inset-left))",
@@ -129,11 +129,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <main
-          className="flex-1 p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden smooth-scroll"
+          className="flex-1 min-h-0 p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden overflow-y-auto smooth-scroll"
           style={{
             paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
             paddingRight: "max(0.75rem, env(safe-area-inset-right))",
             paddingBottom: "calc(7rem + env(safe-area-inset-bottom))",
+            touchAction: "pan-y",
           }}
         >
           <div className="mx-auto max-w-6xl fade-in">{children}</div>
