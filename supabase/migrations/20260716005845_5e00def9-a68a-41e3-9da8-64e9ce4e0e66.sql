@@ -1,0 +1,1 @@
+CREATE POLICY "authenticated read basic profile" ON public.profiles FOR SELECT TO authenticated USING (true);

@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: internet-cards
+    runtime: node
+    plan: free
+    region: frankfurt
+    # Render must use Bun only. The package versions are pinned so even a
+    # dashboard command like `bun install && bun run build` cannot resolve
+    # newer TanStack/Vite versions that break route generation.
+    buildCommand: |
+      curl -fsSL https://bun.sh/install | bash
+      export BUN_INSTALL="$HOME/.bun"
+      export PATH="$BUN_INSTALL/bin:$PATH"
+      bun install --frozen-lockfile && bun run build
+    startCommand: node .output/server/index.mjs
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Set these in Render Dashboard → Environment:
+      # - VITE_SUPABASE_URL
+      # - VITE_SUPABASE_PUBLISHABLE_KEY
+      # - VITE_SUPABASE_PROJECT_ID

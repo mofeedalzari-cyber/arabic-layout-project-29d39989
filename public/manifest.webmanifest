@@ -1,0 +1,14 @@
+{
+  "name": "متجر كروت الواي فاي",
+  "short_name": "WiFi Cards",
+  "description": "منصة إدارة وبيع كروت الإنترنت",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#009688",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "any", "type": "image/x-icon" }
+  ]
+}
