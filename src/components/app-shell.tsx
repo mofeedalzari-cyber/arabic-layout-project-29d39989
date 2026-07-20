@@ -98,16 +98,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-[85vw] max-w-sm p-0 bg-sidebar text-sidebar-foreground flex flex-col h-dvh"
+                className="w-[85vw] max-w-sm p-0 bg-sidebar text-sidebar-foreground flex flex-col h-dvh overflow-hidden"
                 style={{
-                  paddingTop: "max(env(safe-area-inset-top), 28px)",
+                  paddingTop: "max(env(safe-area-inset-top), 24px)",
+                  paddingBottom: "env(safe-area-inset-bottom)",
                   paddingRight: "env(safe-area-inset-right)",
+                  paddingLeft: "env(safe-area-inset-left)",
                 }}
               >
                 <VisuallyHidden>
                   <SheetTitle>القائمة الجانبية</SheetTitle>
                   <SheetDescription>روابط التنقل الرئيسية في التطبيق</SheetDescription>
                 </VisuallyHidden>
+                {/* Spacer to guarantee status-bar clearance on notched devices */}
+                <div aria-hidden className="shrink-0 h-3" />
                 <BrandHeader />
                 <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1">
                   {items.map((it) => <NavLink key={it.to} item={it} />)}
