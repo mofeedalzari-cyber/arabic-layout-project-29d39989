@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Wifi, Package, Upload, Users, Receipt,
   ScrollText, Settings, LogOut, Menu, Moon, Sun, Store, Inbox, CreditCard, Calculator, UserPlus,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 interface NavItem { to: string; label: string; icon: typeof Wifi; adminOnly?: boolean; agentOnly?: boolean }
 
@@ -108,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   paddingBottom: "10px",
                   paddingRight: "env(safe-area-inset-right)",
                   paddingLeft: "env(safe-area-inset-left)",
-                }}
+                } as CSSProperties}
               >
                 <VisuallyHidden>
                   <SheetTitle>القائمة الجانبية</SheetTitle>
