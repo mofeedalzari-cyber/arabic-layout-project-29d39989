@@ -66,8 +66,7 @@ export async function initCapacitorNative(router: Router<any, any>) {
 
     // Android back button — go back in history, otherwise "press again to exit"
     let lastBackPress = 0;
-    App.addListener("backButton", ({ canGoBack }) => {
-      // If a modal/sheet is open, let the browser default close it first
+    App.addListener("backButton", async ({ canGoBack }) => {
       const openOverlay = document.querySelector(
         '[data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]',
       );
@@ -86,9 +85,15 @@ export async function initCapacitorNative(router: Router<any, any>) {
         App.exitApp().catch(() => App.minimizeApp().catch(() => {}));
       } else {
         lastBackPress = now;
+        // Lightweight in-app hint (no extra plugin required)
         try {
-          const { Toast } = await import("@capacitor/toast").catch(() => ({ Toast: null as any }));
-          if (Toast) await Toast.show({ text: "اضغط مرة أخرى للخروج", duration: "short" });
+          const hint = document.createElement("div");
+          hint.textContent = "اضغط مرة أخرى للخروج";
+          hint.style.cssText =
+            "position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 90px);transform:translateX(-50%);background:#111c;color:#fff;padding:8px 16px;border-radius:999px;font:600 13px Cairo,Tahoma,sans-serif;z-index:9999;pointer-events:none;transition:opacity .3s;";
+          document.body.appendChild(hint);
+          setTimeout(() => { hint.style.opacity = "0"; }, 1500);
+          setTimeout(() => hint.remove(), 1900);
         } catch {}
       }
     });
