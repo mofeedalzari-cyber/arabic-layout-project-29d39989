@@ -100,7 +100,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 side="right"
                 className="w-[85vw] max-w-sm p-0 bg-sidebar text-sidebar-foreground flex flex-col h-dvh"
                 style={{
-                  paddingTop: "calc(env(safe-area-inset-top) + 12px)",
+                  paddingTop: "max(env(safe-area-inset-top), 28px)",
                   paddingRight: "env(safe-area-inset-right)",
                 }}
               >
