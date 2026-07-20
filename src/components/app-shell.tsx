@@ -98,10 +98,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-[85vw] max-w-sm p-0 bg-sidebar text-sidebar-foreground flex flex-col h-dvh overflow-hidden drawer-safe-area"
+                className="w-[85vw] max-w-sm box-border p-0 bg-sidebar text-sidebar-foreground flex flex-col overflow-hidden drawer-safe-area"
                 style={{
-                  paddingTop: "calc(var(--app-safe-top, env(safe-area-inset-top)) + 18px)",
-                  paddingBottom: "calc(var(--app-safe-bottom, env(safe-area-inset-bottom)) + 14px)",
+                  top: "calc(var(--app-safe-top, env(safe-area-inset-top)) + 8px)",
+                  bottom: "calc(var(--app-safe-bottom, env(safe-area-inset-bottom)) + 8px)",
+                  height: "auto",
+                  paddingTop: "10px",
+                  paddingBottom: "10px",
                   paddingRight: "env(safe-area-inset-right)",
                   paddingLeft: "env(safe-area-inset-left)",
                 }}

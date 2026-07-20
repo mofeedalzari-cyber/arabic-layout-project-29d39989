@@ -53,6 +53,8 @@
 
 :root {
   --radius: 0.75rem; /* 12px — أنعم وأصغر */
+  --app-safe-top: env(safe-area-inset-top);
+  --app-safe-bottom: env(safe-area-inset-bottom);
   --background: oklch(0.985 0.005 220);      /* #F8FAFC */
   --foreground: oklch(0.18 0.03 250);        /* #0F172A */
   --card: oklch(1 0 0);
@@ -146,6 +148,17 @@
     /* Safe area horizontal fallback (top/bottom يتم إدارتها بواسطة الهيدر والشريط السفلي) */
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
+
+  .capacitor-native {
+    --app-safe-top: max(env(safe-area-inset-top), 30px);
+    --app-safe-bottom: max(env(safe-area-inset-bottom), 48px);
+  }
+
+  .drawer-safe-area {
+    max-height: calc(100dvh - var(--app-safe-top) - var(--app-safe-bottom) - 16px);
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
   }
   h1 { font-size: 1.5rem; line-height: 1.25; }
   h2 { font-size: 1.25rem; line-height: 1.3; }
