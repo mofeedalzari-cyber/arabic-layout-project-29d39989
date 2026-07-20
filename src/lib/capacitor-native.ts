@@ -64,12 +64,32 @@ export async function initCapacitorNative(router: Router<any, any>) {
       }
     });
 
-    // Handle Android back button — go back in history, otherwise minimize
+    // Android back button — go back in history, otherwise "press again to exit"
+    let lastBackPress = 0;
     App.addListener("backButton", ({ canGoBack }) => {
-      if (canGoBack) {
+      // If a modal/sheet is open, let the browser default close it first
+      const openOverlay = document.querySelector(
+        '[data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]',
+      );
+      if (openOverlay) {
+        const closeBtn = openOverlay.querySelector<HTMLElement>('[data-dismiss], [aria-label="Close"], [aria-label="إغلاق"]');
+        if (closeBtn) closeBtn.click();
+        else window.history.back();
+        return;
+      }
+      if (canGoBack && window.history.length > 1) {
         window.history.back();
+        return;
+      }
+      const now = Date.now();
+      if (now - lastBackPress < 2000) {
+        App.exitApp().catch(() => App.minimizeApp().catch(() => {}));
       } else {
-        App.minimizeApp().catch(() => {});
+        lastBackPress = now;
+        try {
+          const { Toast } = await import("@capacitor/toast").catch(() => ({ Toast: null as any }));
+          if (Toast) await Toast.show({ text: "اضغط مرة أخرى للخروج", duration: "short" });
+        } catch {}
       }
     });
   } catch (err) {
