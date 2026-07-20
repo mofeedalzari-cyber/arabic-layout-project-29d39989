@@ -114,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <SheetTitle>القائمة الجانبية</SheetTitle>
                   <SheetDescription>روابط التنقل الرئيسية في التطبيق</SheetDescription>
                 </VisuallyHidden>
-                <BrandHeader />
+                <BrandHeader className="pe-16" />
                 <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1">
                   {items.map((it) => <NavLink key={it.to} item={it} />)}
                 </nav>
@@ -166,9 +166,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function BrandHeader() {
+function BrandHeader({ className }: { className?: string }) {
   return (
-    <div className="p-5 border-b border-sidebar-border flex items-center gap-3">
+    <div className={cn("p-5 border-b border-sidebar-border flex items-center gap-3", className)}>
       <div className="rounded-2xl gradient-primary-bg p-2.5 shadow-soft">
         <Wifi className="h-5 w-5" />
       </div>
