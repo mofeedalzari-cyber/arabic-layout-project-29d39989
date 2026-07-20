@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Wifi, Package, Upload, Users, Receipt,
   ScrollText, Settings, LogOut, Menu, Moon, Sun, Store, Inbox, CreditCard, Calculator, UserPlus,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
 interface NavItem { to: string; label: string; icon: typeof Wifi; adminOnly?: boolean; agentOnly?: boolean }
 
@@ -98,25 +98,27 @@ export function AppShell({ children }: { children: ReactNode }) {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-[85vw] max-w-sm p-0 bg-sidebar text-sidebar-foreground flex flex-col h-dvh overflow-hidden"
+                className="w-[85vw] max-w-sm box-border p-0 bg-sidebar text-sidebar-foreground flex flex-col overflow-hidden drawer-safe-area"
                 style={{
-                  paddingTop: "max(env(safe-area-inset-top), 24px)",
-                  paddingBottom: "env(safe-area-inset-bottom)",
+                  top: "calc(var(--app-safe-top, env(safe-area-inset-top)) + 8px)",
+                  bottom: "calc(var(--app-safe-bottom, env(safe-area-inset-bottom)) + 8px)",
+                  height: "auto",
+                  "--sheet-close-top": "14px",
+                  paddingTop: "10px",
+                  paddingBottom: "10px",
                   paddingRight: "env(safe-area-inset-right)",
                   paddingLeft: "env(safe-area-inset-left)",
-                }}
+                } as CSSProperties}
               >
                 <VisuallyHidden>
                   <SheetTitle>القائمة الجانبية</SheetTitle>
                   <SheetDescription>روابط التنقل الرئيسية في التطبيق</SheetDescription>
                 </VisuallyHidden>
-                {/* Spacer to guarantee status-bar clearance on notched devices */}
-                <div aria-hidden className="shrink-0 h-3" />
-                <BrandHeader />
+                <BrandHeader className="pe-16" />
                 <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1">
                   {items.map((it) => <NavLink key={it.to} item={it} />)}
                 </nav>
-                <div className="shrink-0" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
+                <div className="shrink-0 pb-3">
                   <UserFooter username={profile?.username ?? ""} role={role} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
                 </div>
               </SheetContent>
@@ -137,7 +139,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           style={{
             paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
             paddingRight: "max(0.75rem, env(safe-area-inset-right))",
-            paddingBottom: "calc(7rem + env(safe-area-inset-bottom))",
+            paddingBottom: "calc(7rem + var(--app-safe-bottom, env(safe-area-inset-bottom)))",
             touchAction: "pan-y",
           }}
         >
@@ -148,7 +150,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav
           className="lg:hidden fixed inset-x-2 z-40 border bg-background/95 backdrop-blur rounded-2xl shadow-lg"
           style={{
-            bottom: "max(env(safe-area-inset-bottom), 14px)",
+            bottom: "max(var(--app-safe-bottom, env(safe-area-inset-bottom)), 14px)",
             paddingLeft: "env(safe-area-inset-left)",
             paddingRight: "env(safe-area-inset-right)",
             marginBottom: "6px",
@@ -164,9 +166,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function BrandHeader() {
+function BrandHeader({ className }: { className?: string }) {
   return (
-    <div className="p-5 border-b border-sidebar-border flex items-center gap-3">
+    <div className={cn("p-5 border-b border-sidebar-border flex items-center gap-3", className)}>
       <div className="rounded-2xl gradient-primary-bg p-2.5 shadow-soft">
         <Wifi className="h-5 w-5" />
       </div>
