@@ -150,18 +150,30 @@ export async function sharePdfOrPrint(opts: {
 }) {
   const { html, filename, dialogTitle } = opts;
 
-  // WEB FALLBACK
+  // ============ WEB ============
+  // Generate a real PDF and open it in a new tab so the browser's built-in
+  // PDF viewer shows it (with Print / Save / Zoom controls) — instead of
+  // silently downloading a file.
   if (!isNativeApp()) {
-    openHtmlForPrintWeb(html);
+    try {
+      const blob = await htmlToPdfBlob(html);
+      const ok = openPdfBlobInNewTab(blob, filename);
+      if (!ok) openHtmlForPrintWeb(html);
+    } catch (err) {
+      console.error("[sharePdfOrPrint web] PDF generation failed:", err);
+      openHtmlForPrintWeb(html);
+    }
     return;
   }
 
-  // NATIVE ANDROID (Capacitor)
+  // ============ NATIVE ANDROID (Capacitor) ============
   try {
-    const [{ Filesystem, Directory }, { Share }] = await Promise.all([
+    const [{ Filesystem, Directory }, { FileOpener }, shareMod] = await Promise.all([
       import("@capacitor/filesystem"),
-      import("@capacitor/share"),
+      import("@capacitor-community/file-opener"),
+      import("@capacitor/share").catch(() => ({ Share: null as any })),
     ]);
+    const Share = (shareMod as any).Share;
 
     // 1️⃣ Generate PDF
     let blob: Blob;
@@ -180,7 +192,6 @@ export async function sharePdfOrPrint(opts: {
       base64 = await blobToBase64(blob);
     } catch (b64Err) {
       console.error("[sharePdfOrPrint] Base64 conversion failed:", b64Err);
-      alert("فشل تحويل الملف، سيتم فتح نسخة للطباعة بدلاً من ذلك.");
       openHtmlForPrintWeb(html);
       return;
     }
@@ -197,42 +208,43 @@ export async function sharePdfOrPrint(opts: {
       writtenUri = written.uri;
     } catch (fsErr) {
       console.error("[sharePdfOrPrint] Filesystem write failed:", fsErr);
-      alert("فشل حفظ الملف، سيتم فتح نسخة للطباعة بدلاً من ذلك.");
       openHtmlForPrintWeb(html);
       return;
     }
 
-    // 4️⃣ Open Share Sheet (with extra error handling)
+    // 4️⃣ Open PDF with system viewer (Drive/Adobe/etc.)
     try {
-      await Share.share({
-        title: dialogTitle || filename,
-        text: filename,
-        url: writtenUri,
-        dialogTitle: dialogTitle || "مشاركة أو طباعة الملف",
+      await FileOpener.openFile({
+        path: writtenUri,
+        mimeType: "application/pdf",
       });
-    } catch (shareErr: any) {
-      // 🔥 CRITICAL: THIS is where the app crashes — now handled safely!
-      console.error("[sharePdfOrPrint] Share failed:", shareErr);
-      
-      // Check if it's a cancellation (user pressed back) vs real error
-      if (shareErr?.message?.includes("cancel") || shareErr?.message?.includes("dismiss")) {
-        // User cancelled — do nothing
-        return;
-      }
-      
-      // Real error — fallback to web print
-      alert("تعذر فتح قائمة المشاركة، سيتم فتح نسخة للطباعة بدلاً من ذلك.");
-      openHtmlForPrintWeb(html);
+      return;
+    } catch (openErr) {
+      console.error("[sharePdfOrPrint] FileOpener failed, falling back to Share:", openErr);
     }
+
+    // 5️⃣ Fallback → Share sheet
+    if (Share) {
+      try {
+        await Share.share({
+          title: dialogTitle || filename,
+          text: filename,
+          url: writtenUri,
+          dialogTitle: dialogTitle || "مشاركة أو طباعة الملف",
+        });
+        return;
+      } catch (shareErr: any) {
+        console.error("[sharePdfOrPrint] Share failed:", shareErr);
+        if (shareErr?.message?.includes("cancel") || shareErr?.message?.includes("dismiss")) return;
+      }
+    }
+
+    alert("تعذر فتح ملف PDF، يرجى تثبيت تطبيق لعرض ملفات PDF.");
   } catch (err) {
-    // 🛡️ ULTIMATE CATCH — prevents app crash no matter what
     console.error("[sharePdfOrPrint] CRITICAL error:", err);
     alert("حدث خطأ غير متوقع، سيتم فتح نسخة للطباعة.");
     try {
       openHtmlForPrintWeb(html);
-    } catch (_) {
-      // Last resort
-      alert("يرجى المحاولة مجدداً أو استخدام خاصية التصوير من هاتفك.");
-    }
+    } catch {}
   }
 }
