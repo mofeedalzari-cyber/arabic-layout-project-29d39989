@@ -167,85 +167,39 @@ export async function sharePdfOrPrint(opts: {
   }
 
   // ============ NATIVE ANDROID (Capacitor) ============
+  // فقط: توليد PDF ثم فتح نافذة "مشاركة هذا الملف" مباشرة.
   try {
-    const [{ Filesystem, Directory }, { FileOpener }, shareMod] = await Promise.all([
+    const [{ Filesystem, Directory }, shareMod] = await Promise.all([
       import("@capacitor/filesystem"),
-      import("@capacitor-community/file-opener"),
-      import("@capacitor/share").catch(() => ({ Share: null as any })),
+      import("@capacitor/share"),
     ]);
     const Share = (shareMod as any).Share;
 
-    // 1️⃣ Generate PDF
-    let blob: Blob;
-    try {
-      blob = await htmlToPdfBlob(html);
-    } catch (pdfErr) {
-      console.error("[sharePdfOrPrint] PDF generation failed:", pdfErr);
-      alert("فشل إنشاء ملف PDF، سيتم فتح نسخة للطباعة بدلاً من ذلك.");
-      openHtmlForPrintWeb(html);
-      return;
-    }
+    const blob = await htmlToPdfBlob(html);
+    const base64 = await blobToBase64(blob);
 
-    // 2️⃣ Convert to Base64
-    let base64: string;
-    try {
-      base64 = await blobToBase64(blob);
-    } catch (b64Err) {
-      console.error("[sharePdfOrPrint] Base64 conversion failed:", b64Err);
-      openHtmlForPrintWeb(html);
-      return;
-    }
-
-    // 3️⃣ Write to Cache
     const name = `${safeFileName(filename)}_${Date.now()}.pdf`;
-    let writtenUri: string;
+    const written = await Filesystem.writeFile({
+      path: name,
+      data: base64,
+      directory: Directory.Cache,
+    });
+
     try {
-      const written = await Filesystem.writeFile({
-        path: name,
-        data: base64,
-        directory: Directory.Cache,
+      await Share.share({
+        title: dialogTitle || filename,
+        text: filename,
+        url: written.uri,
+        dialogTitle: dialogTitle || "مشاركة هذا الملف",
       });
-      writtenUri = written.uri;
-    } catch (fsErr) {
-      console.error("[sharePdfOrPrint] Filesystem write failed:", fsErr);
-      openHtmlForPrintWeb(html);
-      return;
+    } catch (shareErr: any) {
+      const msg = String(shareErr?.message || "");
+      if (msg.includes("cancel") || msg.includes("dismiss")) return;
+      console.error("[sharePdfOrPrint] Share failed:", shareErr);
+      alert("تعذر فتح نافذة المشاركة");
     }
-
-    // 4️⃣ Open PDF with system viewer (Drive/Adobe/etc.)
-    try {
-      await FileOpener.open({
-        filePath: writtenUri,
-        contentType: "application/pdf",
-        openWithDefault: true,
-      } as any);
-      return;
-    } catch (openErr) {
-      console.error("[sharePdfOrPrint] FileOpener failed, falling back to Share:", openErr);
-    }
-
-    // 5️⃣ Fallback → Share sheet
-    if (Share) {
-      try {
-        await Share.share({
-          title: dialogTitle || filename,
-          text: filename,
-          url: writtenUri,
-          dialogTitle: dialogTitle || "مشاركة أو طباعة الملف",
-        });
-        return;
-      } catch (shareErr: any) {
-        console.error("[sharePdfOrPrint] Share failed:", shareErr);
-        if (shareErr?.message?.includes("cancel") || shareErr?.message?.includes("dismiss")) return;
-      }
-    }
-
-    alert("تعذر فتح ملف PDF، يرجى تثبيت تطبيق لعرض ملفات PDF.");
   } catch (err) {
     console.error("[sharePdfOrPrint] CRITICAL error:", err);
-    alert("حدث خطأ غير متوقع، سيتم فتح نسخة للطباعة.");
-    try {
-      openHtmlForPrintWeb(html);
-    } catch {}
+    alert("حدث خطأ أثناء تحضير الملف للمشاركة");
   }
 }
