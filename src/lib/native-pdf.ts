@@ -209,18 +209,23 @@ async function withParentPdfSafeColors<T>(task: () => Promise<T>): Promise<T> {
  * Rendered inside an ISOLATED iframe so the app's Tailwind v4 `oklch()`
  * color tokens don't leak in and crash html2canvas.
  */
-async function htmlToPdfBlob(html: string): Promise<Blob> {
+async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<Blob> {
   const html2pdf: any = (await import("html2pdf.js")).default;
-
-  // A4 portrait at 96dpi = 794 x 1123 px. Render source at the exact
-  // printable width (A4 − 2*12mm ≈ 703px) so RTL content fills the page
-  // instead of collapsing to the right edge.
-  const A4_WIDTH_PX = 794;
-  const PRINTABLE_WIDTH_PX = 703;
 
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
-  iframe.style.cssText = `position:fixed;left:0;top:0;width:${A4_WIDTH_PX}px;height:1200px;border:0;visibility:hidden;pointer-events:none;z-index:-1;background:#fff;`;
+  iframe.style.cssText = [
+    "position:fixed",
+    "left:0",
+    "top:0",
+    "width:210mm",
+    "height:297mm",
+    "border:0",
+    "opacity:0",
+    "pointer-events:none",
+    "z-index:-1",
+    "background:#fff",
+  ].join(";");
   document.body.appendChild(iframe);
 
   await new Promise<void>((resolve) => {
@@ -235,15 +240,139 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
   doc.close();
   sanitizePdfDocument(doc);
 
-  // Lock printable width so RTL content fills the page.
-  const widthLock = doc.createElement("style");
-  widthLock.textContent = `
-    html, body { width: ${PRINTABLE_WIDTH_PX}px !important; margin: 0 auto !important; padding: 0 !important; background:#fff !important; }
-    body > * { max-width: 100% !important; }
-    table { table-layout: fixed !important; width: 100% !important; word-wrap: break-word; }
-    th, td { word-break: break-word; overflow-wrap: anywhere; }
+  const originalReport = doc.body.querySelector<HTMLElement>('[data-pdf-report="true"], .page') ?? doc.body.firstElementChild;
+  const reportClone = (originalReport?.cloneNode(true) as HTMLElement | null) ?? doc.createElement("div");
+  if (!originalReport) reportClone.innerHTML = doc.body.innerHTML;
+
+  const printContainer = doc.createElement("div");
+  printContainer.id = "pdf-print-container";
+  printContainer.setAttribute("dir", "rtl");
+  printContainer.style.cssText = [
+    "width:210mm",
+    "min-height:297mm",
+    "margin:0",
+    "padding:12mm",
+    "box-sizing:border-box",
+    "background:white",
+    "direction:rtl",
+    "display:block",
+    "overflow:visible",
+    "position:relative",
+    "transform:none",
+    "scale:1",
+    "zoom:1",
+    "translate:none",
+    "max-width:none",
+  ].join(";");
+  printContainer.appendChild(reportClone);
+
+  const pdfLayout = doc.createElement("style");
+  pdfLayout.textContent = `
+    @page { size: A4 portrait; margin: 0; }
+    html,
+    body {
+      width: 210mm !important;
+      min-width: 210mm !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      direction: rtl !important;
+      overflow: visible !important;
+      transform: none !important;
+      scale: 1 !important;
+      zoom: 1 !important;
+      translate: none !important;
+    }
+    #pdf-print-container {
+      width: 210mm !important;
+      min-height: 297mm !important;
+      margin: 0 !important;
+      padding: 12mm !important;
+      box-sizing: border-box !important;
+      background: #ffffff !important;
+      direction: rtl !important;
+      display: block !important;
+      position: relative !important;
+      overflow: visible !important;
+      transform: none !important;
+      scale: 1 !important;
+      zoom: 1 !important;
+      translate: none !important;
+      max-width: none !important;
+    }
+    #pdf-print-container *,
+    #pdf-print-container *::before,
+    #pdf-print-container *::after {
+      box-sizing: border-box !important;
+      transform: none !important;
+      scale: 1 !important;
+      zoom: 1 !important;
+      translate: none !important;
+      max-width: none !important;
+      overflow: visible !important;
+    }
+    #pdf-print-container [style*="position:absolute"],
+    #pdf-print-container [style*="position: absolute"] {
+      position: static !important;
+    }
+    #pdf-print-container [style*="fit-content"],
+    #pdf-print-container [style*="inline-block"] {
+      display: block !important;
+      width: 100% !important;
+    }
+    #pdf-print-container .page,
+    #pdf-print-container section,
+    #pdf-print-container article,
+    #pdf-print-container main,
+    #pdf-print-container header,
+    #pdf-print-container footer,
+    #pdf-print-container .head,
+    #pdf-print-container .head-row,
+    #pdf-print-container .kpis,
+    #pdf-print-container .kpi,
+    #pdf-print-container .tbl-wrap,
+    #pdf-print-container h1,
+    #pdf-print-container h2,
+    #pdf-print-container h3 {
+      display: block !important;
+      width: 100% !important;
+      max-width: none !important;
+      position: static !important;
+      overflow: visible !important;
+    }
+    #pdf-print-container table {
+      width: 100% !important;
+      table-layout: fixed !important;
+      border-collapse: collapse !important;
+      page-break-inside: auto !important;
+      break-inside: auto !important;
+      direction: rtl !important;
+    }
+    #pdf-print-container thead { display: table-header-group !important; }
+    #pdf-print-container tbody { display: table-row-group !important; }
+    #pdf-print-container tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+    #pdf-print-container th,
+    #pdf-print-container td {
+      padding: 8px !important;
+      border: 1px solid #cccccc !important;
+      word-break: break-word !important;
+      overflow-wrap: anywhere !important;
+      white-space: normal !important;
+      vertical-align: top !important;
+    }
+    #pdf-print-container img,
+    #pdf-print-container svg,
+    #pdf-print-container canvas {
+      max-width: 100% !important;
+      height: auto !important;
+    }
   `;
-  doc.head.appendChild(widthLock);
+  doc.head.appendChild(pdfLayout);
+
+  doc.body.innerHTML = "";
+  doc.body.appendChild(printContainer);
+
+  normalizePdfPrintTree(printContainer);
 
   try {
     const imgs = Array.from(doc.querySelectorAll("img"));
@@ -260,31 +389,81 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
     if ((doc as any).fonts?.ready) await (doc as any).fonts.ready;
   } catch {}
 
-  const source = doc.body;
+  const source = printContainer;
 
   try {
     const opt = {
-      margin: [12, 12, 15, 12],
-      filename: "document.pdf",
-      image: { type: "jpeg", quality: 0.98 },
+      margin: 0,
+      filename,
+      image: { type: "jpeg", quality: 1 },
       html2canvas: {
         scale: 2,
         useCORS: true,
-        allowTaint: true,
         backgroundColor: "#ffffff",
-        logging: false,
-        width: PRINTABLE_WIDTH_PX,
-        windowWidth: PRINTABLE_WIDTH_PX,
+        scrollX: 0,
+        scrollY: 0,
       },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
-      pagebreak: { mode: ["css", "legacy"], avoid: ["tr", ".avoid-break", ".tbl-wrap", ".stat", ".kpi"] },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css", "legacy"] },
     };
     const blob: Blob = await withParentPdfSafeColors(() => html2pdf().set(opt).from(source).outputPdf("blob"));
     if (!blob || blob.size < 100) throw new Error("PDF blob is empty");
     return blob;
   } finally {
+    printContainer.remove();
     iframe.remove();
   }
+}
+
+function normalizePdfPrintTree(root: HTMLElement) {
+  const badProps = [
+    "transform",
+    "scale",
+    "zoom",
+    "max-width",
+    "translate",
+    "overflow",
+    "overflow-x",
+    "overflow-y",
+    "position",
+    "inset",
+    "top",
+    "right",
+    "bottom",
+    "left",
+  ];
+
+  Array.from(root.querySelectorAll<HTMLElement>("*")).forEach((el) => {
+    for (const prop of badProps) el.style.removeProperty(prop);
+
+    const inlineDisplay = el.style.getPropertyValue("display").trim().toLowerCase();
+    const inlineWidth = el.style.getPropertyValue("width").trim().toLowerCase();
+    if (inlineDisplay === "inline-block" || inlineWidth.includes("fit-content")) {
+      el.style.setProperty("display", "block", "important");
+      el.style.setProperty("width", "100%", "important");
+    }
+
+    if (el.matches(".page, section, article, main, header, footer, .head, .head-row, .kpis, .kpi, .tbl-wrap, h1, h2, h3")) {
+      el.style.setProperty("display", "block", "important");
+      el.style.setProperty("width", "100%", "important");
+      el.style.setProperty("overflow", "visible", "important");
+    }
+
+    const tagName = el.tagName.toLowerCase();
+    if (tagName === "table") {
+      el.style.setProperty("width", "100%", "important");
+      el.style.setProperty("table-layout", "fixed", "important");
+      el.style.setProperty("border-collapse", "collapse", "important");
+      el.style.setProperty("page-break-inside", "auto", "important");
+    }
+
+    if (tagName === "th" || tagName === "td") {
+      el.style.setProperty("padding", "8px", "important");
+      el.style.setProperty("border", "1px solid #cccccc", "important");
+      el.style.setProperty("word-break", "break-word", "important");
+      el.style.setProperty("white-space", "normal", "important");
+    }
+  });
 }
 
 function blobToBase64(blob: Blob): Promise<string> {
