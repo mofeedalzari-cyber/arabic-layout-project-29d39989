@@ -85,9 +85,9 @@ export async function primeArabicShaping() {
 
 const FONT_URLS: Record<string, string> = {
   "Amiri-Regular.ttf":
-    "https://cdn.jsdelivr.net/gh/googlefonts/amiri@main/fonts/ttf/Amiri-Regular.ttf",
+    "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf",
   "Amiri-Bold.ttf":
-    "https://cdn.jsdelivr.net/gh/googlefonts/amiri@main/fonts/ttf/Amiri-Bold.ttf",
+    "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Bold.ttf",
 };
 
 let _vfsCache: Record<string, string> | null = null;
