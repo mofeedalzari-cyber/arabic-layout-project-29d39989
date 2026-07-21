@@ -173,77 +173,71 @@ function PackagesPage() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {packages?.map((p) => {
           const net = netMap.get(p.network_id);
+          const c = counts?.get(p.id) ?? { total: 0, avail: 0, assigned: 0, sold: 0 };
+          const shortId = p.id.replace(/-/g, "").slice(0, 8).toUpperCase();
           return (
-            <Card key={p.id} className="card-elegant border-0 overflow-hidden p-0">
-              <div className="p-5 relative" style={{ background: `linear-gradient(135deg, ${p.color}, ${p.color}dd)` }}>
-                <Wifi className="absolute top-3 left-3 h-5 w-5 text-white/40" />
-                <div className="absolute top-3 right-3 bg-white/95 text-foreground rounded-full px-2.5 py-1 text-[11px] font-bold shadow-sm flex items-center gap-1">
-                  <span className="text-success text-sm">{counts?.get(p.id)?.avail ?? 0}</span>
-                  <span className="text-muted-foreground">كرت متوفر</span>
+            <Card key={p.id} className="card-elegant border border-border/40 bg-card rounded-3xl p-4 space-y-3">
+              {/* Header: icon + name + price pill */}
+              <div className="flex items-center justify-between gap-3">
+                <div
+                  className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
+                  style={{ background: p.color }}
+                >
+                  <Layers className="h-5 w-5 text-white" />
                 </div>
-                <div className="text-white/80 text-[11px] mb-1 mt-6">{net?.name ?? "—"}</div>
-                <div className="text-white text-sm/none mb-1">{p.name}</div>
-                <div className="text-white text-2xl font-extrabold">
-                  {fmtMoney(Number(p.price))}
-                  <span className="text-xs font-normal opacity-70 mr-1">{net?.currency}</span>
+                <div className="flex-1 min-w-0 text-right">
+                  <div className="text-base font-extrabold truncate">باقة {p.name}</div>
+                  <div className="text-[11px] text-muted-foreground truncate">{net?.name ?? "—"}</div>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
-                  <div className="bg-white/15 rounded-lg px-2 py-1.5 text-center">
-                    <div className="text-white/60 text-[10px] mb-0.5">حجم البيانات</div>
-                    <div className="text-white font-semibold">{p.data_size ?? "—"}</div>
-                  </div>
-                  <div className="bg-white/15 rounded-lg px-2 py-1.5 text-center">
-                    <div className="text-white/60 text-[10px] mb-0.5">السرعة</div>
-                    <div className="text-white font-semibold">{p.speed ?? "—"}</div>
-                  </div>
-                  <div className="bg-white/15 rounded-lg px-2 py-1.5 text-center">
-                    <div className="text-white/60 text-[10px] mb-0.5">مدة الصلاحية</div>
-                    <div className="text-white font-semibold">{p.validity ?? "—"}</div>
-                  </div>
-                  <div className="bg-white/25 rounded-lg px-2 py-1.5 text-center border border-white/30 shadow-sm">
-                    <div className="text-white/80 text-[10px] mb-0.5 flex items-center justify-center gap-1">
-                      <Clock className="h-3 w-3" />الوقت المسموح
-                    </div>
-                    <div className="text-white font-bold">{p.allowed_time ?? "—"}</div>
-                  </div>
+                <div className="rounded-full bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 whitespace-nowrap">
+                  {fmtMoney(Number(p.price))} {net?.currency ?? "ر.س"}
                 </div>
               </div>
-              <div className="p-3 space-y-3">
-                {(() => {
-                  const c = counts?.get(p.id) ?? { total: 0, avail: 0, assigned: 0, sold: 0 };
-                  return (
-                    <div className="grid grid-cols-4 gap-1.5 text-center text-[11px]">
-                      <div className="rounded-lg bg-muted/60 py-1.5">
-                        <div className="font-extrabold text-sm flex items-center justify-center gap-1"><Layers className="h-3 w-3" />{c.total}</div>
-                        <div className="text-[10px] text-muted-foreground">الكل</div>
-                      </div>
-                      <div className="rounded-lg bg-success/10 py-1.5">
-                        <div className="font-extrabold text-sm text-success">{c.avail}</div>
-                        <div className="text-[10px] text-muted-foreground">متاح</div>
-                      </div>
-                      <div className="rounded-lg bg-primary/10 py-1.5">
-                        <div className="font-extrabold text-sm text-primary">{c.assigned}</div>
-                        <div className="text-[10px] text-muted-foreground">مُخصّص</div>
-                      </div>
-                      <div className="rounded-lg bg-warning/10 py-1.5">
-                        <div className="font-extrabold text-sm text-warning flex items-center justify-center gap-1"><CheckCircle2 className="h-3 w-3" />{c.sold}</div>
-                        <div className="text-[10px] text-muted-foreground">مباع</div>
-                      </div>
-                    </div>
-                  );
-                })()}
-                {isAdmin && (
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setEditing(p); setOpen(true); }}>
-                      <Edit3 className="h-4 w-4 ml-1" />تعديل
-                    </Button>
-                    <Button variant="outline" size="icon" className="rounded-xl text-destructive"
-                      onClick={() => { if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name }); }}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
+
+              {/* Available now */}
+              <div className="rounded-2xl bg-muted/50 px-4 py-3 flex items-center justify-between">
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Archive className="h-4 w-4" />
+                  المتاح الآن
+                </div>
+                <div className="text-2xl font-extrabold text-foreground">{c.avail}</div>
               </div>
+
+              {/* Three feature tiles */}
+              <div className="grid grid-cols-3 gap-2">
+                <FeatureTile icon={<CalendarCheck className="h-4 w-4" />} value={p.validity ?? "—"} label="الصلاحية" />
+                <FeatureTile icon={<Clock className="h-4 w-4" />} value={p.allowed_time ?? "—"} label="الساعات" />
+                <FeatureTile icon={<RefreshCw className="h-4 w-4" />} value={p.data_size ?? "—"} label="الحجم" />
+              </div>
+
+              {/* ID chip */}
+              <div className="flex">
+                <span className="inline-flex items-center rounded-full bg-muted/60 text-muted-foreground text-[11px] font-medium px-3 py-1">
+                  ID: {shortId}
+                </span>
+              </div>
+
+              {/* Actions */}
+              {isAdmin ? (
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setEditing(p); setOpen(true); }}>
+                    <Edit3 className="h-4 w-4 ml-1" />تعديل
+                  </Button>
+                  <Button variant="outline" size="icon" className="rounded-xl text-destructive"
+                    onClick={() => { if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name }); }}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Button asChild variant="outline" className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold">
+                    <Link to="/app/requests"><ShoppingCart className="h-4 w-4 ml-1.5" />طلب سحب</Link>
+                  </Button>
+                  <Button asChild variant="outline" className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold">
+                    <Link to="/app/cabin"><LayoutGrid className="h-4 w-4 ml-1.5" />كبينة البيع</Link>
+                  </Button>
+                </div>
+              )}
             </Card>
           );
         })}
