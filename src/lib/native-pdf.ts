@@ -19,17 +19,14 @@ function safeFileName(name: string): string {
 function openPdfBlobInNewTab(blob: Blob, filename: string): boolean {
   try {
     const url = URL.createObjectURL(blob);
-    const w = window.open(url, "_blank");
-    if (!w) {
-      const a = document.createElement("a");
-      a.href = url;
-      a.target = "_blank";
-      a.rel = "noopener";
-      a.setAttribute("aria-label", filename);
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${safeFileName(filename)}.pdf`;
+    a.rel = "noopener";
+    a.setAttribute("aria-label", filename);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
     return true;
   } catch (err) {
