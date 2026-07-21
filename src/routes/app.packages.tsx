@@ -14,6 +14,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+} from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
 import { Plus, Package as PackageIcon, Edit3, Trash2, Layers, Clock, CalendarCheck, RefreshCw, Archive, ShoppingCart, LayoutGrid } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -137,6 +141,45 @@ function PackagesPage() {
 
   const netMap = new Map(networks?.map((n) => [n.id, n]) ?? []);
 
+  // Request cards flow
+  const [requestPkg, setRequestPkg] = useState<any>(null);
+  const [reqQty, setReqQty] = useState<number>(10);
+  const [reqNotes, setReqNotes] = useState("");
+  const [reqPayment, setReqPayment] = useState<"CREDIT" | "CASH">("CREDIT");
+  const [reqBusy, setReqBusy] = useState(false);
+
+  async function submitRequest() {
+    if (!requestPkg) return;
+    const avail = counts?.get(requestPkg.id)?.avail ?? 0;
+    if (reqQty > avail) {
+      toast.error(`لا يمكن الطلب أكثر من المتاح (${avail})، وأنت طلبت ${reqQty}`);
+      return;
+    }
+    setReqBusy(true);
+    const { error } = await supabase.rpc("request_cards", {
+      _package_id: requestPkg.id, _quantity: reqQty, _notes: reqNotes, _payment_method: reqPayment,
+    });
+    setReqBusy(false);
+    if (error) {
+      const map: Record<string, string> = {
+        FORBIDDEN: "غير مصرح",
+        ACCOUNT_INACTIVE: "حسابك غير مفعّل",
+        PACKAGE_NOT_FOUND: "الباقة غير موجودة",
+        PACKAGE_NOT_IN_YOUR_NETWORK: "هذه الباقة ليست ضمن شبكتك",
+        AGENT_NETWORK_NOT_SET: "لم يتم تعيين شبكتك بعد",
+        INVALID_QUANTITY: "كمية غير صحيحة",
+      };
+      toast.error(map[error.message] ?? error.message);
+      return;
+    }
+    toast.success("تم إرسال الطلب — بانتظار موافقة المدير");
+    setRequestPkg(null); setReqQty(10); setReqNotes(""); setReqPayment("CREDIT");
+    qc.invalidateQueries({ queryKey: ["my-requests"] });
+    qc.invalidateQueries({ queryKey: ["card-requests"] });
+    qc.invalidateQueries({ queryKey: ["packages-counts-all"] });
+  }
+
+
   return (
     <>
       <PageHeader
@@ -235,10 +278,12 @@ function PackagesPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
-                  <Button asChild variant="outline" className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold">
-                    <Link to="/app/networks/$id" params={{ id: p.network_id }} hash={`pkg-${p.id}`}>
-                      <ShoppingCart className="h-4 w-4 ml-1.5" />طلب سحب
-                    </Link>
+                  <Button
+                    variant="outline"
+                    className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold"
+                    onClick={() => { setRequestPkg(p); setReqQty(10); setReqNotes(""); setReqPayment("CREDIT"); }}
+                  >
+                    <ShoppingCart className="h-4 w-4 ml-1.5" />طلب سحب
                   </Button>
                   <Button asChild variant="outline" className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold">
                     <Link to="/app/cabin"><LayoutGrid className="h-4 w-4 ml-1.5" />كبينة البيع</Link>
@@ -260,6 +305,76 @@ function PackagesPage() {
           </div>
         )}
       </div>
+
+      {/* Request cards sheet (agent) */}
+      <Sheet open={!!requestPkg} onOpenChange={(o) => !o && setRequestPkg(null)}>
+        <SheetContent side="bottom" className="rounded-t-3xl" dir="rtl">
+          <SheetHeader>
+            <SheetTitle>طلب كروت من المدير</SheetTitle>
+            <SheetDescription>اختر الكمية المطلوبة — سيتم تنزيل الكروت إلى كبينتك بعد الموافقة.</SheetDescription>
+          </SheetHeader>
+          {requestPkg && (() => {
+            const net = netMap.get(requestPkg.network_id);
+            return (
+              <div className="mt-4 space-y-4">
+                <div className="rounded-2xl p-5 text-white" style={{ background: `linear-gradient(135deg, ${requestPkg.color ?? "#009688"}, ${(requestPkg.color ?? "#009688")}dd)` }}>
+                  <div className="opacity-80 text-sm">{net?.name ?? ""}</div>
+                  <div className="text-base font-bold">{requestPkg.name}</div>
+                  <div className="text-3xl font-extrabold mt-1">{fmtMoney(Number(requestPkg.price))} <span className="text-sm font-normal opacity-70">{net?.currency}</span></div>
+                  <div className="text-xs opacity-80 mt-1">المتاح الآن: {counts?.get(requestPkg.id)?.avail ?? 0}</div>
+                </div>
+                <div>
+                  <Label className="text-xs mb-1.5 block">الكمية المطلوبة</Label>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" className="rounded-xl h-11 w-11" onClick={() => setReqQty(Math.max(1, reqQty - 1))}>−</Button>
+                    <Input type="number" min={1} max={10000} value={reqQty}
+                      onChange={(e) => setReqQty(Math.max(1, Number(e.target.value) || 1))}
+                      className="h-11 rounded-xl text-center text-lg font-bold" />
+                    <Button type="button" variant="outline" className="rounded-xl h-11 w-11" onClick={() => setReqQty(reqQty + 1)}>+</Button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {[5,10,20,50,100].map((n) => (
+                      <button type="button" key={n} onClick={() => setReqQty(n)}
+                        className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70">{n}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs mb-1.5 block">طريقة الدفع</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => setReqPayment("CASH")}
+                      className={`rounded-xl h-11 font-semibold border-2 transition ${reqPayment === "CASH" ? "border-success bg-success/10 text-success" : "border-muted bg-muted/40 text-muted-foreground"}`}>
+                      نقد
+                    </button>
+                    <button type="button" onClick={() => setReqPayment("CREDIT")}
+                      className={`rounded-xl h-11 font-semibold border-2 transition ${reqPayment === "CREDIT" ? "border-warning bg-warning/10 text-warning" : "border-muted bg-muted/40 text-muted-foreground"}`}>
+                      آجل
+                    </button>
+                  </div>
+                </div>
+                <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">القيمة الإجمالية</span>
+                  <span className="font-extrabold text-primary text-base">
+                    {fmtMoney(Number(requestPkg.price) * reqQty)} <span className="text-xs font-normal opacity-70">{net?.currency}</span>
+                  </span>
+                </div>
+                <div>
+                  <Label className="text-xs mb-1.5 block">ملاحظات (اختياري)</Label>
+                  <Textarea rows={2} value={reqNotes} onChange={(e) => setReqNotes(e.target.value)}
+                    placeholder="مثلاً: عاجل، للاستهلاك اليومي..." className="rounded-xl" />
+                </div>
+                <div className="flex gap-2 pb-4">
+                  <Button variant="outline" className="flex-1 rounded-xl h-11" onClick={() => setRequestPkg(null)}>إلغاء</Button>
+                  <Button disabled={reqBusy} onClick={submitRequest}
+                    className="flex-1 rounded-xl h-11 gradient-primary-bg border-0 font-semibold">
+                    {reqBusy ? "..." : `إرسال الطلب (${reqQty})`}
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
