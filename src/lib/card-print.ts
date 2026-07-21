@@ -130,8 +130,9 @@ export function printCards(opts: {
 </body>
 </html>`;
 
-  // Native → generate PDF + share sheet. Web → open print window.
-  void import("./native-pdf").then(({ sharePdfOrPrint }) =>
-    sharePdfOrPrint({ html, filename: title, dialogTitle: "طباعة أو مشاركة الكروت" }),
+  // Open a native print window (web) or system share/preview (native).
+  // Avoids html2pdf.js entirely, which was freezing the app on card grids.
+  void import("./native-pdf").then(({ openHtmlForPrint }) =>
+    openHtmlForPrint({ html, filename: title, dialogTitle: "طباعة أو مشاركة الكروت" }),
   );
 }

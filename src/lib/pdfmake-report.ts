@@ -11,51 +11,20 @@ import type { TDocumentDefinitions, TFontDictionary } from "pdfmake/interfaces";
 // -----------------------------------------------------------------------------
 
 const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
-const RTL_EMBED = "\u202B";
-const POP_DIRECTIONAL = "\u202C";
-const ARABIC_WORD = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+/;
-
-function reverseArabicWordOrder(value: string): string {
-  return value
-    .split(/(\n)/)
-    .map((line) => {
-      if (line === "\n" || !ARABIC_CHAR.test(line)) return line;
-      const tokens = line.match(/\S+|\s+/g) ?? [line];
-      const words = tokens.filter((token) => /\S/.test(token));
-      if (words.filter((word) => ARABIC_WORD.test(word)).length <= 1) return line;
-
-      let wordIndex = words.length - 1;
-      const reversedTokens = tokens
-        .map((token) => {
-          if (/\s/.test(token)) return token;
-          return words[wordIndex--] ?? token;
-        });
-
-      // pdfmake visually compresses/overlaps normal Arabic spaces after bidi
-      // compensation. A double space in the source renders as a normal readable
-      // word gap in the final PDF without altering the actual Arabic letters.
-      return reversedTokens
-        .map((token, index) => {
-          if (!/\s/.test(token)) return token;
-          const prev = reversedTokens[index - 1] ?? "";
-          const next = reversedTokens[index + 1] ?? "";
-          return ARABIC_WORD.test(prev) && ARABIC_WORD.test(next) ? "  " : token;
-        })
-        .join("");
-    })
-    .join("");
-}
 
 /**
- * Keep Arabic letters inside each word in normal order, but reverse whole-word
- * order to counter pdfmake's visual reversal in generated PDFs.
+ * pdfmake in this build renders Arabic tokens in left-to-right order even
+ * with `direction: "rtl"` set on the text node. We reverse whitespace-
+ * separated tokens so the final output reads right-to-left, while leaving
+ * the characters inside each token untouched (reversing characters would
+ * break Arabic letter shaping/joining).
  */
 export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
   const value = String(input);
-  return ARABIC_CHAR.test(value)
-    ? `${RTL_EMBED}${reverseArabicWordOrder(value)}${POP_DIRECTIONAL}`
-    : value;
+  if (!ARABIC_CHAR.test(value)) return value;
+  const parts = value.split(/(\s+)/);
+  return parts.reverse().join("");
 }
 
 function rtlText(input: string | number | null | undefined): string {
