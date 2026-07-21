@@ -300,20 +300,25 @@ export async function sharePdfOrPrint(opts: {
   dialogTitle?: string;
 }) {
   const { html, filename, dialogTitle } = opts;
+  const blob = await htmlToPdfBlob(html);
+  await sharePdfBlob({ blob, filename, dialogTitle });
+}
 
-  // ============ WEB ============
+/**
+ * Share (native) or open (web) a pre-generated PDF blob.
+ */
+export async function sharePdfBlob(opts: {
+  blob: Blob;
+  filename: string;
+  dialogTitle?: string;
+}) {
+  const { blob, filename, dialogTitle } = opts;
+
   if (!isNativeApp()) {
-    try {
-      const blob = await htmlToPdfBlob(html);
-      openPdfBlobInNewTab(blob, filename);
-    } catch (err) {
-      console.error("[sharePdfOrPrint web] PDF generation failed:", err);
-      alert("تعذر توليد ملف PDF، يرجى المحاولة مجدداً");
-    }
+    openPdfBlobInNewTab(blob, filename);
     return;
   }
 
-  // ============ NATIVE ANDROID (Capacitor) ============
   let Filesystem: any, Directory: any, Share: any;
   try {
     const [fsMod, shareMod] = await Promise.all([
@@ -324,20 +329,18 @@ export async function sharePdfOrPrint(opts: {
     Directory = (fsMod as any).Directory;
     Share = (shareMod as any).Share;
   } catch (err) {
-    console.error("[sharePdfOrPrint] plugin import failed:", err);
+    console.error("[sharePdfBlob] plugin import failed:", err);
     alert("تعذر تحميل مكونات المشاركة");
     return;
   }
 
   const fileName = `${safeFileName(filename)}_${Date.now()}.pdf`;
   let base64 = "";
-
   try {
-    const blob = await htmlToPdfBlob(html);
     base64 = await blobToBase64(blob);
-  } catch (pdfErr) {
-    console.error("[sharePdfOrPrint] PDF render failed:", pdfErr);
-    alert("تعذر توليد ملف PDF: " + (String((pdfErr as any)?.message || pdfErr).slice(0, 120)));
+  } catch (err) {
+    console.error("[sharePdfBlob] base64 conversion failed:", err);
+    alert("تعذر تجهيز الملف للمشاركة");
     return;
   }
 
@@ -350,7 +353,7 @@ export async function sharePdfOrPrint(opts: {
     });
     fileUri = written.uri;
   } catch (wErr) {
-    console.error("[sharePdfOrPrint] writeFile failed:", wErr);
+    console.error("[sharePdfBlob] writeFile failed:", wErr);
     alert("تعذر حفظ الملف مؤقتاً");
     return;
   }
@@ -365,7 +368,7 @@ export async function sharePdfOrPrint(opts: {
   } catch (shareErr: any) {
     const msg = String(shareErr?.message || "");
     if (msg.includes("cancel") || msg.includes("dismiss")) return;
-    console.error("[sharePdfOrPrint] Share failed:", shareErr);
+    console.error("[sharePdfBlob] Share failed:", shareErr);
     alert("تعذر فتح نافذة المشاركة: " + msg.slice(0, 120));
   }
 }
