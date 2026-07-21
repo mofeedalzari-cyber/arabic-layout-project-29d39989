@@ -315,3 +315,94 @@ export async function sharePdfBlob(opts: {
     alert("تعذر فتح نافذة المشاركة: " + msg.slice(0, 120));
   }
 }
+
+/**
+ * Save a Blob to the device.
+ *  - Web: triggers a browser download.
+ *  - Native (Android): writes to the public Downloads folder
+ *    (/storage/emulated/0/Download). Falls back to Documents, then to
+ *    the Share sheet if direct save fails.
+ */
+export async function saveBlobToDevice(opts: {
+  blob: Blob;
+  filename: string; // must include extension
+  mimeType?: string;
+  dialogTitle?: string;
+}): Promise<{ savedTo?: string; shared?: boolean }> {
+  const { blob, filename, dialogTitle } = opts;
+
+  if (!isNativeApp()) {
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      return { savedTo: filename };
+    } catch (err) {
+      console.error("[saveBlobToDevice] web download failed:", err);
+      throw err;
+    }
+  }
+
+  let Filesystem: any, Directory: any, Share: any;
+  try {
+    const [fsMod, shareMod] = await Promise.all([
+      import("@capacitor/filesystem"),
+      import("@capacitor/share"),
+    ]);
+    Filesystem = (fsMod as any).Filesystem;
+    Directory = (fsMod as any).Directory;
+    Share = (shareMod as any).Share;
+  } catch (err) {
+    console.error("[saveBlobToDevice] plugin import failed:", err);
+    throw err;
+  }
+
+  const base64 = await blobToBase64(blob);
+
+  // Try public Downloads first (Android): ExternalStorage/Download/<file>
+  const attempts: Array<{ path: string; directory: any; label: string }> = [
+    { path: `Download/${filename}`, directory: Directory.ExternalStorage, label: "التنزيلات" },
+    { path: filename, directory: Directory.Documents, label: "المستندات" },
+  ];
+
+  for (const attempt of attempts) {
+    try {
+      const written = await Filesystem.writeFile({
+        path: attempt.path,
+        data: base64,
+        directory: attempt.directory,
+        recursive: true,
+      });
+      return { savedTo: written.uri || attempt.label };
+    } catch (err) {
+      console.warn(`[saveBlobToDevice] ${attempt.label} failed:`, err);
+    }
+  }
+
+  // Final fallback: write to Cache and open Share sheet so the user can
+  // pick "Save to device" from the system dialog.
+  try {
+    const written = await Filesystem.writeFile({
+      path: filename,
+      data: base64,
+      directory: Directory.Cache,
+    });
+    await Share.share({
+      title: dialogTitle || filename,
+      text: filename,
+      url: written.uri,
+      dialogTitle: dialogTitle || "حفظ الملف",
+    });
+    return { shared: true };
+  } catch (err: any) {
+    const msg = String(err?.message || "");
+    if (msg.includes("cancel") || msg.includes("dismiss")) return { shared: true };
+    console.error("[saveBlobToDevice] share fallback failed:", err);
+    throw err;
+  }
+}

@@ -89,19 +89,27 @@ function BackupCard() {
 
   const backup = useMutation({
     mutationFn: async () => await backupFn(),
-    onSuccess: (data: any) => {
+    onSuccess: async (data: any) => {
       const netName = data?.network?.name ?? "network";
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
       const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-      a.href = url;
-      a.download = `backup-${netName}-${stamp}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      toast.success("تم تنزيل النسخة الاحتياطية");
+      const filename = `backup-${netName}-${stamp}.json`;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      try {
+        const { saveBlobToDevice } = await import("@/lib/native-pdf");
+        const res = await saveBlobToDevice({
+          blob,
+          filename,
+          mimeType: "application/json",
+          dialogTitle: "حفظ النسخة الاحتياطية",
+        });
+        if (res.shared) {
+          toast.success("تم تجهيز النسخة — اختر مكان الحفظ");
+        } else {
+          toast.success("تم حفظ النسخة في مجلد التنزيلات");
+        }
+      } catch (err: any) {
+        toast.error(`تعذر حفظ الملف: ${err?.message ?? ""}`);
+      }
     },
     onError: (e: Error) => toast.error(`فشل النسخ: ${e.message}`),
   });
