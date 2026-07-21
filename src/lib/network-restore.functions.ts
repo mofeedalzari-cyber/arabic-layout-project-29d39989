@@ -43,8 +43,25 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
     await admin.from("packages").delete().eq("network_id", networkId);
     await admin.from("join_requests").delete().eq("network_id", networkId);
 
+    // Fetch valid profile IDs belonging to this network (agents + owner).
+    const { data: netProfiles } = await admin
+      .from("profiles").select("id").eq("network_id", networkId);
+    const allowedUserIds = new Set<string>(
+      [userId, ...((netProfiles ?? []).map((p: any) => p.id as string))],
+    );
+
     const remap = (rows: any): any[] =>
       Array.isArray(rows) ? rows.map((r) => ({ ...r, network_id: networkId })) : [];
+
+    // Strip any user-reference field that points outside this network.
+    const scrubUserRefs = (rows: any[], fields: string[]): any[] =>
+      rows.map((r) => {
+        const out = { ...r };
+        for (const f of fields) {
+          if (out[f] != null && !allowedUserIds.has(out[f])) out[f] = null;
+        }
+        return out;
+      });
 
     const stats: Record<string, number> = {};
     async function ins(table: string, rows: any[]) {
@@ -55,12 +72,41 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
     }
 
     await ins("packages", remap(payload.packages));
-    await ins("cards", remap(payload.cards));
-    await ins("card_requests", remap(payload.card_requests));
-    await ins("sales", remap(payload.sales));
-    await ins("join_requests", remap(payload.join_requests));
-    // request_payments has no network_id; keep as-is (request_id links to restored card_requests)
-    await ins("request_payments", Array.isArray(payload.request_payments) ? payload.request_payments : []);
+    await ins(
+      "cards",
+      scrubUserRefs(remap(payload.cards), ["assigned_to", "sold_to"]),
+    );
+    // card_requests.agent_id references profiles; drop rows for foreign agents.
+    const scrubbedReqs = remap(payload.card_requests).filter((r: any) =>
+      r.agent_id == null || allowedUserIds.has(r.agent_id),
+    );
+    await ins("card_requests", scrubbedReqs);
+    const insertedReqIds = new Set<string>(scrubbedReqs.map((r: any) => r.id).filter(Boolean));
+
+    await ins(
+      "sales",
+      scrubUserRefs(remap(payload.sales), ["agent_id"]).filter(
+        (r: any) => r.agent_id != null,
+      ),
+    );
+    await ins(
+      "join_requests",
+      remap(payload.join_requests).filter((r: any) =>
+        r.agent_id == null || allowedUserIds.has(r.agent_id),
+      ),
+    );
+    // request_payments: only keep rows whose request_id was just re-inserted for this network,
+    // and whose recorded_by belongs to this network.
+    const paymentsIn = Array.isArray(payload.request_payments) ? payload.request_payments : [];
+    const scrubbedPayments = paymentsIn
+      .filter((r: any) => r.request_id && insertedReqIds.has(r.request_id))
+      .map((r: any) => ({
+        ...r,
+        recorded_by:
+          r.recorded_by && allowedUserIds.has(r.recorded_by) ? r.recorded_by : userId,
+      }));
+    await ins("request_payments", scrubbedPayments);
 
     return { network_id: networkId, stats };
   });
+
