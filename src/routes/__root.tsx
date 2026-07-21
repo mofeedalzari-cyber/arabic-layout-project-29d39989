@@ -129,6 +129,38 @@ function RootComponent() {
     initSentry();
     initOfflineQueueAutoSync();
     initCapacitorNative(router);
+
+    // Auto-recover from stale chunk hashes after a redeploy:
+    // if a dynamic import fails, force a hard reload so the browser
+    // fetches the newest index.html and its updated asset filenames.
+    const RELOAD_KEY = "__karti_chunk_reload_at";
+    const shouldReload = (msg: string) =>
+      /Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError|error loading dynamically imported module/i.test(
+        msg,
+      );
+    const tryReload = () => {
+      try {
+        const last = Number(sessionStorage.getItem(RELOAD_KEY) || "0");
+        if (Date.now() - last < 10_000) return; // avoid reload loops
+        sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+      } catch {
+        /* ignore */
+      }
+      window.location.reload();
+    };
+    const onError = (e: ErrorEvent) => {
+      if (e?.message && shouldReload(e.message)) tryReload();
+    };
+    const onRejection = (e: PromiseRejectionEvent) => {
+      const msg = String((e?.reason as any)?.message || e?.reason || "");
+      if (shouldReload(msg)) tryReload();
+    };
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRejection);
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRejection);
+    };
   }, [router]);
 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
