@@ -210,13 +210,13 @@ function AgentAccountsPage() {
               <Wifi className="h-4 w-4 text-primary" />
               <div className="font-semibold">تفاصيل حسب الشبكة</div>
             </div>
-            <TableView
+            <StyledTable
               cols={["الشبكة", "مسحوب", "مباع/مستخدم", "قيمة المبيعات"]}
               rows={byNetwork.map((r) => [
-                r.label,
-                String(r.withdrawn),
-                String(r.sold),
-                `${fmtMoney(r.value)} ${r.currency ?? ""}`,
+                { text: r.label },
+                { text: String(r.withdrawn), tone: "muted", align: "center" },
+                { text: String(r.sold), tone: "warning", align: "center" },
+                { text: fmtMoney(r.value), tone: "primary", align: "center" },
               ])}
               empty="لا توجد بيانات."
             />
@@ -227,15 +227,17 @@ function AgentAccountsPage() {
               <PackageIcon className="h-4 w-4 text-primary" />
               <div className="font-semibold">تفاصيل حسب الفئة</div>
             </div>
-            <TableView
+            <StyledTable
               cols={["الفئة", "الشبكة", "السعر", "مسحوب", "مباع/مستخدم", "قيمة المبيعات"]}
               rows={byPackage.map((r) => [
-                r.label,
-                r.sub ?? "—",
-                r.price != null ? `${fmtMoney(r.price)} ${r.currency ?? ""}` : "—",
-                String(r.withdrawn),
-                String(r.sold),
-                `${fmtMoney(r.value)} ${r.currency ?? ""}`,
+                { text: r.label },
+                { text: r.sub ?? "—" },
+                r.price != null
+                  ? { text: fmtMoney(r.price), badge: r.currency ?? undefined, align: "center" }
+                  : { text: "—", align: "center" },
+                { text: String(r.withdrawn), tone: "muted", align: "center" },
+                { text: String(r.sold), tone: "warning", align: "center" },
+                { text: fmtMoney(r.value), tone: "primary", align: "center" },
               ])}
               empty="لا توجد بيانات."
             />
