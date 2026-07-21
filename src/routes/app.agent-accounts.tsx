@@ -210,13 +210,13 @@ function AgentAccountsPage() {
               <Wifi className="h-4 w-4 text-primary" />
               <div className="font-semibold">تفاصيل حسب الشبكة</div>
             </div>
-            <TableView
+            <StyledTable
               cols={["الشبكة", "مسحوب", "مباع/مستخدم", "قيمة المبيعات"]}
               rows={byNetwork.map((r) => [
-                r.label,
-                String(r.withdrawn),
-                String(r.sold),
-                `${fmtMoney(r.value)} ${r.currency ?? ""}`,
+                { text: r.label },
+                { text: String(r.withdrawn), tone: "muted", align: "center" },
+                { text: String(r.sold), tone: "warning", align: "center" },
+                { text: fmtMoney(r.value), tone: "primary", align: "center" },
               ])}
               empty="لا توجد بيانات."
             />
@@ -227,15 +227,17 @@ function AgentAccountsPage() {
               <PackageIcon className="h-4 w-4 text-primary" />
               <div className="font-semibold">تفاصيل حسب الفئة</div>
             </div>
-            <TableView
+            <StyledTable
               cols={["الفئة", "الشبكة", "السعر", "مسحوب", "مباع/مستخدم", "قيمة المبيعات"]}
               rows={byPackage.map((r) => [
-                r.label,
-                r.sub ?? "—",
-                r.price != null ? `${fmtMoney(r.price)} ${r.currency ?? ""}` : "—",
-                String(r.withdrawn),
-                String(r.sold),
-                `${fmtMoney(r.value)} ${r.currency ?? ""}`,
+                { text: r.label },
+                { text: r.sub ?? "—" },
+                r.price != null
+                  ? { text: fmtMoney(r.price), badge: r.currency ?? undefined, align: "center" }
+                  : { text: "—", align: "center" },
+                { text: String(r.withdrawn), tone: "muted", align: "center" },
+                { text: String(r.sold), tone: "warning", align: "center" },
+                { text: fmtMoney(r.value), tone: "primary", align: "center" },
               ])}
               empty="لا توجد بيانات."
             />
@@ -284,42 +286,73 @@ function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: s
   );
 }
 
-function TableView({ cols, rows, empty }: { cols: string[]; rows: string[][]; empty: string }) {
+type Cell = {
+  text: string;
+  tone?: "muted" | "warning" | "primary" | "success";
+  badge?: string;
+  align?: "start" | "center" | "end";
+};
+
+function toneClass(tone?: Cell["tone"]) {
+  switch (tone) {
+    case "primary": return "text-primary";
+    case "warning": return "text-warning";
+    case "success": return "text-success";
+    case "muted": return "text-muted-foreground";
+    default: return "text-foreground";
+  }
+}
+
+function CellView({ c }: { c: Cell }) {
+  const align = c.align === "center" ? "text-center" : c.align === "end" ? "text-left" : "text-right";
+  return (
+    <div className={`inline-flex items-center gap-1.5 font-semibold ${toneClass(c.tone)} ${align}`}>
+      {c.badge && (
+        <span className="text-[10px] font-bold rounded-md bg-muted/70 text-muted-foreground px-1.5 py-0.5">
+          {c.badge}
+        </span>
+      )}
+      <span className="[overflow-wrap:anywhere]">{c.text}</span>
+    </div>
+  );
+}
+
+function StyledTable({ cols, rows, empty }: { cols: string[]; rows: Cell[][]; empty: string }) {
   if (rows.length === 0) return <div className="text-center text-sm text-muted-foreground py-4">{empty}</div>;
   return (
-    <>
-      <div className="md:hidden space-y-2">
-        {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="rounded-xl bg-muted/40 p-3">
-            {row.map((cell, cellIndex) => (
-              <div key={cellIndex} className="flex items-start justify-between gap-3 border-b border-border/50 py-1.5 first:pt-0 last:border-0 last:pb-0">
-                <span className="shrink-0 text-[11px] text-muted-foreground">{cols[cellIndex]}</span>
-                <span className="min-w-0 text-left text-sm font-semibold leading-relaxed [overflow-wrap:anywhere]">{cell}</span>
-              </div>
+    <div
+      className="h-scroll -mx-4 px-4 pb-2 md:mx-0 md:px-0 md:pb-0 overflow-x-auto"
+      style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+    >
+      <table dir="rtl" className="text-sm min-w-max w-max md:min-w-full md:w-full">
+        <thead>
+          <tr className="text-[11px] text-muted-foreground border-b border-border/50">
+            {cols.map((c, i) => (
+              <th
+                key={c}
+                className={`font-medium px-3 py-2 whitespace-nowrap ${i === 0 ? "text-right" : "text-center"}`}
+              >
+                {c}
+              </th>
             ))}
-          </div>
-        ))}
-      </div>
-      <div
-        className="hidden md:block h-scroll -mx-4 px-4 pb-2 md:mx-0 md:px-0 md:pb-0"
-        style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
-      >
-        <table className="text-sm min-w-max w-max md:min-w-full md:w-full">
-          <thead>
-            <tr className="text-[11px] text-muted-foreground">
-              {cols.map((c) => <th key={c} className="text-right font-medium px-2 py-1.5 whitespace-nowrap">{c}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} className="border-t border-border/50">
+              {r.map((cell, j) => (
+                <td
+                  key={j}
+                  className={`px-3 py-2.5 whitespace-nowrap ${j === 0 ? "text-right" : "text-center"}`}
+                >
+                  <CellView c={cell} />
+                </td>
+              ))}
             </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, i) => (
-              <tr key={i} className="border-t border-border/50">
-                {r.map((cell, j) => <td key={j} className="px-2 py-2 whitespace-nowrap">{cell}</td>)}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
