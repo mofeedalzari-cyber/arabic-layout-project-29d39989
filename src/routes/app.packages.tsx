@@ -236,7 +236,9 @@ function PackagesPage() {
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <Button asChild variant="outline" className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold">
-                    <Link to="/app/requests"><ShoppingCart className="h-4 w-4 ml-1.5" />طلب سحب</Link>
+                    <Link to="/app/networks/$id" params={{ id: p.network_id }} hash={`pkg-${p.id}`}>
+                      <ShoppingCart className="h-4 w-4 ml-1.5" />طلب سحب
+                    </Link>
                   </Button>
                   <Button asChild variant="outline" className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold">
                     <Link to="/app/cabin"><LayoutGrid className="h-4 w-4 ml-1.5" />كبينة البيع</Link>
