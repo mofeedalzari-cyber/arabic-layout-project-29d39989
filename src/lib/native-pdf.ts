@@ -1,7 +1,7 @@
 // Native/Web PDF generation & sharing helper.
 // - On Android (Capacitor): render HTML → PDF (html2pdf.js) → save via Filesystem
 //   → open the native Share Sheet (WhatsApp / Print Service / Gmail / Drive / …).
-// - On Web: keep existing behaviour — open a new tab that auto-triggers print/save.
+// - On Web: open a new tab with the browser's built-in PDF viewer.
 
 export function isNativeApp(): boolean {
   if (typeof window === "undefined") return false;
@@ -20,15 +20,13 @@ function safeFileName(name: string): string {
 
 /**
  * Open a PDF Blob in a new browser tab (native browser PDF viewer with
- * built-in Print / Save buttons). Falls back to the HTML print flow if
- * the browser blocks the tab or Blob URL creation fails.
+ * built-in Print / Save buttons).
  */
 function openPdfBlobInNewTab(blob: Blob, filename: string): boolean {
   try {
     const url = URL.createObjectURL(blob);
     const w = window.open(url, "_blank");
     if (!w) {
-      // popup blocked → fall back to <a> download-like open using anchor click
       const a = document.createElement("a");
       a.href = url;
       a.target = "_blank";
@@ -38,32 +36,11 @@ function openPdfBlobInNewTab(blob: Blob, filename: string): boolean {
       a.click();
       a.remove();
     }
-    // Revoke later so the tab has time to load.
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
     return true;
   } catch (err) {
     console.error("[openPdfBlobInNewTab] failed:", err);
     return false;
-  }
-}
-
-/**
- * Web fallback: open the HTML in a new tab with a visible print toolbar.
- * Used only when PDF rendering fails.
- */
-function openHtmlForPrintWeb(html: string) {
-  try {
-    const w = window.open("", "_blank");
-    if (!w) {
-      alert("يرجى السماح بالنوافذ المنبثقة لعرض الملف");
-      return;
-    }
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-  } catch (err) {
-    console.error("[openHtmlForPrintWeb] failed:", err);
-    alert("حدث خطأ في فتح نافذة الطباعة، يرجى المحاولة مجدداً");
   }
 }
 
@@ -75,7 +52,6 @@ function openHtmlForPrintWeb(html: string) {
 async function htmlToPdfBlob(html: string): Promise<Blob> {
   const html2pdf: any = (await import("html2pdf.js")).default;
 
-  // Create an off-screen iframe with a fresh document — no app CSS inherited.
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
   iframe.style.cssText =
@@ -84,13 +60,11 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
 
   await new Promise<void>((resolve) => {
     iframe.onload = () => resolve();
-    // Some browsers don't fire onload for srcdoc immediately; kick with a timeout
     setTimeout(() => resolve(), 50);
   });
 
   const doc = iframe.contentDocument!;
   doc.open();
-  // Force safe colors: strip any oklch/lab/lch/color() the caller may include.
   const sanitized = html
     .replace(/oklch\([^)]*\)/gi, "#111")
     .replace(/oklab\([^)]*\)/gi, "#111")
@@ -99,13 +73,11 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
   doc.write(sanitized);
   doc.close();
 
-  // Ensure html/body have safe defaults so html2canvas never reads oklch.
   const styleReset = doc.createElement("style");
   styleReset.textContent =
     "html,body{background:#fff !important;color:#111 !important;font-family:Tahoma,Arial,sans-serif;} *{color-scheme:light;}";
   doc.head.appendChild(styleReset);
 
-  // Wait for images & fonts inside the iframe
   try {
     const imgs = Array.from(doc.querySelectorAll("img"));
     await Promise.all(
@@ -134,7 +106,6 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
         allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
-        // Ensure html2canvas uses the iframe's window/document
         windowWidth: 800,
       },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
@@ -163,7 +134,7 @@ function blobToBase64(blob: Blob): Promise<string> {
 
 /**
  * Generate a PDF from HTML and open the native Android Share Sheet,
- * or fall back to browser print on the web.
+ * or open it in the browser's PDF viewer on the web.
  *
  * @param html        Full HTML document (with <html><head><style></style></head><body>…</body></html>).
  * @param filename    Human filename (without extension). E.g. "كشف_حساب_المندوب".
@@ -177,24 +148,18 @@ export async function sharePdfOrPrint(opts: {
   const { html, filename, dialogTitle } = opts;
 
   // ============ WEB ============
-  // Generate a real PDF and open it in a new tab so the browser's built-in
-  // PDF viewer shows it (with Print / Save / Zoom controls) — instead of
-  // silently downloading a file.
   if (!isNativeApp()) {
     try {
       const blob = await htmlToPdfBlob(html);
-      const ok = openPdfBlobInNewTab(blob, filename);
-      if (!ok) openHtmlForPrintWeb(html);
+      openPdfBlobInNewTab(blob, filename);
     } catch (err) {
       console.error("[sharePdfOrPrint web] PDF generation failed:", err);
-      openHtmlForPrintWeb(html);
+      alert("تعذر توليد ملف PDF، يرجى المحاولة مجدداً");
     }
     return;
   }
 
   // ============ NATIVE ANDROID (Capacitor) ============
-  // نحاول: توليد PDF ثم مشاركة. لو فشل توليد PDF (بسبب oklch/الخطوط في
-  // WebView)، نشارك الملف كـ HTML — WhatsApp/Drive/Gmail يقبلونه.
   let Filesystem: any, Directory: any, Share: any;
   try {
     const [fsMod, shareMod] = await Promise.all([
@@ -210,26 +175,16 @@ export async function sharePdfOrPrint(opts: {
     return;
   }
 
-  let fileName = `${safeFileName(filename)}_${Date.now()}.pdf`;
+  const fileName = `${safeFileName(filename)}_${Date.now()}.pdf`;
   let base64 = "";
-  let mimeType = "application/pdf";
 
   try {
     const blob = await htmlToPdfBlob(html);
     base64 = await blobToBase64(blob);
   } catch (pdfErr) {
-    console.error("[sharePdfOrPrint] PDF render failed, falling back to HTML:", pdfErr);
-    // Fallback: share as .html so the user still gets the file
-    try {
-      const htmlBlob = new Blob([html], { type: "text/html;charset=utf-8" });
-      base64 = await blobToBase64(htmlBlob);
-      fileName = `${safeFileName(filename)}_${Date.now()}.html`;
-      mimeType = "text/html";
-    } catch (fbErr) {
-      console.error("[sharePdfOrPrint] HTML fallback failed:", fbErr);
-      alert("تعذر تحضير الملف: " + (String((pdfErr as any)?.message || pdfErr).slice(0, 120)));
-      return;
-    }
+    console.error("[sharePdfOrPrint] PDF render failed:", pdfErr);
+    alert("تعذر توليد ملف PDF: " + (String((pdfErr as any)?.message || pdfErr).slice(0, 120)));
+    return;
   }
 
   let fileUri = "";
