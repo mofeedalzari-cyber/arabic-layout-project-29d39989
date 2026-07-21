@@ -80,7 +80,6 @@ const FONTS: TFontDictionary = {
 };
 
 async function createPdf(docDefinition: TDocumentDefinitions): Promise<Blob> {
-  await primeArabicShaping();
   const [pdfMake, vfs] = await Promise.all([getPdfMake(), loadFontsVfs()]);
   // pdfmake 0.3 no longer reads `pdfMake.vfs = ...` reliably in the browser.
   // The fonts must be registered into its virtual file system before createPdf().
@@ -348,11 +347,6 @@ export async function buildReportPdfBlob(opts: {
   sections: PdfTableSection[];
   meta?: PdfReportMeta;
 }): Promise<Blob> {
-  // MUST prime the Arabic shaper BEFORE building any content, because
-  // ar() runs synchronously and returns raw (reversed-only) text if the
-  // shaper isn't ready yet — producing disconnected letters in the PDF.
-  await primeArabicShaping();
-
   const meta: Required<PdfReportMeta> = {
     systemName: opts.meta?.systemName || "كرتي — نظام إدارة الشبكات والمناديب",
     reportName: opts.meta?.reportName || opts.title,
