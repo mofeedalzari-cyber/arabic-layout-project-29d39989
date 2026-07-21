@@ -564,10 +564,13 @@ function AgentHome({ name }: { name: string }) {
 
   const netMap = useMemo(() => new Map(networks?.map((n) => [n.id, n]) ?? []), [networks]);
 
+  type Network = NonNullable<typeof networks>[number];
+  type Package = NonNullable<typeof packages>[number];
+
   const packagesByNetwork = useMemo(() => {
-    const groups = new Map<string, { network: typeof networks extends readonly (infer N)[] ? N : never; packages: NonNullable<typeof packages> }>();
+    const groups = new Map<string, { network: Network; packages: Package[] }>();
     for (const n of networks ?? []) {
-      groups.set(n.id, { network: n as any, packages: [] });
+      groups.set(n.id, { network: n, packages: [] });
     }
     for (const p of packages ?? []) {
       const g = groups.get(p.network_id);
