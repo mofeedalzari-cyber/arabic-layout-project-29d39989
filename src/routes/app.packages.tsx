@@ -39,7 +39,7 @@ type PkgForm = z.infer<typeof pkgSchema>;
 
 function PackagesPage() {
   const { role } = useAuth();
-  if (role && role !== "admin") return <Navigate to="/app" />;
+  const isAdmin = role === "admin";
   const qc = useQueryClient();
 
   const { data: networks } = useQuery({
