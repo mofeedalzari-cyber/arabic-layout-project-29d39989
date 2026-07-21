@@ -25,10 +25,21 @@ function reverseArabicWordOrder(value: string): string {
       if (words.filter((word) => ARABIC_WORD.test(word)).length <= 1) return line;
 
       let wordIndex = words.length - 1;
-      return tokens
+      const reversedTokens = tokens
         .map((token) => {
           if (/\s/.test(token)) return token;
           return words[wordIndex--] ?? token;
+        });
+
+      // pdfmake visually compresses/overlaps normal Arabic spaces after bidi
+      // compensation. A double space in the source renders as a normal readable
+      // word gap in the final PDF without altering the actual Arabic letters.
+      return reversedTokens
+        .map((token, index) => {
+          if (!/\s/.test(token)) return token;
+          const prev = reversedTokens[index - 1] ?? "";
+          const next = reversedTokens[index + 1] ?? "";
+          return ARABIC_WORD.test(prev) && ARABIC_WORD.test(next) ? "  " : token;
         })
         .join("");
     })
