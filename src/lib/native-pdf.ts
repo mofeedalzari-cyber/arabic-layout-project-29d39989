@@ -69,35 +69,59 @@ function openHtmlForPrintWeb(html: string) {
 
 /**
  * Render the given HTML string into a PDF Blob using html2pdf.js.
- * Rendered off-screen inside a hidden container.
+ * Rendered inside an ISOLATED iframe so the app's Tailwind v4 `oklch()`
+ * color tokens don't leak in and crash html2canvas.
  */
 async function htmlToPdfBlob(html: string): Promise<Blob> {
   const html2pdf: any = (await import("html2pdf.js")).default;
 
-  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  const inner = bodyMatch ? bodyMatch[1] : html;
-  const styleMatch = html.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
-  const styles = styleMatch ? styleMatch.join("\n") : "";
+  // Create an off-screen iframe with a fresh document — no app CSS inherited.
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.style.cssText =
+    "position:fixed;left:0;top:0;width:800px;height:1200px;border:0;visibility:hidden;pointer-events:none;z-index:-1;background:#fff;";
+  document.body.appendChild(iframe);
 
-  // Render inside a real on-screen (but invisible) container so Android WebView
-  // gives html2canvas non-zero dimensions.
-  const container = document.createElement("div");
-  container.setAttribute("dir", "rtl");
-  container.style.cssText =
-    "position:fixed;left:0;top:0;width:800px;min-height:1000px;z-index:-1;opacity:0;pointer-events:none;background:#fff;color:#111;font-family:Cairo,Tahoma,Arial,sans-serif;";
-  container.innerHTML = styles + inner;
-  document.body.appendChild(container);
+  await new Promise<void>((resolve) => {
+    iframe.onload = () => resolve();
+    // Some browsers don't fire onload for srcdoc immediately; kick with a timeout
+    setTimeout(() => resolve(), 50);
+  });
 
-  // Wait for images/fonts to load before rasterizing
+  const doc = iframe.contentDocument!;
+  doc.open();
+  // Force safe colors: strip any oklch/lab/lch/color() the caller may include.
+  const sanitized = html
+    .replace(/oklch\([^)]*\)/gi, "#111")
+    .replace(/oklab\([^)]*\)/gi, "#111")
+    .replace(/lch\([^)]*\)/gi, "#111")
+    .replace(/lab\([^)]*\)/gi, "#111");
+  doc.write(sanitized);
+  doc.close();
+
+  // Ensure html/body have safe defaults so html2canvas never reads oklch.
+  const styleReset = doc.createElement("style");
+  styleReset.textContent =
+    "html,body{background:#fff !important;color:#111 !important;font-family:Tahoma,Arial,sans-serif;} *{color-scheme:light;}";
+  doc.head.appendChild(styleReset);
+
+  // Wait for images & fonts inside the iframe
   try {
-    const imgs = Array.from(container.querySelectorAll("img"));
+    const imgs = Array.from(doc.querySelectorAll("img"));
     await Promise.all(
       imgs.map((img) =>
-        img.complete ? null : new Promise((r) => { img.onload = img.onerror = () => r(null); }),
+        (img as HTMLImageElement).complete
+          ? null
+          : new Promise((r) => {
+              (img as HTMLImageElement).onload = () => r(null);
+              (img as HTMLImageElement).onerror = () => r(null);
+            }),
       ),
     );
-    if ((document as any).fonts?.ready) await (document as any).fonts.ready;
+    if ((doc as any).fonts?.ready) await (doc as any).fonts.ready;
   } catch {}
+
+  const source = doc.body;
 
   try {
     const opt = {
@@ -110,15 +134,17 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
         allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
+        // Ensure html2canvas uses the iframe's window/document
+        windowWidth: 800,
       },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       pagebreak: { mode: ["css", "legacy"] },
     };
-    const blob: Blob = await html2pdf().set(opt).from(container).outputPdf("blob");
+    const blob: Blob = await html2pdf().set(opt).from(source).outputPdf("blob");
     if (!blob || blob.size < 100) throw new Error("PDF blob is empty");
     return blob;
   } finally {
-    container.remove();
+    iframe.remove();
   }
 }
 
