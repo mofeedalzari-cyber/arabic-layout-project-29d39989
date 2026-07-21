@@ -14,7 +14,8 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Package as PackageIcon, Edit3, Trash2, Wifi, Layers, CheckCircle2, Clock } from "lucide-react";
+import { Plus, Package as PackageIcon, Edit3, Trash2, Layers, Clock, CalendarCheck, RefreshCw, Archive, ShoppingCart, LayoutGrid } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
