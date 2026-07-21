@@ -78,15 +78,35 @@ let _shaperSync: ((s: string) => string) | null = null;
 export async function primeArabicShaping() {
   if (_shaperSync) return;
   const R = await getReshaper();
-  _shaperSync = (s: string) => {
+  const fn: ((s: string) => string) | null =
+    typeof R?.convertArabic === "function"
+      ? (s) => R.convertArabic(s)
+      : typeof R === "function"
+        ? (s) => R(s)
+        : null;
+  // Self-test: shaping must convert base Arabic letters (U+06xx) to
+  // presentation forms (U+FExx). If not, keep _shaperSync null so ar()
+  // knows shaping failed and can log rather than silently return garbage.
+  if (fn) {
     try {
-      if (typeof R.convertArabic === "function") return R.convertArabic(s);
-      if (typeof R === "function") return R(s);
-      return s;
+      const probe = fn("شبكة");
+      if (/[\uFB50-\uFDFF\uFE70-\uFEFF]/.test(probe)) {
+        _shaperSync = (s: string) => {
+          try {
+            return fn(s);
+          } catch {
+            return s;
+          }
+        };
+        return;
+      }
     } catch {
-      return s;
+      /* fall through */
     }
-  };
+  }
+  // eslint-disable-next-line no-console
+  console.error("[pdfmake-report] Arabic shaper unavailable — text will not connect");
+  _shaperSync = (s) => s;
 }
 
 // -----------------------------------------------------------------------------
