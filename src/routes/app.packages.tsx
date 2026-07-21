@@ -250,9 +250,11 @@ function PackagesPage() {
           <div className="col-span-full text-center py-16 space-y-4">
             <PackageIcon className="h-10 w-10 text-muted-foreground mx-auto" />
             <div className="text-muted-foreground">لا توجد باقات بعد.</div>
-            <Button onClick={() => { setEditing(null); setOpen(true); }} className="rounded-xl gradient-primary-bg border-0 font-semibold">
-              <Plus className="h-4 w-4 ml-1" />إضافة أول باقة
-            </Button>
+            {isAdmin && (
+              <Button onClick={() => { setEditing(null); setOpen(true); }} className="rounded-xl gradient-primary-bg border-0 font-semibold">
+                <Plus className="h-4 w-4 ml-1" />إضافة أول باقة
+              </Button>
+            )}
           </div>
         )}
       </div>
