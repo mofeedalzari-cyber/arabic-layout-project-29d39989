@@ -64,18 +64,23 @@ function PackagesPage() {
   });
 
   const { data: counts } = useQuery({
-    queryKey: ["packages-counts-all"],
+    queryKey: ["packages-counts-all", networks?.map((n) => n.id).join(",") ?? ""],
+    enabled: !!networks && networks.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("cards").select("package_id, status");
-      const m = new Map<string, { total: number; avail: number; assigned: number; sold: number }>();
-      if (error || !data) return m;
-      for (const c of data as any[]) {
-        const cur = m.get(c.package_id) ?? { total: 0, avail: 0, assigned: 0, sold: 0 };
-        cur.total++;
-        if (c.status === "AVAILABLE") cur.avail++;
-        else if (c.status === "ASSIGNED") cur.assigned++;
-        else if (c.status === "SOLD") cur.sold++;
-        m.set(c.package_id, cur);
+      const m = new Map<string, { avail: number; assigned: number; sold: number }>();
+      if (!networks) return m;
+      const results = await Promise.all(
+        networks.map((n) => supabase.rpc("package_counts", { _network_id: n.id }))
+      );
+      for (const r of results) {
+        if (r.error || !r.data) continue;
+        for (const row of r.data as any[]) {
+          m.set(row.package_id, {
+            avail: row.available ?? 0,
+            assigned: row.assigned ?? 0,
+            sold: row.sold ?? 0,
+          });
+        }
       }
       return m;
     },
@@ -231,7 +236,9 @@ function PackagesPage() {
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <Button asChild variant="outline" className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold">
-                    <Link to="/app/requests"><ShoppingCart className="h-4 w-4 ml-1.5" />طلب سحب</Link>
+                    <Link to="/app/networks/$id" params={{ id: p.network_id }} hash={`pkg-${p.id}`}>
+                      <ShoppingCart className="h-4 w-4 ml-1.5" />طلب سحب
+                    </Link>
                   </Button>
                   <Button asChild variant="outline" className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold">
                     <Link to="/app/cabin"><LayoutGrid className="h-4 w-4 ml-1.5" />كبينة البيع</Link>
