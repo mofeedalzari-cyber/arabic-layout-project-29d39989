@@ -45,7 +45,7 @@ export function ar(input: string | number | null | undefined): string {
     const a = isArCh(ch);
     // treat whitespace + punctuation as "sticky" to current run
     const sticky = /[\s.,:;/\-_(){}\[\]]/.test(ch);
-    const kind = sticky && bufAr !== null ? bufAr : a;
+    const kind: boolean = sticky && bufAr !== null ? bufAr : a;
     if (bufAr === null) bufAr = kind;
     if (kind === bufAr) buf += ch;
     else {
