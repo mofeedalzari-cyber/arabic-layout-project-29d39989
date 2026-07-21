@@ -54,7 +54,7 @@ function PackagesPage() {
     queryFn: async () => {
       let q = supabase.from("packages")
         .select("id, network_id, name, price, data_size, speed, validity, allowed_time, description, color, sort_order, is_active")
-        .order("created_at", { ascending: false });
+        .order("price", { ascending: false });
       if (filterNet !== "all") q = q.eq("network_id", filterNet);
       const { data, error } = await q;
       if (error) throw error;
