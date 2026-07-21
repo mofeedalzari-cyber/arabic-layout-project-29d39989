@@ -1,8 +1,5 @@
 // native-pdf.ts
 // Native/Web PDF generation & sharing helper.
-// - On Android (Capacitor): render HTML → PDF (html2pdf.js) → save via Filesystem
-//   → open the native Share Sheet (WhatsApp / Print Service / Gmail / Drive / …).
-// - On Web: open a new tab with the browser's built-in PDF viewer.
 
 export function isNativeApp(): boolean {
   if (typeof window === "undefined") return false;
@@ -19,10 +16,6 @@ function safeFileName(name: string): string {
   );
 }
 
-/**
- * Open a PDF Blob in a new browser tab (native browser PDF viewer with
- * built-in Print / Save buttons).
- */
 function openPdfBlobInNewTab(blob: Blob, filename: string): boolean {
   try {
     const url = URL.createObjectURL(blob);
@@ -45,7 +38,7 @@ function openPdfBlobInNewTab(blob: Blob, filename: string): boolean {
   }
 }
 
-const UNSUPPORTED_COLOR_RE = /\b(?:oklch|oklab|lch|lab|color-mix)\s*\(/i;
+const UNSUPPORTED_COLOR_RE = /\b(?:oklch|oklab|lch|lab|color-mix)\s*\(/gi;
 
 const PDF_SAFE_STYLE = `
   :root, html, body {
@@ -126,6 +119,7 @@ const PDF_SAFE_STYLE = `
 `;
 
 function stripUnsupportedColorFunctions(value: string): string {
+  // استبدال أي دالة لون غير مدعومة بقيمة لون آمنة (رمادي غامق)
   return value
     .replace(/color-mix\(\s*in\s+(?:oklch|oklab|lch|lab)\s*,\s*(?:[^()]|\([^()]*\))*\)/gi, "#111827")
     .replace(/oklch\((?:[^()]|\([^()]*\))*\)/gi, "#111827")
@@ -151,14 +145,25 @@ function addPdfSafeStyle(doc: Document) {
 }
 
 function sanitizePdfDocument(doc: Document) {
+  // إزالة أي script
   Array.from(doc.querySelectorAll("script")).forEach((script) => script.remove());
+
+  // تنظيف الأنماط الداخلية (style tags)
   Array.from(doc.querySelectorAll("style")).forEach((style) => {
     style.textContent = stripUnsupportedColorFunctions(style.textContent || "");
   });
+
+  // تنظيف الأنماط المضمنة (style attribute)
   Array.from(doc.querySelectorAll<HTMLElement>("[style]")).forEach((el) => {
     const styleText = el.getAttribute("style") || "";
-    if (UNSUPPORTED_COLOR_RE.test(styleText)) el.setAttribute("style", stripUnsupportedColorFunctions(styleText));
+    if (UNSUPPORTED_COLOR_RE.test(styleText)) {
+      // استبدال القيم غير المدعومة بقيم آمنة
+      const cleaned = stripUnsupportedColorFunctions(styleText);
+      el.setAttribute("style", cleaned);
+    }
   });
+
+  // إضافة الأنماط الآمنة العامة
   addPdfSafeStyle(doc);
 
   const win = doc.defaultView;
@@ -180,11 +185,14 @@ function sanitizePdfDocument(doc: Document) {
   ];
   const visualProps = ["background", "background-image", "box-shadow", "text-shadow", "filter"];
 
+  // معالجة العناصر للتأكد من عدم وجود أي قيمة غير مدعومة محسوبة
   Array.from(doc.querySelectorAll<HTMLElement>("html, body, body *")).forEach((el) => {
     const computed = win.getComputedStyle(el);
     for (const prop of colorProps) {
       const value = computed.getPropertyValue(prop);
-      if (UNSUPPORTED_COLOR_RE.test(value)) el.style.setProperty(prop, fallbackColor(prop, el), "important");
+      if (UNSUPPORTED_COLOR_RE.test(value)) {
+        el.style.setProperty(prop, fallbackColor(prop, el), "important");
+      }
     }
     for (const prop of visualProps) {
       const value = computed.getPropertyValue(prop);
@@ -207,26 +215,24 @@ async function withParentPdfSafeColors<T>(task: () => Promise<T>): Promise<T> {
 
 /**
  * Render the given HTML string into a PDF Blob using html2pdf.js.
- * Rendered inside an ISOLATED iframe so the app's Tailwind v4 `oklch()`
- * color tokens don't leak in and crash html2canvas.
+ * Rendered inside an ISOLATED iframe.
  */
 async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<Blob> {
   const html2pdf: any = (await import("html2pdf.js")).default;
 
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
-  iframe.style.cssText = [
-    "position:fixed",
-    "left:0",
-    "top:0",
-    "width:210mm",
-    "height:297mm",
-    "border:0",
-    "opacity:0",
-    "pointer-events:none",
-    "z-index:-1",
-    "background:#fff",
-  ].join(";");
+  iframe.style.cssText = `
+    position:fixed;
+    left:0; top:0;
+    width:210mm;
+    height:297mm;
+    border:0;
+    opacity:0;
+    pointer-events:none;
+    z-index:-1;
+    background:#fff;
+  `;
   document.body.appendChild(iframe);
 
   await new Promise<void>((resolve) => {
@@ -236,9 +242,19 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
 
   const doc = iframe.contentDocument!;
   doc.open();
-  const sanitized = stripUnsupportedColorFunctions(html);
-  doc.write(sanitized);
+
+  // تنظيف الـ HTML المدخل من أي دوال ألوان غير مدعومة
+  let sanitizedHtml = stripUnsupportedColorFunctions(html);
+  // أيضاً ننظف أي style مضمّن داخل الـ HTML (قد يكون في عناصر)
+  sanitizedHtml = sanitizedHtml.replace(/(style\s*=\s*["'])([^"']*)(["'])/gi, (match, p1, p2, p3) => {
+    const cleaned = stripUnsupportedColorFunctions(p2);
+    return `${p1}${cleaned}${p3}`;
+  });
+
+  doc.write(sanitizedHtml);
   doc.close();
+
+  // تطبيق التنظيف المتقدم على المستند
   sanitizePdfDocument(doc);
 
   // ================================================================
@@ -280,6 +296,12 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
     const badProps = ["transform", "scale", "zoom", "translate", "max-width", "position", "inset", "top", "right", "bottom", "left"];
     for (const prop of badProps) el.style.removeProperty(prop);
 
+    // إزالة أي قيمة لون غير مدعومة من الأنماط المضمنة
+    const styleAttr = el.getAttribute("style");
+    if (styleAttr && UNSUPPORTED_COLOR_RE.test(styleAttr)) {
+      el.setAttribute("style", stripUnsupportedColorFunctions(styleAttr));
+    }
+
     const display = el.style.display?.toLowerCase() || "";
     if (display === "inline-block" || display === "inline") {
       el.style.display = "block";
@@ -306,7 +328,7 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
     }
   }
   Array.from(printContainer.querySelectorAll<HTMLElement>("*")).forEach(stripBadStyles);
-  // نطبق أيضاً على الحاوية نفسها بعض التطبيع
+  // نطبق أيضاً على الحاوية نفسها
   stripBadStyles(printContainer as HTMLElement);
 
   // ================================================================
@@ -500,10 +522,6 @@ function blobToBase64(blob: Blob): Promise<string> {
 /**
  * Generate a PDF from HTML and open the native Android Share Sheet,
  * or open it in the browser's PDF viewer on the web.
- *
- * @param html        Full HTML document (with <html><head><style></style></head><body>…</body></html>).
- * @param filename    Human filename (without extension). E.g. "كشف_حساب_المندوب".
- * @param dialogTitle Title of the share sheet.
  */
 export async function sharePdfOrPrint(opts: {
   html: string;
