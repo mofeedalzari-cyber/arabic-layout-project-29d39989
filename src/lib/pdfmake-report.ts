@@ -1,112 +1,22 @@
 // pdfmake-report.ts
 // Helper for generating Arabic (RTL) PDF reports using pdfmake.
-// Handles Amiri font loading, Arabic text shaping and RTL segment reversal.
+// pdfmake + Amiri/fontkit already shape Arabic and apply bidi correctly.
 
 import type { TDocumentDefinitions, TFontDictionary } from "pdfmake/interfaces";
 
 // -----------------------------------------------------------------------------
-// Arabic shaping / RTL helpers
+// Arabic / RTL helpers
 // -----------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _reshaper: any = null;
-async function getReshaper() {
-  if (_reshaper) return _reshaper;
-  const mod: any = await import("arabic-persian-reshaper");
-  // CJS package: `{ ArabicShaper: {convertArabic, ...}, PersianShaper: {...} }`.
-  // Vite may wrap as `{ default: {...} }`. Pick the object that actually
-  // exposes convertArabic (not the wrapper containing ArabicShaper).
-  const candidates = [
-    mod?.ArabicShaper,
-    mod?.default?.ArabicShaper,
-    mod?.default,
-    mod,
-  ];
-  _reshaper =
-    candidates.find((c) => c && typeof c.convertArabic === "function") ?? mod;
-  return _reshaper;
-}
-
-const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/;
-
 /**
- * Shape + visually reorder mixed Arabic/Latin text for pdfmake.
- * Numbers and Latin runs stay LTR; Arabic runs are shaped and reversed;
- * the full string's segment order is reversed so it reads RTL when drawn LTR.
+ * Keep text in logical Unicode order.
+ * Important: do NOT reverse Arabic manually here. pdfmake/fontkit already
+ * handles glyph shaping and bidirectional layout; pre-reversing text is exactly
+ * what caused words to appear backwards in exported reports.
  */
 export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
-  const s = String(input);
-  if (!ARABIC_CHAR.test(s)) return s;
-
-  // Shape whole string first (spaces preserved) using cached reshaper (sync fallback)
-  // The reshaper is loaded once at module-init via primeArabicShaping()
-  const shaped = _shaperSync ? _shaperSync(s) : s;
-
-  // Split into runs: arabic (shaped) vs non-arabic
-  const runs: { ar: boolean; text: string }[] = [];
-  let buf = "";
-  let bufAr: boolean | null = null;
-  const isArCh = (ch: string) =>
-    ARABIC_CHAR.test(ch) ||
-    /[\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ch); // presentation forms after shaping
-
-  for (const ch of shaped) {
-    const a = isArCh(ch);
-    // treat whitespace + punctuation as "sticky" to current run
-    const sticky = /[\s.,:;/\-_(){}\[\]]/.test(ch);
-    const kind: boolean = sticky && bufAr !== null ? bufAr : a;
-    if (bufAr === null) bufAr = kind;
-    if (kind === bufAr) buf += ch;
-    else {
-      runs.push({ ar: bufAr, text: buf });
-      buf = ch;
-      bufAr = kind;
-    }
-  }
-  if (buf) runs.push({ ar: bufAr ?? false, text: buf });
-
-  // reverse each Arabic run character-by-character, then reverse run order
-  const processed = runs.map((r) =>
-    r.ar ? [...r.text].reverse().join("") : r.text,
-  );
-  return processed.reverse().join("");
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _shaperSync: ((s: string) => string) | null = null;
-export async function primeArabicShaping() {
-  if (_shaperSync) return;
-  const R = await getReshaper();
-  const fn: ((s: string) => string) | null =
-    typeof R?.convertArabic === "function"
-      ? (s) => R.convertArabic(s)
-      : typeof R === "function"
-        ? (s) => R(s)
-        : null;
-  // Self-test: shaping must convert base Arabic letters (U+06xx) to
-  // presentation forms (U+FExx). If not, keep _shaperSync null so ar()
-  // knows shaping failed and can log rather than silently return garbage.
-  if (fn) {
-    try {
-      const probe = fn("شبكة");
-      if (/[\uFB50-\uFDFF\uFE70-\uFEFF]/.test(probe)) {
-        _shaperSync = (s: string) => {
-          try {
-            return fn(s);
-          } catch {
-            return s;
-          }
-        };
-        return;
-      }
-    } catch {
-      /* fall through */
-    }
-  }
-  // eslint-disable-next-line no-console
-  console.error("[pdfmake-report] Arabic shaper unavailable — text will not connect");
-  _shaperSync = (s) => s;
+  return String(input);
 }
 
 // -----------------------------------------------------------------------------
@@ -170,7 +80,6 @@ const FONTS: TFontDictionary = {
 };
 
 async function createPdf(docDefinition: TDocumentDefinitions): Promise<Blob> {
-  await primeArabicShaping();
   const [pdfMake, vfs] = await Promise.all([getPdfMake(), loadFontsVfs()]);
   // pdfmake 0.3 no longer reads `pdfMake.vfs = ...` reliably in the browser.
   // The fonts must be registered into its virtual file system before createPdf().
@@ -438,11 +347,6 @@ export async function buildReportPdfBlob(opts: {
   sections: PdfTableSection[];
   meta?: PdfReportMeta;
 }): Promise<Blob> {
-  // MUST prime the Arabic shaper BEFORE building any content, because
-  // ar() runs synchronously and returns raw (reversed-only) text if the
-  // shaper isn't ready yet — producing disconnected letters in the PDF.
-  await primeArabicShaping();
-
   const meta: Required<PdfReportMeta> = {
     systemName: opts.meta?.systemName || "كرتي — نظام إدارة الشبكات والمناديب",
     reportName: opts.meta?.reportName || opts.title,
