@@ -449,14 +449,15 @@ function normalizePdfPrintTree(root: HTMLElement) {
       el.style.setProperty("overflow", "visible", "important");
     }
 
-    if (el instanceof HTMLTableElement) {
+    const tagName = el.tagName.toLowerCase();
+    if (tagName === "table") {
       el.style.setProperty("width", "100%", "important");
       el.style.setProperty("table-layout", "fixed", "important");
       el.style.setProperty("border-collapse", "collapse", "important");
       el.style.setProperty("page-break-inside", "auto", "important");
     }
 
-    if (el instanceof HTMLTableCellElement) {
+    if (tagName === "th" || tagName === "td") {
       el.style.setProperty("padding", "8px", "important");
       el.style.setProperty("border", "1px solid #cccccc", "important");
       el.style.setProperty("word-break", "break-word", "important");
