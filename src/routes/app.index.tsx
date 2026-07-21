@@ -11,7 +11,17 @@ import type { LucideIcon } from "lucide-react";
 import { useUserNames } from "@/lib/use-user-names";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { exportToExcel, exportToPDF, type TableSection, type SummaryRow } from "@/lib/dashboard-export";
+import type { TableSection, SummaryRow } from "@/lib/dashboard-export";
+
+// Lazy-loaded to keep exceljs/pdfmake out of the initial bundle
+async function exportToExcel(...args: Parameters<typeof import("@/lib/dashboard-export").exportToExcel>) {
+  const mod = await import("@/lib/dashboard-export");
+  return mod.exportToExcel(...args);
+}
+async function exportToPDF(...args: Parameters<typeof import("@/lib/dashboard-export").exportToPDF>) {
+  const mod = await import("@/lib/dashboard-export");
+  return mod.exportToPDF(...args);
+}
 import { AgentStats } from "./app.agents";
 import { MobileDataCard } from "@/components/mobile-data-card";
 
