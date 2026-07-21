@@ -231,15 +231,17 @@ function PackagesPage() {
                     </div>
                   );
                 })()}
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setEditing(p); setOpen(true); }}>
-                    <Edit3 className="h-4 w-4 ml-1" />تعديل
-                  </Button>
-                  <Button variant="outline" size="icon" className="rounded-xl text-destructive"
-                    onClick={() => { if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name }); }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                {isAdmin && (
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setEditing(p); setOpen(true); }}>
+                      <Edit3 className="h-4 w-4 ml-1" />تعديل
+                    </Button>
+                    <Button variant="outline" size="icon" className="rounded-xl text-destructive"
+                      onClick={() => { if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name }); }}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </Card>
           );
