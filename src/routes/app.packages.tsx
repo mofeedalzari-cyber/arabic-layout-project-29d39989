@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -39,7 +39,7 @@ type PkgForm = z.infer<typeof pkgSchema>;
 
 function PackagesPage() {
   const { role } = useAuth();
-  if (role && role !== "admin") return <Navigate to="/app" />;
+  const isAdmin = role === "admin";
   const qc = useQueryClient();
 
   const { data: networks } = useQuery({
@@ -136,7 +136,8 @@ function PackagesPage() {
       <PageHeader
         title="الباقات"
         description="إدارة كل الباقات عبر الشبكات"
-        action={
+      action={
+        isAdmin ? (
           <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
             <DialogTrigger asChild>
               <Button className="rounded-xl gradient-primary-bg border-0 font-semibold">
@@ -153,7 +154,8 @@ function PackagesPage() {
               />
             </DialogContent>
           </Dialog>
-        }
+        ) : undefined
+      }
       />
 
       <div className="mb-4 max-w-xs">
@@ -229,15 +231,17 @@ function PackagesPage() {
                     </div>
                   );
                 })()}
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setEditing(p); setOpen(true); }}>
-                    <Edit3 className="h-4 w-4 ml-1" />تعديل
-                  </Button>
-                  <Button variant="outline" size="icon" className="rounded-xl text-destructive"
-                    onClick={() => { if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name }); }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                {isAdmin && (
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setEditing(p); setOpen(true); }}>
+                      <Edit3 className="h-4 w-4 ml-1" />تعديل
+                    </Button>
+                    <Button variant="outline" size="icon" className="rounded-xl text-destructive"
+                      onClick={() => { if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name }); }}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </Card>
           );
@@ -246,9 +250,11 @@ function PackagesPage() {
           <div className="col-span-full text-center py-16 space-y-4">
             <PackageIcon className="h-10 w-10 text-muted-foreground mx-auto" />
             <div className="text-muted-foreground">لا توجد باقات بعد.</div>
-            <Button onClick={() => { setEditing(null); setOpen(true); }} className="rounded-xl gradient-primary-bg border-0 font-semibold">
-              <Plus className="h-4 w-4 ml-1" />إضافة أول باقة
-            </Button>
+            {isAdmin && (
+              <Button onClick={() => { setEditing(null); setOpen(true); }} className="rounded-xl gradient-primary-bg border-0 font-semibold">
+                <Plus className="h-4 w-4 ml-1" />إضافة أول باقة
+              </Button>
+            )}
           </div>
         )}
       </div>
