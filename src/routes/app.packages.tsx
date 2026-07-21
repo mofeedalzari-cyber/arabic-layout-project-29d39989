@@ -136,7 +136,8 @@ function PackagesPage() {
       <PageHeader
         title="الباقات"
         description="إدارة كل الباقات عبر الشبكات"
-        action={
+      action={
+        isAdmin ? (
           <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
             <DialogTrigger asChild>
               <Button className="rounded-xl gradient-primary-bg border-0 font-semibold">
@@ -153,7 +154,8 @@ function PackagesPage() {
               />
             </DialogContent>
           </Dialog>
-        }
+        ) : undefined
+      }
       />
 
       <div className="mb-4 max-w-xs">
