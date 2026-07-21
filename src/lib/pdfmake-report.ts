@@ -163,18 +163,31 @@ async function createPdf(docDefinition: TDocumentDefinitions): Promise<Blob> {
     ...docDefinition,
   });
 
-  // pdfmake 0.3 returns a Promise from getBlob(); older versions used a callback.
-  if (doc.getBlob.length === 0) {
-    return (await doc.getBlob()) as Blob;
-  }
-
-  return new Promise<Blob>((resolve, reject) => {
+  // pdfmake 0.3's getBlob() spawns a Web Worker from a Blob URL, which is
+  // blocked in Android WebView (Capacitor) and yields an empty/failed result.
+  // getBuffer() runs synchronously on the main thread and works everywhere.
+  return await new Promise<Blob>((resolve, reject) => {
     try {
-      doc.getBlob((blob: Blob) => resolve(blob));
+      const cb = (buffer: any) => {
+        try {
+          const u8 =
+            buffer instanceof Uint8Array
+              ? buffer
+              : new Uint8Array(buffer?.buffer ?? buffer);
+          resolve(new Blob([u8], { type: "application/pdf" }));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      const maybe = doc.getBuffer(cb);
+      if (maybe && typeof maybe.then === "function") {
+        maybe.then(cb).catch(reject);
+      }
     } catch (err) {
       reject(err);
     }
   });
+
 }
 
 // -----------------------------------------------------------------------------
