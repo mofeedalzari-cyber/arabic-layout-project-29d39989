@@ -8,15 +8,23 @@ import type { TDocumentDefinitions, TFontDictionary } from "pdfmake/interfaces";
 // Arabic / RTL helpers
 // -----------------------------------------------------------------------------
 
+const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+const RTL_EMBED = "\u202B";
+const POP_DIRECTIONAL = "\u202C";
+
 /**
- * Keep text in logical Unicode order.
- * Important: do NOT reverse Arabic manually here. pdfmake/fontkit already
- * handles glyph shaping and bidirectional layout; pre-reversing text is exactly
- * what caused words to appear backwards in exported reports.
+ * Keep text in logical Unicode order, then explicitly mark Arabic runs as RTL.
+ * Important: do NOT reverse Arabic manually here. The embedding marks + pdfmake
+ * direction style fix whole-word order without breaking glyph shaping.
  */
 export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
-  return String(input);
+  const value = String(input);
+  return ARABIC_CHAR.test(value) ? `${RTL_EMBED}${value}${POP_DIRECTIONAL}` : value;
+}
+
+function rtlText(input: string | number | null | undefined): string {
+  return ar(input);
 }
 
 // -----------------------------------------------------------------------------
@@ -188,16 +196,16 @@ function headerBlock(title: string, meta: Required<PdfReportMeta>, dateStr: stri
       {
         width: "*",
         stack: [
-          { text: ar(meta.systemName), fontSize: 13, bold: true, color: COLORS.ink, alignment: "right" },
-          { text: ar(meta.reportName || title), fontSize: 16, bold: true, color: COLORS.brand, alignment: "right", margin: [0, 4, 0, 0] },
+          { text: rtlText(meta.systemName), direction: "rtl", fontSize: 13, bold: true, color: COLORS.ink, alignment: "right" },
+          { text: rtlText(meta.reportName || title), direction: "rtl", fontSize: 16, bold: true, color: COLORS.brand, alignment: "right", margin: [0, 4, 0, 0] },
         ],
       },
       {
         width: 200,
         stack: [
-          { text: `${ar("التاريخ:")} ${ar(dateStr)}`, fontSize: 9, color: COLORS.muted, alignment: "left" },
-          { text: `${ar("الفرع / الشبكة:")} ${ar(meta.branch)}`, fontSize: 9, color: COLORS.muted, alignment: "left", margin: [0, 3, 0, 0] },
-          { text: `${ar("المستخدم:")} ${ar(meta.user)}`, fontSize: 9, color: COLORS.muted, alignment: "left", margin: [0, 3, 0, 0] },
+          { text: rtlText(`التاريخ: ${dateStr}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right" },
+          { text: rtlText(`الفرع / الشبكة: ${meta.branch}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right", margin: [0, 3, 0, 0] },
+          { text: rtlText(`المستخدم: ${meta.user}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right", margin: [0, 3, 0, 0] },
         ],
       },
     ],
@@ -212,7 +220,8 @@ function summaryBlock(summary: PdfSummaryRow[]): any {
   return {
     stack: [
       {
-        text: ar("ملخص التقرير"),
+        text: rtlText("ملخص التقرير"),
+        direction: "rtl",
         fillColor: COLORS.header,
         color: COLORS.ink,
         bold: true,
@@ -225,14 +234,16 @@ function summaryBlock(summary: PdfSummaryRow[]): any {
           widths: ["*", "*"],
           body: summary.map((s) => [
             {
-              text: ar(s.value),
+              text: rtlText(s.value),
+              direction: "rtl",
               alignment: "center",
               bold: true,
               color: COLORS.ink,
               margin: [6, 5, 6, 5],
             },
             {
-              text: ar(s.label),
+              text: rtlText(s.label),
+              direction: "rtl",
               alignment: "right",
               color: COLORS.inkSoft,
               fillColor: "#fafafa",
@@ -262,7 +273,8 @@ function tableSection(sec: PdfTableSection): any {
     .slice()
     .reverse()
     .map((c) => ({
-      text: ar(c),
+      text: rtlText(c),
+      direction: "rtl",
       bold: true,
       color: COLORS.ink,
       fillColor: COLORS.header,
@@ -274,7 +286,8 @@ function tableSection(sec: PdfTableSection): any {
   const body = sec.rows.length
     ? sec.rows.map((row, i) => {
         const cells = [i + 1, ...row].reverse().map((c) => ({
-          text: ar(c),
+          text: rtlText(c),
+          direction: "rtl",
           alignment: /^-?\d/.test(String(c).trim()) ? "center" : "right",
           margin: [4, 4, 4, 4],
           fontSize: 9.5,
@@ -285,7 +298,8 @@ function tableSection(sec: PdfTableSection): any {
     : [
         [
           {
-            text: ar("— لا توجد بيانات —"),
+            text: rtlText("— لا توجد بيانات —"),
+            direction: "rtl",
             colSpan: cols.length,
             alignment: "center",
             italics: true,
@@ -311,7 +325,8 @@ function tableSection(sec: PdfTableSection): any {
           },
           {
             width: "*",
-            text: ar(sec.title),
+            text: rtlText(sec.title),
+            direction: "rtl",
             bold: true,
             color: COLORS.ink,
             fillColor: COLORS.header,
@@ -375,19 +390,22 @@ export async function buildReportPdfBlob(opts: {
       margin: [30, 0, 30, 0],
       columns: [
         {
-          text: `© ${ar("كرتي")}`,
+      text: rtlText("© كرتي"),
+      direction: "rtl",
           alignment: "left",
           fontSize: 8,
           color: COLORS.muted,
         },
         {
-          text: `${ar("صفحة")} ${currentPage} / ${pageCount}`,
+          text: rtlText(`صفحة ${currentPage} / ${pageCount}`),
+          direction: "rtl",
           alignment: "center",
           fontSize: 8,
           color: COLORS.muted,
         },
         {
-          text: `${ar("برمجة وتصميم مفيد الزري")}`,
+          text: rtlText("برمجة وتصميم مفيد الزري"),
+          direction: "rtl",
           alignment: "right",
           fontSize: 8,
           color: COLORS.brand,
