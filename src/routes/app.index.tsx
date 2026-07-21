@@ -544,12 +544,43 @@ function AgentHome({ name }: { name: string }) {
     queryKey: ["agent-networks"],
     queryFn: async () => {
       const { data, error } = await supabase.from("networks")
-        .select("id, name, description, primary_color, secondary_color, logo_url, cover_url")
+        .select("id, name, description, primary_color, secondary_color, logo_url, cover_url, currency")
         .eq("is_active", true).order("created_at");
       if (error) throw error;
       return data;
     },
   });
+
+  const { data: packages } = useQuery({
+    queryKey: ["agent-packages-home"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("packages")
+        .select("id, name, price, data_size, speed, validity, allowed_time, description, color, network_id")
+        .eq("is_active", true).order("price", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const netMap = useMemo(() => new Map(networks?.map((n) => [n.id, n]) ?? []), [networks]);
+
+  type Network = NonNullable<typeof networks>[number];
+  type Package = NonNullable<typeof packages>[number];
+
+  const packagesByNetwork = useMemo(() => {
+    const groups = new Map<string, { network: Network; packages: Package[] }>();
+    for (const n of networks ?? []) {
+      groups.set(n.id, { network: n, packages: [] });
+    }
+    for (const p of packages ?? []) {
+      const g = groups.get(p.network_id);
+      if (g) g.packages.push(p);
+    }
+    const list = Array.from(groups.values()).filter((g) => g.packages.length > 0);
+    const preferred = list.find((g) => g.network.name.includes("الزري"));
+    const rest = list.filter((g) => g !== preferred);
+    return preferred ? [preferred, ...rest] : list;
+  }, [networks, packages]);
 
   return (
     <div dir="rtl" className="w-full max-w-full overflow-hidden text-right">
@@ -557,7 +588,7 @@ function AgentHome({ name }: { name: string }) {
       <PageHeader title={`أهلاً، ${name}`} description="لوحة إحصائياتك واختيار الشبكات" />
 
       {user && (
-        <div className="mb-6">
+        <div className="mb-5">
           <AgentStats
             agentId={user.id}
             name={profile?.full_name || profile?.username || name}
@@ -565,6 +596,53 @@ function AgentHome({ name }: { name: string }) {
           />
         </div>
       )}
+
+      <div className="mb-3 flex items-center gap-2">
+        <Package className="h-4 w-4 text-primary" />
+        <h3 className="font-bold text-sm sm:text-base">الباقات المتاحة</h3>
+      </div>
+
+      <div className="space-y-4 mb-8">
+        {packagesByNetwork.length === 0 && <EmptyMsg>لا توجد باقات متاحة حاليًا.</EmptyMsg>}
+        {packagesByNetwork.map(({ network, packages: pkgs }) => (
+          <Card key={network.id} className="card-elegant border-0 p-3 sm:p-4 w-full max-w-full">
+            <div className="flex items-center gap-2 mb-3">
+              <div
+                className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{ background: `linear-gradient(135deg, ${network.primary_color}, ${network.secondary_color})` }}
+              >
+                <Wifi className="h-4 w-4 text-white/90" />
+              </div>
+              <h4 className="font-bold text-sm sm:text-base">{network.name}</h4>
+              <Link to="/app/networks/$id" params={{ id: network.id }} className="mr-auto text-xs font-semibold text-primary">
+                عرض الكل ←
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
+              {pkgs.map((p) => (
+                <Link key={p.id} to="/app/networks/$id" params={{ id: network.id }} className="group block">
+                  <div
+                    className="rounded-xl p-3 sm:p-4 border border-border/40 bg-card hover:border-primary/40 transition-colors"
+                    style={{ borderInlineStartWidth: 4, borderInlineStartColor: p.color || "#009688" }}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h5 className="font-bold text-sm [overflow-wrap:anywhere]">{p.name}</h5>
+                      <span className="text-xs font-bold text-primary whitespace-nowrap">{fmtMoney(Number(p.price))}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+                      {p.data_size && <span className="bg-muted/60 rounded-md px-1.5 py-0.5">{p.data_size}</span>}
+                      {p.speed && <span className="bg-muted/60 rounded-md px-1.5 py-0.5">{p.speed}</span>}
+                      {p.validity && <span className="bg-muted/60 rounded-md px-1.5 py-0.5">{p.validity}</span>}
+                      {p.allowed_time && <span className="bg-muted/60 rounded-md px-1.5 py-0.5">{p.allowed_time}</span>}
+                    </div>
+                    {p.description && <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2">{p.description}</p>}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
 
       <div className="mb-3 flex items-center gap-2">
         <Wifi className="h-4 w-4 text-primary" />
