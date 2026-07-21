@@ -1,6 +1,8 @@
 // pdfmake-report.ts
 // Helper for generating Arabic (RTL) PDF reports using pdfmake.
-// pdfmake + Amiri/fontkit already shape Arabic and apply bidi correctly.
+// pdfmake + Amiri/fontkit shape Arabic glyphs, but browser/pdfkit rendering in
+// this build visually reverses Arabic word order. We compensate at word level
+// only, never character level, so letters stay connected and words read right.
 
 import type { TDocumentDefinitions, TFontDictionary } from "pdfmake/interfaces";
 
@@ -11,16 +13,38 @@ import type { TDocumentDefinitions, TFontDictionary } from "pdfmake/interfaces";
 const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
 const RTL_EMBED = "\u202B";
 const POP_DIRECTIONAL = "\u202C";
+const ARABIC_WORD = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+/;
+
+function reverseArabicWordOrder(value: string): string {
+  return value
+    .split(/(\n)/)
+    .map((line) => {
+      if (line === "\n" || !ARABIC_CHAR.test(line)) return line;
+      const tokens = line.match(/\S+|\s+/g) ?? [line];
+      const words = tokens.filter((token) => /\S/.test(token));
+      if (words.filter((word) => ARABIC_WORD.test(word)).length <= 1) return line;
+
+      let wordIndex = words.length - 1;
+      return tokens
+        .map((token) => {
+          if (/\s/.test(token)) return token;
+          return words[wordIndex--] ?? token;
+        })
+        .join("");
+    })
+    .join("");
+}
 
 /**
- * Keep text in logical Unicode order, then explicitly mark Arabic runs as RTL.
- * Important: do NOT reverse Arabic manually here. The embedding marks + pdfmake
- * direction style fix whole-word order without breaking glyph shaping.
+ * Keep Arabic letters inside each word in normal order, but reverse whole-word
+ * order to counter pdfmake's visual reversal in generated PDFs.
  */
 export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
   const value = String(input);
-  return ARABIC_CHAR.test(value) ? `${RTL_EMBED}${value}${POP_DIRECTIONAL}` : value;
+  return ARABIC_CHAR.test(value)
+    ? `${RTL_EMBED}${reverseArabicWordOrder(value)}${POP_DIRECTIONAL}`
+    : value;
 }
 
 function rtlText(input: string | number | null | undefined): string {
