@@ -13,7 +13,17 @@ let _reshaper: any = null;
 async function getReshaper() {
   if (_reshaper) return _reshaper;
   const mod: any = await import("arabic-persian-reshaper");
-  _reshaper = mod.ArabicShaper ?? mod.default?.ArabicShaper ?? mod.default ?? mod;
+  // CJS package: `{ ArabicShaper: {convertArabic, ...}, PersianShaper: {...} }`.
+  // Vite may wrap as `{ default: {...} }`. Pick the object that actually
+  // exposes convertArabic (not the wrapper containing ArabicShaper).
+  const candidates = [
+    mod?.ArabicShaper,
+    mod?.default?.ArabicShaper,
+    mod?.default,
+    mod,
+  ];
+  _reshaper =
+    candidates.find((c) => c && typeof c.convertArabic === "function") ?? mod;
   return _reshaper;
 }
 
