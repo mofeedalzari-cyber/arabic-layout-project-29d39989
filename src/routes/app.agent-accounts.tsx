@@ -354,177 +354,57 @@ async function printAgentReport(a: PrintArgs) {
 <title>حساب المندوب — ${esc(a.agentLabel)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
+  @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
   :root {
     --brand:#0ea884; --brand-2:#0891b2; --brand-3:#065f46;
-    --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --soft:#f8fafc;
-    --gold:#d4a017;
+    --ink:#0f172a; --muted:#64748b; --line:#d1d5db; --soft:#fafafa;
+    --header-bg:#f3f4f6;
   }
   * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; }
+  html, body { margin:0; padding:0; background:#fff; }
   body {
-    font-family: "Cairo", "Segoe UI", Tahoma, Arial, sans-serif;
-    color: var(--ink);
-    background:
-      radial-gradient(1200px 400px at 100% -10%, rgba(14,168,132,.08), transparent 60%),
-      radial-gradient(900px 300px at 0% 110%, rgba(8,145,178,.08), transparent 60%),
-      #fff;
-    padding: 28px;
+    font-family: "Cairo", "Tajawal", "Segoe UI", Tahoma, Arial, sans-serif;
+    color: var(--ink); font-size: 13px; line-height: 1.55;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    direction: rtl;
   }
-  .page { max-width: 1000px; margin: 0 auto; }
-
-  /* ===== Header ===== */
-  .head {
-    position: relative;
-    color:#fff;
-    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
-    border-radius: 18px;
-    padding: 22px 26px;
-    box-shadow: 0 10px 30px -12px rgba(14,168,132,.55);
-    overflow: hidden;
-  }
-  .head::after {
-    content:""; position:absolute; inset:auto -60px -80px auto;
-    width: 260px; height: 260px; border-radius:50%;
-    background: rgba(255,255,255,.08);
-  }
-  .head::before {
-    content:""; position:absolute; inset:-80px auto auto -60px;
-    width: 200px; height: 200px; border-radius:50%;
-    background: rgba(255,255,255,.08);
-  }
-  .head-row { display:flex; justify-content:space-between; align-items:center; gap:16px; position:relative; z-index:1; }
+  .page { width: 100%; margin: 0 auto; }
+  .head { padding: 6px 0 12px; border-bottom: 2px solid var(--brand); margin-bottom: 16px; }
+  .head-row { display:flex; justify-content:space-between; align-items:center; gap:16px; }
   .brand-wrap { display:flex; align-items:center; gap:12px; }
-  .logo {
-    width:52px; height:52px; border-radius:14px;
-    background: rgba(255,255,255,.18);
-    border: 1.5px solid rgba(255,255,255,.35);
-    display:flex; align-items:center; justify-content:center;
-    font-weight:900; font-size:22px;
-    backdrop-filter: blur(6px);
-  }
-  .brand-name { font-weight:900; font-size:20px; letter-spacing:.3px; }
-  .brand-sub { font-size:12px; opacity:.88; margin-top:2px; }
-  .doc-meta { text-align:left; font-size:12px; opacity:.92; }
-  .doc-badge {
-    display:inline-block; background: rgba(255,255,255,.18);
-    border:1px solid rgba(255,255,255,.3);
-    border-radius: 999px; padding:4px 10px; font-weight:700; font-size:11px;
-    margin-bottom:6px;
-  }
-
-  /* ===== Agent card ===== */
-  .agent {
-    display:flex; align-items:center; gap:14px;
-    background:#fff; border:1px solid var(--line);
-    border-radius:16px; padding:14px 16px; margin-top:-18px;
-    position:relative; z-index:2;
-    box-shadow: 0 8px 24px -14px rgba(15,23,42,.15);
-  }
-  .avatar {
-    width:54px; height:54px; border-radius:50%;
-    background: linear-gradient(135deg, var(--brand), var(--brand-3));
-    color:#fff; font-weight:900; font-size:20px;
-    display:flex; align-items:center; justify-content:center;
-    box-shadow: inset 0 -6px 12px rgba(0,0,0,.15);
-  }
-  .agent-info h1 { font-size:18px; margin:0 0 2px; font-weight:800; }
+  .logo { width:48px; height:48px; border-radius:12px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px; }
+  .brand-name { font-weight:900; font-size:18px; color: var(--ink); }
+  .brand-sub { font-size:11.5px; color: var(--muted); margin-top:2px; }
+  .doc-meta { text-align:left; font-size:11.5px; color: var(--muted); }
+  .doc-badge { display:inline-block; background: var(--header-bg); border:1px solid var(--line); color: var(--ink); border-radius: 6px; padding:3px 10px; font-weight:700; font-size:11px; margin-bottom:4px; }
+  .agent { display:flex; align-items:center; gap:14px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:16px; break-inside: avoid; }
+  .avatar { width:48px; height:48px; border-radius:50%; background: linear-gradient(135deg, var(--brand), var(--brand-3)); color:#fff; font-weight:900; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .agent-info h1 { font-size:16px; margin:0 0 2px; font-weight:800; }
   .agent-info .m { color: var(--muted); font-size:12px; }
-  .pill {
-    margin-inline-start:auto;
-    background: linear-gradient(135deg, #ecfdf5, #cffafe);
-    color: var(--brand-3);
-    border:1px solid #a7f3d0;
-    padding:6px 12px; border-radius:999px;
-    font-size:11px; font-weight:800;
-  }
-
-  /* ===== Stats ===== */
-  .stats { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin: 18px 0 22px; }
-  .stat {
-    position:relative;
-    border-radius:14px; padding:14px 14px 12px;
-    background:#fff; border:1px solid var(--line);
-    overflow:hidden;
-  }
-  .stat::before {
-    content:""; position:absolute; inset:0 auto 0 0; width:4px;
-    background: linear-gradient(180deg, var(--brand), var(--brand-2));
-  }
-  .stat.gold::before { background: linear-gradient(180deg, #d4a017, #f59e0b); }
-  .stat.blue::before { background: linear-gradient(180deg, #0891b2, #6366f1); }
-  .stat.rose::before { background: linear-gradient(180deg, #e11d48, #f43f5e); }
-  .stat .l { font-size:11px; color: var(--muted); font-weight:600; letter-spacing:.2px; }
-  .stat .v { font-size:20px; font-weight:900; margin-top:6px; color: var(--ink); }
-
-  /* ===== Sections ===== */
-  h2 {
-    font-size:14px; margin: 22px 0 10px; padding: 0 0 8px;
-    color: var(--ink); font-weight:800;
-    display:flex; align-items:center; gap:8px;
-    border-bottom: 2px solid var(--line);
-    position:relative;
-  }
-  h2::before {
-    content:""; width:14px; height:14px; border-radius:4px;
-    background: linear-gradient(135deg, var(--brand), var(--brand-2));
-  }
-  h2::after {
-    content:""; position:absolute; right:0; bottom:-2px;
-    width: 80px; height:2px;
-    background: linear-gradient(90deg, var(--brand), var(--brand-2));
-  }
-
-  /* ===== Tables ===== */
-  .tbl-wrap {
-    background:#fff; border:1px solid var(--line);
-    border-radius:14px; overflow:hidden;
-    box-shadow: 0 2px 8px -6px rgba(15,23,42,.15);
-  }
-  table { width:100%; border-collapse: collapse; font-size:12.5px; }
-  thead th {
-    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-    color: var(--ink); font-weight:800;
-    padding:10px 10px; text-align:right;
-    border-bottom: 2px solid var(--line);
-    font-size:12px;
-  }
-  tbody td { padding:9px 10px; text-align:right; border-top:1px solid var(--line); }
+  .pill { margin-inline-start:auto; background: var(--header-bg); color: var(--brand-3); border:1px solid var(--line); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; }
+  .stats { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin: 0 0 20px; }
+  .stat { border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:#fff; break-inside: avoid; }
+  .stat .l { font-size:11px; color: var(--muted); font-weight:600; }
+  .stat .v { font-size:16px; font-weight:900; margin-top:4px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  h2 { font-size:14px; margin: 24px 0 8px; padding: 6px 10px; color:#fff; font-weight:800; background: linear-gradient(135deg, var(--brand), var(--brand-2)); border-radius: 6px; display:flex; align-items:center; gap:8px; page-break-after: avoid; }
+  .tbl-wrap { border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-bottom:24px; break-inside: avoid; }
+  table { width:100%; border-collapse: collapse; font-size:12.5px; table-layout: fixed; }
+  thead { display: table-header-group; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
+  thead th { background: var(--header-bg); color: var(--ink); font-weight:700; padding:10px 8px; text-align:right; border:1px solid var(--line); font-size:13px; height:40px; }
+  tbody td { padding:10px 8px; text-align:right; border:1px solid var(--line); height:40px; word-break: break-word; overflow-wrap: anywhere; }
   tbody tr:nth-child(even) td { background: var(--soft); }
-  tbody tr:hover td { background:#ecfdf5; }
-  td.num, th.num { text-align:center; font-variant-numeric: tabular-nums; }
-  .money { font-weight:800; color: var(--brand-3); font-variant-numeric: tabular-nums; }
-  .idx {
-    display:inline-flex; align-items:center; justify-content:center;
-    min-width:24px; height:24px; padding:0 6px; border-radius:8px;
-    background: #eef2ff; color:#3730a3; font-weight:800; font-size:11px;
-  }
-  .empty { text-align:center; color: var(--muted); padding:18px 0; font-style:italic; }
-
-  /* ===== Footer ===== */
-  .footer {
-    margin-top:28px; padding-top:14px;
-    border-top: 2px dashed var(--line);
-    display:flex; justify-content:space-between; align-items:center;
-    font-size:11.5px; color: var(--muted);
-  }
-  .footer .sig {
-    background: linear-gradient(135deg, var(--brand), var(--brand-2));
-    -webkit-background-clip: text; background-clip:text; color:transparent;
-    font-weight:900;
-  }
-
-  @media print {
-    body { padding: 8mm; background:#fff !important; }
-    .head { box-shadow:none; }
-    .stat, .agent, .tbl-wrap { box-shadow:none; }
-    h2 { page-break-after: avoid; }
-    tr, .stat { page-break-inside: avoid; }
-    .noprint { display:none !important; }
-  }
-</style></head><body>
+  tbody tr:nth-child(odd) td { background: #ffffff; }
+  td.num, th.num { text-align:center; font-variant-numeric: tabular-nums; width:36px; }
+  .money { font-weight:700; color: var(--brand-3); font-variant-numeric: tabular-nums; }
+  .idx { display:inline-block; min-width:22px; padding:1px 6px; border-radius:4px; background:var(--header-bg); color:var(--ink); font-weight:700; font-size:11px; }
+  .empty { text-align:center; color: var(--muted); padding:14px 0; font-style:italic; }
+  .footer { margin-top:24px; padding-top:10px; border-top: 1px solid var(--line); display:flex; justify-content:space-between; align-items:center; font-size:11px; color: var(--muted); }
+  .footer .sig { color: var(--brand); font-weight:900; }
+  @media print { body { background:#fff !important; } .noprint { display:none !important; } }
+</style>
 <div class="page">
   <div class="head">
     <div class="head-row">
