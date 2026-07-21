@@ -38,181 +38,6 @@ function openPdfBlobInNewTab(blob: Blob, filename: string): boolean {
   }
 }
 
-const UNSUPPORTED_COLOR_RE = /\b(?:oklch|oklab|lch|lab|color-mix)\s*\(/gi;
-
-const PDF_SAFE_STYLE = `
-  :root, html, body {
-    --background: #ffffff;
-    --foreground: #111827;
-    --card: #ffffff;
-    --card-foreground: #111827;
-    --popover: #ffffff;
-    --popover-foreground: #111827;
-    --primary: #009688;
-    --primary-foreground: #ffffff;
-    --primary-glow: #14b8a6;
-    --secondary: #f1f5f9;
-    --secondary-foreground: #111827;
-    --muted: #f1f5f9;
-    --muted-foreground: #64748b;
-    --accent: #e0f2f1;
-    --accent-foreground: #0f766e;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --success: #22c55e;
-    --success-foreground: #ffffff;
-    --warning: #f59e0b;
-    --warning-foreground: #111827;
-    --border: #d1d5db;
-    --input: #e5e7eb;
-    --ring: #009688;
-    --sidebar: #ffffff;
-    --sidebar-foreground: #111827;
-    --sidebar-primary: #009688;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #e0f2f1;
-    --sidebar-accent-foreground: #0f766e;
-    --sidebar-border: #d1d5db;
-    --sidebar-ring: #009688;
-    --color-background: #ffffff;
-    --color-foreground: #111827;
-    --color-card: #ffffff;
-    --color-card-foreground: #111827;
-    --color-popover: #ffffff;
-    --color-popover-foreground: #111827;
-    --color-primary: #009688;
-    --color-primary-foreground: #ffffff;
-    --color-secondary: #f1f5f9;
-    --color-secondary-foreground: #111827;
-    --color-muted: #f1f5f9;
-    --color-muted-foreground: #64748b;
-    --color-accent: #e0f2f1;
-    --color-accent-foreground: #0f766e;
-    --color-destructive: #ef4444;
-    --color-destructive-foreground: #ffffff;
-    --color-success: #22c55e;
-    --color-success-foreground: #ffffff;
-    --color-warning: #f59e0b;
-    --color-warning-foreground: #111827;
-    --color-border: #d1d5db;
-    --color-input: #e5e7eb;
-    --color-ring: #009688;
-    --shadow-soft: none;
-    --shadow-elegant: none;
-    --shadow-glow: none;
-    --gradient-primary: linear-gradient(135deg, #009688, #14b8a6);
-    --gradient-surface: linear-gradient(180deg, #ffffff, #f8fafc);
-  }
-  html, body {
-    background: #ffffff !important;
-    color: #111827 !important;
-    color-scheme: light !important;
-  }
-  *, *::before, *::after {
-    color-scheme: light !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-    outline-color: #111827 !important;
-    text-decoration-color: currentColor !important;
-    caret-color: #111827 !important;
-  }
-`;
-
-function stripUnsupportedColorFunctions(value: string): string {
-  // استبدال أي دالة لون غير مدعومة بقيمة لون آمنة (رمادي غامق)
-  return value
-    .replace(/color-mix\(\s*in\s+(?:oklch|oklab|lch|lab)\s*,\s*(?:[^()]|\([^()]*\))*\)/gi, "#111827")
-    .replace(/oklch\((?:[^()]|\([^()]*\))*\)/gi, "#111827")
-    .replace(/oklab\((?:[^()]|\([^()]*\))*\)/gi, "#111827")
-    .replace(/lch\((?:[^()]|\([^()]*\))*\)/gi, "#111827")
-    .replace(/lab\((?:[^()]|\([^()]*\))*\)/gi, "#111827");
-}
-
-function fallbackColor(prop: string, el: Element): string {
-  const tag = el.tagName.toLowerCase();
-  if (tag === "html" || tag === "body") return "#ffffff";
-  if (prop.includes("background")) return "transparent";
-  if (prop.includes("border") || prop.includes("outline") || prop.includes("column-rule")) return "#d1d5db";
-  return "#111827";
-}
-
-function addPdfSafeStyle(doc: Document) {
-  const style = doc.createElement("style");
-  style.setAttribute("data-pdf-safe-colors", "true");
-  style.textContent = PDF_SAFE_STYLE;
-  doc.head.appendChild(style);
-  return style;
-}
-
-function sanitizePdfDocument(doc: Document) {
-  // إزالة أي script
-  Array.from(doc.querySelectorAll("script")).forEach((script) => script.remove());
-
-  // تنظيف الأنماط الداخلية (style tags)
-  Array.from(doc.querySelectorAll("style")).forEach((style) => {
-    style.textContent = stripUnsupportedColorFunctions(style.textContent || "");
-  });
-
-  // تنظيف الأنماط المضمنة (style attribute)
-  Array.from(doc.querySelectorAll<HTMLElement>("[style]")).forEach((el) => {
-    const styleText = el.getAttribute("style") || "";
-    if (UNSUPPORTED_COLOR_RE.test(styleText)) {
-      // استبدال القيم غير المدعومة بقيم آمنة
-      const cleaned = stripUnsupportedColorFunctions(styleText);
-      el.setAttribute("style", cleaned);
-    }
-  });
-
-  // إضافة الأنماط الآمنة العامة
-  addPdfSafeStyle(doc);
-
-  const win = doc.defaultView;
-  if (!win) return;
-
-  const colorProps = [
-    "color",
-    "background-color",
-    "border-top-color",
-    "border-right-color",
-    "border-bottom-color",
-    "border-left-color",
-    "outline-color",
-    "text-decoration-color",
-    "column-rule-color",
-    "caret-color",
-    "fill",
-    "stroke",
-  ];
-  const visualProps = ["background", "background-image", "box-shadow", "text-shadow", "filter"];
-
-  // معالجة العناصر للتأكد من عدم وجود أي قيمة غير مدعومة محسوبة
-  Array.from(doc.querySelectorAll<HTMLElement>("html, body, body *")).forEach((el) => {
-    const computed = win.getComputedStyle(el);
-    for (const prop of colorProps) {
-      const value = computed.getPropertyValue(prop);
-      if (UNSUPPORTED_COLOR_RE.test(value)) {
-        el.style.setProperty(prop, fallbackColor(prop, el), "important");
-      }
-    }
-    for (const prop of visualProps) {
-      const value = computed.getPropertyValue(prop);
-      if (UNSUPPORTED_COLOR_RE.test(value)) {
-        el.style.setProperty(prop, prop.startsWith("background") ? "none" : "none", "important");
-      }
-    }
-  });
-}
-
-async function withParentPdfSafeColors<T>(task: () => Promise<T>): Promise<T> {
-  if (typeof document === "undefined") return task();
-  const style = addPdfSafeStyle(document);
-  try {
-    return await task();
-  } finally {
-    style.remove();
-  }
-}
-
 /**
  * Render the given HTML string into a PDF Blob using html2pdf.js.
  * Rendered inside an ISOLATED iframe.
@@ -220,6 +45,7 @@ async function withParentPdfSafeColors<T>(task: () => Promise<T>): Promise<T> {
 async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<Blob> {
   const html2pdf: any = (await import("html2pdf.js")).default;
 
+  // إنشاء iframe معزول
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
   iframe.style.cssText = `
@@ -243,33 +69,52 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
   const doc = iframe.contentDocument!;
   doc.open();
 
-  // تنظيف الـ HTML المدخل من أي دوال ألوان غير مدعومة
-  let sanitizedHtml = stripUnsupportedColorFunctions(html);
-  // أيضاً ننظف أي style مضمّن داخل الـ HTML (قد يكون في عناصر)
-  sanitizedHtml = sanitizedHtml.replace(/(style\s*=\s*["'])([^"']*)(["'])/gi, (match, p1, p2, p3) => {
-    const cleaned = stripUnsupportedColorFunctions(p2);
+  // ================================================================
+  // 1. تنظيف HTML من جميع دوال الألوان غير المدعومة
+  // ================================================================
+  let cleanedHtml = html;
+  // استبدال الدوال الكاملة
+  cleanedHtml = cleanedHtml.replace(/\bcolor-mix\s*\([^)]*\)/gi, "#111827");
+  cleanedHtml = cleanedHtml.replace(/\boklch\s*\([^)]*\)/gi, "#111827");
+  cleanedHtml = cleanedHtml.replace(/\boklab\s*\([^)]*\)/gi, "#111827");
+  cleanedHtml = cleanedHtml.replace(/\blch\s*\([^)]*\)/gi, "#111827");
+  cleanedHtml = cleanedHtml.replace(/\blab\s*\([^)]*\)/gi, "#111827");
+  // استبدال أي كلمة متبقية (مثل "oklch" بدون أقواس)
+  cleanedHtml = cleanedHtml.replace(/\boklch\b/gi, "#111827");
+  cleanedHtml = cleanedHtml.replace(/\boklab\b/gi, "#111827");
+  cleanedHtml = cleanedHtml.replace(/\blch\b/gi, "#111827");
+  cleanedHtml = cleanedHtml.replace(/\blab\b/gi, "#111827");
+
+  // تنظيف الأنماط المضمنة (style attribute)
+  cleanedHtml = cleanedHtml.replace(/(style\s*=\s*["'])([^"']*)(["'])/gi, (match, p1, p2, p3) => {
+    let cleaned = p2;
+    cleaned = cleaned.replace(/\bcolor-mix\s*\([^)]*\)/gi, "#111827");
+    cleaned = cleaned.replace(/\boklch\s*\([^)]*\)/gi, "#111827");
+    cleaned = cleaned.replace(/\boklab\s*\([^)]*\)/gi, "#111827");
+    cleaned = cleaned.replace(/\blch\s*\([^)]*\)/gi, "#111827");
+    cleaned = cleaned.replace(/\blab\s*\([^)]*\)/gi, "#111827");
+    cleaned = cleaned.replace(/\boklch\b/gi, "#111827");
+    cleaned = cleaned.replace(/\boklab\b/gi, "#111827");
+    cleaned = cleaned.replace(/\blch\b/gi, "#111827");
+    cleaned = cleaned.replace(/\blab\b/gi, "#111827");
     return `${p1}${cleaned}${p3}`;
   });
 
-  doc.write(sanitizedHtml);
+  doc.write(cleanedHtml);
   doc.close();
 
-  // تطبيق التنظيف المتقدم على المستند
-  sanitizePdfDocument(doc);
-
   // ================================================================
-  // 1. تحديد عنصر التقرير الأصلي واستنساخه
+  // 2. استنساخ التقرير وتجريد جميع الأنماط والكلاسات
   // ================================================================
   const originalReport = doc.body.querySelector<HTMLElement>('[data-pdf-report="true"], .page') ?? doc.body.firstElementChild;
-  const reportClone = (originalReport?.cloneNode(true) as HTMLElement | null) ?? doc.createElement("div");
-  if (!originalReport) reportClone.innerHTML = doc.body.innerHTML;
+  if (!originalReport) throw new Error("لم يتم العثور على عنصر التقرير");
 
-  // ================================================================
-  // 2. إنشاء حاوية الطباعة المخصصة بأبعاد A4 ثابتة
-  // ================================================================
+  // استنساخ عميق للعنصر
+  const clone = originalReport.cloneNode(true) as HTMLElement;
+
+  // إنشاء حاوية الطباعة المخصصة
   const printContainer = doc.createElement("div");
   printContainer.id = "pdf-print-container";
-  printContainer.setAttribute("dir", "rtl");
   printContainer.style.cssText = `
     width: 210mm;
     min-height: 297mm;
@@ -281,164 +126,90 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
     display: block;
     position: relative;
     overflow: visible;
-    transform: none;
-    scale: 1;
-    zoom: 1;
-    translate: none;
   `;
-  printContainer.appendChild(reportClone);
+  printContainer.appendChild(clone);
 
   // ================================================================
-  // 3. إزالة الأنماط المتعارضة من جميع العناصر داخل الحاوية
+  // 3. إزالة جميع السمات (class, style, data-*) من كل العناصر
   // ================================================================
-  function stripBadStyles(el: HTMLElement) {
-    // إزالة الخصائص التي تسبب مشاكل في html2canvas
-    const badProps = ["transform", "scale", "zoom", "translate", "max-width", "position", "inset", "top", "right", "bottom", "left"];
-    for (const prop of badProps) el.style.removeProperty(prop);
-
-    // إزالة أي قيمة لون غير مدعومة من الأنماط المضمنة
-    const styleAttr = el.getAttribute("style");
-    if (styleAttr && UNSUPPORTED_COLOR_RE.test(styleAttr)) {
-      el.setAttribute("style", stripUnsupportedColorFunctions(styleAttr));
+  function stripAllAttributes(el: HTMLElement) {
+    // إزالة جميع السمات التي قد تحتوي على أنماط
+    const attrs = Array.from(el.attributes);
+    for (const attr of attrs) {
+      const name = attr.name.toLowerCase();
+      if (name === "class" || name === "style" || name.startsWith("data-") || name.startsWith("aria-")) {
+        el.removeAttribute(name);
+      }
     }
-
-    const display = el.style.display?.toLowerCase() || "";
-    if (display === "inline-block" || display === "inline") {
-      el.style.display = "block";
-      el.style.width = "100%";
-    }
-
-    const width = el.style.width?.toLowerCase() || "";
-    if (width.includes("fit-content") || width === "auto") {
-      el.style.width = "100%";
-    }
-
-    if (el.tagName.toLowerCase() === "table") {
-      el.style.width = "100%";
-      el.style.tableLayout = "fixed";
-      el.style.borderCollapse = "collapse";
-      el.style.pageBreakInside = "auto";
-    }
-    if (el.tagName.toLowerCase() === "th" || el.tagName.toLowerCase() === "td") {
-      el.style.padding = "8px";
-      el.style.border = "1px solid #cccccc";
-      el.style.wordBreak = "break-word";
-      el.style.whiteSpace = "normal";
-      el.style.verticalAlign = "top";
-    }
+    // معالجة الأطفال
+    el.childNodes.forEach(child => {
+      if (child.nodeType === 1) stripAllAttributes(child as HTMLElement);
+    });
   }
-  Array.from(printContainer.querySelectorAll<HTMLElement>("*")).forEach(stripBadStyles);
-  // نطبق أيضاً على الحاوية نفسها
-  stripBadStyles(printContainer as HTMLElement);
+  stripAllAttributes(clone);
 
   // ================================================================
-  // 4. إضافة أنماط إجبارية لضمان ملء العرض
+  // 4. إضافة أنماط جديدة نظيفة لتنسيق التقرير
   // ================================================================
-  const pdfLayout = doc.createElement("style");
-  pdfLayout.textContent = `
-    @page { size: A4 portrait; margin: 0; }
-    html, body {
-      width: 210mm !important;
-      min-height: 297mm !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      background: #ffffff !important;
-      direction: rtl !important;
-      overflow: visible !important;
-      transform: none !important;
-      scale: 1 !important;
-      zoom: 1 !important;
-      translate: none !important;
-    }
-    #pdf-print-container {
-      width: 210mm !important;
-      min-height: 297mm !important;
-      margin: 0 !important;
-      padding: 12mm !important;
-      box-sizing: border-box !important;
-      background: #ffffff !important;
-      direction: rtl !important;
-      display: block !important;
-      position: relative !important;
-      overflow: visible !important;
-      transform: none !important;
-      scale: 1 !important;
-      zoom: 1 !important;
-      translate: none !important;
-    }
-    /* إجبار جميع الأقسام على العرض الكامل */
-    #pdf-print-container > *,
-    #pdf-print-container section,
-    #pdf-print-container article,
-    #pdf-print-container main,
-    #pdf-print-container header,
-    #pdf-print-container footer,
-    #pdf-print-container .head,
-    #pdf-print-container .head-row,
-    #pdf-print-container .kpis,
-    #pdf-print-container .kpi,
-    #pdf-print-container .tbl-wrap,
-    #pdf-print-container h1,
-    #pdf-print-container h2,
-    #pdf-print-container h3,
-    #pdf-print-container .card,
-    #pdf-print-container .card-body,
-    #pdf-print-container .summary-grid,
-    #pdf-print-container .sum-row {
-      display: block !important;
-      width: 100% !important;
-      max-width: none !important;
-      position: static !important;
-      overflow: visible !important;
-      transform: none !important;
-      scale: 1 !important;
-      zoom: 1 !important;
-      translate: none !important;
-    }
-    #pdf-print-container table {
-      width: 100% !important;
-      table-layout: fixed !important;
-      border-collapse: collapse !important;
-      page-break-inside: auto !important;
-      break-inside: auto !important;
-      direction: rtl !important;
-    }
-    #pdf-print-container thead { display: table-header-group !important; }
-    #pdf-print-container tbody { display: table-row-group !important; }
-    #pdf-print-container tr { page-break-inside: avoid !important; break-inside: avoid !important; }
-    #pdf-print-container th,
-    #pdf-print-container td {
-      padding: 8px !important;
-      border: 1px solid #cccccc !important;
-      word-break: break-word !important;
-      overflow-wrap: anywhere !important;
-      white-space: normal !important;
-      vertical-align: top !important;
-    }
-    #pdf-print-container img,
-    #pdf-print-container svg,
-    #pdf-print-container canvas {
-      max-width: 100% !important;
-      height: auto !important;
-    }
-    /* إزالة أي positioning مطلق */
-    #pdf-print-container * {
-      transform: none !important;
-      scale: 1 !important;
-      zoom: 1 !important;
-      translate: none !important;
-      max-width: none !important;
-      overflow: visible !important;
-      position: static !important;
-    }
+  const style = doc.createElement("style");
+  style.textContent = `
+    /* إعادة تعيين الأنماط الأساسية */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Cairo", "Tajawal", sans-serif; background: #fff; color: #111827; }
+    #pdf-print-container { width: 100%; padding: 12mm; background: #fff; }
+
+    /* الهيدر */
+    .report-header { border-bottom: 2px solid #0f766e; padding-bottom: 12px; margin-bottom: 20px; display: block; width: 100%; }
+    .header-top { display: table; width: 100%; }
+    .header-top > .col { display: table-cell; vertical-align: middle; }
+    .header-left { width: 64px; }
+    .header-right { text-align: left; width: 40%; padding-right: 12px; }
+    .logo { display: inline-block; width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, #0f766e, #0891b2); color: #fff; text-align: center; line-height: 56px; font-weight: 900; font-size: 24px; }
+    .system-name { font-size: 16px; font-weight: 900; color: #0f172a; }
+    .report-name { font-size: 18px; font-weight: 900; color: #0f766e; margin-top: 6px; }
+    .header-meta { font-size: 11px; color: #64748b; line-height: 1.9; }
+    .header-meta b { color: #334155; }
+    .meta-line { display: block; }
+
+    /* البطاقات */
+    .card { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 24px; background: #fff; overflow: hidden; }
+    .card-title { background: #f1f5f9; color: #0f172a; font-weight: 800; font-size: 13px; padding: 10px 14px; border-bottom: 1px solid #e2e8f0; display: block; }
+    .card-title .chip { float: left; background: #fff; color: #0f766e; border: 1px solid #e2e8f0; border-radius: 999px; padding: 1px 10px; font-size: 10.5px; font-weight: 800; }
+    .card-body { padding: 12px 14px; }
+    .card-body.pad-0 { padding: 0; }
+
+    /* شبكة الملخص */
+    .summary-grid { display: table; width: 100%; border-collapse: collapse; }
+    .sum-row { display: table-row; }
+    .sum-label, .sum-value { display: table-cell; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-size: 12px; vertical-align: middle; }
+    .sum-label { width: 55%; color: #334155; font-weight: 600; background: #fafafa; }
+    .sum-value { width: 45%; color: #0f172a; font-weight: 800; text-align: center; }
+    .summary-grid .sum-row:last-child .sum-label, .summary-grid .sum-row:last-child .sum-value { border-bottom: 0; }
+
+    /* الجداول */
+    .report-table { width: 100%; border-collapse: collapse; table-layout: fixed; direction: rtl; font-size: 11.5px; }
+    .report-table thead th { background: #f1f5f9; color: #0f172a; font-weight: 800; padding: 10px 8px; text-align: right; border: 1px solid #cbd5e1; height: 38px; }
+    .report-table tbody td { padding: 9px 8px; text-align: right; border: 1px solid #e2e8f0; word-break: break-word; vertical-align: middle; color: #0f172a; }
+    .report-table tbody tr:nth-child(even) td { background: #f8fafc; }
+    .report-table td.num, .report-table th.num { text-align: center; }
+    .report-table td.idx { color: #64748b; font-weight: 700; }
+    .report-table .empty { text-align: center; color: #64748b; padding: 16px 0; font-style: italic; }
+
+    /* التذييل */
+    .report-footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid #e2e8f0; display: table; width: 100%; font-size: 10.5px; color: #64748b; }
+    .report-footer > div { display: table-cell; vertical-align: middle; }
+    .report-footer .rf-left { text-align: left; }
+    .report-footer .rf-center { text-align: center; }
+    .report-footer .rf-right { text-align: right; }
+    .report-footer .sig { color: #0f766e; font-weight: 900; }
   `;
-  doc.head.appendChild(pdfLayout);
+  printContainer.appendChild(style);
 
-  // استبدال محتوى body بالحاوية فقط
+  // استبدال محتوى body بالحاوية الجديدة
   doc.body.innerHTML = "";
   doc.body.appendChild(printContainer);
 
-  // الانتظار لتحميل الخطوط والصور
+  // انتظار تحميل الخطوط والصور
   try {
     const imgs = Array.from(doc.querySelectorAll("img"));
     await Promise.all(
