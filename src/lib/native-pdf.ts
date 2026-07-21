@@ -167,39 +167,70 @@ export async function sharePdfOrPrint(opts: {
   }
 
   // ============ NATIVE ANDROID (Capacitor) ============
-  // فقط: توليد PDF ثم فتح نافذة "مشاركة هذا الملف" مباشرة.
+  // نحاول: توليد PDF ثم مشاركة. لو فشل توليد PDF (بسبب oklch/الخطوط في
+  // WebView)، نشارك الملف كـ HTML — WhatsApp/Drive/Gmail يقبلونه.
+  let Filesystem: any, Directory: any, Share: any;
   try {
-    const [{ Filesystem, Directory }, shareMod] = await Promise.all([
+    const [fsMod, shareMod] = await Promise.all([
       import("@capacitor/filesystem"),
       import("@capacitor/share"),
     ]);
-    const Share = (shareMod as any).Share;
+    Filesystem = (fsMod as any).Filesystem;
+    Directory = (fsMod as any).Directory;
+    Share = (shareMod as any).Share;
+  } catch (err) {
+    console.error("[sharePdfOrPrint] plugin import failed:", err);
+    alert("تعذر تحميل مكونات المشاركة");
+    return;
+  }
 
+  let fileName = `${safeFileName(filename)}_${Date.now()}.pdf`;
+  let base64 = "";
+  let mimeType = "application/pdf";
+
+  try {
     const blob = await htmlToPdfBlob(html);
-    const base64 = await blobToBase64(blob);
+    base64 = await blobToBase64(blob);
+  } catch (pdfErr) {
+    console.error("[sharePdfOrPrint] PDF render failed, falling back to HTML:", pdfErr);
+    // Fallback: share as .html so the user still gets the file
+    try {
+      const htmlBlob = new Blob([html], { type: "text/html;charset=utf-8" });
+      base64 = await blobToBase64(htmlBlob);
+      fileName = `${safeFileName(filename)}_${Date.now()}.html`;
+      mimeType = "text/html";
+    } catch (fbErr) {
+      console.error("[sharePdfOrPrint] HTML fallback failed:", fbErr);
+      alert("تعذر تحضير الملف: " + (String((pdfErr as any)?.message || pdfErr).slice(0, 120)));
+      return;
+    }
+  }
 
-    const name = `${safeFileName(filename)}_${Date.now()}.pdf`;
+  let fileUri = "";
+  try {
     const written = await Filesystem.writeFile({
-      path: name,
+      path: fileName,
       data: base64,
       directory: Directory.Cache,
     });
+    fileUri = written.uri;
+  } catch (wErr) {
+    console.error("[sharePdfOrPrint] writeFile failed:", wErr);
+    alert("تعذر حفظ الملف مؤقتاً");
+    return;
+  }
 
-    try {
-      await Share.share({
-        title: dialogTitle || filename,
-        text: filename,
-        url: written.uri,
-        dialogTitle: dialogTitle || "مشاركة هذا الملف",
-      });
-    } catch (shareErr: any) {
-      const msg = String(shareErr?.message || "");
-      if (msg.includes("cancel") || msg.includes("dismiss")) return;
-      console.error("[sharePdfOrPrint] Share failed:", shareErr);
-      alert("تعذر فتح نافذة المشاركة");
-    }
-  } catch (err) {
-    console.error("[sharePdfOrPrint] CRITICAL error:", err);
-    alert("حدث خطأ أثناء تحضير الملف للمشاركة");
+  try {
+    await Share.share({
+      title: dialogTitle || filename,
+      text: filename,
+      url: fileUri,
+      dialogTitle: dialogTitle || "مشاركة هذا الملف",
+    });
+  } catch (shareErr: any) {
+    const msg = String(shareErr?.message || "");
+    if (msg.includes("cancel") || msg.includes("dismiss")) return;
+    console.error("[sharePdfOrPrint] Share failed:", shareErr);
+    alert("تعذر فتح نافذة المشاركة: " + msg.slice(0, 120));
   }
 }
