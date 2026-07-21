@@ -251,7 +251,7 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
     "width:210mm",
     "min-height:297mm",
     "margin:0",
-    "padding:12mm",
+    "padding:15mm",
     "box-sizing:border-box",
     "background:white",
     "direction:rtl",
@@ -287,7 +287,7 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
       width: 210mm !important;
       min-height: 297mm !important;
       margin: 0 !important;
-      padding: 12mm !important;
+      padding: 15mm !important;
       box-sizing: border-box !important;
       background: #ffffff !important;
       direction: rtl !important;
