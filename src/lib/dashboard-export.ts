@@ -1,3 +1,4 @@
+// dashboard-export.ts
 import ExcelJS from "exceljs";
 
 export type SummaryRow = { label: string; value: string | number };
@@ -156,6 +157,9 @@ export async function exportToPDF(
       )
       .join("");
 
+    // ============================================================
+    // 🔴 المهم هنا: وجود data-pdf-report="true" على العنصر الأبوي
+    // ============================================================
     const html = `<!doctype html>
 <html dir="rtl" lang="ar">
 <head>
@@ -346,6 +350,7 @@ export async function exportToPDF(
 </style>
 </head>
 <body>
+  <!-- هذا العنصر هو الذي سيتم استنساخه للطباعة -->
   <div data-pdf-report="true" class="page">
 
     <header class="report-header">
