@@ -12,7 +12,7 @@ import logo from "@/assets/wifi-store-logo.png";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
-const APP_NAME = "متجر كروت الواي فاي";
+const APP_NAME = "كرتي";
 const phoneSchema = z.string().trim().min(6, "رقم الهاتف غير صحيح").max(20).regex(/^[0-9+\-\s]+$/, "أرقام فقط");
 const passwordSchema = z.string().min(6, "6 أحرف على الأقل").max(72);
 

@@ -87,10 +87,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" },
-      { title: "متجر كروت الواي فاي — إدارة وبيع" },
+      { title: "كرتي — إدارة وبيع" },
       { name: "description", content: "منصة احترافية لإدارة وبيع كروت الإنترنت للمديرين والوكلاء." },
       { name: "theme-color", content: "#009688" },
-      { property: "og:title", content: "متجر كروت الواي فاي" },
+      { property: "og:title", content: "كرتي" },
       { property: "og:description", content: "منصة احترافية لإدارة وبيع كروت الإنترنت." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

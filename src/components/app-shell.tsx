@@ -126,7 +126,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="flex items-center gap-2 font-bold">
             <div className="rounded-xl gradient-primary-bg p-1.5"><Wifi className="h-4 w-4" /></div>
-            <span className="truncate">كروت الواي فاي</span>
+            <span className="truncate">كرتي</span>
           </div>
           <Button variant="ghost" size="icon" className="rounded-xl" onClick={toggleTheme} aria-label="تبديل الوضع">
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -173,7 +173,7 @@ function BrandHeader({ className }: { className?: string }) {
         <Wifi className="h-5 w-5" />
       </div>
       <div>
-        <div className="font-bold text-sm leading-tight">كروت الواي فاي</div>
+        <div className="font-bold text-sm leading-tight">كرتي</div>
         <div className="text-[11px] text-muted-foreground">إدارة وبيع</div>
       </div>
     </div>

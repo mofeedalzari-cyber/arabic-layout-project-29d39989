@@ -225,7 +225,7 @@ function PackageDetails({ pkg, agentId, onClose }: { pkg: CabinRow; agentId: str
           <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
         </Button>
         <div className="text-center flex-1">
-          <div className="text-[11px] text-muted-foreground">TOP UP — كبينة الكروت</div>
+          <div className="text-[11px] text-muted-foreground">كرتي — كبينة الكروت</div>
           <div className="text-base font-extrabold truncate">{pkg.network_name}</div>
           <div className="text-[11px] text-muted-foreground">{pkg.currency}</div>
         </div>
