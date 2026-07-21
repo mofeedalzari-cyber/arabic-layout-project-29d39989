@@ -141,6 +141,45 @@ function PackagesPage() {
 
   const netMap = new Map(networks?.map((n) => [n.id, n]) ?? []);
 
+  // Request cards flow
+  const [requestPkg, setRequestPkg] = useState<any>(null);
+  const [reqQty, setReqQty] = useState<number>(10);
+  const [reqNotes, setReqNotes] = useState("");
+  const [reqPayment, setReqPayment] = useState<"CREDIT" | "CASH">("CREDIT");
+  const [reqBusy, setReqBusy] = useState(false);
+
+  async function submitRequest() {
+    if (!requestPkg) return;
+    const avail = counts?.get(requestPkg.id)?.avail ?? 0;
+    if (reqQty > avail) {
+      toast.error(`لا يمكن الطلب أكثر من المتاح (${avail})، وأنت طلبت ${reqQty}`);
+      return;
+    }
+    setReqBusy(true);
+    const { error } = await supabase.rpc("request_cards", {
+      _package_id: requestPkg.id, _quantity: reqQty, _notes: reqNotes, _payment_method: reqPayment,
+    });
+    setReqBusy(false);
+    if (error) {
+      const map: Record<string, string> = {
+        FORBIDDEN: "غير مصرح",
+        ACCOUNT_INACTIVE: "حسابك غير مفعّل",
+        PACKAGE_NOT_FOUND: "الباقة غير موجودة",
+        PACKAGE_NOT_IN_YOUR_NETWORK: "هذه الباقة ليست ضمن شبكتك",
+        AGENT_NETWORK_NOT_SET: "لم يتم تعيين شبكتك بعد",
+        INVALID_QUANTITY: "كمية غير صحيحة",
+      };
+      toast.error(map[error.message] ?? error.message);
+      return;
+    }
+    toast.success("تم إرسال الطلب — بانتظار موافقة المدير");
+    setRequestPkg(null); setReqQty(10); setReqNotes(""); setReqPayment("CREDIT");
+    qc.invalidateQueries({ queryKey: ["my-requests"] });
+    qc.invalidateQueries({ queryKey: ["card-requests"] });
+    qc.invalidateQueries({ queryKey: ["packages-counts-all"] });
+  }
+
+
   return (
     <>
       <PageHeader
