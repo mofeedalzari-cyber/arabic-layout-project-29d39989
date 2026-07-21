@@ -14,6 +14,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+} from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
 import { Plus, Package as PackageIcon, Edit3, Trash2, Layers, Clock, CalendarCheck, RefreshCw, Archive, ShoppingCart, LayoutGrid } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
