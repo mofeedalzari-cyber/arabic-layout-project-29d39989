@@ -305,7 +305,6 @@ function PackagesPage() {
           </div>
         )}
       </div>
-      </div>
 
       {/* Request cards sheet (agent) */}
       <Sheet open={!!requestPkg} onOpenChange={(o) => !o && setRequestPkg(null)}>
