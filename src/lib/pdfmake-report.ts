@@ -158,12 +158,18 @@ async function createPdf(docDefinition: TDocumentDefinitions): Promise<Blob> {
     pdfMake.fonts = { ...(pdfMake.fonts || {}), ...FONTS };
   }
 
+  const doc = pdfMake.createPdf({
+    defaultStyle: { font: "Amiri", fontSize: 11 },
+    ...docDefinition,
+  });
+
+  // pdfmake 0.3 returns a Promise from getBlob(); older versions used a callback.
+  if (doc.getBlob.length === 0) {
+    return (await doc.getBlob()) as Blob;
+  }
+
   return new Promise<Blob>((resolve, reject) => {
     try {
-      const doc = pdfMake.createPdf({
-        defaultStyle: { font: "Amiri", fontSize: 11 },
-        ...docDefinition,
-      });
       doc.getBlob((blob: Blob) => resolve(blob));
     } catch (err) {
       reject(err);
