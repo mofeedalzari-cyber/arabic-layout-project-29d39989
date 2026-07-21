@@ -44,10 +44,22 @@ export async function exportToExcel(
 }
 
 
-export async function exportToPDF(title: string, summary: SummaryRow[], sections: TableSection[]) {
+export type ReportMeta = {
+  reportName?: string;
+  branch?: string;
+  user?: string;
+  systemName?: string;
+};
+
+export async function exportToPDF(
+  title: string,
+  summary: SummaryRow[],
+  sections: TableSection[],
+  meta: ReportMeta = {},
+) {
   try {
     const esc = (v: string | number) =>
-      String(v)
+      String(v ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
@@ -58,49 +70,92 @@ export async function exportToPDF(title: string, summary: SummaryRow[], sections
       return s !== "" && /^-?\d+(\.\d+)?$/.test(s);
     };
 
-    const summaryCards = summary
-      .map(
-        (s, i) => `
-      <div class="kpi kpi-${(i % 4) + 1}">
-        <div class="kpi-l">${esc(s.label)}</div>
-        <div class="kpi-v">${esc(s.value)}</div>
-      </div>`,
-      )
-      .join("");
+    // Auto-fill user from Supabase session if not provided
+    let userName = meta.user ?? "";
+    if (!userName) {
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data } = await supabase.auth.getUser();
+        const u = data?.user;
+        userName =
+          (u?.user_metadata as any)?.full_name ||
+          (u?.user_metadata as any)?.username ||
+          u?.phone ||
+          u?.email ||
+          "—";
+      } catch {
+        userName = "—";
+      }
+    }
+
+    const systemName = meta.systemName || "كرتي — نظام إدارة الشبكات والمناديب";
+    const reportName = meta.reportName || title;
+    const branch = meta.branch || "—";
+    const dateStr = new Date().toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+
+    // Summary card: two-column grid of label/value rows
+    const summaryHtml = summary.length
+      ? `
+    <section class="card">
+      <div class="card-title">ملخص التقرير</div>
+      <div class="card-body">
+        <div class="summary-grid">
+          ${summary
+            .map(
+              (s) => `
+            <div class="sum-row">
+              <div class="sum-label">${esc(s.label)}</div>
+              <div class="sum-value">${esc(s.value)}</div>
+            </div>`,
+            )
+            .join("")}
+        </div>
+      </div>
+    </section>`
+      : "";
 
     const sectionsHtml = sections
       .map(
         (sec) => `
-      <h2><span class="dot"></span>${esc(sec.title)}<span class="count">${sec.rows.length}</span></h2>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th class="num">#</th>
-            ${sec.cols.map((c) => `<th>${esc(c)}</th>`).join("")}
-          </tr></thead>
-          <tbody>${
-            sec.rows.length === 0
-              ? `<tr><td colspan="${sec.cols.length + 1}" class="empty">— لا توجد بيانات —</td></tr>`
-              : sec.rows
-                  .map(
-                    (r, i) => `<tr>
-                      <td class="num"><span class="idx">${i + 1}</span></td>
-                      ${r
-                        .map(
-                          (c) =>
-                            `<td class="${isNumeric(c) ? "num money" : ""}">${esc(c)}</td>`,
-                        )
-                        .join("")}
-                    </tr>`,
-                  )
-                  .join("")
-          }</tbody>
-        </table>
-      </div>`,
+      <section class="card">
+        <div class="card-title">${esc(sec.title)}<span class="chip">${sec.rows.length}</span></div>
+        <div class="card-body pad-0">
+          <table class="report-table">
+            <colgroup>
+              <col style="width:36px" />
+              ${sec.cols.map(() => `<col />`).join("")}
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="num">#</th>
+                ${sec.cols.map((c) => `<th>${esc(c)}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                sec.rows.length === 0
+                  ? `<tr><td colspan="${sec.cols.length + 1}" class="empty">— لا توجد بيانات —</td></tr>`
+                  : sec.rows
+                      .map(
+                        (r, i) => `<tr>
+                          <td class="num idx">${i + 1}</td>
+                          ${r
+                            .map(
+                              (c) =>
+                                `<td class="${isNumeric(c) ? "num" : "txt"}">${esc(c)}</td>`,
+                            )
+                            .join("")}
+                        </tr>`,
+                      )
+                      .join("")
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>`,
       )
       .join("");
 
-    const date = new Date().toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
     const html = `<!doctype html>
 <html dir="rtl" lang="ar">
 <head>
@@ -110,145 +165,218 @@ export async function exportToPDF(title: string, summary: SummaryRow[], sections
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
-  @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
   :root {
-    --brand:#0ea884; --brand-2:#0891b2; --brand-3:#065f46;
-    --ink:#0f172a; --muted:#64748b; --line:#d1d5db; --soft:#fafafa;
-    --header-bg:#f3f4f6;
+    --ink:#0f172a;
+    --ink-soft:#334155;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --line-strong:#cbd5e1;
+    --header-bg:#f1f5f9;
+    --alt-row:#f8fafc;
+    --brand:#0f766e;
+    --brand-2:#0891b2;
   }
   * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; background:#fff; }
+  html, body { margin:0; padding:0; background:#fff; color: var(--ink); }
   body {
     font-family: "Cairo", "Tajawal", "Segoe UI", Tahoma, Arial, sans-serif;
-    color: var(--ink);
-    font-size: 13px;
-    line-height: 1.55;
-    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    font-size: 12px;
+    line-height: 1.6;
     direction: rtl;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
-  .page { width: 100%; margin: 0 auto; }
 
-  /* Header */
-  .head {
-    display:flex; justify-content:space-between; align-items:center;
-    gap:16px; padding: 6px 0 12px;
+  /* ============ HEADER ============ */
+  .report-header {
+    display: block;
+    width: 100%;
     border-bottom: 2px solid var(--brand);
-    margin-bottom: 18px;
+    padding: 0 0 12px;
+    margin: 0 0 20px;
   }
-  .brand-wrap { display:flex; align-items:center; gap:12px; }
+  .header-top {
+    display: table; width: 100%; table-layout: fixed;
+  }
+  .header-top > .col {
+    display: table-cell; vertical-align: middle;
+  }
+  .header-left { width: 64px; }
+  .header-right { text-align: left; width: 40%; padding-inline-start: 12px; }
   .logo {
-    width:48px; height:48px; border-radius:12px;
+    width:56px; height:56px; border-radius:14px;
     background: linear-gradient(135deg, var(--brand), var(--brand-2));
-    color:#fff; display:flex; align-items:center; justify-content:center;
-    font-weight:900; font-size:22px;
+    color:#fff; display:inline-block; text-align:center;
+    line-height:56px; font-weight:900; font-size:24px;
   }
-  .brand-name { font-weight:900; font-size:18px; color: var(--ink); }
-  .brand-sub { font-size:11.5px; color: var(--muted); margin-top:2px; }
-  .doc-meta { text-align:left; font-size:11.5px; color: var(--muted); }
-  .doc-badge {
-    display:inline-block; background: var(--header-bg);
-    border:1px solid var(--line); color: var(--ink);
-    border-radius: 6px; padding:3px 10px; font-weight:700; font-size:11px;
-    margin-bottom:4px;
-  }
-  .doc-title { font-size:18px; font-weight:900; margin: 4px 0 0; color: var(--ink); }
+  .system-name { font-size: 16px; font-weight: 900; color: var(--ink); margin-bottom: 2px; }
+  .report-name { font-size: 18px; font-weight: 900; color: var(--brand); margin-top: 6px; }
+  .header-meta { font-size: 11px; color: var(--muted); line-height: 1.9; }
+  .header-meta b { color: var(--ink-soft); font-weight: 700; }
+  .meta-line { display: block; }
 
-  /* KPI cards */
-  .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin: 0 0 24px; }
-  .kpi {
-    border:1px solid var(--line); border-radius:8px;
-    padding:10px 12px; background:#fff;
-    break-inside: avoid; page-break-inside: avoid;
+  /* ============ CARDS ============ */
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin: 0 0 24px;
+    background: #fff;
+    overflow: hidden;
+    page-break-inside: auto;
+    break-inside: auto;
   }
-  .kpi-l { font-size:11px; color: var(--muted); font-weight:600; }
-  .kpi-v { font-size:16px; font-weight:900; margin-top:4px; color: var(--ink); font-variant-numeric: tabular-nums; }
-
-  /* Section titles */
-  h2 {
-    font-size:14px; margin: 24px 0 8px; padding: 6px 10px;
-    color:#fff; font-weight:800;
-    background: linear-gradient(135deg, var(--brand), var(--brand-2));
-    border-radius: 6px;
-    display:flex; align-items:center; gap:8px;
-    page-break-after: avoid;
-  }
-  h2 .dot { display:none; }
-  h2 .count { margin-inline-start:auto; font-size:11px; font-weight:800; color: var(--brand-3); background:#fff; padding:2px 8px; border-radius:999px; }
-
-  /* Tables */
-  .tbl-wrap {
-    border:1px solid var(--line); border-radius: 6px;
-    overflow:hidden; margin-bottom: 24px;
-    break-inside: avoid;
-  }
-  table { width:100%; border-collapse: collapse; font-size:12.5px; table-layout: fixed; }
-  thead { display: table-header-group; }
-  tr { page-break-inside: avoid; break-inside: avoid; }
-  thead th {
+  .card-title {
     background: var(--header-bg);
-    color: var(--ink); font-weight:700;
-    padding:10px 8px; text-align:right;
-    border:1px solid var(--line);
-    font-size:13px;
-    height: 40px;
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    display: block;
   }
-  tbody td {
-    padding:10px 8px; text-align:right;
-    border:1px solid var(--line);
-    height: 40px;
-    word-break: break-word; overflow-wrap: anywhere;
+  .card-title .chip {
+    float: left;
+    background: #fff;
+    color: var(--brand);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 1px 10px;
+    font-size: 10.5px;
+    font-weight: 800;
   }
-  tbody tr:nth-child(even) td { background: var(--soft); }
-  tbody tr:nth-child(odd) td { background: #ffffff; }
-  td.num, th.num { text-align:center; font-variant-numeric: tabular-nums; }
-  td.money { font-weight:700; color: var(--brand-3); }
-  .idx { display:inline-block; min-width:22px; padding:1px 6px; border-radius:4px; background:var(--header-bg); color:var(--ink); font-weight:700; font-size:11px; }
-  .empty { text-align:center; color: var(--muted); padding:14px 0; font-style:italic; }
+  .card-body { padding: 12px 14px; }
+  .card-body.pad-0 { padding: 0; }
 
-  /* Footer */
-  .footer {
-    margin-top:24px; padding-top:10px;
+  /* ============ SUMMARY GRID (2 columns) ============ */
+  .summary-grid {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .sum-row {
+    display: table-row;
+  }
+  .sum-label, .sum-value {
+    display: table-cell;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+    vertical-align: middle;
+  }
+  .sum-label {
+    width: 55%;
+    color: var(--ink-soft);
+    font-weight: 600;
+    background: #fafafa;
+  }
+  .sum-value {
+    width: 45%;
+    color: var(--ink);
+    font-weight: 800;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .summary-grid .sum-row:last-child .sum-label,
+  .summary-grid .sum-row:last-child .sum-value { border-bottom: 0; }
+
+  /* ============ TABLES ============ */
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    direction: rtl;
+    font-size: 11.5px;
+  }
+  .report-table thead th {
+    background: var(--header-bg);
+    color: var(--ink);
+    font-weight: 800;
+    padding: 10px 8px;
+    text-align: right;
+    border: 1px solid var(--line-strong);
+    font-size: 12px;
+    height: 38px;
+  }
+  .report-table tbody td {
+    padding: 9px 8px;
+    text-align: right;
+    border: 1px solid var(--line);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    vertical-align: middle;
+    font-size: 11.5px;
+    color: var(--ink);
+  }
+  .report-table tbody tr:nth-child(even) td { background: var(--alt-row); }
+  .report-table tbody tr { page-break-inside: avoid; break-inside: avoid; }
+  .report-table td.num, .report-table th.num {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .report-table td.idx {
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .report-table .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 16px 0;
+    font-style: italic;
+  }
+
+  /* ============ FOOTER ============ */
+  .report-footer {
+    margin-top: 24px;
+    padding-top: 10px;
     border-top: 1px solid var(--line);
-    display:flex; justify-content:space-between; align-items:center;
-    font-size:11px; color: var(--muted);
+    display: table;
+    width: 100%;
+    font-size: 10.5px;
+    color: var(--muted);
   }
-  .footer .sig { color: var(--brand); font-weight:900; }
-
-  @media print {
-    body { background:#fff !important; }
-    .noprint { display:none !important; }
+  .report-footer > div {
+    display: table-cell;
+    vertical-align: middle;
   }
+  .report-footer .rf-left { text-align: left; }
+  .report-footer .rf-center { text-align: center; }
+  .report-footer .rf-right { text-align: right; }
+  .report-footer .sig { color: var(--brand); font-weight: 900; }
 </style>
 </head>
 <body>
-  <div class="page">
-    <div class="head">
-      <div class="head-row">
-        <div class="brand-wrap">
-          <div class="logo">📊</div>
-          <div>
-            <div class="brand-name">كرتي</div>
-            <div class="brand-sub">نظام إدارة الشبكات والمناديب</div>
+  <div data-pdf-report="true" class="page">
+
+    <header class="report-header">
+      <div class="header-top">
+        <div class="col header-left">
+          <div class="logo">ك</div>
+        </div>
+        <div class="col">
+          <div class="system-name">${esc(systemName)}</div>
+          <div class="report-name">${esc(reportName)}</div>
+        </div>
+        <div class="col header-right">
+          <div class="header-meta">
+            <span class="meta-line"><b>التاريخ:</b> ${esc(dateStr)}</span>
+            <span class="meta-line"><b>الفرع / الشبكة:</b> ${esc(branch)}</span>
+            <span class="meta-line"><b>المستخدم:</b> ${esc(userName)}</span>
           </div>
         </div>
-        <div class="doc-meta">
-          <div class="doc-badge">تقرير</div>
-          <div>📅 ${esc(date)}</div>
-        </div>
       </div>
-      <div class="doc-title">${esc(title)}</div>
-    </div>
+    </header>
 
-    ${summary.length ? `<div class="kpis">${summaryCards}</div>` : ""}
-
+    ${summaryHtml}
     ${sectionsHtml}
 
-    <div class="footer">
-      <div>© جميع الحقوق محفوظة</div>
-      <div>برمجة وتصميم <span class="sig">مفيد الزري</span> · 778492884</div>
-    </div>
+    <footer class="report-footer">
+      <div class="rf-right">© جميع الحقوق محفوظة — <span class="sig">كرتي</span></div>
+      <div class="rf-center">تاريخ الطباعة: ${esc(dateStr)}</div>
+      <div class="rf-left">برمجة وتصميم <span class="sig">مفيد الزري</span></div>
+    </footer>
+
   </div>
-  <script>window.addEventListener('load', () => setTimeout(() => window.print(), 300));</script>
 </body>
 </html>`;
 

@@ -251,7 +251,7 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
     "width:210mm",
     "min-height:297mm",
     "margin:0",
-    "padding:12mm",
+    "padding:15mm",
     "box-sizing:border-box",
     "background:white",
     "direction:rtl",
@@ -287,7 +287,7 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
       width: 210mm !important;
       min-height: 297mm !important;
       margin: 0 !important;
-      padding: 12mm !important;
+      padding: 15mm !important;
       box-sizing: border-box !important;
       background: #ffffff !important;
       direction: rtl !important;
@@ -406,7 +406,28 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       pagebreak: { mode: ["css", "legacy"] },
     };
-    const blob: Blob = await withParentPdfSafeColors(() => html2pdf().set(opt).from(source).outputPdf("blob"));
+    const blob: Blob = await withParentPdfSafeColors(async () => {
+      const worker = html2pdf().set(opt).from(source).toPdf();
+      const pdf: any = await worker.get("pdf");
+      try {
+        const pageCount = pdf.internal.getNumberOfPages();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const stamp = new Date().toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(8);
+        pdf.setTextColor(120, 120, 120);
+        for (let i = 1; i <= pageCount; i++) {
+          pdf.setPage(i);
+          pdf.text(`Page ${i} / ${pageCount}`, pageWidth / 2, pageHeight - 6, { align: "center" });
+          pdf.text(stamp, pageWidth - 8, pageHeight - 6, { align: "right" });
+          pdf.text("© كرتي", 8, pageHeight - 6, { align: "left" });
+        }
+      } catch (stampErr) {
+        console.warn("[htmlToPdfBlob] page-number stamping skipped:", stampErr);
+      }
+      return pdf.output("blob") as Blob;
+    });
     if (!blob || blob.size < 100) throw new Error("PDF blob is empty");
     return blob;
   } finally {
