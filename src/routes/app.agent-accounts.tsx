@@ -404,7 +404,7 @@ async function printAgentReport(a: PrintArgs) {
   .footer { margin-top:24px; padding-top:10px; border-top: 1px solid var(--line); display:flex; justify-content:space-between; align-items:center; font-size:11px; color: var(--muted); }
   .footer .sig { color: var(--brand); font-weight:900; }
   @media print { body { background:#fff !important; } .noprint { display:none !important; } }
-</style>
+</style></head><body>
 <div class="page">
   <div class="head">
     <div class="head-row">
