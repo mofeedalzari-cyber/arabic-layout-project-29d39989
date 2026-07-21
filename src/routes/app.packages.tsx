@@ -181,7 +181,7 @@ function PackagesPage() {
               <div className="flex items-center justify-between gap-3">
                 <div
                   className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
-                  style={{ background: p.color }}
+                  style={{ background: p.color ?? "#009688" }}
                 >
                   <Layers className="h-5 w-5 text-white" />
                 </div>
