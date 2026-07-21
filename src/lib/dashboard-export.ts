@@ -192,7 +192,7 @@ export async function exportToPDF(title: string, summary: SummaryRow[], sections
         <div class="brand-wrap">
           <div class="logo">📊</div>
           <div>
-            <div class="brand-name">كروت الواي فاي — TOP UP</div>
+            <div class="brand-name">كرتي</div>
             <div class="brand-sub">نظام إدارة الشبكات والمناديب</div>
           </div>
         </div>
