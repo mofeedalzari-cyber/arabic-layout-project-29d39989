@@ -314,3 +314,13 @@ function PackageForm({ initial, networks, onSubmit, busy }: {
     </form>
   );
 }
+
+function FeatureTile({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
+  return (
+    <div className="rounded-2xl bg-muted/40 border border-border/40 px-2 py-2.5 text-center">
+      <div className="flex items-center justify-center text-primary mb-1">{icon}</div>
+      <div className="text-sm font-extrabold text-foreground leading-tight truncate">{value}</div>
+      <div className="text-[10px] text-muted-foreground mt-0.5">{label}</div>
+    </div>
+  );
+}
