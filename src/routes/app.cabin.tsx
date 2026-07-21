@@ -472,8 +472,8 @@ function SaleReceipt({ sale }: { sale: any }) {
           try {
             const esc = (s: any) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
             const html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>${esc(sale.transaction_no)}</title><style>body{font-family:Cairo,sans-serif;padding:20px;text-align:center;background:#fff}.b{border:2px dashed #009688;border-radius:12px;padding:16px;margin:12px auto;max-width:340px}h1{color:#009688;margin:0 0 8px}.k{color:#666;font-size:12px}.v{font-weight:bold;font-size:18px;margin-bottom:8px}</style></head><body><div class="b"><h1>${esc(sale.network_name)}</h1><div class="k">${esc(sale.package_name)}</div><hr/><div class="k">اسم المستخدم</div><div class="v">${esc(sale.card_username)}</div>${sale.card_password?`<div class="k">كلمة المرور</div><div class="v">${esc(sale.card_password)}</div>`:""}<div class="k">السعر</div><div class="v">${esc(fmtMoney(Number(sale.price)))}</div><div class="k" style="margin-top:8px">رقم العملية: ${esc(sale.transaction_no)}</div></div><script>window.onload=()=>setTimeout(()=>window.print(),300)</script></body></html>`;
-            const { sharePdfOrPrint } = await import("@/lib/native-pdf");
-            await sharePdfOrPrint({ html, filename: `فاتورة_${sale.transaction_no}`, dialogTitle: "طباعة أو مشاركة الفاتورة" });
+            const { openHtmlForPrint } = await import("@/lib/native-pdf");
+            await openHtmlForPrint({ html, filename: `فاتورة_${sale.transaction_no}`, dialogTitle: "طباعة أو مشاركة الفاتورة" });
           } catch (err) {
             console.error("[SaleReceipt] print error:", err);
             toast.error("فشل الطباعة");

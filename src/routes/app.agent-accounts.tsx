@@ -337,189 +337,57 @@ type PrintArgs = {
   netMap: Map<string, { currency?: string | null }>;
 };
 
-function esc(v: unknown) {
-  return String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
-}
 
 async function printAgentReport(a: PrintArgs) {
-  const now = new Date().toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+  const { exportToPDF } = await import("@/lib/dashboard-export");
 
+  const summary = [
+    { label: "المندوب", value: a.agentLabel },
+    { label: "الشبكة", value: a.networkFilter },
+    { label: "إجمالي المسحوب", value: a.withdrawn },
+    { label: "مباع / مستخدم", value: a.sold },
+    { label: "قيمة المبيعات", value: fmtMoney(a.salesValue) },
+    { label: "فئات / شبكات", value: `${a.distinctPackages} / ${a.networksCount}` },
+  ];
 
+  const sections = [
+    {
+      title: "تفاصيل حسب الشبكة",
+      cols: ["الشبكة", "مسحوب", "مباع", "قيمة المبيعات"],
+      rows: a.byNetwork.map((r) => [
+        r.label,
+        r.withdrawn,
+        r.sold,
+        `${fmtMoney(r.value)} ${r.currency ?? ""}`.trim(),
+      ]),
+    },
+    {
+      title: "تفاصيل حسب الفئة",
+      cols: ["الفئة", "الشبكة", "السعر", "مسحوب", "مباع", "قيمة المبيعات"],
+      rows: a.byPackage.map((r) => [
+        r.label,
+        r.sub ?? "—",
+        r.price != null ? `${fmtMoney(r.price)} ${r.currency ?? ""}`.trim() : "—",
+        r.withdrawn,
+        r.sold,
+        `${fmtMoney(r.value)} ${r.currency ?? ""}`.trim(),
+      ]),
+    },
+    {
+      title: "سجل العمليات",
+      cols: ["رقم العملية", "الفئة", "الشبكة", "القيمة", "تاريخ البيع"],
+      rows: a.sales.map((s) => [
+        s.transaction_no ?? "—",
+        s.package_name,
+        s.network_name,
+        `${fmtMoney(Number(s.price))} ${a.netMap.get(s.network_id)?.currency ?? ""}`.trim(),
+        new Date(s.sold_at).toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" }),
+      ]),
+    },
+  ];
 
-  const initials = esc(
-    (a.agentLabel || "?").trim().split(/\s+/).slice(0, 2).map((w) => w[0] || "").join("")
-  );
-
-  const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
-<title>حساب المندوب — ${esc(a.agentLabel)}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-<style>
-  @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
-  :root {
-    --brand:#0ea884; --brand-2:#0891b2; --brand-3:#065f46;
-    --ink:#0f172a; --muted:#64748b; --line:#d1d5db; --soft:#fafafa;
-    --header-bg:#f3f4f6;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; background:#fff; }
-  body {
-    font-family: "Cairo", "Tajawal", "Segoe UI", Tahoma, Arial, sans-serif;
-    color: var(--ink); font-size: 13px; line-height: 1.55;
-    -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    direction: rtl;
-  }
-  .page { width: 100%; margin: 0 auto; }
-  .head { padding: 6px 0 12px; border-bottom: 2px solid var(--brand); margin-bottom: 16px; }
-  .head-row { display:flex; justify-content:space-between; align-items:center; gap:16px; }
-  .brand-wrap { display:flex; align-items:center; gap:12px; }
-  .logo { width:48px; height:48px; border-radius:12px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px; }
-  .brand-name { font-weight:900; font-size:18px; color: var(--ink); }
-  .brand-sub { font-size:11.5px; color: var(--muted); margin-top:2px; }
-  .doc-meta { text-align:left; font-size:11.5px; color: var(--muted); }
-  .doc-badge { display:inline-block; background: var(--header-bg); border:1px solid var(--line); color: var(--ink); border-radius: 6px; padding:3px 10px; font-weight:700; font-size:11px; margin-bottom:4px; }
-  .agent { display:flex; align-items:center; gap:14px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:16px; break-inside: avoid; }
-  .avatar { width:48px; height:48px; border-radius:50%; background: linear-gradient(135deg, var(--brand), var(--brand-3)); color:#fff; font-weight:900; font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .agent-info h1 { font-size:16px; margin:0 0 2px; font-weight:800; }
-  .agent-info .m { color: var(--muted); font-size:12px; }
-  .pill { margin-inline-start:auto; background: var(--header-bg); color: var(--brand-3); border:1px solid var(--line); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800; }
-  .stats { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin: 0 0 20px; }
-  .stat { border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:#fff; break-inside: avoid; }
-  .stat .l { font-size:11px; color: var(--muted); font-weight:600; }
-  .stat .v { font-size:16px; font-weight:900; margin-top:4px; color: var(--ink); font-variant-numeric: tabular-nums; }
-  h2 { font-size:14px; margin: 24px 0 8px; padding: 6px 10px; color:#fff; font-weight:800; background: linear-gradient(135deg, var(--brand), var(--brand-2)); border-radius: 6px; display:flex; align-items:center; gap:8px; page-break-after: avoid; }
-  .tbl-wrap { border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-bottom:24px; break-inside: avoid; }
-  table { width:100%; border-collapse: collapse; font-size:12.5px; table-layout: fixed; }
-  thead { display: table-header-group; }
-  tr { page-break-inside: avoid; break-inside: avoid; }
-  thead th { background: var(--header-bg); color: var(--ink); font-weight:700; padding:10px 8px; text-align:right; border:1px solid var(--line); font-size:13px; height:40px; }
-  tbody td { padding:10px 8px; text-align:right; border:1px solid var(--line); height:40px; word-break: break-word; overflow-wrap: anywhere; }
-  tbody tr:nth-child(even) td { background: var(--soft); }
-  tbody tr:nth-child(odd) td { background: #ffffff; }
-  td.num, th.num { text-align:center; font-variant-numeric: tabular-nums; width:36px; }
-  .money { font-weight:700; color: var(--brand-3); font-variant-numeric: tabular-nums; }
-  .idx { display:inline-block; min-width:22px; padding:1px 6px; border-radius:4px; background:var(--header-bg); color:var(--ink); font-weight:700; font-size:11px; }
-  .empty { text-align:center; color: var(--muted); padding:14px 0; font-style:italic; }
-  .footer { margin-top:24px; padding-top:10px; border-top: 1px solid var(--line); display:flex; justify-content:space-between; align-items:center; font-size:11px; color: var(--muted); }
-  .footer .sig { color: var(--brand); font-weight:900; }
-  @media print { body { background:#fff !important; } .noprint { display:none !important; } }
-</style></head><body>
-<div class="page">
-  <div class="head">
-    <div class="head-row">
-      <div class="brand-wrap">
-        <div class="logo">📶</div>
-        <div>
-          <div class="brand-name">كرتي</div>
-          <div class="brand-sub">نظام إدارة الشبكات والمناديب</div>
-        </div>
-      </div>
-      <div class="doc-meta">
-        <div class="doc-badge">تقرير مالي</div>
-        <div>📅 ${esc(now)}</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="agent">
-    <div class="avatar">${initials || "؟"}</div>
-    <div class="agent-info">
-      <h1>${esc(a.agentLabel)}</h1>
-      <div class="m">الشبكة: <b>${esc(a.networkFilter)}</b></div>
-    </div>
-    <div class="pill">كشف حساب مندوب</div>
-  </div>
-
-  <div class="stats">
-    <div class="stat"><div class="l">إجمالي المسحوب</div><div class="v">${a.withdrawn}</div></div>
-    <div class="stat blue"><div class="l">مباع / مستخدم</div><div class="v">${a.sold}</div></div>
-    <div class="stat gold"><div class="l">قيمة المبيعات</div><div class="v">${fmtMoney(a.salesValue)}</div></div>
-    <div class="stat rose"><div class="l">فئات / شبكات</div><div class="v">${a.distinctPackages} / ${a.networksCount}</div></div>
-  </div>
-
-  <h2>تفاصيل حسب الشبكة</h2>
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th class="num">#</th><th>الشبكة</th>
-        <th class="num">مسحوب</th><th class="num">مباع</th>
-        <th>قيمة المبيعات</th>
-      </tr></thead>
-      <tbody>${
-        a.byNetwork.map((r, i) => `
-          <tr>
-            <td class="num"><span class="idx">${i + 1}</span></td>
-            <td><b>${esc(r.label)}</b></td>
-            <td class="num">${r.withdrawn}</td>
-            <td class="num">${r.sold}</td>
-            <td class="money">${fmtMoney(r.value)} <span style="color:var(--muted);font-weight:600">${esc(r.currency ?? "")}</span></td>
-          </tr>`).join("") ||
-        `<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>`
-      }</tbody>
-    </table>
-  </div>
-
-  <h2>تفاصيل حسب الفئة</h2>
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th class="num">#</th><th>الفئة</th><th>الشبكة</th>
-        <th>السعر</th>
-        <th class="num">مسحوب</th><th class="num">مباع</th>
-        <th>قيمة المبيعات</th>
-      </tr></thead>
-      <tbody>${
-        a.byPackage.map((r, i) => `
-          <tr>
-            <td class="num"><span class="idx">${i + 1}</span></td>
-            <td><b>${esc(r.label)}</b></td>
-            <td>${esc(r.sub ?? "—")}</td>
-            <td>${r.price != null ? `${fmtMoney(r.price)} <span style="color:var(--muted);font-weight:600">${esc(r.currency ?? "")}</span>` : "—"}</td>
-            <td class="num">${r.withdrawn}</td>
-            <td class="num">${r.sold}</td>
-            <td class="money">${fmtMoney(r.value)} <span style="color:var(--muted);font-weight:600">${esc(r.currency ?? "")}</span></td>
-          </tr>`).join("") ||
-        `<tr><td colspan="7" class="empty">لا توجد بيانات</td></tr>`
-      }</tbody>
-    </table>
-  </div>
-
-  <h2>سجل العمليات</h2>
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th class="num">#</th><th>رقم العملية</th>
-        <th>الفئة</th><th>الشبكة</th>
-        <th>القيمة</th><th>تاريخ البيع</th>
-      </tr></thead>
-      <tbody>${
-        a.sales.map((s, i) => `
-          <tr>
-            <td class="num"><span class="idx">${i + 1}</span></td>
-            <td><code style="background:#f1f5f9;padding:2px 6px;border-radius:6px;font-size:11px">${esc(s.transaction_no ?? "—")}</code></td>
-            <td><b>${esc(s.package_name)}</b></td>
-            <td>${esc(s.network_name)}</td>
-            <td class="money">${fmtMoney(Number(s.price))} <span style="color:var(--muted);font-weight:600">${esc(a.netMap.get(s.network_id)?.currency ?? "")}</span></td>
-            <td style="color:var(--muted);font-size:11.5px">${new Date(s.sold_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}</td>
-          </tr>`).join("") ||
-        `<tr><td colspan="6" class="empty">لا توجد عمليات</td></tr>`
-      }</tbody>
-    </table>
-  </div>
-
-  <div class="footer">
-    <div>© جميع الحقوق محفوظة</div>
-    <div>برمجة وتصميم <span class="sig">مفيد الزري</span> · 778492884</div>
-  </div>
-</div>
-<script>window.onload = () => { setTimeout(() => window.print(), 350); };</script>
-</body></html>`;
-
-  const { sharePdfOrPrint } = await import("@/lib/native-pdf");
-  await sharePdfOrPrint({
-    html,
-    filename: `كشف_حساب_${a.agentLabel}`,
-    dialogTitle: "طباعة أو مشاركة كشف الحساب",
+  await exportToPDF(`كشف_حساب_${a.agentLabel}`, summary, sections, {
+    reportName: `كشف حساب المندوب — ${a.agentLabel}`,
+    branch: a.networkFilter,
   });
 }
