@@ -408,6 +408,11 @@ export async function buildReportPdfBlob(opts: {
   sections: PdfTableSection[];
   meta?: PdfReportMeta;
 }): Promise<Blob> {
+  // MUST prime the Arabic shaper BEFORE building any content, because
+  // ar() runs synchronously and returns raw (reversed-only) text if the
+  // shaper isn't ready yet — producing disconnected letters in the PDF.
+  await primeArabicShaping();
+
   const meta: Required<PdfReportMeta> = {
     systemName: opts.meta?.systemName || "كرتي — نظام إدارة الشبكات والمناديب",
     reportName: opts.meta?.reportName || opts.title,
@@ -418,6 +423,7 @@ export async function buildReportPdfBlob(opts: {
     dateStyle: "medium",
     timeStyle: "short",
   });
+
 
   const content: any[] = [
     headerBlock(opts.title, meta, dateStr),
