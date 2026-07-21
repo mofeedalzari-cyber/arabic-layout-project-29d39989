@@ -1,3 +1,4 @@
+// native-pdf.ts
 // Native/Web PDF generation & sharing helper.
 // - On Android (Capacitor): render HTML → PDF (html2pdf.js) → save via Filesystem
 //   → open the native Share Sheet (WhatsApp / Print Service / Gmail / Drive / …).
@@ -240,39 +241,83 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
   doc.close();
   sanitizePdfDocument(doc);
 
+  // ================================================================
+  // 1. تحديد عنصر التقرير الأصلي واستنساخه
+  // ================================================================
   const originalReport = doc.body.querySelector<HTMLElement>('[data-pdf-report="true"], .page') ?? doc.body.firstElementChild;
   const reportClone = (originalReport?.cloneNode(true) as HTMLElement | null) ?? doc.createElement("div");
   if (!originalReport) reportClone.innerHTML = doc.body.innerHTML;
 
+  // ================================================================
+  // 2. إنشاء حاوية الطباعة المخصصة بأبعاد A4 ثابتة
+  // ================================================================
   const printContainer = doc.createElement("div");
   printContainer.id = "pdf-print-container";
   printContainer.setAttribute("dir", "rtl");
-  printContainer.style.cssText = [
-    "width:210mm",
-    "min-height:297mm",
-    "margin:0",
-    "padding:15mm",
-    "box-sizing:border-box",
-    "background:white",
-    "direction:rtl",
-    "display:block",
-    "overflow:visible",
-    "position:relative",
-    "transform:none",
-    "scale:1",
-    "zoom:1",
-    "translate:none",
-    "max-width:none",
-  ].join(";");
+  printContainer.style.cssText = `
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+    padding: 12mm;
+    box-sizing: border-box;
+    background: #ffffff;
+    direction: rtl;
+    display: block;
+    position: relative;
+    overflow: visible;
+    transform: none;
+    scale: 1;
+    zoom: 1;
+    translate: none;
+  `;
   printContainer.appendChild(reportClone);
 
+  // ================================================================
+  // 3. إزالة الأنماط المتعارضة من جميع العناصر داخل الحاوية
+  // ================================================================
+  function stripBadStyles(el: HTMLElement) {
+    // إزالة الخصائص التي تسبب مشاكل في html2canvas
+    const badProps = ["transform", "scale", "zoom", "translate", "max-width", "position", "inset", "top", "right", "bottom", "left"];
+    for (const prop of badProps) el.style.removeProperty(prop);
+
+    const display = el.style.display?.toLowerCase() || "";
+    if (display === "inline-block" || display === "inline") {
+      el.style.display = "block";
+      el.style.width = "100%";
+    }
+
+    const width = el.style.width?.toLowerCase() || "";
+    if (width.includes("fit-content") || width === "auto") {
+      el.style.width = "100%";
+    }
+
+    if (el.tagName.toLowerCase() === "table") {
+      el.style.width = "100%";
+      el.style.tableLayout = "fixed";
+      el.style.borderCollapse = "collapse";
+      el.style.pageBreakInside = "auto";
+    }
+    if (el.tagName.toLowerCase() === "th" || el.tagName.toLowerCase() === "td") {
+      el.style.padding = "8px";
+      el.style.border = "1px solid #cccccc";
+      el.style.wordBreak = "break-word";
+      el.style.whiteSpace = "normal";
+      el.style.verticalAlign = "top";
+    }
+  }
+  Array.from(printContainer.querySelectorAll<HTMLElement>("*")).forEach(stripBadStyles);
+  // نطبق أيضاً على الحاوية نفسها بعض التطبيع
+  stripBadStyles(printContainer as HTMLElement);
+
+  // ================================================================
+  // 4. إضافة أنماط إجبارية لضمان ملء العرض
+  // ================================================================
   const pdfLayout = doc.createElement("style");
   pdfLayout.textContent = `
     @page { size: A4 portrait; margin: 0; }
-    html,
-    body {
+    html, body {
       width: 210mm !important;
-      min-width: 210mm !important;
+      min-height: 297mm !important;
       margin: 0 !important;
       padding: 0 !important;
       background: #ffffff !important;
@@ -287,7 +332,7 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
       width: 210mm !important;
       min-height: 297mm !important;
       margin: 0 !important;
-      padding: 15mm !important;
+      padding: 12mm !important;
       box-sizing: border-box !important;
       background: #ffffff !important;
       direction: rtl !important;
@@ -298,29 +343,9 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
       scale: 1 !important;
       zoom: 1 !important;
       translate: none !important;
-      max-width: none !important;
     }
-    #pdf-print-container *,
-    #pdf-print-container *::before,
-    #pdf-print-container *::after {
-      box-sizing: border-box !important;
-      transform: none !important;
-      scale: 1 !important;
-      zoom: 1 !important;
-      translate: none !important;
-      max-width: none !important;
-      overflow: visible !important;
-    }
-    #pdf-print-container [style*="position:absolute"],
-    #pdf-print-container [style*="position: absolute"] {
-      position: static !important;
-    }
-    #pdf-print-container [style*="fit-content"],
-    #pdf-print-container [style*="inline-block"] {
-      display: block !important;
-      width: 100% !important;
-    }
-    #pdf-print-container .page,
+    /* إجبار جميع الأقسام على العرض الكامل */
+    #pdf-print-container > *,
     #pdf-print-container section,
     #pdf-print-container article,
     #pdf-print-container main,
@@ -333,12 +358,20 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
     #pdf-print-container .tbl-wrap,
     #pdf-print-container h1,
     #pdf-print-container h2,
-    #pdf-print-container h3 {
+    #pdf-print-container h3,
+    #pdf-print-container .card,
+    #pdf-print-container .card-body,
+    #pdf-print-container .summary-grid,
+    #pdf-print-container .sum-row {
       display: block !important;
       width: 100% !important;
       max-width: none !important;
       position: static !important;
       overflow: visible !important;
+      transform: none !important;
+      scale: 1 !important;
+      zoom: 1 !important;
+      translate: none !important;
     }
     #pdf-print-container table {
       width: 100% !important;
@@ -366,14 +399,24 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
       max-width: 100% !important;
       height: auto !important;
     }
+    /* إزالة أي positioning مطلق */
+    #pdf-print-container * {
+      transform: none !important;
+      scale: 1 !important;
+      zoom: 1 !important;
+      translate: none !important;
+      max-width: none !important;
+      overflow: visible !important;
+      position: static !important;
+    }
   `;
   doc.head.appendChild(pdfLayout);
 
+  // استبدال محتوى body بالحاوية فقط
   doc.body.innerHTML = "";
   doc.body.appendChild(printContainer);
 
-  normalizePdfPrintTree(printContainer);
-
+  // الانتظار لتحميل الخطوط والصور
   try {
     const imgs = Array.from(doc.querySelectorAll("img"));
     await Promise.all(
@@ -389,102 +432,56 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
     if ((doc as any).fonts?.ready) await (doc as any).fonts.ready;
   } catch {}
 
-  const source = printContainer;
+  // ================================================================
+  // 5. توليد PDF باستخدام الإعدادات المطلوبة
+  // ================================================================
+  const opt = {
+    margin: 0,
+    filename,
+    image: { type: "jpeg", quality: 1 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      scrollX: 0,
+      scrollY: 0,
+    },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    pagebreak: { mode: ["css", "legacy"] },
+  };
 
+  let blob: Blob;
   try {
-    const opt = {
-      margin: 0,
-      filename,
-      image: { type: "jpeg", quality: 1 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        scrollX: 0,
-        scrollY: 0,
-      },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["css", "legacy"] },
-    };
-    const blob: Blob = await withParentPdfSafeColors(async () => {
-      const worker = html2pdf().set(opt).from(source).toPdf();
-      const pdf: any = await worker.get("pdf");
-      try {
-        const pageCount = pdf.internal.getNumberOfPages();
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const stamp = new Date().toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(8);
-        pdf.setTextColor(120, 120, 120);
-        for (let i = 1; i <= pageCount; i++) {
-          pdf.setPage(i);
-          pdf.text(`Page ${i} / ${pageCount}`, pageWidth / 2, pageHeight - 6, { align: "center" });
-          pdf.text(stamp, pageWidth - 8, pageHeight - 6, { align: "right" });
-          pdf.text("© كرتي", 8, pageHeight - 6, { align: "left" });
-        }
-      } catch (stampErr) {
-        console.warn("[htmlToPdfBlob] page-number stamping skipped:", stampErr);
+    const worker = html2pdf().set(opt).from(printContainer).toPdf();
+    const pdf: any = await worker.get("pdf");
+
+    // إضافة أرقام الصفحات وتوقيع
+    try {
+      const pageCount = pdf.internal.getNumberOfPages();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const stamp = new Date().toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8);
+      pdf.setTextColor(120, 120, 120);
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.text(`صفحة ${i} / ${pageCount}`, pageWidth / 2, pageHeight - 6, { align: "center" });
+        pdf.text(stamp, pageWidth - 8, pageHeight - 6, { align: "right" });
+        pdf.text("© كرتي", 8, pageHeight - 6, { align: "left" });
       }
-      return pdf.output("blob") as Blob;
-    });
-    if (!blob || blob.size < 100) throw new Error("PDF blob is empty");
-    return blob;
+    } catch (stampErr) {
+      console.warn("[htmlToPdfBlob] page-number stamping skipped:", stampErr);
+    }
+
+    blob = pdf.output("blob") as Blob;
   } finally {
-    printContainer.remove();
+    // تنظيف الإطار
     iframe.remove();
   }
-}
 
-function normalizePdfPrintTree(root: HTMLElement) {
-  const badProps = [
-    "transform",
-    "scale",
-    "zoom",
-    "max-width",
-    "translate",
-    "overflow",
-    "overflow-x",
-    "overflow-y",
-    "position",
-    "inset",
-    "top",
-    "right",
-    "bottom",
-    "left",
-  ];
-
-  Array.from(root.querySelectorAll<HTMLElement>("*")).forEach((el) => {
-    for (const prop of badProps) el.style.removeProperty(prop);
-
-    const inlineDisplay = el.style.getPropertyValue("display").trim().toLowerCase();
-    const inlineWidth = el.style.getPropertyValue("width").trim().toLowerCase();
-    if (inlineDisplay === "inline-block" || inlineWidth.includes("fit-content")) {
-      el.style.setProperty("display", "block", "important");
-      el.style.setProperty("width", "100%", "important");
-    }
-
-    if (el.matches(".page, section, article, main, header, footer, .head, .head-row, .kpis, .kpi, .tbl-wrap, h1, h2, h3")) {
-      el.style.setProperty("display", "block", "important");
-      el.style.setProperty("width", "100%", "important");
-      el.style.setProperty("overflow", "visible", "important");
-    }
-
-    const tagName = el.tagName.toLowerCase();
-    if (tagName === "table") {
-      el.style.setProperty("width", "100%", "important");
-      el.style.setProperty("table-layout", "fixed", "important");
-      el.style.setProperty("border-collapse", "collapse", "important");
-      el.style.setProperty("page-break-inside", "auto", "important");
-    }
-
-    if (tagName === "th" || tagName === "td") {
-      el.style.setProperty("padding", "8px", "important");
-      el.style.setProperty("border", "1px solid #cccccc", "important");
-      el.style.setProperty("word-break", "break-word", "important");
-      el.style.setProperty("white-space", "normal", "important");
-    }
-  });
+  if (!blob || blob.size < 100) throw new Error("PDF blob is empty");
+  return blob;
 }
 
 function blobToBase64(blob: Blob): Promise<string> {
