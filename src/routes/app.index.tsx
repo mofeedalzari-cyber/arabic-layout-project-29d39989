@@ -623,7 +623,7 @@ function AgentHome({ name }: { name: string }) {
                 <Link key={p.id} to="/app/networks/$id" params={{ id: network.id }} className="group block">
                   <div
                     className="rounded-xl p-3 sm:p-4 border border-border/40 bg-card hover:border-primary/40 transition-colors"
-                    style={{ borderInlineStartWidth: 4, borderInlineStartColor: p.color }}
+                    style={{ borderInlineStartWidth: 4, borderInlineStartColor: p.color || "#009688" }}
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <h5 className="font-bold text-sm [overflow-wrap:anywhere]">{p.name}</h5>
