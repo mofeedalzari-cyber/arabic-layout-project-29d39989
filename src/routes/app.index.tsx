@@ -598,11 +598,41 @@ function AgentHome({ name }: { name: string }) {
       )}
 
       <div className="mb-3 flex items-center gap-2">
+        <Wifi className="h-4 w-4 text-primary" />
+        <h3 className="font-bold text-sm sm:text-base">الشبكات المتاحة</h3>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-8">
+        {networks?.map((n) => (
+          <Link key={n.id} to="/app/networks/$id" params={{ id: n.id }} className="group">
+            <Card className="card-elegant card-elegant-hover overflow-hidden border-0 slide-up">
+              <div className="h-24 relative"
+                   style={{ background: `linear-gradient(135deg, ${n.primary_color}, ${n.secondary_color})` }}>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Wifi className="h-12 w-12 text-white/90" />
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-lg mb-1 [overflow-wrap:anywhere]">{n.name}</h3>
+                {n.description && <p className="text-xs text-muted-foreground line-clamp-2">{n.description}</p>}
+                <div className="mt-3 text-xs font-semibold text-primary">عرض الباقات ←</div>
+              </div>
+            </Card>
+          </Link>
+        ))}
+        {networks?.length === 0 && (
+          <div className="col-span-full">
+            <EmptyMsg>لا توجد شبكات متاحة حاليًا.</EmptyMsg>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-3 flex items-center gap-2">
         <Package className="h-4 w-4 text-primary" />
         <h3 className="font-bold text-sm sm:text-base">الباقات المتاحة</h3>
       </div>
 
-      <div className="space-y-4 mb-8">
+      <div className="space-y-4">
         {packagesByNetwork.length === 0 && <EmptyMsg>لا توجد باقات متاحة حاليًا.</EmptyMsg>}
         {packagesByNetwork.map(({ network, packages: pkgs }) => (
           <Card key={network.id} className="card-elegant border-0 p-3 sm:p-4 w-full max-w-full">
@@ -642,36 +672,6 @@ function AgentHome({ name }: { name: string }) {
             </div>
           </Card>
         ))}
-      </div>
-
-      <div className="mb-3 flex items-center gap-2">
-        <Wifi className="h-4 w-4 text-primary" />
-        <h3 className="font-bold text-sm sm:text-base">الشبكات المتاحة</h3>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {networks?.map((n) => (
-          <Link key={n.id} to="/app/networks/$id" params={{ id: n.id }} className="group">
-            <Card className="card-elegant card-elegant-hover overflow-hidden border-0 slide-up">
-              <div className="h-24 relative"
-                   style={{ background: `linear-gradient(135deg, ${n.primary_color}, ${n.secondary_color})` }}>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Wifi className="h-12 w-12 text-white/90" />
-                </div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-lg mb-1 [overflow-wrap:anywhere]">{n.name}</h3>
-                {n.description && <p className="text-xs text-muted-foreground line-clamp-2">{n.description}</p>}
-                <div className="mt-3 text-xs font-semibold text-primary">عرض الباقات ←</div>
-              </div>
-            </Card>
-          </Link>
-        ))}
-        {networks?.length === 0 && (
-          <div className="col-span-full">
-            <EmptyMsg>لا توجد شبكات متاحة حاليًا.</EmptyMsg>
-          </div>
-        )}
       </div>
     </div>
   );
