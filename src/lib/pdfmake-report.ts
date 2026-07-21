@@ -142,8 +142,22 @@ const FONTS: TFontDictionary = {
 async function createPdf(docDefinition: TDocumentDefinitions): Promise<Blob> {
   await primeArabicShaping();
   const [pdfMake, vfs] = await Promise.all([getPdfMake(), loadFontsVfs()]);
-  pdfMake.vfs = vfs;
-  pdfMake.fonts = FONTS;
+  // pdfmake 0.3 no longer reads `pdfMake.vfs = ...` reliably in the browser.
+  // The fonts must be registered into its virtual file system before createPdf().
+  if (typeof pdfMake.addVirtualFileSystem === "function") {
+    pdfMake.addVirtualFileSystem(vfs);
+  } else {
+    pdfMake.vfs = { ...(pdfMake.vfs || {}), ...vfs };
+  }
+
+  if (typeof pdfMake.addFonts === "function") {
+    pdfMake.addFonts(FONTS);
+  } else if (typeof pdfMake.setFonts === "function") {
+    pdfMake.setFonts(FONTS);
+  } else {
+    pdfMake.fonts = { ...(pdfMake.fonts || {}), ...FONTS };
+  }
+
   return new Promise<Blob>((resolve, reject) => {
     try {
       const doc = pdfMake.createPdf({
