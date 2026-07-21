@@ -212,10 +212,15 @@ async function withParentPdfSafeColors<T>(task: () => Promise<T>): Promise<T> {
 async function htmlToPdfBlob(html: string): Promise<Blob> {
   const html2pdf: any = (await import("html2pdf.js")).default;
 
+  // A4 portrait at 96dpi = 794 x 1123 px. Render source at the exact
+  // printable width (A4 − 2*12mm ≈ 703px) so RTL content fills the page
+  // instead of collapsing to the right edge.
+  const A4_WIDTH_PX = 794;
+  const PRINTABLE_WIDTH_PX = 703;
+
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
-  iframe.style.cssText =
-    "position:fixed;left:0;top:0;width:800px;height:1200px;border:0;visibility:hidden;pointer-events:none;z-index:-1;background:#fff;";
+  iframe.style.cssText = `position:fixed;left:0;top:0;width:${A4_WIDTH_PX}px;height:1200px;border:0;visibility:hidden;pointer-events:none;z-index:-1;background:#fff;`;
   document.body.appendChild(iframe);
 
   await new Promise<void>((resolve) => {
@@ -229,6 +234,16 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
   doc.write(sanitized);
   doc.close();
   sanitizePdfDocument(doc);
+
+  // Lock printable width so RTL content fills the page.
+  const widthLock = doc.createElement("style");
+  widthLock.textContent = `
+    html, body { width: ${PRINTABLE_WIDTH_PX}px !important; margin: 0 auto !important; padding: 0 !important; background:#fff !important; }
+    body > * { max-width: 100% !important; }
+    table { table-layout: fixed !important; width: 100% !important; word-wrap: break-word; }
+    th, td { word-break: break-word; overflow-wrap: anywhere; }
+  `;
+  doc.head.appendChild(widthLock);
 
   try {
     const imgs = Array.from(doc.querySelectorAll("img"));
@@ -249,19 +264,20 @@ async function htmlToPdfBlob(html: string): Promise<Blob> {
 
   try {
     const opt = {
-      margin: [8, 8, 8, 8],
+      margin: [12, 12, 15, 12],
       filename: "document.pdf",
-      image: { type: "jpeg", quality: 0.95 },
+      image: { type: "jpeg", quality: 0.98 },
       html2canvas: {
-        scale: 1.5,
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
-        windowWidth: 800,
+        width: PRINTABLE_WIDTH_PX,
+        windowWidth: PRINTABLE_WIDTH_PX,
       },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["css", "legacy"] },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
+      pagebreak: { mode: ["css", "legacy"], avoid: ["tr", ".avoid-break", ".tbl-wrap", ".stat", ".kpi"] },
     };
     const blob: Blob = await withParentPdfSafeColors(() => html2pdf().set(opt).from(source).outputPdf("blob"));
     if (!blob || blob.size < 100) throw new Error("PDF blob is empty");
