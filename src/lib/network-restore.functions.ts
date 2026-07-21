@@ -9,7 +9,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  */
 export const restoreMyNetwork = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { payload: any }) => data)
+  .validator((data: { payload: any }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const payload = data?.payload;
