@@ -1,33 +1,48 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 export type SummaryRow = { label: string; value: string | number };
 export type TableSection = { title: string; cols: string[]; rows: (string | number)[][] };
 
-export function exportToExcel(fileName: string, summary: SummaryRow[], sections: TableSection[]) {
+export async function exportToExcel(
+  fileName: string,
+  summary: SummaryRow[],
+  sections: TableSection[],
+) {
   try {
-    const wb = XLSX.utils.book_new();
+    const wb = new ExcelJS.Workbook();
 
-    const sumAoA: (string | number)[][] = [["البند", "القيمة"], ...summary.map((s) => [s.label, s.value])];
-    const wsSum = XLSX.utils.aoa_to_sheet(sumAoA);
-    wsSum["!cols"] = [{ wch: 28 }, { wch: 20 }];
-    (wsSum as unknown as { "!rtl": boolean })["!rtl"] = true;
-    XLSX.utils.book_append_sheet(wb, wsSum, "الملخص");
+    const wsSum = wb.addWorksheet("الملخص", { views: [{ rightToLeft: true }] });
+    wsSum.columns = [
+      { header: "البند", key: "label", width: 28 },
+      { header: "القيمة", key: "value", width: 20 },
+    ];
+    summary.forEach((s) => wsSum.addRow({ label: s.label, value: s.value }));
 
-    sections.forEach((sec) => {
-      const aoa: (string | number)[][] = [sec.cols, ...sec.rows];
-      const ws = XLSX.utils.aoa_to_sheet(aoa);
-      ws["!cols"] = sec.cols.map(() => ({ wch: 20 }));
-      (ws as unknown as { "!rtl": boolean })["!rtl"] = true;
-      const sheetName = sec.title.slice(0, 30);
-      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    sections.forEach((sec, i) => {
+      const name = (sec.title || `ورقة ${i + 1}`).slice(0, 30).replace(/[\\/*?:[\]]/g, " ");
+      const ws = wb.addWorksheet(name, { views: [{ rightToLeft: true }] });
+      ws.columns = sec.cols.map((c) => ({ header: c, key: c, width: 20 }));
+      sec.rows.forEach((row) => ws.addRow(row));
     });
 
-    XLSX.writeFile(wb, `${fileName}.xlsx`);
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${fileName}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch (err) {
     console.error("[exportToExcel] failed:", err);
     alert("فشل تصدير ملف Excel، يرجى المحاولة مجدداً");
   }
 }
+
 
 export async function exportToPDF(title: string, summary: SummaryRow[], sections: TableSection[]) {
   try {
