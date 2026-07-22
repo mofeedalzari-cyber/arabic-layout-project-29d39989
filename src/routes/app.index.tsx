@@ -234,7 +234,7 @@ function AdminBreakdowns() {
       { label: "عدد المناديب", value: summary.agentsCount },
       { label: "إجمالي قيمة المبيعات", value: fmtMoney(summary.salesValue) },
       { label: "إجمالي ديون المناديب", value: fmtMoney(summary.debts) },
-      { label: "الديون المستلمة", value: fmtMoney(summary.collected) },
+      { label: "الرصيد", value: fmtMoney(summary.collected) },
     ];
     const sections: TableSection[] = [
       {
@@ -300,7 +300,7 @@ function AdminBreakdowns() {
           <SummaryItem label="عدد المناديب" value={fmtMoney(summary.agentsCount)} />
           <SummaryItem label="إجمالي قيمة المبيعات" value={fmtMoney(summary.salesValue)} tone="primary" />
           <SummaryItem label="إجمالي ديون المناديب" value={fmtMoney(summary.debts)} tone="danger" />
-          <SummaryItem label="الديون المستلمة" value={fmtMoney(summary.collected)} tone="success" />
+          <SummaryItem label="الرصيد" value={fmtMoney(summary.collected)} tone="success" />
 
         </div>
       </Card>
@@ -418,7 +418,7 @@ function AdminBreakdowns() {
                   { label: "عدد المناديب", value: fmtMoney(summary.agentsCount) },
                   { label: "إجمالي قيمة المبيعات", value: fmtMoney(summary.salesValue) },
                   { label: "إجمالي ديون المناديب", value: fmtMoney(summary.debts) },
-                  { label: "الديون المستلمة", value: fmtMoney(summary.collected) },
+                  { label: "الرصيد", value: fmtMoney(summary.collected) },
                 ];
                 const stamp = new Date().toISOString().slice(0, 10);
                 exportToPDF(
