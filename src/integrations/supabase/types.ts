@@ -675,6 +675,14 @@ export type Database = {
         Args: { _agent_id: string; _network_id: string }
         Returns: undefined
       }
+      settle_agent_debt: {
+        Args: { _agent_id: string; _amount: number; _note?: string }
+        Returns: {
+          applied: number
+          payments_count: number
+          remaining_debt: number
+        }[]
+      }
       username_from_phone: { Args: { _phone: string }; Returns: string }
     }
     Enums: {
