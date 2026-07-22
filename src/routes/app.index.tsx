@@ -84,7 +84,7 @@ function AdminDashboard() {
         <StatCard icon={DollarSign} label="قيمة المبيعات" value={fmtMoney(stats?.sold_value ?? 0)} tone="primary" />
         <StatCard icon={Wifi} label="الشبكات" value={stats?.networks ?? 0} />
         <StatCard icon={Package} label="الباقات" value={stats?.packages ?? 0} />
-        <StatCard icon={Users} label="الوكلاء" value={stats?.agents ?? 0} />
+        <StatCard icon={Users} label="المناديب" value={stats?.agents ?? 0} />
         <StatCard icon={TrendingUp} label="قيمة المتوفر" value={fmtMoney(stats?.available_value ?? 0)} />
       </div>
 
@@ -108,7 +108,7 @@ function AdminDashboard() {
         </Card>
 
         <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
-          <h3 className="font-bold mb-4 text-sm sm:text-base">أفضل الوكلاء مبيعًا</h3>
+          <h3 className="font-bold mb-4 text-sm sm:text-base">أفضل المناديب مبيعًا</h3>
           <div className="space-y-2">
             {topAgents?.length ? topAgents.map((a, i) => (
               <div key={a.name} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-muted/40 text-sm">

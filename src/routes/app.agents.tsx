@@ -79,7 +79,7 @@ function AgentsPage() {
 
   return (
     <>
-      <PageHeader title="الوكلاء" description="إدارة حسابات الوكلاء وعرض إحصائياتهم" />
+      <PageHeader title="المناديب" description="إدارة حسابات المناديب وعرض إحصائياتهم" />
       <div className="relative mb-4 max-w-md">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input placeholder="بحث..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />
