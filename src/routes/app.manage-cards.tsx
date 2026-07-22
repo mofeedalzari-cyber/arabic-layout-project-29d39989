@@ -298,6 +298,7 @@ function ManageCardsPage() {
           )}
           <Button variant="outline" className="rounded-lg h-9" onClick={selectPage} disabled={!pageRows.length}>تحديد الصفحة</Button>
           <Button variant="outline" className="rounded-lg h-9" onClick={unselectPage} disabled={!pageRows.length}>إلغاء تحديد الصفحة</Button>
+          <Button variant="outline" className="rounded-lg h-9 text-destructive border-destructive/40" onClick={selectAllSold} disabled={!cards?.some((c) => c.status === "SOLD")}>تحديد كل المباع</Button>
           <Button variant="outline" className="rounded-lg h-9" onClick={() => setSelected(new Set())} disabled={!selected.size}>مسح التحديد</Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
