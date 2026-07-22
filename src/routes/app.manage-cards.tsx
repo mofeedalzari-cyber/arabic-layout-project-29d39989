@@ -323,6 +323,10 @@ function ManageCardsPage() {
           <Button variant="outline" className="rounded-lg h-9" onClick={selectPage} disabled={!pageRows.length}>تحديد الصفحة</Button>
           <Button variant="outline" className="rounded-lg h-9" onClick={unselectPage} disabled={!pageRows.length}>إلغاء تحديد الصفحة</Button>
           <Button variant="outline" className="rounded-lg h-9 text-destructive border-destructive/40" onClick={selectAllSold} disabled={!cards?.some((c) => c.status === "SOLD")}>تحديد كل المباع</Button>
+          <Button variant="outline" className="rounded-lg h-9 text-blue-600 border-blue-500/40" onClick={selectAllAssigned} disabled={!cards?.some((c) => c.status === "ASSIGNED")}>تحديد كل المسحوب</Button>
+          <Button variant="outline" className="rounded-lg h-9 text-blue-600 border-blue-500/40" onClick={printAssigned} disabled={!cards?.some((c) => c.status === "ASSIGNED")}>
+            <Printer className="h-4 w-4 ml-1" />طباعة المسحوب
+          </Button>
           <Button variant="outline" className="rounded-lg h-9" onClick={() => setSelected(new Set())} disabled={!selected.size}>مسح التحديد</Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
