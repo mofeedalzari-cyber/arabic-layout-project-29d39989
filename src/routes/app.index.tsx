@@ -342,53 +342,7 @@ function AdminBreakdowns() {
           </Button>
         </div>
 
-        {/* Mobile: cards */}
-        <div className="md:hidden space-y-2">
-          {salesByPkg.length === 0 ? (
-            <EmptyMsg>لا توجد بيانات.</EmptyMsg>
-          ) : salesByPkg.map((r, i) => (
-            <MobileDataCard
-              key={i}
-              title={`${r.network} — ${r.pkg}`}
-              fields={[
-                { label: "إجمالي الكروت", value: fmtMoney(r.total) },
-                { label: "المباع", value: fmtMoney(r.sold), tone: "success" },
-                { label: "المتبقي", value: fmtMoney(r.remaining), tone: "warning" },
-                { label: "القيمة", value: `${fmtMoney(r.value)}${r.currency ? " " + r.currency : ""}`, tone: "primary" },
-              ]}
-            />
-          ))}
-        </div>
-
-        {/* Desktop: table */}
-        <div className="hidden md:block overflow-x-auto">
-          <table dir="rtl" className="w-full text-sm">
-            <thead>
-              <tr className="text-[11px] text-muted-foreground border-b border-border/50">
-                <th className="text-right font-medium px-2 py-2">الشبكة</th>
-                <th className="text-right font-medium px-2 py-2">الفئة</th>
-                <th className="text-right font-medium px-2 py-2">إجمالي الكروت</th>
-                <th className="text-right font-medium px-2 py-2">مباعة</th>
-                <th className="text-right font-medium px-2 py-2">متبقية</th>
-                <th className="text-right font-medium px-2 py-2">إجمالي القيمة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {salesByPkg.length === 0 ? (
-                <tr><td colSpan={6} className="text-center text-sm text-muted-foreground py-4">لا توجد بيانات.</td></tr>
-              ) : salesByPkg.map((r, i) => (
-                <tr key={i} className="border-t border-border/50">
-                  <td className="px-2 py-2">{r.network}</td>
-                  <td className="px-2 py-2">{r.pkg}</td>
-                  <td className="px-2 py-2">{r.total}</td>
-                  <td className="px-2 py-2">{r.sold}</td>
-                  <td className="px-2 py-2">{r.remaining}</td>
-                  <td className="px-2 py-2">{fmtMoney(r.value)}{r.currency ? " " + r.currency : ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <PackagesChart data={salesByPkg} />
       </Card>
 
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
