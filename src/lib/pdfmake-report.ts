@@ -373,6 +373,8 @@ export async function buildReportPdfBlob(opts: {
     reportName: opts.meta?.reportName || opts.title,
     branch: opts.meta?.branch || "—",
     user: opts.meta?.user || "—",
+    userRole: opts.meta?.userRole || "المستخدم",
+
   };
   const dateStr = new Date().toLocaleString("ar-EG", {
     dateStyle: "medium",
