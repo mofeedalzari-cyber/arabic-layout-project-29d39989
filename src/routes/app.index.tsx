@@ -105,16 +105,17 @@ function AdminBreakdowns() {
   const agentMap = useMemo(() => new Map(agents?.map((a) => [a.id, a]) ?? []), [agents]);
 
   const salesByPkg = useMemo(() => {
-    const m = new Map<string, { network: string; pkg: string; total: number; sold: number; remaining: number; value: number; currency?: string }>();
+    const m = new Map<string, { network: string; pkg: string; total: number; sold: number; withdrawn: number; remaining: number; value: number; currency?: string }>();
     (packages ?? []).forEach((p) => {
       const net = netMap.get(p.network_id);
-      m.set(p.id, { network: net?.name ?? "—", pkg: p.name, total: 0, sold: 0, remaining: 0, value: 0, currency: net?.currency });
+      m.set(p.id, { network: net?.name ?? "—", pkg: p.name, total: 0, sold: 0, withdrawn: 0, remaining: 0, value: 0, currency: net?.currency });
     });
     (cards ?? []).forEach((c) => {
       const row = m.get(c.package_id);
       if (!row) return;
       row.total++;
       if (c.status === "SOLD") row.sold++;
+      else if (c.status === "ASSIGNED") row.withdrawn++;
       else if (c.status === "AVAILABLE") row.remaining++;
     });
     (sales ?? []).forEach((s) => {
