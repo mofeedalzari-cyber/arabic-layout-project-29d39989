@@ -134,7 +134,8 @@ function ManageCardsPage() {
         .from("sales").select("card_id").in("card_id", ids);
       if (sErr) throw sErr;
       const refSet = new Set((soldRefs ?? []).map((r: any) => r.card_id));
-      const hasSoldCards = ids.some((id) => refSet.has(id));
+      const statusMap = new Map((cards ?? []).map((c) => [c.id, c.status]));
+      const hasSoldCards = ids.some((id) => refSet.has(id) || statusMap.get(id) === "SOLD");
       const forceDelete = extendedDelete || hasSoldCards;
       let deleted = 0;
       if (ids.length) {
@@ -179,7 +180,8 @@ function ManageCardsPage() {
   const delOne = useMutation({
     mutationFn: async (id: string) => {
       const { data: refs } = await supabase.from("sales").select("card_id").eq("card_id", id).limit(1);
-      const { error } = await supabase.rpc("admin_delete_cards", { _ids: [id], _force: extendedDelete || Boolean(refs?.length) });
+      const isSold = cards?.some((c) => c.id === id && c.status === "SOLD") ?? false;
+      const { error } = await supabase.rpc("admin_delete_cards", { _ids: [id], _force: extendedDelete || Boolean(refs?.length) || isSold });
       if (error) throw error;
       return { archived: false };
     },
