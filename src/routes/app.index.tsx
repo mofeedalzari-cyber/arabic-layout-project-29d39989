@@ -23,7 +23,7 @@ async function exportToPDF(...args: Parameters<typeof import("@/lib/dashboard-ex
   return mod.exportToPDF(...args);
 }
 import { AgentStats } from "./app.agents";
-import { MobileDataCard } from "@/components/mobile-data-card";
+
 import { PackagesChart, AgentsChart } from "@/components/dashboard-charts";
 
 export const Route = createFileRoute("/app/")({ component: DashboardPage });
