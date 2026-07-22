@@ -29,7 +29,7 @@ function RequestsPage() {
     <div dir="rtl">
       <PageHeader
         title="طلبات سحب الكروت"
-        description={isAdmin ? "طلبات الوكلاء بانتظار الموافقة" : "طلباتك للكروت"}
+        description={isAdmin ? "طلبات المناديب بانتظار الموافقة" : "طلباتك للكروت"}
       />
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} dir="rtl">
         <TabsList className="rounded-xl mb-4">
