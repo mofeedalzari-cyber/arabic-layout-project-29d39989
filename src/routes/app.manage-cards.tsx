@@ -13,11 +13,12 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Search, Filter, Eye, EyeOff, ChevronsRight, ChevronRight, ChevronLeft, ChevronsLeft } from "lucide-react";
+import { Trash2, Search, Filter, Eye, EyeOff, ChevronsRight, ChevronRight, ChevronLeft, ChevronsLeft, Printer } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { displayPhone, fmtArabicDateTime } from "@/lib/format";
+import { printAssignedCards } from "@/lib/card-print";
 
 export const Route = createFileRoute("/app/manage-cards")({ component: ManageCardsPage });
 
@@ -214,6 +215,29 @@ function ManageCardsPage() {
       return n;
     });
   }
+  function selectAllAssigned() {
+    setSelected((s) => {
+      const n = new Set(s);
+      (cards ?? []).filter((c) => c.status === "ASSIGNED").forEach((c) => n.add(c.id));
+      return n;
+    });
+  }
+  function printAssigned() {
+    const src = (cards ?? []).filter((c) => c.status === "ASSIGNED");
+    const chosen = selected.size ? src.filter((c) => selected.has(c.id)) : src;
+    if (!chosen.length) { toast.error("لا توجد كروت مسحوبة للطباعة"); return; }
+    const netName = networks?.find((n) => n.id === networkId)?.name ?? "";
+    printAssignedCards({
+      networkName: netName,
+      rows: chosen.map((c) => ({
+        code: c.password ?? c.username,
+        username: c.username,
+        package_name: c.package_name,
+        agent_name: c.assigned_full_name || displayPhone(null, c.assigned_username) || "—",
+        assigned_at: c.assigned_at ?? c.created_at,
+      })),
+    });
+  }
   function toggleReveal(id: string) {
     setRevealed((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
@@ -299,6 +323,10 @@ function ManageCardsPage() {
           <Button variant="outline" className="rounded-lg h-9" onClick={selectPage} disabled={!pageRows.length}>تحديد الصفحة</Button>
           <Button variant="outline" className="rounded-lg h-9" onClick={unselectPage} disabled={!pageRows.length}>إلغاء تحديد الصفحة</Button>
           <Button variant="outline" className="rounded-lg h-9 text-destructive border-destructive/40" onClick={selectAllSold} disabled={!cards?.some((c) => c.status === "SOLD")}>تحديد كل المباع</Button>
+          <Button variant="outline" className="rounded-lg h-9 text-blue-600 border-blue-500/40" onClick={selectAllAssigned} disabled={!cards?.some((c) => c.status === "ASSIGNED")}>تحديد كل المسحوب</Button>
+          <Button variant="outline" className="rounded-lg h-9 text-blue-600 border-blue-500/40" onClick={printAssigned} disabled={!cards?.some((c) => c.status === "ASSIGNED")}>
+            <Printer className="h-4 w-4 ml-1" />طباعة المسحوب
+          </Button>
           <Button variant="outline" className="rounded-lg h-9" onClick={() => setSelected(new Set())} disabled={!selected.size}>مسح التحديد</Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
