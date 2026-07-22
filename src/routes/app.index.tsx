@@ -33,7 +33,6 @@ function DashboardPage() {
 }
 
 function AdminDashboard() {
-  const { display: displayName } = useUserNames();
   const { data: stats } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
@@ -44,33 +43,6 @@ function AdminDashboard() {
         sold_value: number; available_value: number;
         networks: number; packages: number; agents: number;
       };
-    },
-  });
-
-  const { data: recent } = useQuery({
-    queryKey: ["recent-sales"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("sales")
-        .select("id, transaction_no, package_name, network_name, agent_username, price, sold_at")
-        .order("sold_at", { ascending: false }).limit(6);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: topAgents } = useQuery({
-    queryKey: ["top-agents"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("sales").select("agent_username, price");
-      if (error) throw error;
-      const map = new Map<string, { count: number; total: number }>();
-      for (const s of data) {
-        const cur = map.get(s.agent_username) ?? { count: 0, total: 0 };
-        cur.count++; cur.total += Number(s.price);
-        map.set(s.agent_username, cur);
-      }
-      return [...map.entries()].map(([name, v]) => ({ name, ...v }))
-        .sort((a, b) => b.count - a.count).slice(0, 5);
     },
   });
 
@@ -89,42 +61,6 @@ function AdminDashboard() {
       </div>
 
       <AdminBreakdowns />
-
-      <div className="grid md:grid-cols-2 gap-4 md:gap-6 mt-5">
-        <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
-          <div className="flex items-center justify-between mb-4 gap-2">
-            <h3 className="font-bold text-sm sm:text-base">أحدث المبيعات</h3>
-            <Link to="/app/sales" className="text-xs text-primary font-semibold shrink-0">عرض الكل ←</Link>
-          </div>
-          <div className="space-y-2">
-            {recent?.length ? recent.map((s) => (
-              <div key={s.id} className="flex items-center justify-between gap-2 p-2.5 sm:p-3 rounded-xl bg-muted/40 text-sm">
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold [overflow-wrap:anywhere]">{s.package_name}</div>
-                  <div className="text-xs text-muted-foreground [overflow-wrap:anywhere]">{s.network_name} · {displayName(s.agent_username)}</div>
-                </div>
-                <div className="text-primary font-bold shrink-0 text-sm">{fmtMoney(Number(s.price))}</div>
-              </div>
-            )) : <EmptyMsg>لا مبيعات بعد.</EmptyMsg>}
-          </div>
-        </Card>
-
-        <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
-          <h3 className="font-bold mb-4 text-sm sm:text-base">أفضل المناديب مبيعًا</h3>
-          <div className="space-y-2">
-            {topAgents?.length ? topAgents.map((a, i) => (
-              <div key={a.name} className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-muted/40 text-sm">
-                <div className="h-8 w-8 shrink-0 rounded-full gradient-primary-bg flex items-center justify-center font-bold text-xs">{i + 1}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold [overflow-wrap:anywhere]">{displayName(a.name)}</div>
-                  <div className="text-xs text-muted-foreground">{a.count} عملية</div>
-                </div>
-                <div className="font-bold text-primary shrink-0 text-sm">{fmtMoney(a.total)}</div>
-              </div>
-            )) : <EmptyMsg>لا بيانات.</EmptyMsg>}
-          </div>
-        </Card>
-      </div>
     </div>
   );
 }
