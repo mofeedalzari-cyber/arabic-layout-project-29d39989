@@ -262,6 +262,32 @@
   transform: translateZ(0);
 }
 
+/* Centered popup toast — رسالة منبثقة في وسط الشاشة تختفي سريعاً */
+.toaster.toaster-center {
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(92vw, 400px) !important;
+  min-width: 260px !important;
+  max-width: 92vw !important;
+  pointer-events: none !important;
+}
+.toaster.toaster-center > div {
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+.toaster.toaster-center [data-sonner-toast] {
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) var(--y) !important;
+}
+.toaster.toaster-center > div > div {
+  pointer-events: auto;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
