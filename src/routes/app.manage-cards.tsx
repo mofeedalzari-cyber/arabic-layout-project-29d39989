@@ -173,7 +173,7 @@ function ManageCardsPage() {
         .filter((c) => (c.status === "SOLD" || c.status === "ASSIGNED") && new Date(c.created_at) < cutoff)
         .map((c) => c.id);
       if (!ids.length) return { deleted: 0 };
-      const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: ids });
+      const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: ids, _force: true });
       if (error) throw error;
       const r = Array.isArray(data) ? data[0] : data;
       return { deleted: r?.deleted ?? 0 };
