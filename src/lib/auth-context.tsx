@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = async (uid: string) => {
     const [{ data: prof }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("id, username, full_name, is_active").eq("id", uid).maybeSingle(),
+      supabase.from("profiles").select("id, username, full_name, phone, is_active, network_id").eq("id", uid).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
     setProfile(prof as Profile | null);
@@ -75,12 +75,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (e) {
         console.error("[auth] getSession failed", e);
       } finally {
+        // Only release the loading gate AFTER getSession resolves.
+        // Do NOT use a short failsafe here — it can flip loading=false while
+        // user is still null and cause the AppLayout effect to redirect to /auth
+        // (looks like: the app "freezes then goes back to login").
         if (mounted) setLoading(false);
       }
     })();
 
-    // Safety net: never keep the app stuck on the loading spinner
-    const failsafe = setTimeout(() => { if (mounted) setLoading(false); }, 1500);
+    // Long safety net only (10s) — protects against a truly hung getSession call.
+    const failsafe = setTimeout(() => { if (mounted) setLoading(false); }, 10000);
 
     return () => { mounted = false; clearTimeout(failsafe); sub.subscription.unsubscribe(); };
   }, []);
