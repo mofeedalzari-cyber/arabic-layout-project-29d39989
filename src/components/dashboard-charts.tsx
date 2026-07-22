@@ -4,7 +4,6 @@ import {
 } from "recharts";
 import { useState } from "react";
 import { fmtMoney } from "@/lib/format";
-import { fmtMoney } from "@/lib/format";
 
 type PkgRow = { network: string; pkg: string; total: number; sold: number; remaining: number; value: number; currency?: string };
 type AgentRow = { agent: string; pkg: string; holding: number; price: number; currency?: string };
