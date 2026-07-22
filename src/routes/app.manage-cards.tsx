@@ -147,7 +147,7 @@ function ManageCardsPage() {
       const deleteIds = extendedDelete ? [...toDelete, ...toArchive] : toDelete;
       let deleted = 0;
       if (deleteIds.length) {
-        const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: deleteIds });
+        const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: deleteIds, _force: extendedDelete });
         if (error) throw error;
         const r = Array.isArray(data) ? data[0] : data;
         deleted = r?.deleted ?? 0;
@@ -173,7 +173,7 @@ function ManageCardsPage() {
         .filter((c) => (c.status === "SOLD" || c.status === "ASSIGNED") && new Date(c.created_at) < cutoff)
         .map((c) => c.id);
       if (!ids.length) return { deleted: 0 };
-      const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: ids });
+      const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: ids, _force: true });
       if (error) throw error;
       const r = Array.isArray(data) ? data[0] : data;
       return { deleted: r?.deleted ?? 0 };
@@ -192,7 +192,7 @@ function ManageCardsPage() {
         await supabase.from("cards").update({ status: "SOLD" }).eq("id", id);
         return { archived: true };
       }
-      const { error } = await supabase.rpc("admin_delete_cards", { _ids: [id] });
+      const { error } = await supabase.rpc("admin_delete_cards", { _ids: [id], _force: true });
       if (error) throw error;
       return { archived: false };
     },
