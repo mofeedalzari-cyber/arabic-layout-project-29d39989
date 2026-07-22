@@ -502,60 +502,6 @@ function AdminBreakdowns() {
 
         </Card>
 
-        <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
-          <div className="flex items-center gap-2 mb-3">
-            <Users className="h-4 w-4 text-primary shrink-0" />
-            <h3 className="font-bold text-sm sm:text-base min-w-0 truncate">المناديب المرتبطين بالشبكة</h3>
-            <span className="mr-auto shrink-0 text-[11px] bg-primary/15 text-primary rounded-full px-2 py-0.5 font-bold">
-              {agents?.length ?? 0}
-            </span>
-          </div>
-          {(agents ?? []).length === 0 ? (
-            <div className="text-center text-sm text-muted-foreground py-4">لا يوجد مناديب.</div>
-          ) : (
-            <>
-              {/* Mobile cards */}
-              <div className="md:hidden space-y-2">
-                {(agents ?? []).map((a) => (
-                  <MobileDataCard
-                    key={a.id}
-                    title={a.full_name || displayPhone((a as any).phone, a.username)}
-                    headerRight={
-                      <span className={`text-[11px] font-bold rounded-full px-2 py-0.5 ${a.is_active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
-                        {a.is_active ? "نشط" : "موقوف"}
-                      </span>
-                    }
-                    fields={[
-                      { label: "الهاتف", value: displayPhone((a as any).phone, a.username) },
-                      { label: "الحالة", value: a.is_active ? "نشط" : "موقوف", tone: a.is_active ? "success" : "danger" },
-                    ]}
-                  />
-                ))}
-              </div>
-              {/* Desktop table */}
-              <div className="hidden md:block overflow-x-auto">
-                <table dir="rtl" className="w-full text-sm">
-                  <thead>
-                    <tr className="text-[11px] text-muted-foreground border-b border-border/50">
-                      <th className="text-right font-medium px-2 py-2">المندوب</th>
-                      <th className="text-right font-medium px-2 py-2">الهاتف</th>
-                      <th className="text-right font-medium px-2 py-2">الحالة</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(agents ?? []).map((a) => (
-                      <tr key={a.id} className="border-t border-border/50">
-                        <td className="px-2 py-2">{a.full_name || displayPhone((a as any).phone, a.username)}</td>
-                        <td className="px-2 py-2">{displayPhone((a as any).phone, a.username)}</td>
-                        <td className="px-2 py-2">{a.is_active ? "نشط" : "موقوف"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </Card>
       </div>
     </div>
   );
