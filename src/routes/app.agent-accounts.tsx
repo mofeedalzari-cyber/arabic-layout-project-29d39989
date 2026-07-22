@@ -324,13 +324,13 @@ function StyledTable({ cols, rows, empty }: { cols: string[]; rows: Cell[][]; em
       className="h-scroll -mx-4 px-4 pb-2 md:mx-0 md:px-0 md:pb-0 overflow-x-auto"
       style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
     >
-      <table dir="rtl" className="text-sm min-w-max w-max md:min-w-full md:w-full">
+      <table dir="rtl" className="text-sm min-w-max w-max md:min-w-full md:w-full border-collapse border border-border">
         <thead>
-          <tr className="text-[11px] text-muted-foreground border-b border-border/50">
+          <tr className="text-[11px] text-muted-foreground">
             {cols.map((c, i) => (
               <th
                 key={c}
-                className={`font-medium px-3 py-2 whitespace-nowrap ${i === 0 ? "text-right" : "text-center"}`}
+                className={`font-medium px-3 py-2 whitespace-nowrap border border-border ${i === 0 ? "text-right" : "text-center"}`}
               >
                 {c}
               </th>
@@ -339,11 +339,11 @@ function StyledTable({ cols, rows, empty }: { cols: string[]; rows: Cell[][]; em
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} className="border-t border-border/50">
+            <tr key={i}>
               {r.map((cell, j) => (
                 <td
                   key={j}
-                  className={`px-3 py-2.5 whitespace-nowrap ${j === 0 ? "text-right" : "text-center"}`}
+                  className={`px-3 py-2.5 whitespace-nowrap border border-border ${j === 0 ? "text-right" : "text-center"}`}
                 >
                   <CellView c={cell} />
                 </td>
