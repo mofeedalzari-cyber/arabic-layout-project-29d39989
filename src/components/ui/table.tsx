@@ -8,7 +8,7 @@ const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableE
       className="relative w-full h-scroll"
       style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
     >
-      <table ref={ref} className={cn("w-full min-w-max md:min-w-full caption-bottom text-sm", className)} {...props} />
+      <table ref={ref} className={cn("w-full min-w-max md:min-w-full caption-bottom text-sm border-collapse border border-border", className)} {...props} />
     </div>
   ),
 );
