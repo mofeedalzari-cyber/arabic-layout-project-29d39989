@@ -130,8 +130,6 @@ function AdminDashboard() {
 }
 
 function AdminBreakdowns() {
-  const { display: displayName } = useUserNames();
-
   const { data: networks } = useQuery({
     queryKey: ["dash-networks"],
     queryFn: async () => (await supabase.from("networks").select("id, name, currency")).data ?? [],
