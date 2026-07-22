@@ -207,6 +207,13 @@ function ManageCardsPage() {
   }
   function selectPage() { setSelected((s) => { const n = new Set(s); pageIds.forEach((id) => n.add(id)); return n; }); }
   function unselectPage() { setSelected((s) => { const n = new Set(s); pageIds.forEach((id) => n.delete(id)); return n; }); }
+  function selectAllSold() {
+    setSelected((s) => {
+      const n = new Set(s);
+      (cards ?? []).filter((c) => c.status === "SOLD").forEach((c) => n.add(c.id));
+      return n;
+    });
+  }
   function toggleReveal(id: string) {
     setRevealed((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
@@ -291,6 +298,7 @@ function ManageCardsPage() {
           )}
           <Button variant="outline" className="rounded-lg h-9" onClick={selectPage} disabled={!pageRows.length}>تحديد الصفحة</Button>
           <Button variant="outline" className="rounded-lg h-9" onClick={unselectPage} disabled={!pageRows.length}>إلغاء تحديد الصفحة</Button>
+          <Button variant="outline" className="rounded-lg h-9 text-destructive border-destructive/40" onClick={selectAllSold} disabled={!cards?.some((c) => c.status === "SOLD")}>تحديد كل المباع</Button>
           <Button variant="outline" className="rounded-lg h-9" onClick={() => setSelected(new Set())} disabled={!selected.size}>مسح التحديد</Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
