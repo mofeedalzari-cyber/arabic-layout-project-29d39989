@@ -9,11 +9,11 @@ type AgentRow = { agent: string; pkg: string; holding: number; price: number; cu
 
 // ألوان معتمدة على tokens التصميم (HSL) — تعمل مع الوضع الفاتح والداكن
 const C = {
-  sold: "hsl(var(--primary))",
-  remaining: "hsl(var(--warning))",
-  agent: "hsl(var(--primary))",
-  grid: "hsl(var(--border))",
-  axis: "hsl(var(--muted-foreground))",
+  sold: "var(--primary)",
+  remaining: "var(--warning)",
+  agent: "var(--primary)",
+  grid: "var(--border)",
+  axis: "var(--muted-foreground)",
 };
 
 function ChartTooltip({ active, payload, label }: any) {
@@ -64,12 +64,12 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
           >
             <defs>
               <linearGradient id="grad-sold" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.55} />
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.55} />
               </linearGradient>
               <linearGradient id="grad-rem" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="hsl(var(--warning))" stopOpacity={0.95} />
-                <stop offset="100%" stopColor="hsl(var(--warning))" stopOpacity={0.5} />
+                <stop offset="0%" stopColor="var(--warning)" stopOpacity={0.95} />
+                <stop offset="100%" stopColor="var(--warning)" stopOpacity={0.5} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke={C.grid} strokeDasharray="3 3" horizontal={false} />
@@ -84,7 +84,7 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
               axisLine={false}
               orientation="right"
             />
-            <Tooltip content={<ChartTooltip />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }} />
+            <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.35 }} />
             <Bar dataKey="المباع" stackId="a" fill="url(#grad-sold)" radius={[8, 0, 0, 8]}>
               <LabelList dataKey="المباع" position="insideRight" style={{ fill: "#fff", fontSize: 10, fontWeight: 700 }} formatter={(v: any) => (Number(v) > 0 ? v : "")} />
             </Bar>
@@ -129,8 +129,8 @@ export function AgentsChart({ data }: { data: AgentRow[] }) {
           >
             <defs>
               <linearGradient id="grad-agent" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.5} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke={C.grid} strokeDasharray="3 3" horizontal={false} />
@@ -145,7 +145,7 @@ export function AgentsChart({ data }: { data: AgentRow[] }) {
               axisLine={false}
               orientation="right"
             />
-            <Tooltip content={<ChartTooltip />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }} />
+            <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.35 }} />
             <Bar dataKey="لديه" fill="url(#grad-agent)" radius={[8, 8, 8, 8]}>
               {chartData.map((d, i) => (
                 <Cell key={i} fillOpacity={0.55 + 0.45 * (d["لديه"] / max)} />
