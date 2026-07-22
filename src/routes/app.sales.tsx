@@ -59,7 +59,7 @@ function SalesPage() {
               <div className="flex-1 min-w-0">
                 <div className="font-semibold truncate">{s.package_name}</div>
                 <div className="text-[11px] text-muted-foreground">
-                  {s.network_name} · {displayName(s.agent_username)} · {new Date(s.sold_at).toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" })}
+                  {s.network_name} · {displayName(s.agent_username)} · {fmtArabicDateTime(s.sold_at)}
                 </div>
                 <div className="text-[10px] text-muted-foreground font-mono">{s.transaction_no}</div>
               </div>

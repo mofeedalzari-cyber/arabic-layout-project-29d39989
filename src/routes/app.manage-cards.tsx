@@ -354,11 +354,11 @@ function ManageCardsPage() {
                       <td className="p-3"><StatusBadge status={c.status} /></td>
                       <td className="p-3 text-xs">{agentName || <span className="text-muted-foreground">—</span>}</td>
                       <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(c.created_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}
+                        {fmtArabicDateTime(c.created_at)}
                       </td>
                       <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
                         {c.sold_at
-                          ? new Date(c.sold_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })
+                          ? fmtArabicDateTime(c.sold_at)
                           : <span className="text-muted-foreground">—</span>}
                       </td>
                       <td className="p-3">

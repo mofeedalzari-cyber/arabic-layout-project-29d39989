@@ -111,7 +111,7 @@ function JoinList({ status }: { status: string }) {
                     <div className="text-xs"><span className="text-muted-foreground">الهاتف: </span>{displayPhone(r.agent_phone, r.agent_username)}</div>
                   )}
                   <div className="text-xs text-muted-foreground">
-                    التاريخ: {new Date(r.requested_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}
+                    التاريخ: {fmtArabicDateTime(r.requested_at)}
                   </div>
                   {r.reject_reason && (
                     <div className="text-xs bg-destructive/10 text-destructive rounded-lg p-2 mt-1">

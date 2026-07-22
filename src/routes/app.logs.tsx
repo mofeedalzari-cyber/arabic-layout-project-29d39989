@@ -38,7 +38,7 @@ function LogsPage() {
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-sm">{labelize(l.action)} <span className="text-muted-foreground">— {l.actor_username ? displayName(l.actor_username) : "نظام"}</span></div>
               {l.metadata && <div className="text-[11px] text-muted-foreground font-mono truncate">{JSON.stringify(l.metadata)}</div>}
-              <div className="text-[10px] text-muted-foreground">{new Date(l.created_at).toLocaleString("en-US")}</div>
+              <div className="text-[10px] text-muted-foreground">{fmtArabicDateTime(l.created_at)}</div>
             </div>
           </Card>
         ))}

@@ -161,7 +161,7 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
                     <b className="text-warning">{fmtMoney(remaining)}</b>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    التاريخ: {new Date(r.created_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}
+                    التاريخ: {fmtArabicDateTime(r.created_at)}
                   </div>
                   {r.notes && <div className="text-xs bg-muted/50 rounded-lg p-2 mt-1">📝 {r.notes}</div>}
                   {r.reject_reason && <div className="text-xs bg-destructive/10 text-destructive rounded-lg p-2 mt-1">سبب الرفض: {r.reject_reason}</div>}
