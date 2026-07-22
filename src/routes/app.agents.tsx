@@ -93,7 +93,7 @@ function AgentsPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-bold truncate">{a.full_name || a.username}</div>
-                <div className="text-xs text-muted-foreground truncate">@{a.username} · {a.sales.count} مبيعة · {fmtMoney(a.sales.total)}</div>
+                <div className="text-xs text-muted-foreground truncate" dir="ltr">{(a as any).phone || a.username.replace(/^u/, "")} · {a.sales.count} مبيعة · {fmtMoney(a.sales.total)}</div>
               </div>
               <Button
                 variant="outline" size="sm"

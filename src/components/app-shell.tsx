@@ -223,10 +223,10 @@ function UserFooter({ username, role, onSignOut, dark, onToggleTheme }: {
     <div className="p-3 border-t border-sidebar-border space-y-2">
       <div className="flex items-center gap-3 p-2 rounded-xl bg-sidebar-accent/40">
         <div className="h-9 w-9 rounded-full gradient-primary-bg flex items-center justify-center font-bold text-sm">
-          {username.slice(0, 2).toUpperCase()}
+          {username.replace(/^u/, "").slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold truncate">{username || "—"}</div>
+          <div className="text-sm font-semibold truncate" dir="ltr">{username ? username.replace(/^u/, "") : "—"}</div>
           <div className="text-[11px] text-muted-foreground">{role === "admin" ? "مدير" : "وكيل"}</div>
         </div>
       </div>

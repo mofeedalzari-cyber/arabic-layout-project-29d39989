@@ -54,7 +54,7 @@ function SettingsPage() {
     <>
       <PageHeader title="الإعدادات" description="معلومات الحساب" />
       <Card className="card-elegant border-0 p-5 max-w-md space-y-4">
-        <Row label="اسم المستخدم" value={profile?.username ?? "—"} />
+        <Row label="اسم المستخدم" value={profile?.username ? profile.username.replace(/^u/, "") : "—"} />
         <Row label="نوع الحساب" value={role === "admin" ? "مدير" : "وكيل"} />
         <Row label="الحالة" value={profile?.is_active ? "مفعّل" : "موقوف"} />
         <div className="space-y-2">
