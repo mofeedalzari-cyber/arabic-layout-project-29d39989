@@ -134,7 +134,7 @@ function PackagesPage() {
     });
     setReqBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("تم إرسال الطلب — بانتظار موافقة المدير");
+    toast.success("تم إرسال الطلب — بانتظار موافقة المدير", { duration: 2000 });
     setRequestPkg(null); setReqQty(10); setReqNotes(""); setReqPayment("CREDIT");
     qc.invalidateQueries({ queryKey: ["my-requests"] });
     qc.invalidateQueries({ queryKey: ["card-requests"] });

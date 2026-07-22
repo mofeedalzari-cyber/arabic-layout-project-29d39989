@@ -83,7 +83,7 @@ export function useRequestNotifications() {
 
           toast.success(`طلب سحب جديد — ${agent}`, {
             description: `${pkg} · الكمية: ${qty}`,
-            duration: 8000,
+            duration: 2000,
             action: {
               label: "عرض",
               onClick: () => navigate({ to: "/app/requests" }),
