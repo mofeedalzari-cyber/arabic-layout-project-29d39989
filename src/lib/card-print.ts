@@ -65,10 +65,13 @@ export function printCards(opts: {
 <head>
 <meta charset="utf-8" />
 <title>${esc(title)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   @page { size: A4; margin: 6mm; }
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 6mm; font-family: -apple-system, "Tahoma", Arial, sans-serif; background: #f3f4f6; }
+  body { margin: 0; padding: 6mm; font-family: "Cairo", -apple-system, "Tahoma", Arial, sans-serif; background: #f3f4f6; }
   .toolbar {
     position: sticky; top: 0; z-index: 10;
     display: flex; gap: 8px; justify-content: center; align-items: center;
