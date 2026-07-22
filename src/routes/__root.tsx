@@ -129,7 +129,6 @@ function RootComponent() {
     initSentry();
     initOfflineQueueAutoSync();
     initCapacitorNative(router);
-    (window as any).__appToast = toast;
 
     // Auto-recover from stale chunk hashes after a redeploy:
     // if a dynamic import fails, force a hard reload so the browser
