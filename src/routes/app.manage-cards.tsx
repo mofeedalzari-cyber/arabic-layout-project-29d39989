@@ -194,20 +194,27 @@ function ManageCardsPage() {
 
   const delOne = useMutation({
     mutationFn: async (id: string) => {
+      const card = cards?.find((c) => c.id === id);
+      if (card?.status === "ASSIGNED") {
+        const { error } = await supabase.rpc("admin_unassign_cards", { _ids: [id] });
+        if (error) throw error;
+        return { unassigned: true };
+      }
       const { data: refs } = await supabase.from("sales").select("card_id").eq("card_id", id).limit(1);
-      const isSold = cards?.some((c) => c.id === id && c.status === "SOLD") ?? false;
+      const isSold = card?.status === "SOLD";
       const { error } = await supabase.rpc("admin_delete_cards", { _ids: [id], _force: extendedDelete || Boolean(refs?.length) || isSold });
       if (error) throw error;
-      return { archived: false };
+      return { unassigned: false };
     },
     onSuccess: (r: any) => {
-      toast.success(r.archived ? "تم أرشفة الكرت" : "تم حذف الكرت");
+      toast.success(r.unassigned ? "تم إرجاع الكرت إلى المتاح" : "تم حذف الكرت");
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
       qc.invalidateQueries({ queryKey: ["aa-sales"] });
       qc.invalidateQueries({ queryKey: ["aa-cards"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   function toggle(id: string) {
     setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
