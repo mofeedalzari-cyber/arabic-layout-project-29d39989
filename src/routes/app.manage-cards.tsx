@@ -215,6 +215,29 @@ function ManageCardsPage() {
       return n;
     });
   }
+  function selectAllAssigned() {
+    setSelected((s) => {
+      const n = new Set(s);
+      (cards ?? []).filter((c) => c.status === "ASSIGNED").forEach((c) => n.add(c.id));
+      return n;
+    });
+  }
+  function printAssigned() {
+    const src = (cards ?? []).filter((c) => c.status === "ASSIGNED");
+    const chosen = selected.size ? src.filter((c) => selected.has(c.id)) : src;
+    if (!chosen.length) { toast.error("لا توجد كروت مسحوبة للطباعة"); return; }
+    const netName = networks?.find((n) => n.id === networkId)?.name ?? "";
+    printAssignedCards({
+      networkName: netName,
+      rows: chosen.map((c) => ({
+        code: c.password ?? c.username,
+        username: c.username,
+        package_name: c.package_name,
+        agent_name: c.assigned_full_name || displayPhone(null, c.assigned_username) || "—",
+        assigned_at: c.assigned_at ?? c.created_at,
+      })),
+    });
+  }
   function toggleReveal(id: string) {
     setRevealed((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
