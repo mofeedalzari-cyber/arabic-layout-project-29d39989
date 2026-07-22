@@ -34,68 +34,102 @@ function ChartTooltip({ active, payload, label }: any) {
 }
 
 export function PackagesChart({ data }: { data: PkgRow[] }) {
-  const chartData = data.map((r) => ({
-    name: `${r.pkg}`,
-    network: r.network,
-    "المباع": r.sold,
-    "المتبقي": r.remaining,
-  }));
-
-  if (!chartData.length) {
+  if (!data.length) {
     return <div className="text-center text-sm text-muted-foreground py-10">لا توجد بيانات.</div>;
   }
 
-  const height = Math.max(220, Math.min(chartData.length * 42 + 40, 520));
+  const COLORS = {
+    sold: "var(--primary)",
+    withdrawn: "var(--success, var(--primary))",
+    remaining: "var(--warning)",
+  };
 
   return (
     <>
-      {/* Legend */}
-      <div className="flex items-center gap-4 mb-3 text-xs">
-        <LegendChip color={C.sold} label="المباع" />
-        <LegendChip color={C.remaining} label="المتبقي" />
+      <div className="flex flex-wrap items-center justify-center gap-4 mb-4 text-xs">
+        <LegendChip color={COLORS.sold} label="المباع" />
+        <LegendChip color={COLORS.withdrawn} label="المسحوب" />
+        <LegendChip color={COLORS.remaining} label="المتبقي" />
       </div>
 
-      <div style={{ width: "100%", height }} dir="ltr">
-        <ResponsiveContainer>
-          <BarChart
-            data={chartData}
-            layout="vertical"
-            margin={{ top: 4, right: 12, left: 8, bottom: 4 }}
-            barCategoryGap={12}
-          >
-            <defs>
-              <linearGradient id="grad-sold" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.55} />
-              </linearGradient>
-              <linearGradient id="grad-rem" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="var(--warning)" stopOpacity={0.95} />
-                <stop offset="100%" stopColor="var(--warning)" stopOpacity={0.5} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke={C.grid} strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" stroke={C.axis} fontSize={11} allowDecimals={false} />
-            <YAxis
-              type="category"
-              dataKey="name"
-              stroke={C.axis}
-              fontSize={11}
-              width={90}
-              tickLine={false}
-              axisLine={false}
-              orientation="right"
-            />
-            <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.35 }} />
-            <Bar dataKey="المباع" stackId="a" fill="url(#grad-sold)" radius={[8, 0, 0, 8]}>
-              <LabelList dataKey="المباع" position="insideRight" style={{ fill: "#fff", fontSize: 10, fontWeight: 700 }} formatter={(v: any) => (Number(v) > 0 ? v : "")} />
-            </Bar>
-            <Bar dataKey="المتبقي" stackId="a" fill="url(#grad-rem)" radius={[0, 8, 8, 0]}>
-              <LabelList dataKey="المتبقي" position="insideRight" style={{ fill: "#fff", fontSize: 10, fontWeight: 700 }} formatter={(v: any) => (Number(v) > 0 ? v : "")} />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {data.map((r, idx) => {
+          const total = r.total || (r.sold + r.withdrawn + r.remaining);
+          const slices = [
+            { name: "المباع", value: r.sold, color: COLORS.sold },
+            { name: "المسحوب", value: r.withdrawn, color: COLORS.withdrawn },
+            { name: "المتبقي", value: r.remaining, color: COLORS.remaining },
+          ];
+          return (
+            <div key={idx} className="rounded-2xl border border-border/60 bg-card/50 p-3">
+              <div className="text-center mb-1">
+                <div className="text-sm font-bold text-foreground truncate">{r.pkg}</div>
+                <div className="text-[10px] text-muted-foreground truncate">{r.network}</div>
+              </div>
+              <div style={{ width: "100%", height: 180 }} dir="ltr">
+                <ResponsiveContainer>
+                  <PieChart>
+                    <defs>
+                      {slices.map((s, i) => (
+                        <linearGradient key={i} id={`grad-pkg-${idx}-${i}`} x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor={s.color} stopOpacity={1} />
+                          <stop offset="100%" stopColor={s.color} stopOpacity={0.55} />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <Pie
+                      data={slices}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      stroke="var(--background)"
+                      strokeWidth={2}
+                    >
+                      {slices.map((_, i) => (
+                        <Cell key={i} fill={`url(#grad-pkg-${idx}-${i})`} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={({ active, payload }: any) => {
+                        if (!active || !payload?.length) return null;
+                        const p = payload[0];
+                        const pct = total ? Math.round((Number(p.value) / total) * 100) : 0;
+                        return (
+                          <div className="rounded-xl border border-border/60 bg-background/95 backdrop-blur px-3 py-2 shadow-lg text-xs" dir="rtl">
+                            <div className="font-bold mb-1 text-foreground">{p.name}</div>
+                            <div className="text-muted-foreground">
+                              العدد: <span className="font-bold text-foreground">{p.value}</span> ({pct}%)
+                            </div>
+                          </div>
+                        );
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[10px]">
+                <MiniStat label="مباع" value={r.sold} color={COLORS.sold} />
+                <MiniStat label="مسحوب" value={r.withdrawn} color={COLORS.withdrawn} />
+                <MiniStat label="متبقي" value={r.remaining} color={COLORS.remaining} />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </>
+  );
+}
+
+function MiniStat({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="rounded-lg bg-muted/40 py-1">
+      <div className="font-bold text-foreground" style={{ color }}>{value}</div>
+      <div className="text-muted-foreground">{label}</div>
+    </div>
   );
 }
 
