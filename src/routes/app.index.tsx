@@ -209,7 +209,7 @@ function AdminBreakdowns() {
       const cur = m.get(key) ?? {
         agentId: c.assigned_to,
         agent: ag?.full_name || ag?.username || "—",
-        phone: ag?.username ?? "—",
+        phone: (ag as any)?.phone || (ag?.username?.replace(/^u/, "") ?? "—"),
         pkg: pkg?.name ?? "—",
         price: pkg ? Number(pkg.price) : 0,
         currency: net?.currency,
