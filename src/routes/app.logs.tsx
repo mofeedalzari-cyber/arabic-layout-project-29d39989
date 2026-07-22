@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { ScrollText } from "lucide-react";
 import { useUserNames } from "@/lib/use-user-names";
+import { fmtArabicDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/app/logs")({ component: LogsPage });
 

@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { Search, Receipt } from "lucide-react";
-import { fmtMoney } from "@/lib/format";
+import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 
 export const Route = createFileRoute("/app/sales")({ component: SalesPage });

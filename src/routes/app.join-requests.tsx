@@ -14,7 +14,7 @@ import {
 import { Check, X, Clock, UserPlus, Inbox } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { displayPhone } from "@/lib/format";
+import { displayPhone, fmtArabicDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/app/join-requests")({ component: JoinRequestsPage });
 

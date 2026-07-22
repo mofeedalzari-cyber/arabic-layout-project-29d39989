@@ -17,7 +17,7 @@ import { Trash2, Search, Filter, Eye, EyeOff, ChevronsRight, ChevronRight, Chevr
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { displayPhone } from "@/lib/format";
+import { displayPhone, fmtArabicDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/app/manage-cards")({ component: ManageCardsPage });
 

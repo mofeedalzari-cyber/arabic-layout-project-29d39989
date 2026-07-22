@@ -16,7 +16,7 @@ import { Check, X, Clock, Inbox, Wallet, Banknote } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUserNames } from "@/lib/use-user-names";
-import { displayPhone, fmtMoney } from "@/lib/format";
+import { displayPhone, fmtMoney, fmtArabicDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/app/requests")({ component: RequestsPage });
 
