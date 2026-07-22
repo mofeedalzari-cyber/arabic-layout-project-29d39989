@@ -146,6 +146,13 @@ function AdminBreakdowns() {
     queryKey: ["dash-sales-all"],
     queryFn: async () => (await supabase.from("sales").select("agent_id, agent_username, package_id, network_id, price")).data ?? [],
   });
+  const { data: paymentsCollected } = useQuery({
+    queryKey: ["dash-payments-collected"],
+    queryFn: async () => {
+      const { data } = await supabase.from("card_requests").select("paid_amount").eq("status", "APPROVED");
+      return (data ?? []).reduce((s, r: any) => s + Number(r.paid_amount || 0), 0);
+    },
+  });
   const { data: agents } = useQuery({
     queryKey: ["dash-agents"],
     queryFn: async () => {
