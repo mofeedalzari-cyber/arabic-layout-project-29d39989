@@ -147,7 +147,7 @@ function ManageCardsPage() {
       const deleteIds = extendedDelete ? [...toDelete, ...toArchive] : toDelete;
       let deleted = 0;
       if (deleteIds.length) {
-        const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: deleteIds });
+        const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: deleteIds, _force: extendedDelete });
         if (error) throw error;
         const r = Array.isArray(data) ? data[0] : data;
         deleted = r?.deleted ?? 0;
