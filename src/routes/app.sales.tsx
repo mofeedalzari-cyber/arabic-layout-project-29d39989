@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { Search, Receipt } from "lucide-react";
-import { fmtMoney } from "@/lib/format";
+import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 
 export const Route = createFileRoute("/app/sales")({ component: SalesPage });
@@ -59,7 +59,7 @@ function SalesPage() {
               <div className="flex-1 min-w-0">
                 <div className="font-semibold truncate">{s.package_name}</div>
                 <div className="text-[11px] text-muted-foreground">
-                  {s.network_name} · {displayName(s.agent_username)} · {new Date(s.sold_at).toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" })}
+                  {s.network_name} · {displayName(s.agent_username)} · {fmtArabicDateTime(s.sold_at)}
                 </div>
                 <div className="text-[10px] text-muted-foreground font-mono">{s.transaction_no}</div>
               </div>

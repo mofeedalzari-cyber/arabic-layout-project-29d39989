@@ -11,7 +11,7 @@ import {
 import { Wifi, ShieldAlert, Check, Copy, Share2, MessageCircle, PackageOpen, Tag, RefreshCw, Search, User as UserIcon, Printer, Image as ImageIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { fmtMoney } from "@/lib/format";
+import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { CardTemplateDialog } from "@/components/card-template-dialog";
 import { loadTemplate, printCards } from "@/lib/card-print";
@@ -368,13 +368,13 @@ function PackageDetails({ pkg, agentId, onClose }: { pkg: CabinRow; agentId: str
             </div>
             {c.status === "SOLD" && c.sold_at && (
               <div className="rounded-xl bg-muted/50 px-3 py-2 flex items-center justify-between text-sm">
-                <span dir="ltr" className="font-mono">{new Date(c.sold_at).toISOString().replace("T", "  ").slice(0, 22) + "Z"}</span>
+                <span>{fmtArabicDateTime(c.sold_at)}</span>
                 <span className="text-muted-foreground">تاريخ العملية :</span>
               </div>
             )}
             {c.status === "ASSIGNED" && c.assigned_at && (
               <div className="rounded-xl bg-muted/50 px-3 py-2 flex items-center justify-between text-sm">
-                <span dir="ltr" className="font-mono">{new Date(c.assigned_at).toISOString().replace("T", "  ").slice(0, 22) + "Z"}</span>
+                <span>{fmtArabicDateTime(c.assigned_at)}</span>
                 <span className="text-muted-foreground">تاريخ الاستلام :</span>
               </div>
             )}

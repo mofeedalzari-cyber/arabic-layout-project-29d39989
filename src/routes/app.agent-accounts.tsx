@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useMemo, useState } from "react";
-import { displayPhone, fmtMoney } from "@/lib/format";
+import { displayPhone, fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { Wifi, Package as PackageIcon, ShoppingCart, DollarSign, Layers, Clock, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/app/agent-accounts")({ component: AgentAccountsPage });
@@ -257,7 +257,7 @@ function AgentAccountsPage() {
                     <div className="min-w-0">
                       <div className="text-sm font-semibold truncate">{s.package_name}</div>
                       <div className="text-[11px] text-muted-foreground truncate">
-                        {s.network_name} · {new Date(s.sold_at).toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" })}
+                        {s.network_name} · {fmtArabicDateTime(s.sold_at)}
                       </div>
                     </div>
                     <div className="text-sm font-bold shrink-0">
@@ -414,7 +414,7 @@ async function printAgentReport(a: PrintArgs) {
         s.package_name,
         s.network_name,
         `${fmtMoney(Number(s.price))} ${a.netMap.get(s.network_id)?.currency ?? ""}`.trim(),
-        new Date(s.sold_at).toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" }),
+        fmtArabicDateTime(s.sold_at),
       ]),
     },
   ];
