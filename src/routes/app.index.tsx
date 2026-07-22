@@ -23,7 +23,8 @@ async function exportToPDF(...args: Parameters<typeof import("@/lib/dashboard-ex
   return mod.exportToPDF(...args);
 }
 import { AgentStats } from "./app.agents";
-import { MobileDataCard } from "@/components/mobile-data-card";
+
+import { PackagesChart, AgentsChart } from "@/components/dashboard-charts";
 
 export const Route = createFileRoute("/app/")({ component: DashboardPage });
 
@@ -342,53 +343,7 @@ function AdminBreakdowns() {
           </Button>
         </div>
 
-        {/* Mobile: cards */}
-        <div className="md:hidden space-y-2">
-          {salesByPkg.length === 0 ? (
-            <EmptyMsg>لا توجد بيانات.</EmptyMsg>
-          ) : salesByPkg.map((r, i) => (
-            <MobileDataCard
-              key={i}
-              title={`${r.network} — ${r.pkg}`}
-              fields={[
-                { label: "إجمالي الكروت", value: fmtMoney(r.total) },
-                { label: "المباع", value: fmtMoney(r.sold), tone: "success" },
-                { label: "المتبقي", value: fmtMoney(r.remaining), tone: "warning" },
-                { label: "القيمة", value: `${fmtMoney(r.value)}${r.currency ? " " + r.currency : ""}`, tone: "primary" },
-              ]}
-            />
-          ))}
-        </div>
-
-        {/* Desktop: table */}
-        <div className="hidden md:block overflow-x-auto">
-          <table dir="rtl" className="w-full text-sm">
-            <thead>
-              <tr className="text-[11px] text-muted-foreground border-b border-border/50">
-                <th className="text-right font-medium px-2 py-2">الشبكة</th>
-                <th className="text-right font-medium px-2 py-2">الفئة</th>
-                <th className="text-right font-medium px-2 py-2">إجمالي الكروت</th>
-                <th className="text-right font-medium px-2 py-2">مباعة</th>
-                <th className="text-right font-medium px-2 py-2">متبقية</th>
-                <th className="text-right font-medium px-2 py-2">إجمالي القيمة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {salesByPkg.length === 0 ? (
-                <tr><td colSpan={6} className="text-center text-sm text-muted-foreground py-4">لا توجد بيانات.</td></tr>
-              ) : salesByPkg.map((r, i) => (
-                <tr key={i} className="border-t border-border/50">
-                  <td className="px-2 py-2">{r.network}</td>
-                  <td className="px-2 py-2">{r.pkg}</td>
-                  <td className="px-2 py-2">{r.total}</td>
-                  <td className="px-2 py-2">{r.sold}</td>
-                  <td className="px-2 py-2">{r.remaining}</td>
-                  <td className="px-2 py-2">{fmtMoney(r.value)}{r.currency ? " " + r.currency : ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <PackagesChart data={salesByPkg} />
       </Card>
 
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
@@ -437,68 +392,17 @@ function AdminBreakdowns() {
             </Button>
           </div>
 
-          {(() => {
-            const latestAgents = agentStats.slice(0, 3);
-            return (
-              <>
-                {/* Mobile cards */}
-                <div className="md:hidden space-y-2">
-                  {latestAgents.length === 0 ? (
-                    <EmptyMsg>لا توجد كروت مسحوبة حاليًا.</EmptyMsg>
-                  ) : latestAgents.map((r, i) => (
-                    <MobileDataCard
-                      key={i}
-                      title={r.agent}
-                      fields={[
-                        { label: "الهاتف", value: r.phone },
-                        { label: "الفئة", value: r.pkg },
-                        { label: "عدد الكروت", value: fmtMoney(r.holding), tone: "primary" },
-                        { label: "السعر", value: `${fmtMoney(r.price)}${r.currency ? " " + r.currency : ""}` },
-                      ]}
-                    />
-                  ))}
-                </div>
+          <AgentsChart data={agentStats} />
 
-                {/* Desktop table */}
-                <div className="hidden md:block overflow-x-auto">
-                  <table dir="rtl" className="w-full text-sm">
-                    <thead>
-                      <tr className="text-[11px] text-muted-foreground border-b border-border/50">
-                        <th className="text-right font-medium px-2 py-2">المندوب</th>
-                        <th className="text-right font-medium px-2 py-2">الهاتف</th>
-                        <th className="text-right font-medium px-2 py-2">الفئة</th>
-                        <th className="text-right font-medium px-2 py-2">لديه</th>
-                        <th className="text-right font-medium px-2 py-2">السعر</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {latestAgents.length === 0 ? (
-                        <tr><td colSpan={5} className="text-center text-sm text-muted-foreground py-4">لا توجد كروت مسحوبة حاليًا.</td></tr>
-                      ) : latestAgents.map((r, i) => (
-                        <tr key={i} className="border-t border-border/50">
-                          <td className="px-2 py-2">{r.agent}</td>
-                          <td className="px-2 py-2">{r.phone}</td>
-                          <td className="px-2 py-2">{r.pkg}</td>
-                          <td className="px-2 py-2">{r.holding}</td>
-                          <td className="px-2 py-2">{fmtMoney(r.price)}{r.currency ? " " + r.currency : ""}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {agentStats.length > 3 && (
-                  <div className="mt-3 flex justify-center">
-                    <Button asChild size="sm" variant="outline" className="h-9 text-xs gap-1.5">
-                      <Link to="/app/agents">
-                        عرض الكل ({agentStats.length})
-                      </Link>
-                    </Button>
-                  </div>
-                )}
-              </>
-            );
-          })()}
+          {agentStats.length > 0 && (
+            <div className="mt-3 flex justify-center">
+              <Button asChild size="sm" variant="outline" className="h-9 text-xs gap-1.5">
+                <Link to="/app/agents">
+                  عرض التفاصيل الكاملة
+                </Link>
+              </Button>
+            </div>
+          )}
 
         </Card>
 
