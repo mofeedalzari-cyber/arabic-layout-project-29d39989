@@ -153,6 +153,8 @@ function ManageCardsPage() {
       toast.success(parts.join(" — ") || "لا يوجد تغييرات");
       setSelected(new Set());
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
+      qc.invalidateQueries({ queryKey: ["aa-sales"] });
+      qc.invalidateQueries({ queryKey: ["aa-cards"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -173,6 +175,8 @@ function ManageCardsPage() {
     onSuccess: (r: any) => {
       toast.success(r.deleted ? `تم حذف ${r.deleted} كرت قديم` : "لا يوجد كروت قديمة للحذف");
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
+      qc.invalidateQueries({ queryKey: ["aa-sales"] });
+      qc.invalidateQueries({ queryKey: ["aa-cards"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -188,6 +192,8 @@ function ManageCardsPage() {
     onSuccess: (r: any) => {
       toast.success(r.archived ? "تم أرشفة الكرت" : "تم حذف الكرت");
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
+      qc.invalidateQueries({ queryKey: ["aa-sales"] });
+      qc.invalidateQueries({ queryKey: ["aa-cards"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
