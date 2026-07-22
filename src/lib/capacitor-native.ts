@@ -78,8 +78,9 @@ export async function initCapacitorNative(router: Router<any, any>) {
       }
     });
 
-    // Android back button — go back in history, otherwise "press again to exit"
+    // Android back button — عالج الحوارات، ثم رجوع، وفي الرئيسية اضغط مرتين للخروج
     let lastBackPress = 0;
+    const HOME_PATHS = new Set(["/app", "/app/", "/", ""]);
     App.addListener("backButton", async ({ canGoBack }) => {
       const openOverlay = document.querySelector(
         '[data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]',
@@ -90,16 +91,22 @@ export async function initCapacitorNative(router: Router<any, any>) {
         else window.history.back();
         return;
       }
-      if (canGoBack && window.history.length > 1) {
+
+      const currentPath = window.location.pathname.replace(/\/+$/, "") || "/";
+      const isHome = HOME_PATHS.has(currentPath) || HOME_PATHS.has(currentPath + "/");
+
+      // خارج الرئيسية: ارجع عاديًا إن أمكن
+      if (!isHome && canGoBack && window.history.length > 1) {
         window.history.back();
         return;
       }
+
+      // في الرئيسية (أو لا يوجد تاريخ): اضغط مرتين للخروج
       const now = Date.now();
       if (now - lastBackPress < 2000) {
         App.exitApp().catch(() => App.minimizeApp().catch(() => {}));
       } else {
         lastBackPress = now;
-        // Lightweight in-app hint (no extra plugin required)
         try {
           const hint = document.createElement("div");
           hint.textContent = "اضغط مرة أخرى للخروج";
