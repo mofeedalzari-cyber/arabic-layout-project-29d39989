@@ -422,7 +422,20 @@ function PackageForm({ initial, networks, onSubmit, busy }: {
         <div><Label className="text-xs">حجم الباقة</Label><Input value={form.data_size ?? ""} onChange={(e) => setForm({ ...form, data_size: e.target.value })} placeholder="50 GB" /></div>
         <div><Label className="text-xs">السرعة</Label><Input value={form.speed ?? ""} onChange={(e) => setForm({ ...form, speed: e.target.value })} placeholder="20 Mbps" /></div>
         <div><Label className="text-xs">مدة الصلاحية</Label><Input value={form.validity ?? ""} onChange={(e) => setForm({ ...form, validity: e.target.value })} placeholder="30 يوم" /></div>
-        <div><Label className="text-xs">اللون</Label><Input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} /></div>
+        <div>
+          <Label className="text-xs">اللون</Label>
+          <div className="flex items-center gap-2">
+            <Input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} className="w-14 p-1 h-10" />
+            <Button type="button" variant="outline" size="sm" className="h-10 rounded-xl text-xs" onClick={() => setForm({ ...form, color: "#009688" })}>
+              استعادة الافتراضي
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {["#009688","#0ea5e9","#6366f1","#8b5cf6","#ec4899","#ef4444","#f59e0b","#10b981","#14b8a6","#64748b"].map((c) => (
+              <button key={c} type="button" onClick={() => setForm({ ...form, color: c })} className="w-6 h-6 rounded-full border-2 border-white shadow ring-1 ring-border" style={{ background: c }} aria-label={c} />
+            ))}
+          </div>
+        </div>
         <div className="col-span-2"><Label className="text-xs">الوقت المسموح</Label><Input value={form.allowed_time ?? ""} onChange={(e) => setForm({ ...form, allowed_time: e.target.value })} placeholder="مثال: 4 ساعات يومياً" /></div>
       </div>
       <div><Label className="text-xs">وصف (اختياري)</Label><Input value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
