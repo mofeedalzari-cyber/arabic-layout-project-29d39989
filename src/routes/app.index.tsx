@@ -154,7 +154,7 @@ function AdminBreakdowns() {
       const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "agent");
       const ids = roles?.map((r) => r.user_id) ?? [];
       if (!ids.length) return [];
-      const { data } = await supabase.from("profiles").select("id, username, full_name, is_active").in("id", ids).order("full_name");
+      const { data } = await supabase.from("profiles").select("id, username, full_name, phone, is_active").in("id", ids).order("full_name");
       return data ?? [];
     },
   });
