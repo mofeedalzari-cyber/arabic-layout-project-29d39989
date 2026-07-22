@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useMemo, useState } from "react";
-import { displayPhone, fmtMoney, fmtArabicDateTime } from "@/lib/format";
+import { displayPhone, fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf } from "@/lib/format";
 import { Wifi, Package as PackageIcon, ShoppingCart, DollarSign, Layers, Clock, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/app/agent-accounts")({ component: AgentAccountsPage });
