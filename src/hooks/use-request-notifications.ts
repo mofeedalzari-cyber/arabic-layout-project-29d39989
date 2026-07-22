@@ -43,14 +43,6 @@ async function nativeVibrate() {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       (navigator as any).vibrate?.([120, 60, 120]);
     }
-    // Capacitor Haptics if available
-    // @ts-ignore
-    if ((window as any).Capacitor?.isNativePlatform?.()) {
-      const { Haptics, ImpactStyle } = await import("@capacitor/haptics").catch(
-        () => ({} as any),
-      );
-      await Haptics?.impact?.({ style: ImpactStyle?.Medium ?? "MEDIUM" });
-    }
   } catch {
     // ignore
   }
