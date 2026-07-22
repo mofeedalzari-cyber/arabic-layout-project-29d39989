@@ -59,34 +59,41 @@ export const adminUpdateAgent = createServerFn({ method: "POST" })
       throw new Error("PASSWORD_TOO_SHORT");
     }
 
-    // Profile update (RLS-safe via has_role admin policy; fallback to admin client if needed)
+    // Profile update via RLS (admin policy allows updating agents in own network)
     const profileUpdate: Record<string, unknown> = {};
     if (data.full_name !== undefined) profileUpdate.full_name = full_name || null;
     if (data.phone !== undefined) profileUpdate.phone = phone || null;
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
     if (Object.keys(profileUpdate).length > 0) {
-      const { error: upErr } = await (supabaseAdmin
-        .from("profiles") as any)
+      const { error: upErr } = await (supabase.from("profiles") as any)
         .update(profileUpdate)
         .eq("id", agentId);
       if (upErr) throw new Error(upErr.message);
     }
 
-
-    // Auth update (password + phone)
+    // Auth update (password + phone) — requires service role
     const authAttrs: Record<string, unknown> = {};
     if (password && password.length > 0) authAttrs.password = password;
     if (data.phone !== undefined) authAttrs.phone = phone || null;
 
     if (Object.keys(authAttrs).length > 0) {
-      const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(
-        agentId,
-        authAttrs as any,
-      );
-      if (authErr) throw new Error(authErr.message);
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(
+          agentId,
+          authAttrs as any,
+        );
+        if (authErr) throw new Error(authErr.message);
+      } catch (e: any) {
+        const msg = String(e?.message ?? e);
+        if (msg.includes("SUPABASE_SERVICE_ROLE_KEY") || msg.includes("environment variable")) {
+          // Profile fields saved; auth-level fields need service role which isn't available.
+          throw new Error("تعذّر تحديث كلمة المرور/الهاتف على مستوى الحساب. تم حفظ الاسم والهاتف في الملف الشخصي فقط.");
+        }
+        throw e;
+      }
     }
+
 
     return { ok: true };
   });
