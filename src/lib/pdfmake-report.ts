@@ -155,8 +155,10 @@ export type PdfReportMeta = {
   reportName?: string;
   branch?: string;
   user?: string;
+  userRole?: string;
   systemName?: string;
 };
+
 
 const COLORS = {
   ink: "#0f172a",
@@ -209,7 +211,7 @@ function headerBlock(title: string, meta: Required<PdfReportMeta>, dateStr: stri
         stack: [
           { text: rtlText(`التاريخ: ${dateStr}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right" },
           { text: rtlText(`الفرع / الشبكة: ${meta.branch}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right", margin: [0, 3, 0, 0] },
-          { text: rtlText(`المستخدم: ${meta.user}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right", margin: [0, 3, 0, 0] },
+          { text: rtlText(`${meta.userRole}: ${meta.user}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right", margin: [0, 3, 0, 0] },
         ],
       },
     ],
@@ -371,6 +373,8 @@ export async function buildReportPdfBlob(opts: {
     reportName: opts.meta?.reportName || opts.title,
     branch: opts.meta?.branch || "—",
     user: opts.meta?.user || "—",
+    userRole: opts.meta?.userRole || "المستخدم",
+
   };
   const dateStr = new Date().toLocaleString("ar-EG", {
     dateStyle: "medium",

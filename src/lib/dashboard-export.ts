@@ -50,6 +50,7 @@ export type ReportMeta = {
   reportName?: string;
   branch?: string;
   user?: string;
+  userRole?: string;
   systemName?: string;
 };
 
@@ -62,21 +63,30 @@ export async function exportToPDF(
   try {
     // Auto-fill user from Supabase session if not provided
     let userName = meta.user ?? "";
-    if (!userName) {
+    let userRole = meta.userRole ?? "";
+    if (!userName || !userRole) {
       try {
         const { supabase } = await import("@/integrations/supabase/client");
         const { data } = await supabase.auth.getUser();
         const u = data?.user;
-        userName =
-          (u?.user_metadata as any)?.full_name ||
-          cleanPhoneLike((u?.user_metadata as any)?.username) ||
-          cleanPhoneLike(u?.phone) ||
-          u?.email ||
-          "—";
+        if (!userName) {
+          userName =
+            (u?.user_metadata as any)?.full_name ||
+            cleanPhoneLike((u?.user_metadata as any)?.username) ||
+            cleanPhoneLike(u?.phone) ||
+            u?.email ||
+            "—";
+        }
+        if (!userRole && u?.id) {
+          const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", u.id).maybeSingle();
+          const role = (r as any)?.role;
+          userRole = role === "admin" ? "المدير" : role === "agent" ? "المندوب" : "المستخدم";
+        }
       } catch {
-        userName = "—";
+        if (!userName) userName = "—";
       }
     }
+    if (!userRole) userRole = "المستخدم";
 
     const [{ buildReportPdfBlob }, { sharePdfBlob }] = await Promise.all([
       import("./pdfmake-report"),
@@ -92,8 +102,10 @@ export async function exportToPDF(
         reportName: meta.reportName || title,
         branch: meta.branch || "—",
         user: userName,
+        userRole,
       },
     });
+
 
     await sharePdfBlob({
       blob,
