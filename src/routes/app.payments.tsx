@@ -236,35 +236,34 @@ async function printReceiptPDF(a: {
   amountPaid: number; remaining: number; prevRemaining: number; note: string;
   dateStr: string; adminName: string;
 }) {
-  const { exportToPDF } = await import("@/lib/dashboard-export");
-  const cur = a.currency ? ` ${a.currency}` : "";
-  const summary = [
-    { label: "المندوب", value: a.agentName },
-    { label: "هاتف المندوب", value: a.agentPhone || "—" },
-    { label: "الشبكة", value: a.networkName },
-    { label: "الدين قبل السداد", value: `${fmtMoney(a.prevRemaining)}${cur}` },
-    { label: "المبلغ المُسدَّد", value: `${fmtMoney(a.amountPaid)}${cur}` },
-    { label: "الدين المتبقي", value: `${fmtMoney(a.remaining)}${cur}` },
-    { label: "التاريخ", value: a.dateStr },
-    { label: "المدير", value: a.adminName },
-    ...(a.note ? [{ label: "ملاحظة", value: a.note }] : []),
-  ];
-  const sections = [
-    {
-      title: "تفاصيل السند",
-      cols: ["البيان", "القيمة"],
-      rows: [
-        ["المبلغ المُسدَّد", `${fmtMoney(a.amountPaid)}${cur}`],
-        ["الدين قبل السداد", `${fmtMoney(a.prevRemaining)}${cur}`],
-        ["الدين المتبقي بعد السداد", `${fmtMoney(a.remaining)}${cur}`],
-      ],
-    },
-  ];
-  const title = `سند_سداد_${a.agentName}_${new Date().toISOString().slice(0, 10)}`;
-  await exportToPDF(title, summary, sections, {
-    reportName: `سند سداد — ${a.agentName}`,
-    branch: a.networkName,
-    user: a.adminName,
-    userRole: "المدير",
+  const { buildCreditReceiptPdfBlob } = await import("@/lib/receipt-pdf");
+  const { sharePdfBlob } = await import("@/lib/native-pdf");
+
+  let adminPhone = "";
+  let adminUsername = "";
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data } = await supabase.auth.getUser();
+    const u = data?.user;
+    adminPhone = String(u?.phone || (u?.user_metadata as any)?.phone || "").replace(/\D/g, "");
+    adminUsername = (u?.user_metadata as any)?.username || "";
+  } catch {}
+
+  const statement = a.note?.trim() ? a.note.trim() : `تسديد من ${a.agentName}`;
+
+  const blob = await buildCreditReceiptPdfBlob({
+    networkName: a.networkName,
+    networkPhone: adminPhone,
+    networkRegion: "الجمهورية اليمنية",
+    agentName: a.agentName,
+    amount: a.amountPaid,
+    currency: a.currency,
+    statement,
+    dateStr: a.dateStr,
+    adminName: a.adminName,
+    adminUsername,
   });
+
+  const title = `سند_إشعار_دائن_${a.agentName}_${new Date().toISOString().slice(0, 10)}`;
+  await sharePdfBlob({ blob, filename: title, dialogTitle: "مشاركة أو طباعة السند" });
 }

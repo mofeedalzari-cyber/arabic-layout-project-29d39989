@@ -269,7 +269,7 @@ export async function buildCreditReceiptPdfBlob(input: CreditReceiptInput): Prom
     pageSize: "A4",
     pageMargins: [30, 30, 30, 40],
     defaultStyle: { font: "Cairo", fontSize: 11 },
-    content: [headerRow, titleBox, metaRow, recipientRow, introRow, amountTable, signatures],
+    content: [headerRow, titleBox, metaRow, recipientRow, introRow, amountTable, signatures] as any,
     footer: (cp: number, tp: number) => ({
       margin: [30, 0, 30, 0],
       columns: [
