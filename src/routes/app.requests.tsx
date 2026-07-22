@@ -138,7 +138,7 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
           const paid = Number(r.paid_amount ?? 0);
           const remaining = Math.max(total - paid, 0);
           const isCash = r.payment_method === "CASH";
-          const phone = phones?.get(r.agent_username);
+          const phone = phones?.get(r.agent_username) || r.agent_username?.replace(/^u/, "");
           const fullName = display(r.agent_username);
           const qty = r.approved_quantity ?? r.quantity;
           return (
