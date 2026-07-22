@@ -110,7 +110,7 @@ async function createPdf(docDefinition: TDocumentDefinitions): Promise<Blob> {
   }
 
   const doc = pdfMake.createPdf({
-    defaultStyle: { font: "Amiri", fontSize: 11 },
+    defaultStyle: { font: "Cairo", fontSize: 11 },
     ...docDefinition,
   });
 
