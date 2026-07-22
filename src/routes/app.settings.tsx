@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, Trash2, Save, Download, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { displayPhone } from "@/lib/format";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -29,7 +30,7 @@ function SettingsPage() {
   const [fullName, setFullName] = useState<string>("");
 
   useEffect(() => {
-    setPhone(profile?.phone ?? "");
+    setPhone(displayPhone(profile?.phone, profile?.username) === "—" ? "" : displayPhone(profile?.phone, profile?.username));
     setFullName(profile?.full_name ?? "");
   }, [profile?.phone, profile?.full_name]);
 
@@ -54,7 +55,7 @@ function SettingsPage() {
     <>
       <PageHeader title="الإعدادات" description="معلومات الحساب" />
       <Card className="card-elegant border-0 p-5 max-w-md space-y-4">
-        <Row label="اسم المستخدم" value={profile?.username ? profile.username.replace(/^u/, "") : "—"} />
+        <Row label="اسم المستخدم" value={displayPhone(profile?.phone, profile?.username)} />
         <Row label="نوع الحساب" value={role === "admin" ? "مدير" : "وكيل"} />
         <Row label="الحالة" value={profile?.is_active ? "مفعّل" : "موقوف"} />
         <div className="space-y-2">

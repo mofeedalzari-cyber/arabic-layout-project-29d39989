@@ -14,6 +14,7 @@ import {
 import { Check, X, Clock, UserPlus, Inbox } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { displayPhone } from "@/lib/format";
 
 export const Route = createFileRoute("/app/join-requests")({ component: JoinRequestsPage });
 
@@ -103,11 +104,11 @@ function JoinList({ status }: { status: string }) {
                 </div>
                 <div className="min-w-0 flex-1 space-y-0.5 text-sm">
                   <div className="font-bold text-base truncate">
-                    {r.agent_full_name || r.agent_username}
+                    {r.agent_full_name || displayPhone(r.agent_phone, r.agent_username)}
                   </div>
-                  <div className="text-xs text-muted-foreground">@{r.agent_username}</div>
+                  <div className="text-xs text-muted-foreground">{displayPhone(r.agent_phone, r.agent_username)}</div>
                   {r.agent_phone && (
-                    <div className="text-xs"><span className="text-muted-foreground">الهاتف: </span>{r.agent_phone}</div>
+                    <div className="text-xs"><span className="text-muted-foreground">الهاتف: </span>{displayPhone(r.agent_phone, r.agent_username)}</div>
                   )}
                   <div className="text-xs text-muted-foreground">
                     التاريخ: {new Date(r.requested_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}
@@ -144,7 +145,7 @@ function JoinList({ status }: { status: string }) {
           {rejectFor && (
             <div className="space-y-3">
               <div className="text-sm text-muted-foreground">
-                طلب <b>{rejectFor.agent_full_name || rejectFor.agent_username}</b>
+                طلب <b>{rejectFor.agent_full_name || displayPhone(rejectFor.agent_phone, rejectFor.agent_username)}</b>
               </div>
               <div>
                 <Label className="text-xs mb-1.5 block">سبب الرفض (اختياري)</Label>

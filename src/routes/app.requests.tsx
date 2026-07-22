@@ -16,7 +16,7 @@ import { Check, X, Clock, Inbox, Wallet, Banknote } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUserNames } from "@/lib/use-user-names";
-import { fmtMoney } from "@/lib/format";
+import { displayPhone, fmtMoney } from "@/lib/format";
 
 export const Route = createFileRoute("/app/requests")({ component: RequestsPage });
 
@@ -65,7 +65,7 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
       const { data, error } = await supabase.from("profiles").select("username, phone");
       if (error) throw error;
       const m = new Map<string, string>();
-      for (const p of data ?? []) if (p.phone) m.set(p.username, p.phone);
+      for (const p of data ?? []) m.set(p.username, displayPhone(p.phone, p.username));
       return m;
     },
     staleTime: 60_000,
@@ -138,7 +138,7 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
           const paid = Number(r.paid_amount ?? 0);
           const remaining = Math.max(total - paid, 0);
           const isCash = r.payment_method === "CASH";
-          const phone = phones?.get(r.agent_username) || r.agent_username?.replace(/^u/, "");
+          const phone = phones?.get(r.agent_username) || displayPhone(null, r.agent_username);
           const fullName = display(r.agent_username);
           const qty = r.approved_quantity ?? r.quantity;
           return (

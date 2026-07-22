@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { cn } from "@/lib/utils";
+import { displayPhone } from "@/lib/format";
 import {
   LayoutDashboard, Wifi, Package, Upload, Users, Receipt,
   ScrollText, Settings, LogOut, Menu, Moon, Sun, Store, Inbox, CreditCard, Calculator, UserPlus,
@@ -67,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
             {items.map((it) => <NavLink key={it.to} item={it} />)}
           </nav>
-          <UserFooter username={profile?.username ?? ""} role={role} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
+          <UserFooter username={profile?.username ?? ""} phone={profile?.phone ?? ""} role={role} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
         </aside>
       )}
 
@@ -119,7 +120,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {items.map((it) => <NavLink key={it.to} item={it} />)}
                 </nav>
                 <div className="shrink-0 pb-3">
-                  <UserFooter username={profile?.username ?? ""} role={role} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
+                  <UserFooter username={profile?.username ?? ""} phone={profile?.phone ?? ""} role={role} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
                 </div>
               </SheetContent>
             </Sheet>
@@ -216,17 +217,18 @@ function BottomLink({ item }: { item: NavItem }) {
   );
 }
 
-function UserFooter({ username, role, onSignOut, dark, onToggleTheme }: {
-  username: string; role: string | null; onSignOut: () => void; dark: boolean; onToggleTheme: () => void;
+function UserFooter({ username, phone, role, onSignOut, dark, onToggleTheme }: {
+  username: string; phone?: string | null; role: string | null; onSignOut: () => void; dark: boolean; onToggleTheme: () => void;
 }) {
+  const phoneText = displayPhone(phone, username);
   return (
     <div className="p-3 border-t border-sidebar-border space-y-2">
       <div className="flex items-center gap-3 p-2 rounded-xl bg-sidebar-accent/40">
         <div className="h-9 w-9 rounded-full gradient-primary-bg flex items-center justify-center font-bold text-sm">
-          {username.replace(/^u/, "").slice(0, 2).toUpperCase()}
+          {phoneText.slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold truncate" dir="ltr">{username ? username.replace(/^u/, "") : "—"}</div>
+          <div className="text-sm font-semibold truncate" dir="ltr">{phoneText}</div>
           <div className="text-[11px] text-muted-foreground">{role === "admin" ? "مدير" : "وكيل"}</div>
         </div>
       </div>

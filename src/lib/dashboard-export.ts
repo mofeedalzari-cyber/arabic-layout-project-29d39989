@@ -1,5 +1,6 @@
 // dashboard-export.ts
 import ExcelJS from "exceljs";
+import { cleanPhoneLike } from "@/lib/format";
 
 export type SummaryRow = { label: string; value: string | number };
 export type TableSection = { title: string; cols: string[]; rows: (string | number)[][] };
@@ -68,7 +69,7 @@ export async function exportToPDF(
         const u = data?.user;
         userName =
           (u?.user_metadata as any)?.full_name ||
-          (u?.user_metadata as any)?.username ||
+          cleanPhoneLike((u?.user_metadata as any)?.username) ||
           u?.phone ||
           u?.email ||
           "—";
