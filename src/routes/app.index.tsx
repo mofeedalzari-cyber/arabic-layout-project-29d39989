@@ -199,8 +199,8 @@ function AdminBreakdowns() {
       const p = pkgMap.get(c.package_id);
       return s + (p ? Number(p.price) : 0);
     }, 0);
-    return { total, sold, remaining, salesValue, debts, agentsCount: agents?.length ?? 0 };
-  }, [cards, sales, pkgMap, agents]);
+    return { total, sold, remaining, salesValue, debts, collected: paymentsCollected ?? 0, agentsCount: agents?.length ?? 0 };
+  }, [cards, sales, pkgMap, agents, paymentsCollected]);
 
   const agentStats = useMemo(() => {
     type Row = { agentId: string; agent: string; phone: string; pkg: string; price: number; currency?: string; holding: number };
