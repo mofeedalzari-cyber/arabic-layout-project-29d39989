@@ -16,6 +16,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppSalesRouteImport } from './routes/app.sales'
 import { Route as AppRequestsRouteImport } from './routes/app.requests'
+import { Route as AppPaymentsRouteImport } from './routes/app.payments'
 import { Route as AppPackagesRouteImport } from './routes/app.packages'
 import { Route as AppNetworksRouteImport } from './routes/app.networks'
 import { Route as AppManageCardsRouteImport } from './routes/app.manage-cards'
@@ -61,6 +62,11 @@ const AppSalesRoute = AppSalesRouteImport.update({
 const AppRequestsRoute = AppRequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPaymentsRoute = AppPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPackagesRoute = AppPackagesRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/app/manage-cards': typeof AppManageCardsRoute
   '/app/networks': typeof AppNetworksRouteWithChildren
   '/app/packages': typeof AppPackagesRoute
+  '/app/payments': typeof AppPaymentsRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
   '/app/settings': typeof AppSettingsRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/app/logs': typeof AppLogsRoute
   '/app/manage-cards': typeof AppManageCardsRoute
   '/app/packages': typeof AppPackagesRoute
+  '/app/payments': typeof AppPaymentsRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
   '/app/settings': typeof AppSettingsRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/app/manage-cards': typeof AppManageCardsRoute
   '/app/networks': typeof AppNetworksRouteWithChildren
   '/app/packages': typeof AppPackagesRoute
+  '/app/payments': typeof AppPaymentsRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
   '/app/settings': typeof AppSettingsRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/app/manage-cards'
     | '/app/networks'
     | '/app/packages'
+    | '/app/payments'
     | '/app/requests'
     | '/app/sales'
     | '/app/settings'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/app/logs'
     | '/app/manage-cards'
     | '/app/packages'
+    | '/app/payments'
     | '/app/requests'
     | '/app/sales'
     | '/app/settings'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/app/manage-cards'
     | '/app/networks'
     | '/app/packages'
+    | '/app/payments'
     | '/app/requests'
     | '/app/sales'
     | '/app/settings'
@@ -294,6 +306,13 @@ declare module '@tanstack/react-router' {
       path: '/requests'
       fullPath: '/app/requests'
       preLoaderRoute: typeof AppRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/payments': {
+      id: '/app/payments'
+      path: '/payments'
+      fullPath: '/app/payments'
+      preLoaderRoute: typeof AppPaymentsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/packages': {
@@ -400,6 +419,7 @@ interface AppRouteChildren {
   AppManageCardsRoute: typeof AppManageCardsRoute
   AppNetworksRoute: typeof AppNetworksRouteWithChildren
   AppPackagesRoute: typeof AppPackagesRoute
+  AppPaymentsRoute: typeof AppPaymentsRoute
   AppRequestsRoute: typeof AppRequestsRoute
   AppSalesRoute: typeof AppSalesRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -416,6 +436,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppManageCardsRoute: AppManageCardsRoute,
   AppNetworksRoute: AppNetworksRouteWithChildren,
   AppPackagesRoute: AppPackagesRoute,
+  AppPaymentsRoute: AppPaymentsRoute,
   AppRequestsRoute: AppRequestsRoute,
   AppSalesRoute: AppSalesRoute,
   AppSettingsRoute: AppSettingsRoute,
