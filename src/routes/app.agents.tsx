@@ -262,16 +262,21 @@ type PkgRow = {
 
 export function AgentStats({ agentId, name, username }: { agentId: string; name: string; username: string }) {
   const qc = useQueryClient();
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
   const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ["agent-stats-full", agentId],
+    queryKey: ["agent-stats-full", agentId, fromDate, toDate],
     queryFn: async () => {
+      let salesQ = supabase.from("sales")
+        .select("id, price, package_id, package_name, network_id, network_name, sold_at")
+        .eq("agent_id", agentId);
+      if (fromDate) salesQ = salesQ.gte("sold_at", new Date(fromDate + "T00:00:00").toISOString());
+      if (toDate) salesQ = salesQ.lte("sold_at", new Date(toDate + "T23:59:59.999").toISOString());
       const [cardsRes, salesRes, reqRes] = await Promise.all([
         supabase.from("cards")
           .select("id, status, package_id, network_id, assigned_to, sold_to, packages!inner(price, name), networks!inner(name, currency)")
           .or(`assigned_to.eq.${agentId},sold_to.eq.${agentId}`),
-        supabase.from("sales")
-          .select("id, price, package_id, package_name, network_id, network_name, sold_at")
-          .eq("agent_id", agentId),
+        salesQ,
         supabase.from("card_requests")
           .select("id, network_id, network_name, total_value, paid_amount, status")
           .eq("agent_id", agentId).eq("status", "APPROVED"),
@@ -279,6 +284,7 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
       if (cardsRes.error) throw cardsRes.error;
       if (salesRes.error) throw salesRes.error;
       if (reqRes.error) throw reqRes.error;
+
 
       const cards = (cardsRes.data ?? []) as any[];
       const sales = salesRes.data ?? [];
@@ -382,12 +388,35 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
       </div>
 
       <div className="px-4">
+        <Card className="p-3 border-0 card-elegant mb-3">
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="flex-1 min-w-[130px]">
+              <Label className="text-[11px] text-muted-foreground">من تاريخ</Label>
+              <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="rounded-xl h-9 text-sm" dir="ltr" />
+            </div>
+            <div className="flex-1 min-w-[130px]">
+              <Label className="text-[11px] text-muted-foreground">إلى تاريخ</Label>
+              <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="rounded-xl h-9 text-sm" dir="ltr" />
+            </div>
+            {(fromDate || toDate) && (
+              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => { setFromDate(""); setToDate(""); }}>
+                مسح
+              </Button>
+            )}
+          </div>
+          {(fromDate || toDate) && (
+            <div className="mt-2 text-[11px] text-muted-foreground">
+              الفترة: {fromDate || "…"} — {toDate || "…"} (المباع فقط)
+            </div>
+          )}
+        </Card>
         <div className="grid grid-cols-3 gap-2">
           <TopStat label="إجمالي القيمة" value={fmtMoney(t.totalValue)} tone="primary" />
           <TopStat label="قيمة المباع" value={fmtMoney(t.soldValue)} />
           <TopStat label="قيمة المتاح" value={fmtMoney(t.availableValue)} />
         </div>
       </div>
+
 
       <div className="p-4 space-y-4">
         {perNetwork.length === 0 && (
