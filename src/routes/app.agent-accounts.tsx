@@ -414,7 +414,7 @@ async function printAgentReport(a: PrintArgs) {
         s.package_name,
         s.network_name,
         `${fmtMoney(Number(s.price))} ${a.netMap.get(s.network_id)?.currency ?? ""}`.trim(),
-        fmtArabicDateTime(s.sold_at),
+        fmtArabicDateTimePdf(s.sold_at),
       ]),
     },
   ];
