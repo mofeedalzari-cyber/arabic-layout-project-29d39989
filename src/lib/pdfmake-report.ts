@@ -211,7 +211,7 @@ function headerBlock(title: string, meta: Required<PdfReportMeta>, dateStr: stri
         stack: [
           { text: rtlText(`التاريخ: ${dateStr}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right" },
           { text: rtlText(`الفرع / الشبكة: ${meta.branch}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right", margin: [0, 3, 0, 0] },
-          { text: rtlText(`المستخدم: ${meta.user}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right", margin: [0, 3, 0, 0] },
+          { text: rtlText(`${meta.userRole}: ${meta.user}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right", margin: [0, 3, 0, 0] },
         ],
       },
     ],
