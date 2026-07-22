@@ -25,6 +25,7 @@ const NAV: NavItem[] = [
   { to: "/app/manage-cards", label: "إدارة الكروت", icon: CreditCard, adminOnly: true },
   { to: "/app/agents", label: "إدارة المناديب", icon: Users, adminOnly: true },
   { to: "/app/agent-accounts", label: "حسابات المناديب", icon: Calculator, adminOnly: true },
+  { to: "/app/payments", label: "السداد", icon: HandCoins, adminOnly: true },
   { to: "/app/logs", label: "السجلات", icon: ScrollText, adminOnly: true },
   { to: "/app/settings", label: "الإعدادات", icon: Settings },
 ];
