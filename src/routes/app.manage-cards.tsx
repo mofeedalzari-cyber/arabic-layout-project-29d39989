@@ -207,6 +207,13 @@ function ManageCardsPage() {
   }
   function selectPage() { setSelected((s) => { const n = new Set(s); pageIds.forEach((id) => n.add(id)); return n; }); }
   function unselectPage() { setSelected((s) => { const n = new Set(s); pageIds.forEach((id) => n.delete(id)); return n; }); }
+  function selectAllSold() {
+    setSelected((s) => {
+      const n = new Set(s);
+      (cards ?? []).filter((c) => c.status === "SOLD").forEach((c) => n.add(c.id));
+      return n;
+    });
+  }
   function toggleReveal(id: string) {
     setRevealed((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
