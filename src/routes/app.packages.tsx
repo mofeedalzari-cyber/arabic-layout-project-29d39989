@@ -237,7 +237,7 @@ function PackagesPage() {
                   <div className="text-base font-extrabold truncate">باقة {p.name}</div>
                   <div className="text-[11px] text-muted-foreground truncate">{net?.name ?? "—"}</div>
                 </div>
-                <div className="rounded-full bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 whitespace-nowrap">
+                <div className="rounded-full bg-destructive/10 text-destructive text-xs font-bold px-3 py-1.5 whitespace-nowrap">
                   {fmtMoney(Number(p.price))} {net?.currency ?? "ر.س"}
                 </div>
               </div>
