@@ -234,6 +234,7 @@ function AdminBreakdowns() {
       { label: "عدد المناديب", value: summary.agentsCount },
       { label: "إجمالي قيمة المبيعات", value: fmtMoney(summary.salesValue) },
       { label: "إجمالي ديون المناديب", value: fmtMoney(summary.debts) },
+      { label: "الديون المستلمة", value: fmtMoney(summary.collected) },
     ];
     const sections: TableSection[] = [
       {
