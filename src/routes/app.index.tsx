@@ -327,7 +327,13 @@ function AdminBreakdowns() {
             </Button>
           </div>
 
-          <AgentsChart data={agentStats} />
+          <AgentsChart
+            totals={{
+              withdrawn: agentStats.reduce((s, r) => s + r.holding, 0),
+              sold: summary.sold,
+              remaining: summary.remaining,
+            }}
+          />
 
           {agentStats.length > 0 && (
             <div className="mt-3 flex justify-center">
