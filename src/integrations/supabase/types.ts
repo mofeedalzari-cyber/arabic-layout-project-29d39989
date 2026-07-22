@@ -517,13 +517,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_delete_cards: {
-        Args: { _ids: string[] }
-        Returns: {
-          deleted: number
-          skipped_sold: number
-        }[]
-      }
+      admin_delete_cards:
+        | {
+            Args: { _ids: string[] }
+            Returns: {
+              deleted: number
+              skipped_sold: number
+            }[]
+          }
+        | {
+            Args: { _force?: boolean; _ids: string[] }
+            Returns: {
+              deleted: number
+              skipped_sold: number
+            }[]
+          }
       admin_delete_network: {
         Args: { _network_id: string }
         Returns: undefined
