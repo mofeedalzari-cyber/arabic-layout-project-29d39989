@@ -129,27 +129,37 @@ function ManageCardsPage() {
   const del = useMutation({
     mutationFn: async () => {
       const ids = Array.from(selected);
-      if (ids.length === 0) return { deleted: 0, archived: 0 };
-      const { data: soldRefs, error: sErr } = await supabase
-        .from("sales").select("card_id").in("card_id", ids);
-      if (sErr) throw sErr;
-      const refSet = new Set((soldRefs ?? []).map((r: any) => r.card_id));
+      if (ids.length === 0) return { deleted: 0, unassigned: 0 };
       const statusMap = new Map((cards ?? []).map((c) => [c.id, c.status]));
-      const hasSoldCards = ids.some((id) => refSet.has(id) || statusMap.get(id) === "SOLD");
-      const forceDelete = extendedDelete || hasSoldCards;
+      const assignedIds = ids.filter((id) => statusMap.get(id) === "ASSIGNED");
+      const otherIds = ids.filter((id) => statusMap.get(id) !== "ASSIGNED");
+
+      let unassigned = 0;
+      if (assignedIds.length) {
+        const { data, error } = await supabase.rpc("admin_unassign_cards", { _ids: assignedIds });
+        if (error) throw error;
+        unassigned = (data as number) ?? 0;
+      }
+
       let deleted = 0;
-      if (ids.length) {
-        const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: ids, _force: forceDelete });
+      if (otherIds.length) {
+        const { data: soldRefs, error: sErr } = await supabase
+          .from("sales").select("card_id").in("card_id", otherIds);
+        if (sErr) throw sErr;
+        const refSet = new Set((soldRefs ?? []).map((r: any) => r.card_id));
+        const hasSoldCards = otherIds.some((id) => refSet.has(id) || statusMap.get(id) === "SOLD");
+        const forceDelete = extendedDelete || hasSoldCards;
+        const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: otherIds, _force: forceDelete });
         if (error) throw error;
         const r = Array.isArray(data) ? data[0] : data;
         deleted = r?.deleted ?? 0;
       }
-      return { deleted, archived: 0 };
+      return { deleted, unassigned };
     },
     onSuccess: (r: any) => {
       const parts: string[] = [];
       if (r.deleted) parts.push(`تم حذف ${r.deleted} كرت`);
-      if (r.archived) parts.push(`تم أرشفة ${r.archived} كرت`);
+      if (r.unassigned) parts.push(`تم إرجاع ${r.unassigned} كرت مسحوب إلى المتاح`);
       toast.success(parts.join(" — ") || "لا يوجد تغييرات");
       setSelected(new Set());
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
@@ -158,6 +168,7 @@ function ManageCardsPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   const delOldSold = useMutation({
     mutationFn: async () => {
