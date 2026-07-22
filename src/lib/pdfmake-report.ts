@@ -258,8 +258,8 @@ function summaryBlock(summary: PdfSummaryRow[]): any {
         layout: {
           hLineColor: () => COLORS.line,
           vLineColor: () => COLORS.line,
-          hLineWidth: () => 0.5,
-          vLineWidth: () => 0.5,
+          hLineWidth: () => 1,
+          vLineWidth: () => 1,
         },
       },
     ],
