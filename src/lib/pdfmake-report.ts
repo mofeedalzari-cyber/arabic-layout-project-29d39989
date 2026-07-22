@@ -36,10 +36,10 @@ function rtlText(input: string | number | null | undefined): string {
 // -----------------------------------------------------------------------------
 
 const FONT_URLS: Record<string, string> = {
-  "Amiri-Regular.ttf":
-    "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf",
-  "Amiri-Bold.ttf":
-    "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Bold.ttf",
+  "Cairo-Regular.ttf":
+    "https://cdn.jsdelivr.net/npm/@expo-google-fonts/cairo@0.4.2/Cairo_400Regular.ttf",
+  "Cairo-Bold.ttf":
+    "https://cdn.jsdelivr.net/npm/@expo-google-fonts/cairo@0.4.2/Cairo_700Bold.ttf",
 };
 
 let _vfsCache: Record<string, string> | null = null;
