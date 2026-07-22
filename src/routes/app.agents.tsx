@@ -262,16 +262,21 @@ type PkgRow = {
 
 export function AgentStats({ agentId, name, username }: { agentId: string; name: string; username: string }) {
   const qc = useQueryClient();
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
   const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ["agent-stats-full", agentId],
+    queryKey: ["agent-stats-full", agentId, fromDate, toDate],
     queryFn: async () => {
+      let salesQ = supabase.from("sales")
+        .select("id, price, package_id, package_name, network_id, network_name, sold_at")
+        .eq("agent_id", agentId);
+      if (fromDate) salesQ = salesQ.gte("sold_at", new Date(fromDate + "T00:00:00").toISOString());
+      if (toDate) salesQ = salesQ.lte("sold_at", new Date(toDate + "T23:59:59.999").toISOString());
       const [cardsRes, salesRes, reqRes] = await Promise.all([
         supabase.from("cards")
           .select("id, status, package_id, network_id, assigned_to, sold_to, packages!inner(price, name), networks!inner(name, currency)")
           .or(`assigned_to.eq.${agentId},sold_to.eq.${agentId}`),
-        supabase.from("sales")
-          .select("id, price, package_id, package_name, network_id, network_name, sold_at")
-          .eq("agent_id", agentId),
+        salesQ,
         supabase.from("card_requests")
           .select("id, network_id, network_name, total_value, paid_amount, status")
           .eq("agent_id", agentId).eq("status", "APPROVED"),
@@ -279,6 +284,7 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
       if (cardsRes.error) throw cardsRes.error;
       if (salesRes.error) throw salesRes.error;
       if (reqRes.error) throw reqRes.error;
+
 
       const cards = (cardsRes.data ?? []) as any[];
       const sales = salesRes.data ?? [];
