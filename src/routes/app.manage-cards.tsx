@@ -400,9 +400,9 @@ function ManageCardsPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
-    AVAILABLE: { label: "متاح", cls: "bg-success/15 text-success" },
-    ASSIGNED: { label: "مسحوب", cls: "bg-warning/20 text-warning" },
-    SOLD: { label: "مباع", cls: "bg-warning/20 text-warning" },
+    AVAILABLE: { label: "متاح", cls: "bg-success/15 text-success border border-success/30" },
+    ASSIGNED: { label: "مسحوب", cls: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30" },
+    SOLD: { label: "مباع", cls: "bg-destructive/15 text-destructive border border-destructive/30" },
   };
   const m = map[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
   return <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${m.cls}`}>{m.label}</span>;
