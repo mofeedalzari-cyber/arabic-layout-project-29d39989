@@ -155,8 +155,10 @@ export type PdfReportMeta = {
   reportName?: string;
   branch?: string;
   user?: string;
+  userRole?: string;
   systemName?: string;
 };
+
 
 const COLORS = {
   ink: "#0f172a",
