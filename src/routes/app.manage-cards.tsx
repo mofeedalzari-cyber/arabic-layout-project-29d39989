@@ -192,7 +192,7 @@ function ManageCardsPage() {
         await supabase.from("cards").update({ status: "SOLD" }).eq("id", id);
         return { archived: true };
       }
-      const { error } = await supabase.rpc("admin_delete_cards", { _ids: [id] });
+      const { error } = await supabase.rpc("admin_delete_cards", { _ids: [id], _force: true });
       if (error) throw error;
       return { archived: false };
     },
