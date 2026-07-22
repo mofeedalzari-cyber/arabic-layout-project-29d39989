@@ -88,7 +88,9 @@ function AdminDashboard() {
         <StatCard icon={TrendingUp} label="قيمة المتوفر" value={fmtMoney(stats?.available_value ?? 0)} />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+      <AdminBreakdowns />
+
+      <div className="grid md:grid-cols-2 gap-4 md:gap-6 mt-5">
         <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
           <div className="flex items-center justify-between mb-4 gap-2">
             <h3 className="font-bold text-sm sm:text-base">أحدث المبيعات</h3>
@@ -123,8 +125,6 @@ function AdminDashboard() {
           </div>
         </Card>
       </div>
-
-      <AdminBreakdowns />
     </div>
   );
 }
@@ -275,7 +275,7 @@ function AdminBreakdowns() {
   };
 
   return (
-    <div className="grid gap-4 md:gap-6 mt-5 w-full max-w-full">
+    <div className="grid gap-4 md:gap-6 w-full max-w-full">
       <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
           <div className="flex items-center gap-2 min-w-0">
