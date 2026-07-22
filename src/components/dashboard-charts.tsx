@@ -99,66 +99,102 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
   );
 }
 
-export function AgentsChart({ data }: { data: AgentRow[] }) {
-  // نجمع لكل مندوب إجمالي الكروت التي بحوزته (كل الباقات)
-  const agg = new Map<string, number>();
-  for (const r of data) agg.set(r.agent, (agg.get(r.agent) ?? 0) + r.holding);
-  const chartData = [...agg.entries()]
-    .map(([agent, holding]) => ({ name: agent, "لديه": holding }))
-    .sort((a, b) => b["لديه"] - a["لديه"])
-    .slice(0, 8);
+export function AgentsChart({ totals }: { totals: { withdrawn: number; sold: number; remaining: number } }) {
+  const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
 
-  if (!chartData.length) {
-    return <div className="text-center text-sm text-muted-foreground py-10">لا توجد كروت مسحوبة حاليًا.</div>;
+  const data = [
+    { name: "المسحوب (لدى المناديب)", value: totals.withdrawn, color: "var(--primary)" },
+    { name: "المباع", value: totals.sold, color: "var(--success, var(--primary))" },
+    { name: "المتبقي", value: totals.remaining, color: "var(--warning)" },
+  ];
+  const total = data.reduce((s, d) => s + d.value, 0);
+
+  if (total === 0) {
+    return <div className="text-center text-sm text-muted-foreground py-10">لا توجد بيانات.</div>;
   }
 
-  const max = Math.max(...chartData.map((d) => d["لديه"]));
+  const renderActive = (props: any) => {
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+    return (
+      <g>
+        <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 6}
+          startAngle={startAngle} endAngle={endAngle} fill={fill} />
+      </g>
+    );
+  };
 
   return (
     <>
-      <div className="flex items-center gap-4 mb-3 text-xs">
-        <LegendChip color={C.agent} label="الكروت المسحوبة" />
+      <div className="flex flex-wrap items-center justify-center gap-4 mb-3 text-xs">
+        {data.map((d, i) => (
+          <LegendChip key={i} color={d.color} label={`${d.name}: ${d.value}`} />
+        ))}
       </div>
 
-      <div style={{ width: "100%", height: Math.max(220, chartData.length * 44 + 30) }} dir="ltr">
+      <div style={{ width: "100%", height: 300 }} dir="ltr">
         <ResponsiveContainer>
-          <BarChart
-            data={chartData}
-            layout="vertical"
-            margin={{ top: 4, right: 12, left: 8, bottom: 4 }}
-            barCategoryGap={10}
-          >
+          <PieChart>
             <defs>
-              <linearGradient id="grad-agent" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity={1} />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.5} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke={C.grid} strokeDasharray="3 3" horizontal={false} />
-            <XAxis type="number" stroke={C.axis} fontSize={11} allowDecimals={false} />
-            <YAxis
-              type="category"
-              dataKey="name"
-              stroke={C.axis}
-              fontSize={11}
-              width={100}
-              tickLine={false}
-              axisLine={false}
-              orientation="right"
-            />
-            <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.35 }} />
-            <Bar dataKey="لديه" fill="url(#grad-agent)" radius={[8, 8, 8, 8]}>
-              {chartData.map((d, i) => (
-                <Cell key={i} fillOpacity={0.55 + 0.45 * (d["لديه"] / max)} />
+              {data.map((d, i) => (
+                <linearGradient key={i} id={`grad-pie-${i}`} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={d.color} stopOpacity={1} />
+                  <stop offset="100%" stopColor={d.color} stopOpacity={0.55} />
+                </linearGradient>
               ))}
-              <LabelList dataKey="لديه" position="insideRight" style={{ fill: "#fff", fontSize: 11, fontWeight: 700 }} />
-            </Bar>
-          </BarChart>
+            </defs>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={100}
+              paddingAngle={2}
+              stroke="var(--background)"
+              strokeWidth={2}
+              activeIndex={activeIndex}
+              activeShape={renderActive}
+              onMouseEnter={(_, i) => setActiveIndex(i)}
+              onMouseLeave={() => setActiveIndex(undefined)}
+            >
+              {data.map((_, i) => (
+                <Cell key={i} fill={`url(#grad-pie-${i})`} />
+              ))}
+              <LabelList
+                dataKey="value"
+                position="inside"
+                style={{ fill: "#fff", fontSize: 12, fontWeight: 700 }}
+                formatter={(v: any) => {
+                  const n = Number(v);
+                  if (!n) return "";
+                  const pct = Math.round((n / total) * 100);
+                  return `${n} (${pct}%)`;
+                }}
+              />
+            </Pie>
+            <Tooltip
+              content={({ active, payload }: any) => {
+                if (!active || !payload?.length) return null;
+                const p = payload[0];
+                const pct = Math.round((Number(p.value) / total) * 100);
+                return (
+                  <div className="rounded-xl border border-border/60 bg-background/95 backdrop-blur px-3 py-2 shadow-lg text-xs" dir="rtl">
+                    <div className="font-bold mb-1 text-foreground">{p.name}</div>
+                    <div className="text-muted-foreground">
+                      العدد: <span className="font-bold text-foreground">{p.value}</span> ({pct}%)
+                    </div>
+                  </div>
+                );
+              }}
+            />
+          </PieChart>
         </ResponsiveContainer>
       </div>
     </>
   );
 }
+
 
 function LegendChip({ color, label }: { color: string; label: string }) {
   return (
