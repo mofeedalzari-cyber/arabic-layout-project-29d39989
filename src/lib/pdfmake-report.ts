@@ -37,9 +37,9 @@ function rtlText(input: string | number | null | undefined): string {
 
 const FONT_URLS: Record<string, string> = {
   "Cairo-Regular.ttf":
-    "https://cdn.jsdelivr.net/npm/@expo-google-fonts/cairo@0.4.2/Cairo_400Regular.ttf",
+    "https://fonts.gstatic.com/s/cairo/v31/SLXgc1nY6HkvangtZmpQdkhzfH5lkSs2SgRjCAGMQ1z0hOA-W1Q.ttf",
   "Cairo-Bold.ttf":
-    "https://cdn.jsdelivr.net/npm/@expo-google-fonts/cairo@0.4.2/Cairo_700Bold.ttf",
+    "https://fonts.gstatic.com/s/cairo/v31/SLXgc1nY6HkvangtZmpQdkhzfH5lkSs2SgRjCAGMQ1z0hAc5W1Q.ttf",
 };
 
 let _vfsCache: Record<string, string> | null = null;
