@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { cleanPhoneLike } from "@/lib/format";
 
 /**
  * Maps username -> full display name (full_name when available, else username).
@@ -15,7 +16,7 @@ export function useUserNames() {
       if (error) throw error;
       const m = new Map<string, string>();
       for (const p of data ?? []) {
-        m.set(p.username, (p.full_name && p.full_name.trim()) || p.username);
+        m.set(p.username, (p.full_name && p.full_name.trim()) || cleanPhoneLike(p.username));
       }
       return m;
     },
@@ -25,6 +26,6 @@ export function useUserNames() {
   return {
     map,
     display: (username?: string | null) =>
-      (username && map.get(username)) || username || "—",
+      (username && map.get(username)) || cleanPhoneLike(username) || "—",
   };
 }

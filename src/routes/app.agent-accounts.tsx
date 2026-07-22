@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useMemo, useState } from "react";
-import { fmtMoney } from "@/lib/format";
+import { displayPhone, fmtMoney } from "@/lib/format";
 import { Wifi, Package as PackageIcon, ShoppingCart, DollarSign, Layers, Clock, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/app/agent-accounts")({ component: AgentAccountsPage });
@@ -34,7 +34,7 @@ function AgentAccountsPage() {
       const ids = roles?.map((r) => r.user_id) ?? [];
       if (!ids.length) return [];
       const { data } = await supabase.from("profiles")
-        .select("id, username, full_name").in("id", ids).order("full_name");
+        .select("id, username, full_name, phone").in("id", ids).order("full_name");
       return data ?? [];
     },
   });
@@ -79,7 +79,7 @@ function AgentAccountsPage() {
   );
 
   const agent = agents?.find((a) => a.id === agentId);
-  const agentLabel = agent ? `${agent.full_name || agent.username} — ${agent.username}` : "";
+  const agentLabel = agent ? `${agent.full_name || displayPhone((agent as any).phone, agent.username)} — ${displayPhone((agent as any).phone, agent.username)}` : "";
 
   // Totals
   const withdrawn = filteredCards.filter((c) => c.status === "ASSIGNED").length;
@@ -161,7 +161,7 @@ function AgentAccountsPage() {
             <SelectContent>
               {agents?.map((a) => (
                 <SelectItem key={a.id} value={a.id}>
-                  {(a.full_name || a.username)} ({a.username})
+                  {(a.full_name || displayPhone((a as any).phone, a.username))} ({displayPhone((a as any).phone, a.username)})
                 </SelectItem>
               ))}
             </SelectContent>
