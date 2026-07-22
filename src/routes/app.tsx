@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AppShell } from "@/components/app-shell";
 import { Wifi, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRequestNotifications } from "@/hooks/use-request-notifications";
 
 export const Route = createFileRoute("/app")({
   component: AppLayout,
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/app")({
 function AppLayout() {
   const { user, loading, profile, role, signOut } = useAuth();
   const navigate = useNavigate();
+  useRequestNotifications();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
