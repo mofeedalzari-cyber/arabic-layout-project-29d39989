@@ -376,7 +376,9 @@ export async function buildReportPdfBlob(opts: {
     userRole: opts.meta?.userRole || "المستخدم",
 
   };
-  const dateStr = new Date().toLocaleString("ar-EG", {
+  // Use Latin digits (ar-EG-u-nu-latn) — the embedded Cairo TTF subset
+  // doesn't include Arabic-Indic digit glyphs, so ٠-٩ would render as tofu.
+  const dateStr = new Date().toLocaleString("ar-EG-u-nu-latn", {
     dateStyle: "medium",
     timeStyle: "short",
   });

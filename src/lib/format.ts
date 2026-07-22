@@ -37,3 +37,22 @@ export function fmtArabicDate(value?: string | number | Date | null) {
   return `${dt} ${wd}`;
 }
 
+/**
+ * Arabic date+time+weekday but with Latin digits (0-9), for use inside
+ * generated PDFs. The embedded Cairo TTF subset doesn't ship Arabic-Indic
+ * digit glyphs, so ٠-٩ render as tofu. Using `ar-EG-u-nu-latn` keeps the
+ * Arabic month/weekday text but uses plain 0-9 digits which the font has.
+ */
+export function fmtArabicDateTimePdf(value?: string | number | Date | null) {
+  if (!value) return "—";
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return "—";
+  const dt = d.toLocaleString("ar-EG-u-nu-latn", {
+    year: "numeric", month: "numeric", day: "numeric",
+    hour: "numeric", minute: "2-digit", hour12: true,
+  });
+  const wd = d.toLocaleString("ar-EG", { weekday: "long" });
+  return `${dt} ${wd}`;
+}
+
+
