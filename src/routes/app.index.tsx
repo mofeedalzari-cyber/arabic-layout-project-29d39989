@@ -8,7 +8,6 @@ import { Card } from "@/components/ui/card";
 import { Wifi, Package, ShoppingCart, DollarSign, Users, TrendingUp, Activity, Layers, UserCheck, FileSpreadsheet, FileText } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { useUserNames } from "@/lib/use-user-names";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import type { TableSection, SummaryRow } from "@/lib/dashboard-export";
