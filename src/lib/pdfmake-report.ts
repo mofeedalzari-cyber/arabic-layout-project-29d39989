@@ -83,11 +83,11 @@ async function getPdfMake() {
 }
 
 const FONTS: TFontDictionary = {
-  Amiri: {
-    normal: "Amiri-Regular.ttf",
-    bold: "Amiri-Bold.ttf",
-    italics: "Amiri-Regular.ttf",
-    bolditalics: "Amiri-Bold.ttf",
+  Cairo: {
+    normal: "Cairo-Regular.ttf",
+    bold: "Cairo-Bold.ttf",
+    italics: "Cairo-Regular.ttf",
+    bolditalics: "Cairo-Bold.ttf",
   },
 };
 
