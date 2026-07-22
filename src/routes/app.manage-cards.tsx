@@ -13,11 +13,12 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Search, Filter, Eye, EyeOff, ChevronsRight, ChevronRight, ChevronLeft, ChevronsLeft } from "lucide-react";
+import { Trash2, Search, Filter, Eye, EyeOff, ChevronsRight, ChevronRight, ChevronLeft, ChevronsLeft, Printer } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { displayPhone, fmtArabicDateTime } from "@/lib/format";
+import { printAssignedCards } from "@/lib/card-print";
 
 export const Route = createFileRoute("/app/manage-cards")({ component: ManageCardsPage });
 
