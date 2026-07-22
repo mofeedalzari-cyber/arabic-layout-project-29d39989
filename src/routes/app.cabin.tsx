@@ -11,7 +11,7 @@ import {
 import { Wifi, ShieldAlert, Check, Copy, Share2, MessageCircle, PackageOpen, Tag, RefreshCw, Search, User as UserIcon, Printer, Image as ImageIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { fmtMoney } from "@/lib/format";
+import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { CardTemplateDialog } from "@/components/card-template-dialog";
 import { loadTemplate, printCards } from "@/lib/card-print";
