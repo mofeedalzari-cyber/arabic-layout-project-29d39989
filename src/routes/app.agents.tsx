@@ -15,7 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Search, BarChart3, Wifi, RefreshCw, Wallet, Receipt, Coins, Shapes, Network, Tag, Pencil,
 } from "lucide-react";
-import { fmtMoney } from "@/lib/format";
+import { displayPhone, fmtMoney } from "@/lib/format";
 import { useServerFn } from "@tanstack/react-start";
 import { adminUpdateAgent } from "@/lib/admin-agents.functions";
 import { Label } from "@/components/ui/label";
@@ -89,16 +89,16 @@ function AgentsPage() {
           <Card key={a.id} className="card-elegant border-0 p-3 sm:p-4">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="h-11 w-11 rounded-full gradient-primary-bg flex items-center justify-center font-bold text-white shrink-0">
-                {a.username.slice(0, 2).toUpperCase()}
+                {displayPhone((a as any).phone, a.username).slice(0, 2).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-bold truncate">{a.full_name || a.username}</div>
-                <div className="text-xs text-muted-foreground truncate" dir="ltr">{(a as any).phone || a.username.replace(/^u/, "")} · {a.sales.count} مبيعة · {fmtMoney(a.sales.total)}</div>
+                <div className="font-bold truncate">{a.full_name || displayPhone((a as any).phone, a.username)}</div>
+                <div className="text-xs text-muted-foreground truncate" dir="ltr">{displayPhone((a as any).phone, a.username)} · {a.sales.count} مبيعة · {fmtMoney(a.sales.total)}</div>
               </div>
               <Button
                 variant="outline" size="sm"
                 className="hidden sm:inline-flex rounded-xl shrink-0"
-                onClick={() => setStatsFor({ id: a.id, name: a.full_name || a.username, username: a.username })}
+                onClick={() => setStatsFor({ id: a.id, name: a.full_name || displayPhone((a as any).phone, a.username), username: a.username })}
               >
                 <BarChart3 className="h-4 w-4 ml-1" />الإحصائيات
               </Button>
@@ -140,7 +140,7 @@ function AgentsPage() {
                 </span>
                 <Button
                   variant="outline" size="sm" className="rounded-xl h-8"
-                  onClick={() => setStatsFor({ id: a.id, name: a.full_name || a.username, username: a.username })}
+                  onClick={() => setStatsFor({ id: a.id, name: a.full_name || displayPhone((a as any).phone, a.username), username: a.username })}
                 >
                   <BarChart3 className="h-4 w-4 ml-1" />الإحصائيات
                 </Button>
@@ -190,7 +190,7 @@ function EditAgentDialog({
   useEffect(() => {
     if (agent) {
       setFullName(agent.full_name ?? "");
-      setPhone(agent.phone ?? "");
+      setPhone(displayPhone(agent.phone, agent.username) === "—" ? "" : displayPhone(agent.phone, agent.username));
       setPassword("");
     }
   }, [agent?.id]);
@@ -221,7 +221,7 @@ function EditAgentDialog({
     <Dialog open={!!agent} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md rounded-3xl" dir="rtl">
         <DialogHeader>
-          <DialogTitle>تعديل بيانات المندوب @{agent?.username}</DialogTitle>
+          <DialogTitle>تعديل بيانات المندوب {displayPhone(agent?.phone, agent?.username)}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
@@ -374,7 +374,7 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
         </Button>
         <div className="text-center flex-1">
           <div className="text-lg font-extrabold">لوحة الإحصائيات</div>
-          <div className="text-xs text-muted-foreground">{name} <span className="opacity-60">· @{username}</span></div>
+          <div className="text-xs text-muted-foreground">{name} <span className="opacity-60">· {displayPhone(null, username)}</span></div>
         </div>
         <div className="h-10 w-10 rounded-full gradient-primary-bg flex items-center justify-center text-white">
           <BarChart3 className="h-5 w-5" />

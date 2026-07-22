@@ -70,7 +70,7 @@ export async function exportToPDF(
         userName =
           (u?.user_metadata as any)?.full_name ||
           cleanPhoneLike((u?.user_metadata as any)?.username) ||
-          u?.phone ||
+          cleanPhoneLike(u?.phone) ||
           u?.email ||
           "—";
       } catch {

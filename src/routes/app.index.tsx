@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { fmtMoney } from "@/lib/format";
+import { displayPhone, fmtMoney } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/app/")({ component: DashboardPage });
 
 function DashboardPage() {
   const { role, profile } = useAuth();
-  return role === "admin" ? <AdminDashboard /> : <AgentHome name={profile?.full_name || profile?.username || ""} />;
+  return role === "admin" ? <AdminDashboard /> : <AgentHome name={profile?.full_name || displayPhone(profile?.phone, profile?.username)} />;
 }
 
 function AdminDashboard() {
@@ -208,8 +208,8 @@ function AdminBreakdowns() {
       const ag = agentMap.get(c.assigned_to);
       const cur = m.get(key) ?? {
         agentId: c.assigned_to,
-        agent: ag?.full_name || ag?.username || "—",
-        phone: (ag as any)?.phone || (ag?.username?.replace(/^u/, "") ?? "—"),
+        agent: ag?.full_name || displayPhone((ag as any)?.phone, ag?.username),
+        phone: displayPhone((ag as any)?.phone, ag?.username),
         pkg: pkg?.name ?? "—",
         price: pkg ? Number(pkg.price) : 0,
         currency: net?.currency,
@@ -243,7 +243,7 @@ function AdminBreakdowns() {
         title: "إحصائيات المناديب",
         cols: ["المندوب", "الهاتف", "الفئة", "لديه", "السعر"],
         rows: agentStats.map((r) => [
-          displayName(r.phone), r.phone, r.pkg, r.holding,
+          r.agent, r.phone, r.pkg, r.holding,
           `${fmtMoney(r.price)}${r.currency ? " " + r.currency : ""}`,
         ]),
       },
@@ -251,7 +251,7 @@ function AdminBreakdowns() {
         title: "المناديب المرتبطين بالشبكة",
         cols: ["المندوب", "الهاتف", "الحالة"],
         rows: (agents ?? []).map((a) => [
-          a.full_name || a.username, a.username, a.is_active ? "نشط" : "موقوف",
+          a.full_name || displayPhone((a as any).phone, a.username), displayPhone((a as any).phone, a.username), a.is_active ? "نشط" : "موقوف",
         ]),
       },
     ];
@@ -396,7 +396,7 @@ function AdminBreakdowns() {
               className="sm:mr-auto h-9 gap-1.5 text-xs w-full sm:w-auto"
               onClick={() => {
                 const rows: (string | number)[][] = agentStats.map((r) => [
-                  displayName(r.phone),
+                  r.agent,
                   r.phone,
                   r.pkg,
                   `${fmtMoney(r.price)}${r.currency ? " " + r.currency : ""}`,
@@ -435,7 +435,7 @@ function AdminBreakdowns() {
             ) : agentStats.map((r, i) => (
               <MobileDataCard
                 key={i}
-                title={displayName(r.phone)}
+                title={r.agent}
                 fields={[
                   { label: "الهاتف", value: r.phone },
                   { label: "الفئة", value: r.pkg },
@@ -463,7 +463,7 @@ function AdminBreakdowns() {
                   <tr><td colSpan={5} className="text-center text-sm text-muted-foreground py-4">لا توجد كروت مسحوبة حاليًا.</td></tr>
                 ) : agentStats.map((r, i) => (
                   <tr key={i} className="border-t border-border/50">
-                    <td className="px-2 py-2">{displayName(r.phone)}</td>
+                    <td className="px-2 py-2">{r.agent}</td>
                     <td className="px-2 py-2">{r.phone}</td>
                     <td className="px-2 py-2">{r.pkg}</td>
                     <td className="px-2 py-2">{r.holding}</td>
@@ -492,14 +492,14 @@ function AdminBreakdowns() {
                 {(agents ?? []).map((a) => (
                   <MobileDataCard
                     key={a.id}
-                    title={a.full_name || a.username}
+                    title={a.full_name || displayPhone((a as any).phone, a.username)}
                     headerRight={
                       <span className={`text-[11px] font-bold rounded-full px-2 py-0.5 ${a.is_active ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
                         {a.is_active ? "نشط" : "موقوف"}
                       </span>
                     }
                     fields={[
-                      { label: "الهاتف", value: a.username },
+                      { label: "الهاتف", value: displayPhone((a as any).phone, a.username) },
                       { label: "الحالة", value: a.is_active ? "نشط" : "موقوف", tone: a.is_active ? "success" : "danger" },
                     ]}
                   />
@@ -518,8 +518,8 @@ function AdminBreakdowns() {
                   <tbody>
                     {(agents ?? []).map((a) => (
                       <tr key={a.id} className="border-t border-border/50">
-                        <td className="px-2 py-2">{a.full_name || a.username}</td>
-                        <td className="px-2 py-2">{a.username}</td>
+                        <td className="px-2 py-2">{a.full_name || displayPhone((a as any).phone, a.username)}</td>
+                        <td className="px-2 py-2">{displayPhone((a as any).phone, a.username)}</td>
                         <td className="px-2 py-2">{a.is_active ? "نشط" : "موقوف"}</td>
                       </tr>
                     ))}
@@ -604,7 +604,7 @@ function AgentHome({ name }: { name: string }) {
         <div className="mb-4">
           <AgentStats
             agentId={user.id}
-            name={profile?.full_name || profile?.username || name}
+            name={profile?.full_name || displayPhone(profile?.phone, profile?.username) || name}
             username={profile?.username || ""}
           />
         </div>

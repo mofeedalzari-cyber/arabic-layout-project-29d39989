@@ -17,6 +17,7 @@ import { Trash2, Search, Filter, Eye, EyeOff, ChevronsRight, ChevronRight, Chevr
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { displayPhone } from "@/lib/format";
 
 export const Route = createFileRoute("/app/manage-cards")({ component: ManageCardsPage });
 
@@ -81,10 +82,10 @@ function ManageCardsPage() {
       const rows = (data ?? []) as CardRow[];
       const ids = Array.from(new Set(rows.flatMap((r) => [r.assigned_to, r.sold_to]).filter(Boolean) as string[]));
       if (!ids.length) return [];
-      const { data: profs } = await supabase.from("profiles").select("id, full_name, username").in("id", ids);
+      const { data: profs } = await supabase.from("profiles").select("id, full_name, username, phone").in("id", ids);
       return (profs ?? []).map((p: any) => ({
         id: p.id as string,
-        name: (p.full_name as string | null) || (p.username as string | null) || (p.id as string).slice(0, 8),
+        name: (p.full_name as string | null) || displayPhone(p.phone as string | null, p.username as string | null) || (p.id as string).slice(0, 8),
       }));
     },
     enabled: !!networkId,
@@ -103,8 +104,8 @@ function ManageCardsPage() {
       const rows = (data ?? []) as CardRow[];
       const ids = Array.from(new Set(rows.flatMap((r) => [r.assigned_to, r.sold_to]).filter(Boolean) as string[]));
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
-        const nameMap = new Map((profs ?? []).map((p: any) => [p.id, p.full_name as string | null]));
+        const { data: profs } = await supabase.from("profiles").select("id, full_name, username, phone").in("id", ids);
+        const nameMap = new Map((profs ?? []).map((p: any) => [p.id, (p.full_name as string | null) || displayPhone(p.phone, p.username)]));
         rows.forEach((r) => {
           r.assigned_full_name = r.assigned_to ? nameMap.get(r.assigned_to) ?? null : null;
           r.sold_full_name = r.sold_to ? nameMap.get(r.sold_to) ?? null : null;
@@ -335,8 +336,8 @@ function ManageCardsPage() {
               </thead>
               <tbody className="divide-y">
                 {pageRows.map((c, idx) => {
-                  const agentName = c.status === "ASSIGNED" ? (c.assigned_full_name || c.assigned_username)
-                    : c.status === "SOLD" ? (c.sold_full_name || c.sold_username) : null;
+                  const agentName = c.status === "ASSIGNED" ? (c.assigned_full_name || displayPhone(null, c.assigned_username))
+                    : c.status === "SOLD" ? (c.sold_full_name || displayPhone(null, c.sold_username)) : null;
                   const isRevealed = revealed.has(c.id);
                   const code = c.password ?? c.username;
                   return (
