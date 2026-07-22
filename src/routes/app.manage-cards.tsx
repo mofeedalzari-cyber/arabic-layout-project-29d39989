@@ -134,25 +134,17 @@ function ManageCardsPage() {
         .from("sales").select("card_id").in("card_id", ids);
       if (sErr) throw sErr;
       const refSet = new Set((soldRefs ?? []).map((r: any) => r.card_id));
-      const toArchive = ids.filter((id) => refSet.has(id));
-      const toDelete = ids.filter((id) => !refSet.has(id));
-
-      let archived = 0;
-      if (toArchive.length && !extendedDelete) {
-        const { data: upd, error: uErr } = await supabase
-          .from("cards").update({ status: "SOLD" }).in("id", toArchive).neq("status", "SOLD").select("id");
-        if (uErr) throw uErr;
-        archived = upd?.length ?? 0;
-      }
-      const deleteIds = extendedDelete ? [...toDelete, ...toArchive] : toDelete;
+      const statusMap = new Map((cards ?? []).map((c) => [c.id, c.status]));
+      const hasSoldCards = ids.some((id) => refSet.has(id) || statusMap.get(id) === "SOLD");
+      const forceDelete = extendedDelete || hasSoldCards;
       let deleted = 0;
-      if (deleteIds.length) {
-        const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: deleteIds, _force: extendedDelete });
+      if (ids.length) {
+        const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: ids, _force: forceDelete });
         if (error) throw error;
         const r = Array.isArray(data) ? data[0] : data;
         deleted = r?.deleted ?? 0;
       }
-      return { deleted, archived };
+      return { deleted, archived: 0 };
     },
     onSuccess: (r: any) => {
       const parts: string[] = [];
@@ -161,6 +153,8 @@ function ManageCardsPage() {
       toast.success(parts.join(" — ") || "لا يوجد تغييرات");
       setSelected(new Set());
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
+      qc.invalidateQueries({ queryKey: ["aa-sales"] });
+      qc.invalidateQueries({ queryKey: ["aa-cards"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -181,6 +175,8 @@ function ManageCardsPage() {
     onSuccess: (r: any) => {
       toast.success(r.deleted ? `تم حذف ${r.deleted} كرت قديم` : "لا يوجد كروت قديمة للحذف");
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
+      qc.invalidateQueries({ queryKey: ["aa-sales"] });
+      qc.invalidateQueries({ queryKey: ["aa-cards"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -188,17 +184,16 @@ function ManageCardsPage() {
   const delOne = useMutation({
     mutationFn: async (id: string) => {
       const { data: refs } = await supabase.from("sales").select("card_id").eq("card_id", id).limit(1);
-      if (refs && refs.length && !extendedDelete) {
-        await supabase.from("cards").update({ status: "SOLD" }).eq("id", id);
-        return { archived: true };
-      }
-      const { error } = await supabase.rpc("admin_delete_cards", { _ids: [id], _force: true });
+      const isSold = cards?.some((c) => c.id === id && c.status === "SOLD") ?? false;
+      const { error } = await supabase.rpc("admin_delete_cards", { _ids: [id], _force: extendedDelete || Boolean(refs?.length) || isSold });
       if (error) throw error;
       return { archived: false };
     },
     onSuccess: (r: any) => {
       toast.success(r.archived ? "تم أرشفة الكرت" : "تم حذف الكرت");
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
+      qc.invalidateQueries({ queryKey: ["aa-sales"] });
+      qc.invalidateQueries({ queryKey: ["aa-cards"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -306,9 +301,7 @@ function ManageCardsPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>حذف {selected.size} كرت؟</AlertDialogTitle>
                   <AlertDialogDescription>
-                    {extendedDelete
-                      ? "الوضع الموسع مفعل: سيتم محاولة حذف الكل بما فيها المسحوبة/المباعة."
-                      : "الكروت غير المرتبطة بمبيعات ستُحذف نهائيًا، والمرتبطة بمبيعات ستُؤرشف كـ (مباع)."}
+                    سيتم حذف الكروت المحددة. إذا كان ضمنها كروت مباعة فسيتم حذف عملية البيع المرتبطة بها حتى ينقص حساب المندوب مباشرة.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
