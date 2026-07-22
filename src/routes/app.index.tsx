@@ -154,7 +154,7 @@ function AdminBreakdowns() {
       const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "agent");
       const ids = roles?.map((r) => r.user_id) ?? [];
       if (!ids.length) return [];
-      const { data } = await supabase.from("profiles").select("id, username, full_name, is_active").in("id", ids).order("full_name");
+      const { data } = await supabase.from("profiles").select("id, username, full_name, phone, is_active").in("id", ids).order("full_name");
       return data ?? [];
     },
   });
@@ -209,7 +209,7 @@ function AdminBreakdowns() {
       const cur = m.get(key) ?? {
         agentId: c.assigned_to,
         agent: ag?.full_name || ag?.username || "—",
-        phone: ag?.username ?? "—",
+        phone: (ag as any)?.phone || (ag?.username?.replace(/^u/, "") ?? "—"),
         pkg: pkg?.name ?? "—",
         price: pkg ? Number(pkg.price) : 0,
         currency: net?.currency,
