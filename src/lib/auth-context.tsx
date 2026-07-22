@@ -10,6 +10,7 @@ export interface Profile {
   full_name: string | null;
   phone: string | null;
   is_active: boolean;
+  network_id: string | null;
 }
 
 interface AuthContextValue {
