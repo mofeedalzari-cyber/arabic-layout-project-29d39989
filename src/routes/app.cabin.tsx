@@ -208,11 +208,19 @@ function PackageDetails({ pkg, agentId, onClose }: { pkg: CabinRow; agentId: str
   });
 
   const filtered = useMemo(() => {
-    const list = (cards ?? []).filter((c) => tab === "sold" ? c.status === "SOLD" : c.status === "ASSIGNED");
+    let list = (cards ?? []).filter((c) => tab === "sold" ? c.status === "SOLD" : c.status === "ASSIGNED");
+    if (tab === "sold") {
+      list = [...list].sort((a, b) => {
+        const av = a.sold_at ? new Date(a.sold_at).getTime() : 0;
+        const bv = b.sold_at ? new Date(b.sold_at).getTime() : 0;
+        return bv - av;
+      });
+    }
     if (!q || tab !== "sold") return list;
     const s = q.toLowerCase();
     return list.filter((c) => c.username.toLowerCase().includes(s));
   }, [cards, tab, q]);
+
 
 
   const available = (cards ?? []).filter((c) => c.status === "ASSIGNED").length;
