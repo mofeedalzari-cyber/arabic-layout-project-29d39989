@@ -52,7 +52,7 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
         <LegendChip color={COLORS.remaining} label="المتبقي" />
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory" dir="rtl">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3" dir="rtl">
         {data.map((r, idx) => {
           const total = r.total || (r.sold + r.withdrawn + r.remaining);
           const slices = [
