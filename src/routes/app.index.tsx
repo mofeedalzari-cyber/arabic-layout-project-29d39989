@@ -238,10 +238,10 @@ function AdminBreakdowns() {
           <SummaryItem label="إجمالي قيمة المبيعات" value={fmtMoney(summary.salesValue)} tone="primary" />
           <SummaryItem label="إجمالي ديون المناديب" value={fmtMoney(summary.debts)} tone="danger" />
           <SummaryItem label="الرصيد" value={fmtMoney(summary.collected)} tone="success" />
+
         </div>
       </Card>
 
-      {/* ====== قسم إحصائيات المبيعات حسب الفئات ====== */}
       <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
           <div className="flex items-center gap-2 min-w-0">
@@ -279,66 +279,7 @@ function AdminBreakdowns() {
           </Button>
         </div>
 
-        {/* دليل الرسم البياني (Legend) */}
-        <div className="flex items-center justify-center gap-4 text-xs mb-3 text-muted-foreground font-medium">
-          <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#00a896]" /> المباع
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#2ec4b6]" /> المسحوب
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#ff9f1c]" /> المتبقي
-          </span>
-        </div>
-
-        {/* حاوية التمرير الأفقي للبطاقات */}
-        <div
-          className="overflow-x-auto overflow-y-hidden pb-2"
-          style={{
-            scrollSnapType: 'x mandatory',
-            WebkitOverflowScrolling: 'touch',
-            direction: 'rtl',
-          }}
-        >
-          <div className="flex flex-row gap-3">
-            {salesByPkg.map((item) => (
-              <div
-                key={`${item.network}-${item.pkg}`}
-                className="min-w-[210px] sm:min-w-[230px] flex-shrink-0 bg-background border border-border/60 rounded-2xl p-3 text-center shadow-sm"
-                style={{ scrollSnapAlign: 'start' }}
-              >
-                <div className="font-bold text-base text-foreground leading-tight">{item.pkg}</div>
-                <div className="text-xs text-muted-foreground mb-2 mt-0.5">{item.network}</div>
-
-                {/* الرسم البياني الدائري لكل باقة */}
-                <div className="h-36 w-full my-1">
-                  <PackagesChart
-                    sold={item.sold}
-                    withdrawn={item.withdrawn}
-                    remaining={item.remaining}
-                  />
-                </div>
-
-                {/* التفاصيل والأرقام السفلية */}
-                <div className="grid grid-cols-3 gap-1 bg-muted/30 rounded-xl p-1.5 mt-2 text-center text-xs">
-                  <div>
-                    <div className="font-bold text-foreground">{item.sold}</div>
-                    <div className="text-[10px] text-muted-foreground">مباع</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-foreground">{item.withdrawn}</div>
-                    <div className="text-[10px] text-muted-foreground">مسحوب</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-foreground">{item.remaining}</div>
-                    <div className="text-[10px] text-muted-foreground">متبقي</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <PackagesChart data={salesByPkg} />
       </Card>
 
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
