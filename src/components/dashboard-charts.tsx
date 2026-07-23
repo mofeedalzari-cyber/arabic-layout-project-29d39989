@@ -61,7 +61,7 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
             { name: "المتبقي", value: r.remaining, color: COLORS.remaining },
           ];
           return (
-            <div key={idx} className="shrink-0 w-40 sm:w-52 snap-start rounded-2xl border border-border/60 bg-card/50 p-2 sm:p-3">
+            <div key={idx} className="min-w-0 rounded-2xl border border-border/60 bg-card/50 p-2 sm:p-3">
               <div className="text-center mb-1">
                 <div className="text-sm font-bold text-foreground truncate">{r.pkg}</div>
                 <div className="text-[10px] text-muted-foreground truncate">{r.network}</div>
