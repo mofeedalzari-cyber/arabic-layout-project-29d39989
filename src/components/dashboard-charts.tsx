@@ -83,8 +83,9 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      innerRadius={40}
-                      outerRadius={70}
+                      innerRadius={30}
+                      outerRadius={55}
+
                       paddingAngle={2}
                       stroke="var(--background)"
                       strokeWidth={2}
