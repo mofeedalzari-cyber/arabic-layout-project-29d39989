@@ -279,14 +279,15 @@ function AdminBreakdowns() {
           </Button>
         </div>
 
-        {/* حاوية التمرير الأفقي مع دعم RTL واللمس */}
+        {/* حاوية التمرير الأفقي - معدلة لضمان ظهور جميع البطاقات */}
         <div
-          className="overflow-x-auto overflow-y-hidden whitespace-nowrap pb-2"
+          className="overflow-x-auto overflow-y-hidden pb-2"
           style={{
             scrollSnapType: 'x mandatory',
             WebkitOverflowScrolling: 'touch',
             direction: 'rtl',
-            minHeight: '120px',
+            minHeight: '130px',
+            padding: '4px 0',
           }}
         >
           {salesByPkg.length === 0 ? (
