@@ -47,8 +47,7 @@ function AdminDashboard() {
   });
 
   return (
-    // ✨ تم إزالة overflow-hidden للسماح بالتمرير الأفقي
-    <div className="w-full max-w-full">
+    <div className="w-full max-w-full overflow-hidden">
       <PageHeader title="لوحة التحكم" description="نظرة شاملة على أداء المتجر" />
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 mb-5">
         <StatCard icon={Package} label="إجمالي الكروت" value={stats?.total_cards ?? 0} tone="primary" />
@@ -239,10 +238,11 @@ function AdminBreakdowns() {
           <SummaryItem label="إجمالي قيمة المبيعات" value={fmtMoney(summary.salesValue)} tone="primary" />
           <SummaryItem label="إجمالي ديون المناديب" value={fmtMoney(summary.debts)} tone="danger" />
           <SummaryItem label="الرصيد" value={fmtMoney(summary.collected)} tone="success" />
+
         </div>
       </Card>
 
-      <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full overflow-visible">
+      <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
           <div className="flex items-center gap-2 min-w-0">
             <Layers className="h-4 w-4 text-primary shrink-0" />
@@ -279,7 +279,6 @@ function AdminBreakdowns() {
           </Button>
         </div>
 
-        {/* المكون المعدل الذي يعرض بطاقات أفقية قابلة للتمرير */}
         <PackagesChart data={salesByPkg} />
       </Card>
 
@@ -381,8 +380,10 @@ function AgentHome({ name }: { name: string }) {
     },
   });
 
+
   return (
     <div dir="rtl" className="w-full max-w-full overflow-hidden text-right">
+
       <PageHeader title={`أهلاً، ${name}`} description="اختر الشبكة ثم اطلع على إحصائياتك" />
 
       <div className="mb-3 flex items-center gap-2">
@@ -427,6 +428,7 @@ function AgentHome({ name }: { name: string }) {
           />
         </div>
       )}
+
     </div>
   );
 }
