@@ -66,7 +66,7 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
                 <div className="text-sm font-bold text-foreground truncate">{r.pkg}</div>
                 <div className="text-[10px] text-muted-foreground truncate">{r.network}</div>
               </div>
-              <div style={{ width: "100%", height: 180 }} dir="ltr">
+              <div style={{ width: "100%", height: 140 }} dir="ltr">
                 <ResponsiveContainer>
                   <PieChart>
                     <defs>
