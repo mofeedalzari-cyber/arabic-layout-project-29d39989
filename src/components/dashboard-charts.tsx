@@ -33,6 +33,7 @@ function ChartTooltip({ active, payload, label }: any) {
   );
 }
 
+// ======== المكون المعدل ========
 export function PackagesChart({ data }: { data: PkgRow[] }) {
   if (!data.length) {
     return <div className="text-center text-sm text-muted-foreground py-10">لا توجد بيانات.</div>;
@@ -52,7 +53,16 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
         <LegendChip color={COLORS.remaining} label="المتبقي" />
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x" dir="rtl">
+      {/* حاوية التمرير الأفقي مع الخصائص المطلوبة */}
+      <div
+        className="flex gap-4 overflow-x-auto pb-3 w-full"
+        dir="rtl"
+        style={{
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'thin',
+        }}
+      >
         {data.map((r, idx) => {
           const total = r.total || (r.sold + r.withdrawn + r.remaining);
           const slices = [
@@ -61,7 +71,10 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
             { name: "المتبقي", value: r.remaining, color: COLORS.remaining },
           ];
           return (
-            <div key={idx} className="shrink-0 w-44 sm:w-52 snap-start rounded-2xl border border-border/60 bg-card/50 p-2 sm:p-3">
+            <div
+              key={idx}
+              className="min-w-[260px] max-w-[280px] shrink-0 snap-start rounded-2xl border border-border/60 bg-card/50 p-3"
+            >
               <div className="text-center mb-1">
                 <div className="text-sm font-bold text-foreground truncate">{r.pkg}</div>
                 <div className="text-[10px] text-muted-foreground truncate">{r.network}</div>
@@ -85,7 +98,6 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
                       cy="50%"
                       innerRadius={30}
                       outerRadius={55}
-
                       paddingAngle={2}
                       stroke="var(--background)"
                       strokeWidth={2}
