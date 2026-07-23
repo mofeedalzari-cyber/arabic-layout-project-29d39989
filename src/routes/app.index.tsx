@@ -1,6 +1,69 @@
-// ============================================================
-//  AdminBreakdowns - بعد التعديل
-// ============================================================
+import { createFileRoute } from "@tanstack/react-router";
+import { displayPhone, fmtMoney } from "@/lib/format";
+import { useAuth } from "@/lib/auth-context";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { PageHeader } from "@/components/app-shell";
+import { Card } from "@/components/ui/card";
+import { Wifi, Package, ShoppingCart, DollarSign, Users, TrendingUp, Activity, Layers, UserCheck, FileSpreadsheet, FileText } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import type { LucideIcon } from "lucide-react";
+import { useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import type { TableSection, SummaryRow } from "@/lib/dashboard-export";
+
+// Lazy-loaded to keep exceljs/pdfmake out of the initial bundle
+async function exportToExcel(...args: Parameters<typeof import("@/lib/dashboard-export").exportToExcel>) {
+  const mod = await import("@/lib/dashboard-export");
+  return mod.exportToExcel(...args);
+}
+async function exportToPDF(...args: Parameters<typeof import("@/lib/dashboard-export").exportToPDF>) {
+  const mod = await import("@/lib/dashboard-export");
+  return mod.exportToPDF(...args);
+}
+import { AgentStats } from "./app.agents";
+
+import { PackagesChart, AgentsChart } from "@/components/dashboard-charts";
+
+export const Route = createFileRoute("/app/")({ component: DashboardPage });
+
+function DashboardPage() {
+  const { role, profile } = useAuth();
+  return role === "admin" ? <AdminDashboard /> : <AgentHome name={profile?.full_name || displayPhone(profile?.phone, profile?.username)} />;
+}
+
+function AdminDashboard() {
+  const { data: stats } = useQuery({
+    queryKey: ["admin-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_stats");
+      if (error) throw error;
+      return data as {
+        total_cards: number; available: number; sold: number;
+        sold_value: number; available_value: number;
+        networks: number; packages: number; agents: number;
+      };
+    },
+  });
+
+  return (
+    <div className="w-full max-w-full overflow-hidden">
+      <PageHeader title="لوحة التحكم" description="نظرة شاملة على أداء المتجر" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 mb-5">
+        <StatCard icon={Package} label="إجمالي الكروت" value={stats?.total_cards ?? 0} tone="primary" />
+        <StatCard icon={ShoppingCart} label="المتوفر" value={stats?.available ?? 0} tone="success" />
+        <StatCard icon={Activity} label="المباع" value={stats?.sold ?? 0} tone="warning" />
+        <StatCard icon={DollarSign} label="قيمة المبيعات" value={fmtMoney(stats?.sold_value ?? 0)} tone="primary" />
+        <StatCard icon={Wifi} label="الشبكات" value={stats?.networks ?? 0} />
+        <StatCard icon={Package} label="الباقات" value={stats?.packages ?? 0} />
+        <StatCard icon={Users} label="المناديب" value={stats?.agents ?? 0} />
+        <StatCard icon={TrendingUp} label="قيمة المتوفر" value={fmtMoney(stats?.available_value ?? 0)} />
+      </div>
+
+      <AdminBreakdowns />
+    </div>
+  );
+}
 
 function AdminBreakdowns() {
   const { data: networks } = useQuery({
@@ -100,7 +163,6 @@ function AdminBreakdowns() {
     return Array.from(m.values()).sort((a, b) => a.agent.localeCompare(b.agent));
   }, [cards, pkgMap, netMap, agentMap]);
 
-  // ====================== دوال التصدير (كما هي) ======================
   const buildExportData = (): { summary: SummaryRow[]; sections: TableSection[] } => {
     const sumRows: SummaryRow[] = [
       { label: "إجمالي الكروت المُضافة", value: summary.total },
@@ -149,54 +211,8 @@ function AdminBreakdowns() {
     exportToPDF("لوحة التحكم — تقرير شامل", s, sections);
   };
 
-  // ====================== مكون البطاقات القابلة للتمرير ======================
-  function PackageCards({ data }: { data: typeof salesByPkg }) {
-    return (
-      <div
-        className="w-full overflow-x-auto overflow-y-hidden scroll-snap-x-mandatory"
-        style={{
-          WebkitOverflowScrolling: 'touch',
-          scrollSnapType: 'x mandatory',
-        }}
-      >
-        <div
-          className="flex flex-row gap-4"
-          style={{ whiteSpace: 'nowrap' }}
-        >
-          {data.map((item) => (
-            <div
-              key={`${item.network}-${item.pkg}`}
-              className="min-w-[280px] max-w-[320px] flex-shrink-0"
-              style={{ scrollSnapAlign: 'start' }}
-            >
-              <Card className="p-4 border-0 shadow-sm">
-                <h4 className="font-bold text-sm truncate">{item.pkg}</h4>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <span className="text-muted-foreground">المبلغ</span>
-                    <div className="font-semibold text-sm">{fmtMoney(item.value)}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">المتبقي</span>
-                    <div className="font-semibold text-sm">{item.remaining}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">المسحوب</span>
-                    <div className="font-semibold text-sm">{item.sold}</div>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // ====================== التصيير (Render) ======================
   return (
     <div className="grid gap-4 md:gap-6 w-full max-w-full">
-      {/* بطاقة الملخص */}
       <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
           <div className="flex items-center gap-2 min-w-0">
@@ -222,10 +238,10 @@ function AdminBreakdowns() {
           <SummaryItem label="إجمالي قيمة المبيعات" value={fmtMoney(summary.salesValue)} tone="primary" />
           <SummaryItem label="إجمالي ديون المناديب" value={fmtMoney(summary.debts)} tone="danger" />
           <SummaryItem label="الرصيد" value={fmtMoney(summary.collected)} tone="success" />
+
         </div>
       </Card>
 
-      {/* قسم إحصائيات المبيعات حسب الفئات - الآن بطاقات تمرير */}
       <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
           <div className="flex items-center gap-2 min-w-0">
@@ -263,11 +279,9 @@ function AdminBreakdowns() {
           </Button>
         </div>
 
-        {/* استبدال الرسم البياني بالبطاقات */}
-        <PackageCards data={salesByPkg} />
+        <PackagesChart data={salesByPkg} />
       </Card>
 
-      {/* قسم إحصائيات المناديب (يُترك كما هو) */}
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
         <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
@@ -314,7 +328,6 @@ function AdminBreakdowns() {
             </Button>
           </div>
 
-          {/* احتفظ بالرسم البياني للمناديب */}
           <AgentsChart
             totals={{
               withdrawn: agentStats.reduce((s, r) => s + r.holding, 0),
@@ -332,8 +345,114 @@ function AdminBreakdowns() {
               </Button>
             </div>
           )}
+
         </Card>
+
       </div>
     </div>
   );
+}
+
+function SummaryItem({ label, value, tone }: { label: string; value: string; tone?: "primary" | "success" | "warning" | "danger" }) {
+  const toneClass = tone === "success" ? "text-success"
+    : tone === "warning" ? "text-warning"
+    : tone === "danger" ? "text-destructive"
+    : tone === "primary" ? "text-primary"
+    : "text-foreground";
+  return (
+    <div className="rounded-xl bg-muted/40 p-2.5 sm:p-3 min-w-0">
+      <div className="text-[11px] text-muted-foreground mb-1 [overflow-wrap:anywhere]">{label}</div>
+      <div className={`text-sm sm:text-base font-bold ${toneClass} [overflow-wrap:anywhere]`}>{value}</div>
+    </div>
+  );
+}
+
+function AgentHome({ name }: { name: string }) {
+  const { user, profile } = useAuth();
+  const { data: networks } = useQuery({
+    queryKey: ["agent-networks"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("networks")
+        .select("id, name, description, primary_color, secondary_color, logo_url, cover_url, currency")
+        .eq("is_active", true).order("created_at");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+
+  return (
+    <div dir="rtl" className="w-full max-w-full overflow-hidden text-right">
+
+      <PageHeader title={`أهلاً، ${name}`} description="اختر الشبكة ثم اطلع على إحصائياتك" />
+
+      <div className="mb-3 flex items-center gap-2">
+        <Wifi className="h-4 w-4 text-primary" />
+        <h3 className="font-bold text-sm sm:text-base">الشبكات المتاحة</h3>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        {networks?.map((n) => (
+          <Link key={n.id} to="/app/networks/$id" params={{ id: n.id }} className="group block">
+            <Card className="overflow-hidden border-0 shadow-md transition-transform duration-200 active:scale-[0.98]">
+              <div
+                className="h-32 sm:h-36 relative flex items-center justify-center"
+                style={{ background: `linear-gradient(135deg, ${n.primary_color || "#ef4444"}, ${n.secondary_color || "#14b8a6"})` }}
+              >
+                <Wifi className="h-14 w-14 sm:h-16 sm:w-16 text-white drop-shadow-sm" />
+              </div>
+              <div className="p-4 bg-background text-right">
+                <h3 className="font-bold text-base sm:text-lg mb-1 [overflow-wrap:anywhere] text-foreground">{n.name}</h3>
+                {n.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{n.description}</p>}
+                <div className="text-xs sm:text-sm font-semibold text-primary inline-flex items-center gap-1">
+                  عرض الباقات
+                  <span>←</span>
+                </div>
+              </div>
+            </Card>
+          </Link>
+        ))}
+        {networks?.length === 0 && (
+          <div className="col-span-full">
+            <EmptyMsg>لا توجد شبكات متاحة حاليًا.</EmptyMsg>
+          </div>
+        )}
+      </div>
+
+      {user && (
+        <div className="mb-4">
+          <AgentStats
+            agentId={user.id}
+            name={profile?.full_name || displayPhone(profile?.phone, profile?.username) || name}
+            username={profile?.username || ""}
+          />
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, label, value, tone }: { icon: LucideIcon; label: string; value: string | number; tone?: "primary" | "success" | "warning" }) {
+  const toneClass = tone === "success" ? "bg-success/15 text-success"
+    : tone === "warning" ? "bg-warning/15 text-warning"
+    : tone === "primary" ? "bg-primary/15 text-primary"
+    : "bg-muted text-muted-foreground";
+  return (
+    <Card className="card-elegant border-0 p-3 sm:p-4 slide-up w-full max-w-full">
+      <div className="flex items-start gap-2 sm:gap-3">
+        <div className={`rounded-xl p-2 sm:p-2.5 shrink-0 ${toneClass}`}>
+          <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[11px] text-muted-foreground leading-tight [overflow-wrap:anywhere]">{label}</div>
+          <div className="text-base sm:text-lg font-bold [overflow-wrap:anywhere] leading-tight mt-1">{value}</div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function EmptyMsg({ children }: { children: React.ReactNode }) {
+  return <div className="text-center text-sm text-muted-foreground py-8">{children}</div>;
 }
