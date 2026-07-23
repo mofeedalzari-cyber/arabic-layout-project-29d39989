@@ -279,70 +279,7 @@ function AdminBreakdowns() {
           </Button>
         </div>
 
-        {/* حاوية التمرير الأفقي للسحب بين البطاقات بدون تصغير عرضها */}
-        <div
-          dir="rtl"
-          className="pb-3"
-          style={{
-            overflowX: 'auto',
-            overflowY: 'hidden',
-            whiteSpace: 'nowrap',
-            scrollSnapType: 'x mandatory',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              gap: '16px',
-            }}
-          >
-            {salesByPkg.map((item) => (
-              <div
-                key={`${item.network}-${item.pkg}`}
-                className="w-[290px] min-w-[290px] max-w-[290px] flex-shrink-0 bg-background border border-border/80 rounded-2xl p-4 text-center shadow-sm flex flex-col justify-between"
-                style={{
-                  scrollSnapAlign: 'start',
-                  whiteSpace: 'normal',
-                }}
-              >
-                <div>
-                  <div className="font-bold text-base text-foreground leading-tight">{item.pkg}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{item.network}</div>
-                </div>
-
-                <div className="my-3 py-2.5 border-y border-border/40 space-y-2 text-xs text-right">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">إجمالي الكروت:</span>
-                    <span className="font-bold text-foreground">{item.total}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">إجمالي القيمة:</span>
-                    <span className="font-bold text-primary">
-                      {fmtMoney(item.value)} {item.currency || ''}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-1 bg-muted/40 rounded-xl p-2 text-center">
-                  <div>
-                    <div className="font-bold text-primary text-sm">{item.sold}</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">مباع</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-emerald-600 text-sm">{item.withdrawn}</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">مسحوب</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-amber-600 text-sm">{item.remaining}</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">متبقي</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <PackagesChart data={salesByPkg} />
       </Card>
 
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
