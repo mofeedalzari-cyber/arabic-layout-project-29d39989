@@ -238,10 +238,10 @@ function AdminBreakdowns() {
           <SummaryItem label="إجمالي قيمة المبيعات" value={fmtMoney(summary.salesValue)} tone="primary" />
           <SummaryItem label="إجمالي ديون المناديب" value={fmtMoney(summary.debts)} tone="danger" />
           <SummaryItem label="الرصيد" value={fmtMoney(summary.collected)} tone="success" />
-
         </div>
       </Card>
 
+      {/* ====== قسم إحصائيات المبيعات حسب الفئات (بطاقات قابلة للتمرير الأفقي) ====== */}
       <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
           <div className="flex items-center gap-2 min-w-0">
@@ -279,7 +279,57 @@ function AdminBreakdowns() {
           </Button>
         </div>
 
-        <PackagesChart data={salesByPkg} />
+        {/* حاوية التمرير الأفقي مع دعم RTL واللمس */}
+        <div
+          className="overflow-x-auto overflow-y-hidden whitespace-nowrap pb-2"
+          style={{
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+            direction: 'rtl',
+            minHeight: '120px',
+          }}
+        >
+          {salesByPkg.length === 0 ? (
+            <div className="text-center text-muted-foreground py-4" style={{ direction: 'rtl' }}>
+              لا توجد بيانات لعرضها
+            </div>
+          ) : (
+            <div className="flex flex-row gap-4" style={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
+              {salesByPkg.map((item) => (
+                <div
+                  key={`${item.network}-${item.pkg}`}
+                  className="min-w-[280px] max-w-[320px] flex-shrink-0 bg-muted/40 rounded-xl p-4"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <div className="text-right">
+                    <div className="text-sm font-semibold text-primary">{item.network}</div>
+                    <div className="text-lg font-bold">{item.pkg}</div>
+                    <div className="mt-2 space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>إجمالي الكروت:</span>
+                        <span className="font-medium">{item.total}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>مباعة:</span>
+                        <span className="font-medium text-success">{item.sold}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>متبقية:</span>
+                        <span className="font-medium text-warning">{item.remaining}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>القيمة:</span>
+                        <span className="font-medium">
+                          {fmtMoney(item.value)} {item.currency || ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </Card>
 
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
@@ -347,7 +397,6 @@ function AdminBreakdowns() {
           )}
 
         </Card>
-
       </div>
     </div>
   );
@@ -380,10 +429,8 @@ function AgentHome({ name }: { name: string }) {
     },
   });
 
-
   return (
     <div dir="rtl" className="w-full max-w-full overflow-hidden text-right">
-
       <PageHeader title={`أهلاً، ${name}`} description="اختر الشبكة ثم اطلع على إحصائياتك" />
 
       <div className="mb-3 flex items-center gap-2">
@@ -428,7 +475,6 @@ function AgentHome({ name }: { name: string }) {
           />
         </div>
       )}
-
     </div>
   );
 }
