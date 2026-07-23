@@ -241,7 +241,7 @@ function AdminBreakdowns() {
         </div>
       </Card>
 
-      {/* ====== قسم إحصائيات المبيعات حسب الفئات (ببطاقات قابلة للتمرير الأفقي) ====== */}
+      {/* ====== قسم إحصائيات المبيعات حسب الفئات ====== */}
       <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
           <div className="flex items-center gap-2 min-w-0">
@@ -279,44 +279,60 @@ function AdminBreakdowns() {
           </Button>
         </div>
 
-        {/* حاوية التمرير الأفقي مع دعم RTL واللمس */}
+        {/* دليل الرسم البياني (Legend) */}
+        <div className="flex items-center justify-center gap-4 text-xs mb-3 text-muted-foreground font-medium">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#00a896]" /> المباع
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#2ec4b6]" /> المسحوب
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#ff9f1c]" /> المتبقي
+          </span>
+        </div>
+
+        {/* حاوية التمرير الأفقي للبطاقات */}
         <div
-          className="overflow-x-auto overflow-y-hidden whitespace-nowrap pb-2"
+          className="overflow-x-auto overflow-y-hidden pb-2"
           style={{
             scrollSnapType: 'x mandatory',
             WebkitOverflowScrolling: 'touch',
             direction: 'rtl',
           }}
         >
-          <div className="flex flex-row gap-4" style={{ display: 'flex', flexDirection: 'row', gap: '16px' }}>
+          <div className="flex flex-row gap-3">
             {salesByPkg.map((item) => (
               <div
                 key={`${item.network}-${item.pkg}`}
-                className="min-w-[280px] max-w-[320px] flex-shrink-0 bg-muted/40 rounded-xl p-4"
+                className="min-w-[210px] sm:min-w-[230px] flex-shrink-0 bg-background border border-border/60 rounded-2xl p-3 text-center shadow-sm"
                 style={{ scrollSnapAlign: 'start' }}
               >
-                <div className="text-right">
-                  <div className="text-sm font-semibold text-primary">{item.network}</div>
-                  <div className="text-lg font-bold">{item.pkg}</div>
-                  <div className="mt-2 space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span>إجمالي الكروت:</span>
-                      <span className="font-medium">{item.total}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>مباعة:</span>
-                      <span className="font-medium text-success">{item.sold}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>متبقية:</span>
-                      <span className="font-medium text-warning">{item.remaining}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>القيمة:</span>
-                      <span className="font-medium">
-                        {fmtMoney(item.value)} {item.currency || ''}
-                      </span>
-                    </div>
+                <div className="font-bold text-base text-foreground leading-tight">{item.pkg}</div>
+                <div className="text-xs text-muted-foreground mb-2 mt-0.5">{item.network}</div>
+
+                {/* الرسم البياني الدائري لكل باقة */}
+                <div className="h-36 w-full my-1">
+                  <PackagesChart
+                    sold={item.sold}
+                    withdrawn={item.withdrawn}
+                    remaining={item.remaining}
+                  />
+                </div>
+
+                {/* التفاصيل والأرقام السفلية */}
+                <div className="grid grid-cols-3 gap-1 bg-muted/30 rounded-xl p-1.5 mt-2 text-center text-xs">
+                  <div>
+                    <div className="font-bold text-foreground">{item.sold}</div>
+                    <div className="text-[10px] text-muted-foreground">مباع</div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-foreground">{item.withdrawn}</div>
+                    <div className="text-[10px] text-muted-foreground">مسحوب</div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-foreground">{item.remaining}</div>
+                    <div className="text-[10px] text-muted-foreground">متبقي</div>
                   </div>
                 </div>
               </div>
