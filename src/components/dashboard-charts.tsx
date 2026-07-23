@@ -61,12 +61,12 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
             { name: "المتبقي", value: r.remaining, color: COLORS.remaining },
           ];
           return (
-            <div key={idx} className="shrink-0 w-56 snap-start rounded-2xl border border-border/60 bg-card/50 p-3">
+            <div key={idx} className="shrink-0 w-40 sm:w-52 snap-start rounded-2xl border border-border/60 bg-card/50 p-2 sm:p-3">
               <div className="text-center mb-1">
                 <div className="text-sm font-bold text-foreground truncate">{r.pkg}</div>
                 <div className="text-[10px] text-muted-foreground truncate">{r.network}</div>
               </div>
-              <div style={{ width: "100%", height: 180 }} dir="ltr">
+              <div style={{ width: "100%", height: 140 }} dir="ltr">
                 <ResponsiveContainer>
                   <PieChart>
                     <defs>
@@ -83,8 +83,9 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      innerRadius={40}
-                      outerRadius={70}
+                      innerRadius={30}
+                      outerRadius={55}
+
                       paddingAngle={2}
                       stroke="var(--background)"
                       strokeWidth={2}
