@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { CardTemplateDialog } from "@/components/card-template-dialog";
-import { loadTemplate, printCards } from "@/lib/card-print";
+import { loadTemplate, printCards, printCardsPdf } from "@/lib/card-print";
 
 export const Route = createFileRoute("/app/cabin")({ component: CabinPage });
 
