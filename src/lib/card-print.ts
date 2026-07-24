@@ -196,11 +196,8 @@ export async function printCardsPdf(opts: {
     rows.push(row);
   }
 
-  const [{ default: pdfMakeMod }, fontsMod] = [
-    await import("pdfmake/build/pdfmake"),
-    null,
-  ];
-  const pdfMake: any = (pdfMakeMod as any).default ?? pdfMakeMod;
+  const pdfMakeMod: any = await import("pdfmake/build/pdfmake");
+  const pdfMake: any = pdfMakeMod.default ?? pdfMakeMod;
 
   // reuse font vfs from pdfmake-report via a shared fetch
   const FONT_URLS: Record<string, string> = {
