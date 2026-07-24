@@ -287,14 +287,22 @@ function PackageDetails({ pkg, agentId, onClose }: { pkg: CabinRow; agentId: str
 
                   // محاولة الطباعة مع حماية
                   try {
-                    await printCards({
-                      template: tpl,
-                      codes: availableCodes,
-                      title: `${pkg.network_name} — ${pkg.package_name}`,
-                      autoPrint,
-                    });
+                    if (autoPrint) {
+                      await printCardsPdf({
+                        template: tpl,
+                        codes: availableCodes,
+                        title: `${pkg.network_name} — ${pkg.package_name}`,
+                      });
+                    } else {
+                      await printCards({
+                        template: tpl,
+                        codes: availableCodes,
+                        title: `${pkg.network_name} — ${pkg.package_name}`,
+                        autoPrint: false,
+                      });
+                    }
                   } catch (printErr) {
-                    console.error("[doPrint] printCards failed:", printErr);
+                    console.error("[doPrint] print failed:", printErr);
                     toast.error("فشلت الطباعة، يرجى المحاولة مجدداً");
                     return;
                   }
