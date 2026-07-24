@@ -140,6 +140,122 @@ export function printCards(opts: {
   );
 }
 
+/** يرسم كل كرت (قالب + الكود) على canvas ويحوّله إلى dataURL. */
+async function renderCardImage(template: CardTemplate, code: string): Promise<string> {
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const el = new Image();
+    el.crossOrigin = "anonymous";
+    el.onload = () => resolve(el);
+    el.onerror = () => reject(new Error("template image load failed"));
+    el.src = template.image;
+  });
+  const W = Math.max(400, Math.min(1600, img.naturalWidth || 800));
+  const H = Math.round(W * ((img.naturalHeight || 500) / (img.naturalWidth || 800)));
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const ctx = c.getContext("2d")!;
+  ctx.drawImage(img, 0, 0, W, H);
+
+  const bx = (template.codeX / 100) * W;
+  const by = (template.codeY / 100) * H;
+  const bw = (template.codeWidth / 100) * W;
+  const bh = (template.codeHeight / 100) * H;
+  const fontPx = Math.round(template.fontSize * (W / 800));
+  ctx.fillStyle = template.fontColor;
+  ctx.font = `${template.fontWeight} ${fontPx}px "Arial Black", Arial, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.direction = "ltr";
+  ctx.fillText(String(code), bx + bw / 2, by + bh / 2);
+  return c.toDataURL("image/jpeg", 0.92);
+}
+
+/**
+ * طباعة الكروت كملف PDF عبر pdfmake (نفس المكتبة المستخدمة في تقارير المبيعات).
+ * 3 أعمدة على A4، صورة كل كرت مرسومة بالكود فوق القالب.
+ */
+export async function printCardsPdf(opts: {
+  template: CardTemplate;
+  codes: string[];
+  title: string;
+}): Promise<void> {
+  const { template, codes, title } = opts;
+  if (!codes.length) throw new Error("لا توجد كروت للطباعة");
+
+  const images = await Promise.all(codes.map((c) => renderCardImage(template, c)));
+
+  const COLS = 3;
+  const rows: any[][] = [];
+  for (let i = 0; i < images.length; i += COLS) {
+    const row = images.slice(i, i + COLS).map((img) => ({
+      image: img,
+      width: 165, // ~ (A4 width 595pt - margins) / 3
+      margin: [2, 2, 2, 2],
+    }));
+    while (row.length < COLS) row.push({ text: "" } as any);
+    rows.push(row);
+  }
+
+  const pdfMakeMod: any = await import("pdfmake/build/pdfmake");
+  const pdfMake: any = pdfMakeMod.default ?? pdfMakeMod;
+
+  // reuse font vfs from pdfmake-report via a shared fetch
+  const FONT_URLS: Record<string, string> = {
+    "Cairo-Regular.ttf":
+      "https://fonts.gstatic.com/s/cairo/v31/SLXgc1nY6HkvangtZmpQdkhzfH5lkSs2SgRjCAGMQ1z0hOA-W1Q.ttf",
+    "Cairo-Bold.ttf":
+      "https://fonts.gstatic.com/s/cairo/v31/SLXgc1nY6HkvangtZmpQdkhzfH5lkSs2SgRjCAGMQ1z0hAc5W1Q.ttf",
+  };
+  const toB64 = async (u: string) => {
+    const r = await fetch(u);
+    const buf = new Uint8Array(await r.arrayBuffer());
+    let bin = ""; const CHUNK = 0x8000;
+    for (let i = 0; i < buf.length; i += CHUNK) bin += String.fromCharCode(...buf.subarray(i, i + CHUNK));
+    return btoa(bin);
+  };
+  const vfs = Object.fromEntries(
+    await Promise.all(Object.entries(FONT_URLS).map(async ([n, u]) => [n, await toB64(u)] as const)),
+  );
+  if (typeof pdfMake.addVirtualFileSystem === "function") pdfMake.addVirtualFileSystem(vfs);
+  else pdfMake.vfs = { ...(pdfMake.vfs || {}), ...vfs };
+  const FONTS = { Cairo: { normal: "Cairo-Regular.ttf", bold: "Cairo-Bold.ttf", italics: "Cairo-Regular.ttf", bolditalics: "Cairo-Bold.ttf" } };
+  if (typeof pdfMake.addFonts === "function") pdfMake.addFonts(FONTS);
+  else pdfMake.fonts = { ...(pdfMake.fonts || {}), ...FONTS };
+
+  const dateStr = new Date().toLocaleString("ar-EG-u-nu-latn", { dateStyle: "medium", timeStyle: "short" });
+
+  const doc: any = {
+    pageSize: "A4",
+    pageMargins: [20, 24, 20, 24],
+    defaultStyle: { font: "Cairo", fontSize: 10 },
+    content: [
+      {
+        columns: [
+          { text: title, alignment: "right", bold: true, fontSize: 12 },
+          { text: `${codes.length} كرت — ${dateStr}`, alignment: "left", fontSize: 9, color: "#64748b" },
+        ],
+        margin: [0, 0, 0, 8],
+      },
+      {
+        table: { widths: ["*", "*", "*"], body: rows },
+        layout: "noBorders",
+      },
+    ],
+  };
+
+  const blob: Blob = await new Promise((resolve, reject) => {
+    try {
+      pdfMake.createPdf(doc).getBuffer((buf: any) => {
+        const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf?.buffer ?? buf);
+        resolve(new Blob([u8], { type: "application/pdf" }));
+      });
+    } catch (e) { reject(e); }
+  });
+
+  const { sharePdfBlob } = await import("./native-pdf");
+  await sharePdfBlob({ blob, filename: title, dialogTitle: "طباعة أو مشاركة الكروت" });
+}
+
 export interface AssignedCardRow {
   code: string;
   username: string;

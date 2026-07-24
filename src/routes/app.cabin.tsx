@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { CardTemplateDialog } from "@/components/card-template-dialog";
-import { loadTemplate, printCards } from "@/lib/card-print";
+import { loadTemplate, printCards, printCardsPdf } from "@/lib/card-print";
 
 export const Route = createFileRoute("/app/cabin")({ component: CabinPage });
 
@@ -287,14 +287,22 @@ function PackageDetails({ pkg, agentId, onClose }: { pkg: CabinRow; agentId: str
 
                   // محاولة الطباعة مع حماية
                   try {
-                    await printCards({
-                      template: tpl,
-                      codes: availableCodes,
-                      title: `${pkg.network_name} — ${pkg.package_name}`,
-                      autoPrint,
-                    });
+                    if (autoPrint) {
+                      await printCardsPdf({
+                        template: tpl,
+                        codes: availableCodes,
+                        title: `${pkg.network_name} — ${pkg.package_name}`,
+                      });
+                    } else {
+                      await printCards({
+                        template: tpl,
+                        codes: availableCodes,
+                        title: `${pkg.network_name} — ${pkg.package_name}`,
+                        autoPrint: false,
+                      });
+                    }
                   } catch (printErr) {
-                    console.error("[doPrint] printCards failed:", printErr);
+                    console.error("[doPrint] print failed:", printErr);
                     toast.error("فشلت الطباعة، يرجى المحاولة مجدداً");
                     return;
                   }
