@@ -178,7 +178,105 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
   );
 }
 
-// --- المكونات المساعدة (لم تتغير) ---
+export function AgentsChart({
+  totals,
+}: {
+  totals: {
+    withdrawn: number;
+    sold: number;
+    remaining: number;
+  };
+}) {
+  const [activeIndex, setActiveIndex] = useState<number>();
+
+  const data = [
+    { name: "المسحوب (لدى المناديب)", value: totals.withdrawn, color: COLORS.sold },
+    { name: "المباع", value: totals.sold, color: COLORS.withdrawn },
+    { name: "المتبقي", value: totals.remaining, color: COLORS.remaining },
+  ];
+
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+
+  if (!total) {
+    return (
+      <div className="text-center text-sm text-muted-foreground py-10">
+        لا توجد بيانات.
+      </div>
+    );
+  }
+
+  const renderActive = (props: any) => {
+    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+    return (
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 10}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.15))" }}
+      />
+    );
+  };
+
+  return (
+    <div dir="rtl">
+      {/* أسطورة محسّنة مع عرض القيم */}
+      <div className="flex flex-wrap justify-center gap-5 mb-4 text-xs">
+        {data.map((d, i) => (
+          <LegendChip key={i} color={d.color} label={`${d.name}: ${d.value}`} />
+        ))}
+      </div>
+
+      {/* رسم بياني دائري كبير بتجاوب أفضل */}
+      <div className="w-full max-w-md mx-auto aspect-square" dir="ltr">
+        <ResponsiveContainer>
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius="35%"
+              outerRadius="65%"
+              activeIndex={activeIndex}
+              activeShape={renderActive}
+              onMouseEnter={(_, i) => setActiveIndex(i)}
+              onMouseLeave={() => setActiveIndex(undefined)}
+            >
+              {data.map((d, i) => (
+                <Cell key={i} fill={d.color} />
+              ))}
+              <LabelList
+                dataKey="value"
+                position="inside"
+                formatter={(v: any) => {
+                  const n = Number(v);
+                  if (!n) return "";
+                  return `${n} (${Math.round((n / total) * 100)}%)`;
+                }}
+                style={{ fontSize: "12px", fill: "#fff", fontWeight: 600, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
+              />
+            </Pie>
+            <Tooltip
+              contentStyle={{
+                borderRadius: "12px",
+                border: "1px solid var(--border)",
+                backgroundColor: "var(--background)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+// --- المكونات المساعدة (لم تتغير توقيعاتها) ---
 
 function MiniStat({
   label,
@@ -189,6 +287,7 @@ function MiniStat({
   value: number;
   color: string;
 }) {
+  // إضافة أيقونة رمزية بسيطة
   const iconMap: Record<string, string> = {
     مباع: "🟢",
     مسحوب: "🔵",
