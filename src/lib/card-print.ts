@@ -320,10 +320,12 @@ export async function printAssignedCards(opts: {
 
   const blob: Blob = await new Promise((resolve, reject) => {
     try {
-      pdfMake.createPdf(doc).getBuffer((buf: any) => {
+      const cb = (buf: any) => {
         const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf?.buffer ?? buf);
         resolve(new Blob([u8], { type: "application/pdf" }));
-      });
+      };
+      const maybe: any = pdfMake.createPdf(doc).getBuffer(cb);
+      if (maybe && typeof maybe.then === "function") maybe.then(cb).catch(reject);
     } catch (e) { reject(e); }
   });
 
