@@ -148,11 +148,11 @@ function SuperAdminPage() {
 
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse border">
+              <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الشبكة</Th><Th>المالك</Th><Th>الهاتف</Th><Th>مناديب</Th><Th>باقات</Th>
-                    <Th>كروت</Th><Th>مباع</Th><Th>قيمة المبيعات</Th><Th>الحالة</Th><Th>الإنشاء</Th><Th>إجراء</Th>
+                    <Th>كروت</Th><Th>مباع</Th><Th>قيمة المبيعات</Th><Th>الحالة</Th><Th>الإنشاء</Th><Th>إجراءات</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -169,19 +169,40 @@ function SuperAdminPage() {
                       <Td>{n.is_active ? <Badge>نشطة</Badge> : <Badge variant="secondary">موقوفة</Badge>}</Td>
                       <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(n.created_at)}</Td>
                       <Td>
-                        <Button
-                          size="sm"
-                          variant={n.is_active ? "destructive" : "default"}
-                          disabled={toggleNet.isPending}
-                          onClick={() => {
-                            const msg = n.is_active
-                              ? `إيقاف شبكة "${n.name}"؟ لن يتمكن مستخدموها من الدخول.`
-                              : `إعادة تفعيل شبكة "${n.name}"؟`;
-                            if (window.confirm(msg)) toggleNet.mutate({ id: n.id, active: !n.is_active });
-                          }}
-                        >
-                          {n.is_active ? <><PowerOff className="h-4 w-4 ml-1" />إيقاف</> : <><Power className="h-4 w-4 ml-1" />تفعيل</>}
-                        </Button>
+                        <div className="flex gap-1 flex-wrap">
+                          <Button
+                            size="sm"
+                            variant={n.is_active ? "destructive" : "default"}
+                            disabled={toggleNet.isPending}
+                            onClick={() => {
+                              const msg = n.is_active
+                                ? `إيقاف شبكة "${n.name}"؟ لن يتمكن مستخدموها من الدخول.`
+                                : `إعادة تفعيل شبكة "${n.name}"؟`;
+                              if (window.confirm(msg)) toggleNet.mutate({ id: n.id, active: !n.is_active });
+                            }}
+                          >
+                            {n.is_active ? <><PowerOff className="h-4 w-4 ml-1" />إيقاف</> : <><Power className="h-4 w-4 ml-1" />تفعيل</>}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={deleteNet.isPending}
+                            onClick={() => {
+                              const first = window.confirm(
+                                `⚠️ حذف نهائي لشبكة "${n.name}"؟\nسيتم حذف جميع المناديب والباقات والكروت والطلبات والمبيعات المرتبطة بها.`
+                              );
+                              if (!first) return;
+                              const confirm2 = window.prompt(`للتأكيد اكتب اسم الشبكة: ${n.name}`);
+                              if (confirm2 !== n.name) {
+                                toast.error("تم إلغاء الحذف — الاسم غير مطابق");
+                                return;
+                              }
+                              deleteNet.mutate(n.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 ml-1" />حذف
+                          </Button>
+                        </div>
                       </Td>
                     </tr>
                   ))}
