@@ -27,9 +27,20 @@ interface CabinRow {
   currency: string; available: number; sold_count: number;
 }
 
+interface Customer {
+  id: string;
+  name: string;
+  whatsapp: string;
+  network_id: string | null;
+}
+
+function normalizeWa(v: string) {
+  return String(v ?? "").replace(/\D/g, "");
+}
+
 function CabinPage() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { data: rows, isLoading } = useQuery({
     queryKey: ["agent-cabin"],
     queryFn: async () => {
@@ -39,18 +50,58 @@ function CabinPage() {
     },
   });
 
+  const { data: customers } = useQuery({
+    queryKey: ["my-customers", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, name, whatsapp, network_id")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Customer[];
+    },
+  });
+
   const [confirmPkg, setConfirmPkg] = useState<CabinRow | null>(null);
   const [saleResult, setSaleResult] = useState<any>(null);
   const [selling, setSelling] = useState(false);
   const [detailsPkg, setDetailsPkg] = useState<CabinRow | null>(null);
+  const [selCustomer, setSelCustomer] = useState<Customer | null>(null);
+  const [customersOpen, setCustomersOpen] = useState(false);
+  const [addingCustomer, setAddingCustomer] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newWa, setNewWa] = useState("");
 
+  async function createCustomer(): Promise<Customer | null> {
+    if (!user) return null;
+    const name = newName.trim();
+    const wa = normalizeWa(newWa);
+    if (!name) { toast.error("أدخل اسم الزبون"); return null; }
+    if (wa.length < 7) { toast.error("رقم واتساب غير صحيح"); return null; }
+    const { data, error } = await supabase.from("customers").insert({
+      agent_id: user.id, network_id: profile?.network_id ?? null, name, whatsapp: wa,
+    }).select("id, name, whatsapp, network_id").single();
+    if (error) { toast.error(error.message); return null; }
+    setNewName(""); setNewWa(""); setAddingCustomer(false);
+    qc.invalidateQueries({ queryKey: ["my-customers"] });
+    toast.success("تم إضافة الزبون");
+    return data as Customer;
+  }
+
+  async function deleteCustomer(id: string) {
+    const { error } = await supabase.from("customers").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ["my-customers"] });
+    toast.success("تم الحذف");
+  }
 
   async function confirmSell() {
     if (!confirmPkg) return;
     setSelling(true);
     const { data, error } = await supabase.rpc("sell_card", { _package_id: confirmPkg.package_id });
-    setSelling(false);
     if (error) {
+      setSelling(false);
       const map: Record<string, string> = {
         NO_CARDS_AVAILABLE: "لا توجد كروت في كبينتك لهذه الباقة",
         ACCOUNT_INACTIVE: "حسابك غير مفعّل",
@@ -62,12 +113,23 @@ function CabinPage() {
       toast.error(key ? map[key] : error.message);
       return;
     }
+    const sale = Array.isArray(data) ? data[0] : data;
+    if (selCustomer && sale?.sale_id) {
+      await supabase.from("sales")
+        .update({ customer_id: selCustomer.id, buyer_name: selCustomer.name })
+        .eq("id", sale.sale_id);
+      sale.customer = selCustomer;
+      sale.buyer_name = selCustomer.name;
+    }
+    setSelling(false);
     setConfirmPkg(null);
-    setSaleResult(Array.isArray(data) ? data[0] : data);
+    setSaleResult(sale);
+    setSelCustomer(null);
     qc.invalidateQueries({ queryKey: ["agent-cabin"] });
     qc.invalidateQueries({ queryKey: ["sales"] });
     qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
   }
+
 
   const totalAvail = rows?.reduce((a, r) => a + r.available, 0) ?? 0;
   const totalSold = rows?.reduce((a, r) => a + r.sold_count, 0) ?? 0;
