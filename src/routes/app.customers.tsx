@@ -21,8 +21,11 @@ type Sale = { id: string; transaction_no: string; package_name: string; network_
 
 function CustomersPage() {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Customer | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Customer | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const { data: customers } = useQuery({
     queryKey: ["customers-page", user?.id],
