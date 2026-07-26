@@ -30,8 +30,9 @@ const netSchema = z.object({
 type NetForm = z.infer<typeof netSchema>;
 
 function NetworksPage() {
-  const { role } = useAuth();
+  const { role, isSuperadmin } = useAuth();
   const isAdmin = role === "admin";
+  const canCreate = isAdmin || isSuperadmin;
   const qc = useQueryClient();
 
   const { data: networks, isLoading } = useQuery({
@@ -63,7 +64,7 @@ function NetworksPage() {
       sales.data?.forEach((s) => { get(s.network_id).value += Number(s.price); });
       return m;
     },
-    enabled: isAdmin,
+    enabled: canCreate,
   });
 
   const [open, setOpen] = useState(false);
@@ -74,6 +75,14 @@ function NetworksPage() {
       if (editing) {
         const { error } = await supabase.from("networks").update(form).eq("id", editing.id);
         if (error) throw error;
+      } else if (isSuperadmin && !isAdmin) {
+        // Superadmin without own admin network: create via RPC (no owner)
+        const { error } = await supabase.rpc("superadmin_create_network", { _name: form.name, _currency: form.currency });
+        if (error) throw error;
+      } else if (isSuperadmin) {
+        // Superadmin creating additional networks: use RPC (no owner)
+        const { error } = await supabase.rpc("superadmin_create_network", { _name: form.name, _currency: form.currency });
+        if (error) throw error;
       } else {
         const { error } = await supabase.from("networks").insert(form);
         if (error) throw error;
@@ -83,10 +92,12 @@ function NetworksPage() {
       toast.success(editing ? "تم التحديث" : "تم إنشاء الشبكة");
       qc.invalidateQueries({ queryKey: ["networks"] });
       qc.invalidateQueries({ queryKey: ["network-counts"] });
+      qc.invalidateQueries({ queryKey: ["sa-networks"] });
       setOpen(false); setEditing(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
