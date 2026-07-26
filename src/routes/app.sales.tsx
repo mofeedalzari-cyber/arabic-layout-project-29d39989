@@ -6,12 +6,20 @@ import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { useState, useMemo } from "react";
-import { Search, Receipt, Pencil, CreditCard } from "lucide-react";
+import { Search, Pencil, Trash2 } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
@@ -41,6 +49,9 @@ function SalesPage() {
   const [editBuyer, setEditBuyer] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteCards, setDeleteCards] = useState(false);
   const { display: displayName } = useUserNames();
 
   const { data: sales, isLoading } = useQuery({
@@ -59,17 +70,33 @@ function SalesPage() {
   });
 
   const filtered = useMemo(() => {
-    if (!q) return sales;
+    if (!q) return sales ?? [];
     const s = q.toLowerCase();
-    return sales?.filter((r) =>
+    return (sales ?? []).filter((r) =>
       r.transaction_no.toLowerCase().includes(s) ||
       r.package_name.toLowerCase().includes(s) ||
       r.network_name.toLowerCase().includes(s) ||
       r.agent_username.toLowerCase().includes(s) ||
       (r.buyer_name ?? "").toLowerCase().includes(s) ||
+      (r.card_username ?? "").toLowerCase().includes(s) ||
       displayName(r.agent_username).toLowerCase().includes(s)
     );
   }, [sales, q, displayName]);
+
+  const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
+  const someSelected = selected.size > 0;
+
+  function toggleAll() {
+    if (allSelected) setSelected(new Set());
+    else setSelected(new Set(filtered.map((r) => r.id)));
+  }
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
 
   function canModify(s: SaleRow) {
     return isAdmin || s.agent_id === user?.id;
@@ -103,47 +130,113 @@ function SalesPage() {
     qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
   }
 
+  async function bulkDelete() {
+    if (selected.size === 0) return;
+    setBusy(true);
+    const ids = Array.from(selected);
+    let ok = 0, fail = 0;
+    for (const id of ids) {
+      const { error } = await (supabase.rpc as any)("delete_sale", { _sale_id: id, _delete_card: deleteCards });
+      if (error) fail++; else ok++;
+    }
+    setBusy(false);
+    setConfirmDelete(false);
+    setSelected(new Set());
+    setDeleteCards(false);
+    if (ok) toast.success(`تم حذف ${ok} عملية`);
+    if (fail) toast.error(`فشل حذف ${fail}`);
+    qc.invalidateQueries({ queryKey: ["sales"] });
+    qc.invalidateQueries({ queryKey: ["cards"] });
+    qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
+  }
+
   return (
     <>
-      <PageHeader title={isAdmin ? "جميع المبيعات" : "مبيعاتي"} description={`${filtered?.length ?? 0} عملية`} />
-      <div className="relative mb-4 max-w-md">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="بحث برقم العملية أو الاسم..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />
+      <PageHeader title={isAdmin ? "جميع المبيعات" : "مبيعاتي"} description={`${filtered.length} عملية`} />
+
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="بحث برقم العملية أو الاسم..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />
+        </div>
+        {isAdmin && someSelected && (
+          <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} className="gap-1">
+            <Trash2 className="h-4 w-4" />
+            حذف المحدد ({selected.size})
+          </Button>
+        )}
       </div>
 
-      <div className="grid gap-2">
-        {isLoading ? Array.from({ length: 6 }).map((_, i) => <Card key={i} className="card-elegant border-0 h-16 animate-pulse" />) :
-          filtered?.map((s) => (
-            <Card key={s.id} className="card-elegant border-0 p-3 flex items-center gap-3 slide-up">
-              <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <Receipt className="h-4 w-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold truncate">{s.package_name}</div>
-                <div className="text-[11px] text-muted-foreground truncate">
-                  {s.network_name} · {displayName(s.agent_username)} · {fmtArabicDateTime(s.sold_at)}
-                </div>
-                <div className="text-[10px] text-muted-foreground font-mono">{s.transaction_no}</div>
-                {s.card_username && (
-                  <div className="mt-1 flex items-center gap-1 text-[11px] text-primary font-mono">
-                    <CreditCard className="h-3 w-3" />
-                    <span>{s.card_username}</span>
-                    {s.card_password && <span className="text-muted-foreground">/ {s.card_password}</span>}
-                  </div>
+      <Card className="card-elegant border-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {isAdmin && (
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={toggleAll}
+                      aria-label="تحديد الكل"
+                    />
+                  </TableHead>
                 )}
-                {s.buyer_name && <div className="text-[11px] text-primary">المشتري: {s.buyer_name}</div>}
-              </div>
-              <div className="text-primary font-bold text-sm whitespace-nowrap">{fmtMoney(Number(s.price))}</div>
-              {canModify(s) && (
-                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => openEdit(s)} title="تعديل">
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-              )}
-            </Card>
-          ))
-        }
-        {filtered?.length === 0 && <div className="text-center py-16 text-muted-foreground">لا توجد مبيعات.</div>}
-      </div>
+                <TableHead className="text-right">#</TableHead>
+                <TableHead className="text-right">رقم العملية</TableHead>
+                <TableHead className="text-right">الباقة</TableHead>
+                <TableHead className="text-right">الشبكة</TableHead>
+                <TableHead className="text-right">المندوب</TableHead>
+                <TableHead className="text-right">الكرت</TableHead>
+                <TableHead className="text-right">التاريخ</TableHead>
+                <TableHead className="text-right">السعر</TableHead>
+                <TableHead className="text-right">إجراء</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <TableRow key={i}><TableCell colSpan={isAdmin ? 10 : 9} className="h-10 animate-pulse" /></TableRow>
+                ))
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={isAdmin ? 10 : 9} className="text-center py-12 text-muted-foreground">
+                    لا توجد مبيعات.
+                  </TableCell>
+                </TableRow>
+              ) : filtered.map((s, i) => (
+                <TableRow key={s.id} className={selected.has(s.id) ? "bg-primary/5" : ""}>
+                  {isAdmin && (
+                    <TableCell>
+                      <Checkbox
+                        checked={selected.has(s.id)}
+                        onCheckedChange={() => toggleOne(s.id)}
+                      />
+                    </TableCell>
+                  )}
+                  <TableCell className="text-muted-foreground text-xs">{i + 1}</TableCell>
+                  <TableCell className="font-mono text-[11px] whitespace-nowrap">{s.transaction_no}</TableCell>
+                  <TableCell className="font-semibold">{s.package_name}</TableCell>
+                  <TableCell className="text-xs">{s.network_name}</TableCell>
+                  <TableCell className="text-xs">{displayName(s.agent_username)}</TableCell>
+                  <TableCell className="font-mono text-xs text-primary whitespace-nowrap">
+                    {s.card_username ?? "—"}
+                    {s.card_password && <span className="text-muted-foreground"> / {s.card_password}</span>}
+                  </TableCell>
+                  <TableCell className="text-xs whitespace-nowrap">{fmtArabicDateTime(s.sold_at)}</TableCell>
+                  <TableCell className="text-primary font-bold whitespace-nowrap">{fmtMoney(Number(s.price))}</TableCell>
+                  <TableCell>
+                    {canModify(s) && (
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)} title="تعديل">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
 
       <Dialog open={!!toEdit} onOpenChange={(o) => !o && setToEdit(null)}>
         <DialogContent dir="rtl">
@@ -168,6 +261,27 @@ function SalesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف {selected.size} عملية بيع؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم إرجاع الكروت المرتبطة إلى حالة "مُخصّصة" لدى المندوب، إلا إذا اخترت حذفها نهائياً.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex items-center gap-2 py-2">
+            <Checkbox id="del-cards" checked={deleteCards} onCheckedChange={(v) => setDeleteCards(!!v)} />
+            <Label htmlFor="del-cards" className="cursor-pointer">حذف الكروت نهائياً (بدون إرجاع)</Label>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={bulkDelete} disabled={busy} className="bg-destructive hover:bg-destructive/90">
+              {busy ? "جاري الحذف..." : "تأكيد الحذف"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
