@@ -17,8 +17,22 @@ export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminP
 
 function SuperAdminPage() {
   const { role, loading } = useAuth();
+  const qc = useQueryClient();
   if (loading) return null;
   if (role !== "superadmin") return <Navigate to="/app" />;
+
+  const toggleNet = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase.rpc("superadmin_set_network_active", { _network_id: id, _active: active });
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => {
+      toast.success(v.active ? "تم تفعيل الشبكة" : "تم إيقاف الشبكة");
+      qc.invalidateQueries({ queryKey: ["sa-networks"] });
+      qc.invalidateQueries({ queryKey: ["sa-stats"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "فشل"),
+  });
 
   const stats = useQuery({
     queryKey: ["sa-stats"],
