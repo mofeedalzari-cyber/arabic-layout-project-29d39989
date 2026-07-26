@@ -136,8 +136,8 @@ function SuperAdminPage() {
       />
 
 
-      <Tabs defaultValue="networks" className="mt-4">
-        <TabsList className="grid grid-cols-4 w-full">
+      <Tabs defaultValue="networks" className="mt-4" dir="rtl">
+        <TabsList dir="rtl" className="grid grid-cols-4 w-full">
           <TabsTrigger value="networks">الشبكات</TabsTrigger>
           <TabsTrigger value="agents">المناديب</TabsTrigger>
           <TabsTrigger value="packages">الباقات</TabsTrigger>
