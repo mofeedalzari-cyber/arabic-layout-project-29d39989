@@ -193,6 +193,25 @@ function CustomersPage() {
             {c.last && (
               <div className="text-[10px] text-muted-foreground mt-2">آخر عملية: {fmtArabicDateTime(c.last)}</div>
             )}
+            <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                disabled={sendingId === c.id}
+                onClick={() => sendStatementWhatsApp(c as any)}
+              >
+                <FileText className="h-4 w-4 ml-1" />
+                {sendingId === c.id ? "جاري..." : "كشف واتساب"}
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setConfirmDelete(c as any)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </Card>
         ))}
         {rows.length === 0 && <div className="text-center py-16 text-muted-foreground">لا يوجد زبائن.</div>}
