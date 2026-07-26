@@ -238,21 +238,34 @@ function CustomersPage() {
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
                 <TableCell className="text-xs">{c.last ? fmtArabicDateTime(c.last) : "—"}</TableCell>
-                <TableCell>
-                  {c.whatsapp && (
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <div className="flex gap-2 justify-end">
+                    {c.whatsapp && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const n = String(c.whatsapp).replace(/\D/g, "");
+                          window.open(`https://wa.me/${n}`, "_blank");
+                        }}
+                      >
+                        <MessageCircle className="h-4 w-4 ml-1" />
+                        واتساب
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const n = String(c.whatsapp).replace(/\D/g, "");
-                        window.open(`https://wa.me/${n}`, "_blank");
-                      }}
+                      disabled={sendingId === c.id}
+                      onClick={() => sendStatementWhatsApp(c as any)}
                     >
-                      <MessageCircle className="h-4 w-4 ml-1" />
-                      واتساب
+                      <FileText className="h-4 w-4 ml-1" />
+                      {sendingId === c.id ? "جاري..." : "كشف واتساب"}
                     </Button>
-                  )}
+                    <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(c as any)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
