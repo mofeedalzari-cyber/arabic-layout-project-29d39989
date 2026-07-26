@@ -125,17 +125,23 @@ export async function shareInvoiceImageOnWhatsApp(opts: {
       data: base64,
       directory: Directory.Cache,
     });
+    // Share the image with caption. On Android, `files[]` reliably attaches
+    // the image; when the user picks WhatsApp the caption is prefilled.
+    // WhatsApp does not accept a specific phone number together with a media
+    // attachment via any public URL scheme, so a one-tap contact pick is
+    // unavoidable — we hint the target number in the dialog title.
     await Share.share({
-      title: "كشف حساب",
       text: message,
-      url: written.uri,
-      dialogTitle: "مشاركة كشف الحساب عبر واتساب",
+      files: [written.uri],
+      dialogTitle: whatsappPhone
+        ? `إرسال كشف الحساب عبر واتساب إلى +${String(whatsappPhone).replace(/\D/g, "")}`
+        : "مشاركة كشف الحساب عبر واتساب",
     });
   } catch (shareErr: any) {
     const msg = String(shareErr?.message || "");
     if (msg.includes("cancel") || msg.includes("dismiss")) return;
     console.error("[shareInvoiceImageOnWhatsApp] Share failed:", shareErr);
-    // Fallback to text-only WhatsApp
+    // Fallback: open the customer's WhatsApp chat directly with the text.
     if (whatsappPhone) await openWhatsApp(whatsappPhone, message);
   }
 }
