@@ -135,14 +135,9 @@ function SalesPage() {
               </div>
               <div className="text-primary font-bold text-sm whitespace-nowrap">{fmtMoney(Number(s.price))}</div>
               {canModify(s) && (
-                <div className="flex flex-col gap-1 shrink-0">
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)} title="تعديل">
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setToDelete(s)} title="حذف">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => openEdit(s)} title="تعديل">
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
               )}
             </Card>
           ))
