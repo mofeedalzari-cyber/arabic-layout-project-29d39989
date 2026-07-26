@@ -431,6 +431,7 @@ export type Database = {
         Row: {
           agent_id: string
           agent_username: string
+          buyer_name: string | null
           card_id: string
           id: string
           network_id: string
@@ -444,6 +445,7 @@ export type Database = {
         Insert: {
           agent_id: string
           agent_username: string
+          buyer_name?: string | null
           card_id: string
           id?: string
           network_id: string
@@ -457,6 +459,7 @@ export type Database = {
         Update: {
           agent_id?: string
           agent_username?: string
+          buyer_name?: string | null
           card_id?: string
           id?: string
           network_id?: string
