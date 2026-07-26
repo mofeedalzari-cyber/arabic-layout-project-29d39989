@@ -213,7 +213,8 @@ function PackagesPage() {
         title="الباقات"
         description="إدارة كل الباقات عبر الشبكات"
       action={
-        isAdmin ? (
+        canManage ? (
+
           <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
             <DialogTrigger asChild>
               <Button className="rounded-xl gradient-primary-bg border-0 font-semibold">
