@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -54,6 +55,8 @@ function LogsPage() {
   return (
     <>
       <PageHeader title="سجل النشاط" description="آخر 200 عملية في النظام" />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
       {!!logs?.length && (
         <div className="flex items-center justify-between mb-3 gap-2">
           <label className="flex items-center gap-2 text-sm">

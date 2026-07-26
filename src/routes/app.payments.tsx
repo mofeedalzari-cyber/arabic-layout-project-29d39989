@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,6 +114,8 @@ function PaymentsPage() {
   return (
     <>
       <PageHeader title="السداد" description="تسجيل سداد المندوب وخصمه من ديونه تلقائياً" />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="p-4 card-elegant border-0 space-y-3">

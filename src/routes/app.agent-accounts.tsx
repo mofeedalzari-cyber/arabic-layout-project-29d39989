@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -142,6 +143,8 @@ function AgentAccountsPage() {
   return (
     <>
       <PageHeader title="حسابات المناديب" description="عرض تفصيلي لحساب كل مندوب حسب الشبكة والفئة" />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
 
       <div className="grid sm:grid-cols-2 gap-3 mb-4">
         <div>

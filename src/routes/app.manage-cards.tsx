@@ -2,6 +2,7 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -264,6 +265,8 @@ function ManageCardsPage() {
   return (
     <div dir="rtl">
       <PageHeader title="كروت الشبكة" description="فلترة وحذف جماعي" />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
 
       <Card className="card-elegant border-0 p-4 mb-4 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

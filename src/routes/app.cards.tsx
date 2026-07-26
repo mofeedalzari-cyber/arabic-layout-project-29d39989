@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -171,6 +172,8 @@ function CardsPage() {
   return (
     <>
       <PageHeader title="رفع الكروت" description="أضف الكروت بالجملة إلى الباقات" />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
       <Card className="card-elegant border-0 p-5 max-w-3xl">
         <div className="grid md:grid-cols-2 gap-3 mb-4">
           <div>

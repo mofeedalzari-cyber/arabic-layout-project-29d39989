@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -153,6 +154,8 @@ function SalesPage() {
   return (
     <>
       <PageHeader title={isAdmin ? "جميع المبيعات" : "مبيعاتي"} description={`${filtered.length} عملية`} />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="relative flex-1 min-w-[200px] max-w-md">
