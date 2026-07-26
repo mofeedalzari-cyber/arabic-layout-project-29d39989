@@ -130,7 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {items.map((it) => <NavLink key={it.to} item={it} />)}
                 </nav>
                 <div className="shrink-0 pb-3">
-                  <UserFooter fullName={profile?.full_name ?? ""} username={profile?.username ?? ""} phone={profile?.phone ?? ""} role={role} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
+                  <UserFooter fullName={profile?.full_name ?? ""} username={profile?.username ?? ""} phone={profile?.phone ?? ""} role={role} isSuperadmin={isSuperadmin} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
                 </div>
               </SheetContent>
             </Sheet>
