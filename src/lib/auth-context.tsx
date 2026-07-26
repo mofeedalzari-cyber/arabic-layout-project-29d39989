@@ -101,7 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
-    user, session, profile, role, loading,
+    user, session, profile, role, isSuperadmin, loading,
+
     signOut: async () => {
       // Clear local state first so UI updates immediately
       setSession(null);
