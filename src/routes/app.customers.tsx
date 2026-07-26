@@ -487,6 +487,40 @@ function CustomersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <AlertDialog open={!!saleToDelete} onOpenChange={(o) => !o && setSaleToDelete(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف عملية البيع؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف العملية {saleToDelete?.transaction_no} وإرجاع الكرت إلى حسابك. لا يمكن التراجع.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saleBusy}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSaleDelete} disabled={saleBusy} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {saleBusy ? "جاري..." : "حذف"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!saleToEdit} onOpenChange={(o) => !o && setSaleToEdit(null)}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل عملية البيع</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>اسم المشتري</Label>
+              <Input value={editBuyer} onChange={(e) => setEditBuyer(e.target.value)} placeholder="اختياري" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaleToEdit(null)} disabled={saleBusy}>إلغاء</Button>
+            <Button onClick={saveSaleEdit} disabled={saleBusy}>{saleBusy ? "جاري..." : "حفظ"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
