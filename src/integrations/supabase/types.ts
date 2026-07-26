@@ -760,6 +760,10 @@ export type Database = {
           sold: number
         }[]
       }
+      superadmin_set_network_active: {
+        Args: { _active: boolean; _network_id: string }
+        Returns: undefined
+      }
       superadmin_stats: { Args: never; Returns: Json }
       username_from_phone: { Args: { _phone: string }; Returns: string }
     }

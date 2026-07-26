@@ -1,22 +1,38 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { fmtMoney, displayPhone, fmtArabicDateTime } from "@/lib/format";
 import { useState } from "react";
-import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search } from "lucide-react";
+import { toast } from "sonner";
+import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search, Power, PowerOff } from "lucide-react";
 
 export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
 
 function SuperAdminPage() {
   const { role, loading } = useAuth();
+  const qc = useQueryClient();
   if (loading) return null;
   if (role !== "superadmin") return <Navigate to="/app" />;
+
+  const toggleNet = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase.rpc("superadmin_set_network_active", { _network_id: id, _active: active });
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => {
+      toast.success(v.active ? "تم تفعيل الشبكة" : "تم إيقاف الشبكة");
+      qc.invalidateQueries({ queryKey: ["sa-networks"] });
+      qc.invalidateQueries({ queryKey: ["sa-stats"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "فشل"),
+  });
 
   const stats = useQuery({
     queryKey: ["sa-stats"],
@@ -104,7 +120,7 @@ function SuperAdminPage() {
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الشبكة</Th><Th>المالك</Th><Th>الهاتف</Th><Th>مناديب</Th><Th>باقات</Th>
-                    <Th>كروت</Th><Th>مباع</Th><Th>قيمة المبيعات</Th><Th>الحالة</Th><Th>الإنشاء</Th>
+                    <Th>كروت</Th><Th>مباع</Th><Th>قيمة المبيعات</Th><Th>الحالة</Th><Th>الإنشاء</Th><Th>إجراء</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -120,9 +136,24 @@ function SuperAdminPage() {
                       <Td>{fmtMoney(Number(n.sold_value ?? 0))} {n.currency}</Td>
                       <Td>{n.is_active ? <Badge>نشطة</Badge> : <Badge variant="secondary">موقوفة</Badge>}</Td>
                       <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(n.created_at)}</Td>
+                      <Td>
+                        <Button
+                          size="sm"
+                          variant={n.is_active ? "destructive" : "default"}
+                          disabled={toggleNet.isPending}
+                          onClick={() => {
+                            const msg = n.is_active
+                              ? `إيقاف شبكة "${n.name}"؟ لن يتمكن مستخدموها من الدخول.`
+                              : `إعادة تفعيل شبكة "${n.name}"؟`;
+                            if (window.confirm(msg)) toggleNet.mutate({ id: n.id, active: !n.is_active });
+                          }}
+                        >
+                          {n.is_active ? <><PowerOff className="h-4 w-4 ml-1" />إيقاف</> : <><Power className="h-4 w-4 ml-1" />تفعيل</>}
+                        </Button>
+                      </Td>
                     </tr>
                   ))}
-                  {networks.data?.length === 0 && <tr><Td colSpan={10} className="text-center text-muted-foreground py-8">لا توجد شبكات</Td></tr>}
+                  {networks.data?.length === 0 && <tr><Td colSpan={11} className="text-center text-muted-foreground py-8">لا توجد شبكات</Td></tr>}
                 </tbody>
               </table>
             </div>
