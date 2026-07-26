@@ -7,15 +7,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useState, useMemo } from "react";
-import { Search, Receipt, Trash2, Pencil, CreditCard } from "lucide-react";
+import { Search, Receipt, Pencil, CreditCard } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
@@ -41,7 +37,6 @@ function SalesPage() {
   const isAdmin = role === "admin";
   const qc = useQueryClient();
   const [q, setQ] = useState("");
-  const [toDelete, setToDelete] = useState<SaleRow | null>(null);
   const [toEdit, setToEdit] = useState<SaleRow | null>(null);
   const [editBuyer, setEditBuyer] = useState("");
   const [editPrice, setEditPrice] = useState("");
@@ -108,20 +103,6 @@ function SalesPage() {
     qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
   }
 
-  async function confirmDelete(deleteCard: boolean) {
-    if (!toDelete) return;
-    setBusy(true);
-    const { error } = await supabase.rpc("delete_sale", { _sale_id: toDelete.id, _delete_card: deleteCard });
-    setBusy(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success(deleteCard ? "تم الحذف بدون إرجاع الكرت" : "تم حذف العملية وإرجاع الكرت");
-    setToDelete(null);
-    qc.invalidateQueries({ queryKey: ["sales"] });
-    qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
-    qc.invalidateQueries({ queryKey: ["agent-cabin"] });
-    qc.invalidateQueries({ queryKey: ["cabin-cards"] });
-  }
-
   return (
     <>
       <PageHeader title={isAdmin ? "جميع المبيعات" : "مبيعاتي"} description={`${filtered?.length ?? 0} عملية`} />
@@ -154,40 +135,15 @@ function SalesPage() {
               </div>
               <div className="text-primary font-bold text-sm whitespace-nowrap">{fmtMoney(Number(s.price))}</div>
               {canModify(s) && (
-                <div className="flex flex-col gap-1 shrink-0">
-                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)} title="تعديل">
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setToDelete(s)} title="حذف">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => openEdit(s)} title="تعديل">
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
               )}
             </Card>
           ))
         }
         {filtered?.length === 0 && <div className="text-center py-16 text-muted-foreground">لا توجد مبيعات.</div>}
       </div>
-
-      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
-        <AlertDialogContent dir="rtl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>حذف عملية البيع؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              اختر طريقة الحذف للعملية {toDelete?.transaction_no}: إما إرجاع الكرت إلى حساب المندوب، أو حذف بدون إرجاع (حذف الكرت نهائياً).
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-            <Button onClick={() => confirmDelete(false)} disabled={busy} className="w-full">
-              {busy ? "جاري..." : "إرجاع الكرت إلى المندوب"}
-            </Button>
-            <Button onClick={() => confirmDelete(true)} disabled={busy} variant="destructive" className="w-full">
-              {busy ? "جاري..." : "حذف بدون إرجاع"}
-            </Button>
-            <AlertDialogCancel disabled={busy} className="w-full mt-0">إلغاء</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Dialog open={!!toEdit} onOpenChange={(o) => !o && setToEdit(null)}>
         <DialogContent dir="rtl">
