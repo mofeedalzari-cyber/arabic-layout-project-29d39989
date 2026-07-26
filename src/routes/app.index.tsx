@@ -374,7 +374,7 @@ function AgentHome({ name }: { name: string }) {
     queryFn: async () => {
       if (!profile?.network_id) return [];
       const { data, error } = await supabase.from("packages")
-        .select("id, name, description, price, allowed_time, currency, network_id")
+        .select("id, name, description, price, allowed_time, network_id")
         .eq("network_id", profile.network_id)
         .eq("is_active", true)
         .order("price", { ascending: true });
