@@ -115,7 +115,8 @@ function SuperAdminPage() {
           <TabsTrigger value="cards">الكروت</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="networks" className="mt-3">
+        <TabsContent value="networks" className="mt-3 space-y-3">
+          <div className="flex justify-end"><AddNetworkDialog /></div>
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse border">
