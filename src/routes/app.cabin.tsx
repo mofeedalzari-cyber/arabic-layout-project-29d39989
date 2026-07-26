@@ -139,6 +139,13 @@ function CabinPage() {
     <>
       <PageHeader title="كبينة البيع" description="الكروت المُخصّصة لك — جاهزة للبيع" />
 
+      <div className="mb-3 flex justify-end">
+        <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setCustomersOpen(true)}>
+          <Users className="h-4 w-4 ml-1" />
+          الزبائن ({customers?.length ?? 0})
+        </Button>
+      </div>
+
       <div className="grid grid-cols-3 gap-3 mb-5">
         <StatMini label="متوفر" value={String(totalAvail)} tone="success" />
         <StatMini label="مباع" value={String(totalSold)} tone="warning" />
