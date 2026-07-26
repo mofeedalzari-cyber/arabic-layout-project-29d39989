@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useMemo, useState } from "react";
-import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard } from "lucide-react";
+import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard, UserPlus } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
 import { openWhatsApp } from "@/lib/wa-open";
 import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
@@ -34,6 +34,34 @@ function CustomersPage() {
   const [editBuyer, setEditBuyer] = useState("");
   const [saleBusy, setSaleBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newWhats, setNewWhats] = useState("");
+  const [addBusy, setAddBusy] = useState(false);
+
+  async function handleAddCustomer() {
+    const name = newName.trim();
+    const whatsapp = newWhats.trim();
+    if (!name) { toast.error("أدخل اسم الزبون"); return; }
+    if (!whatsapp) { toast.error("أدخل رقم واتساب"); return; }
+    if (!user?.id) return;
+    setAddBusy(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("network_id").eq("id", user.id).maybeSingle();
+      const { error } = await supabase.from("customers").insert({
+        agent_id: user.id,
+        network_id: prof?.network_id ?? null,
+        name,
+        whatsapp,
+      });
+      if (error) { toast.error("تعذر إضافة الزبون: " + error.message); return; }
+      toast.success("تم إضافة الزبون");
+      setNewName(""); setNewWhats(""); setAddOpen(false);
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
+    } finally {
+      setAddBusy(false);
+    }
+  }
 
   const { data: customers } = useQuery({
     queryKey: ["customers-page", user?.id],
@@ -266,9 +294,15 @@ function CustomersPage() {
         <StatCard icon={<Receipt className="h-4 w-4" />} label="إجمالي المبيعات" value={fmtMoney(totals.revenue)} />
       </div>
 
-      <div className="relative mb-4 max-w-md">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="بحث باسم أو رقم واتساب..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />
+      <div className="flex gap-2 mb-4 items-center">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="بحث باسم أو رقم واتساب..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />
+        </div>
+        <Button onClick={() => setAddOpen(true)} className="rounded-xl gradient-primary-bg text-white">
+          <UserPlus className="h-4 w-4 ml-1" />
+          إضافة زبون
+        </Button>
       </div>
 
       {/* Mobile cards */}
@@ -528,6 +562,28 @@ function CustomersPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setSaleToEdit(null)} disabled={saleBusy}>إلغاء</Button>
             <Button onClick={saveSaleEdit} disabled={saleBusy}>{saleBusy ? "جاري..." : "حفظ"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addOpen} onOpenChange={(o) => { if (!addBusy) setAddOpen(o); }}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>إضافة زبون جديد</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>اسم الزبون</Label>
+              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="مثال: محمد أمين" />
+            </div>
+            <div>
+              <Label>رقم الواتساب</Label>
+              <Input value={newWhats} onChange={(e) => setNewWhats(e.target.value)} placeholder="7XXXXXXXX" inputMode="tel" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={addBusy}>إلغاء</Button>
+            <Button onClick={handleAddCustomer} disabled={addBusy}>{addBusy ? "جاري..." : "إضافة"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
