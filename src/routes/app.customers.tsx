@@ -299,10 +299,7 @@ function CustomersPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          const n = String(c.whatsapp).replace(/\D/g, "");
-                          window.open(`https://wa.me/${n}`, "_blank");
-                        }}
+                        onClick={() => openWhatsApp(c.whatsapp!)}
                       >
                         <MessageCircle className="h-4 w-4 ml-1" />
                         واتساب
@@ -354,10 +351,7 @@ function CustomersPage() {
                   {selected.whatsapp && (
                     <Button
                       size="sm"
-                      onClick={() => {
-                        const n = String(selected.whatsapp).replace(/\D/g, "");
-                        window.open(`https://wa.me/${n}`, "_blank");
-                      }}
+                      onClick={() => openWhatsApp(selected.whatsapp!)}
                     >
                       <MessageCircle className="h-4 w-4 ml-1" />
                       واتساب
