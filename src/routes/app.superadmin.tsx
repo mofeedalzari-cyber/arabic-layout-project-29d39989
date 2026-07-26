@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { fmtMoney, displayPhone, fmtArabicDateTime } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search, Power, PowerOff, Plus } from "lucide-react";
+import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search, Power, PowerOff, Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
 
