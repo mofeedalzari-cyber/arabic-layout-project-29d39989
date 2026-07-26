@@ -278,7 +278,7 @@ function SuperAdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(packages.data ?? []).map((p: any) => (
+                  {(packages.data ?? []).filter((p: any) => !packagesNetFilter || p.network_id === packagesNetFilter).map((p: any) => (
                     <tr key={p.id} className="border-t">
                       <Td className="font-semibold">{p.name}</Td>
                       <Td>{p.network_name}</Td>
