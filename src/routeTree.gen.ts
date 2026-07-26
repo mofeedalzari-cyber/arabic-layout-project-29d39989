@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppSuperadminRouteImport } from './routes/app.superadmin'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppSalesRouteImport } from './routes/app.sales'
 import { Route as AppRequestsRouteImport } from './routes/app.requests'
@@ -47,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSuperadminRoute = AppSuperadminRouteImport.update({
+  id: '/superadmin',
+  path: '/superadmin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/superadmin': typeof AppSuperadminRoute
   '/app/': typeof AppIndexRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
   '/app/networks/': typeof AppNetworksIndexRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/superadmin': typeof AppSuperadminRoute
   '/app': typeof AppIndexRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
   '/app/networks': typeof AppNetworksIndexRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/superadmin': typeof AppSuperadminRoute
   '/app/': typeof AppIndexRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
   '/app/networks/': typeof AppNetworksIndexRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/app/requests'
     | '/app/sales'
     | '/app/settings'
+    | '/app/superadmin'
     | '/app/'
     | '/app/networks/$id'
     | '/app/networks/'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/app/requests'
     | '/app/sales'
     | '/app/settings'
+    | '/app/superadmin'
     | '/app'
     | '/app/networks/$id'
     | '/app/networks'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/app/requests'
     | '/app/sales'
     | '/app/settings'
+    | '/app/superadmin'
     | '/app/'
     | '/app/networks/$id'
     | '/app/networks/'
@@ -285,6 +297,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/superadmin': {
+      id: '/app/superadmin'
+      path: '/superadmin'
+      fullPath: '/app/superadmin'
+      preLoaderRoute: typeof AppSuperadminRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/settings': {
@@ -423,6 +442,7 @@ interface AppRouteChildren {
   AppRequestsRoute: typeof AppRequestsRoute
   AppSalesRoute: typeof AppSalesRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppSuperadminRoute: typeof AppSuperadminRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -440,6 +460,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRequestsRoute: AppRequestsRoute,
   AppSalesRoute: AppSalesRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppSuperadminRoute: AppSuperadminRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
@@ -453,13 +474,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

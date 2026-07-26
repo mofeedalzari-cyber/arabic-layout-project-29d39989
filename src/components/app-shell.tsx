@@ -7,14 +7,15 @@ import { cn } from "@/lib/utils";
 import { displayPhone } from "@/lib/format";
 import {
   LayoutDashboard, Wifi, Package, Upload, Users, Receipt,
-  ScrollText, Settings, LogOut, Menu, Moon, Sun, Store, Inbox, CreditCard, Calculator, UserPlus, HandCoins,
+  ScrollText, Settings, LogOut, Menu, Moon, Sun, Store, Inbox, CreditCard, Calculator, UserPlus, HandCoins, ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
-interface NavItem { to: string; label: string; icon: typeof Wifi; adminOnly?: boolean; agentOnly?: boolean }
+interface NavItem { to: string; label: string; icon: typeof Wifi; adminOnly?: boolean; agentOnly?: boolean; superOnly?: boolean }
 
 const NAV: NavItem[] = [
   { to: "/app", label: "الرئيسية", icon: LayoutDashboard },
+  { to: "/app/superadmin", label: "مدير التطبيق", icon: ShieldCheck, superOnly: true },
   { to: "/app/networks", label: "الشبكات", icon: Wifi },
   { to: "/app/cabin", label: "كبينة البيع", icon: Store, agentOnly: true },
   { to: "/app/packages", label: "الباقات", icon: Package },
@@ -32,7 +33,12 @@ const NAV: NavItem[] = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { profile, role, signOut } = useAuth();
-  const items = NAV.filter((n) => (!n.adminOnly || role === "admin") && (!n.agentOnly || role === "agent"));
+  const items = NAV.filter((n) => {
+    if (n.superOnly) return role === "superadmin";
+    if (n.adminOnly) return role === "admin" || role === "superadmin";
+    if (n.agentOnly) return role === "agent";
+    return true;
+  });
   const [dark, setDark] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -232,7 +238,7 @@ function UserFooter({ fullName, username, phone, role, onSignOut, dark, onToggle
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold truncate">{displayName}</div>
-          <div className="text-[11px] text-muted-foreground">{role === "admin" ? "مدير" : "مندوب"}</div>
+          <div className="text-[11px] text-muted-foreground">{role === "superadmin" ? "مدير التطبيق" : role === "admin" ? "مدير" : "مندوب"}</div>
         </div>
       </div>
 

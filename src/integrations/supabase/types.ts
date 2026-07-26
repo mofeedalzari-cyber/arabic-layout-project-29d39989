@@ -613,6 +613,7 @@ export type Database = {
         Returns: boolean
       }
       is_active_user: { Args: { _user_id: string }; Returns: boolean }
+      is_superadmin: { Args: { _uid: string }; Returns: boolean }
       list_active_networks: {
         Args: never
         Returns: {
@@ -683,10 +684,87 @@ export type Database = {
           remaining_debt: number
         }[]
       }
+      superadmin_agents: {
+        Args: never
+        Returns: {
+          created_at: string
+          full_name: string
+          id: string
+          is_active: boolean
+          network_id: string
+          network_name: string
+          phone: string
+          role: string
+          sold_count: number
+          sold_value: number
+          username: string
+        }[]
+      }
+      superadmin_cards: {
+        Args: {
+          _limit?: number
+          _network_id?: string
+          _package_id?: string
+          _search?: string
+          _status?: string
+        }
+        Returns: {
+          assigned_at: string
+          assigned_to: string
+          assigned_username: string
+          created_at: string
+          id: string
+          network_id: string
+          network_name: string
+          package_id: string
+          package_name: string
+          password: string
+          sold_at: string
+          sold_to: string
+          sold_username: string
+          status: string
+          username: string
+        }[]
+      }
+      superadmin_networks: {
+        Args: never
+        Returns: {
+          agents_count: number
+          cards_count: number
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          name: string
+          owner_id: string
+          owner_phone: string
+          owner_username: string
+          packages_count: number
+          sold_count: number
+          sold_value: number
+        }[]
+      }
+      superadmin_packages: {
+        Args: never
+        Returns: {
+          assigned: number
+          available: number
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          name: string
+          network_id: string
+          network_name: string
+          price: number
+          sold: number
+        }[]
+      }
+      superadmin_stats: { Args: never; Returns: Json }
       username_from_phone: { Args: { _phone: string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "agent"
+      app_role: "admin" | "agent" | "superadmin"
       card_status: "AVAILABLE" | "ASSIGNED" | "SOLD"
     }
     CompositeTypes: {
@@ -815,7 +893,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "agent"],
+      app_role: ["admin", "agent", "superadmin"],
       card_status: ["AVAILABLE", "ASSIGNED", "SOLD"],
     },
   },

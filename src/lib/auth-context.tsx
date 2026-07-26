@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "admin" | "agent";
+export type Role = "admin" | "agent" | "superadmin";
 
 export interface Profile {
   id: string;
@@ -42,7 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
     setProfile(prof as Profile | null);
-    const r = roles?.find((x) => x.role === "admin")?.role
+    const r = roles?.find((x) => x.role === "superadmin")?.role
+      ?? roles?.find((x) => x.role === "admin")?.role
       ?? roles?.find((x) => x.role === "agent")?.role
       ?? null;
     setRole((r as Role | null) ?? null);
