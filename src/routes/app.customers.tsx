@@ -34,6 +34,34 @@ function CustomersPage() {
   const [editBuyer, setEditBuyer] = useState("");
   const [saleBusy, setSaleBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newWhats, setNewWhats] = useState("");
+  const [addBusy, setAddBusy] = useState(false);
+
+  async function handleAddCustomer() {
+    const name = newName.trim();
+    const whatsapp = newWhats.trim();
+    if (!name) { toast.error("أدخل اسم الزبون"); return; }
+    if (!whatsapp) { toast.error("أدخل رقم واتساب"); return; }
+    if (!user?.id) return;
+    setAddBusy(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("network_id").eq("id", user.id).maybeSingle();
+      const { error } = await supabase.from("customers").insert({
+        agent_id: user.id,
+        network_id: prof?.network_id ?? null,
+        name,
+        whatsapp,
+      });
+      if (error) { toast.error("تعذر إضافة الزبون: " + error.message); return; }
+      toast.success("تم إضافة الزبون");
+      setNewName(""); setNewWhats(""); setAddOpen(false);
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
+    } finally {
+      setAddBusy(false);
+    }
+  }
 
   const { data: customers } = useQuery({
     queryKey: ["customers-page", user?.id],
