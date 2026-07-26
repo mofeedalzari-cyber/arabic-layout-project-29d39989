@@ -416,6 +416,11 @@ function StatMini({ label, value, tone }: { label: string; value: string; tone: 
 }
 
 function SaleReceipt({ sale }: { sale: any }) {
+  const [buyerName, setBuyerName] = useState<string>(sale.buyer_name ?? "");
+  const [savedName, setSavedName] = useState<string>(sale.buyer_name ?? "");
+  const [saving, setSaving] = useState(false);
+  const qc = useQueryClient();
+
   async function copy(text: string, label: string) {
     try {
       await navigator.clipboard.writeText(text);
@@ -425,9 +430,20 @@ function SaleReceipt({ sale }: { sale: any }) {
       toast.error("فشل النسخ");
     }
   }
-  
-  const fullText = `بيانات الكرت:\n\nاليوزر: ${sale.card_username}\n${sale.card_password ? `كلمة المرور: ${sale.card_password}\n` : ""}الفئة: ${sale.package_name}\nالشبكة: ${sale.network_name}`;
-  
+
+  async function saveBuyer() {
+    const name = buyerName.trim().slice(0, 120);
+    setSaving(true);
+    const { error } = await supabase.from("sales").update({ buyer_name: name || null }).eq("id", sale.sale_id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    setSavedName(name);
+    qc.invalidateQueries({ queryKey: ["sales"] });
+    toast.success(name ? "تم حفظ اسم المشتري" : "تم مسح اسم المشتري");
+  }
+
+  const fullText = `بيانات الكرت:\n\nاليوزر: ${sale.card_username}\n${sale.card_password ? `كلمة المرور: ${sale.card_password}\n` : ""}الفئة: ${sale.package_name}\nالشبكة: ${sale.network_name}${savedName ? `\nالمشتري: ${savedName}` : ""}`;
+
   return (
     <div className="mt-4 space-y-3 pb-4">
       <div className="rounded-2xl border-2 border-dashed border-primary/40 p-5 bg-primary/5 space-y-2">
@@ -436,6 +452,27 @@ function SaleReceipt({ sale }: { sale: any }) {
         {sale.card_password && <Row label="كلمة المرور" value={sale.card_password} onCopy={() => copy(sale.card_password, "كلمة المرور")} />}
         <Row label="السعر" value={fmtMoney(Number(sale.price))} />
         <Row label="رقم العملية" value={sale.transaction_no} onCopy={() => copy(sale.transaction_no, "رقم العملية")} />
+        {savedName && <Row label="المشتري" value={savedName} />}
+      </div>
+
+      <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
+        <div className="text-xs text-muted-foreground font-semibold">ملاحظة — اسم المشتري (اختياري)</div>
+        <div className="flex gap-2">
+          <Input
+            value={buyerName}
+            onChange={(e) => setBuyerName(e.target.value)}
+            placeholder="اكتب اسم الشخص الذي تم بيع الكرت له"
+            maxLength={120}
+            className="rounded-xl h-11 bg-background"
+          />
+          <Button
+            disabled={saving || buyerName.trim() === savedName.trim()}
+            onClick={saveBuyer}
+            className="rounded-xl h-11 gradient-primary-bg border-0 font-semibold px-4"
+          >
+            {saving ? "..." : "حفظ"}
+          </Button>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Button variant="outline" className="rounded-xl" onClick={() => copy(fullText, "البيانات")}><Copy className="h-4 w-4 ml-1" />نسخ</Button>
