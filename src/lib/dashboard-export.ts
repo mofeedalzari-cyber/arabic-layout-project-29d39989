@@ -1,9 +1,17 @@
 // dashboard-export.ts
-import ExcelJS from "exceljs";
+import writeXlsxFile from "write-excel-file";
 import { cleanPhoneLike } from "@/lib/format";
 
 export type SummaryRow = { label: string; value: string | number };
 export type TableSection = { title: string; cols: string[]; rows: (string | number)[][] };
+
+type Cell = { value: string | number | null; type?: any; fontWeight?: "bold" };
+
+function toCell(v: string | number | null | undefined): Cell {
+  if (v === null || v === undefined || v === "") return { value: null };
+  if (typeof v === "number" && Number.isFinite(v)) return { type: Number, value: v };
+  return { type: String, value: String(v) };
+}
 
 export async function exportToExcel(
   fileName: string,
@@ -11,39 +19,36 @@ export async function exportToExcel(
   sections: TableSection[],
 ) {
   try {
-    const wb = new ExcelJS.Workbook();
+    const sheets: Cell[][][] = [];
+    const sheetNames: string[] = [];
 
-    const wsSum = wb.addWorksheet("الملخص", { views: [{ rightToLeft: true }] });
-    wsSum.columns = [
-      { header: "البند", key: "label", width: 28 },
-      { header: "القيمة", key: "value", width: 20 },
+    // Summary sheet
+    const sumData: Cell[][] = [
+      [{ value: "البند", type: String, fontWeight: "bold" }, { value: "القيمة", type: String, fontWeight: "bold" }],
+      ...summary.map((s) => [toCell(s.label), toCell(s.value)]),
     ];
-    summary.forEach((s) => wsSum.addRow({ label: s.label, value: s.value }));
+    sheets.push(sumData);
+    sheetNames.push("الملخص");
 
     sections.forEach((sec, i) => {
       const name = (sec.title || `ورقة ${i + 1}`).slice(0, 30).replace(/[\\/*?:[\]]/g, " ");
-      const ws = wb.addWorksheet(name, { views: [{ rightToLeft: true }] });
-      ws.columns = sec.cols.map((c) => ({ header: c, key: c, width: 20 }));
-      sec.rows.forEach((row) => ws.addRow(row));
+      const header: Cell[] = sec.cols.map((c) => ({ value: c, type: String, fontWeight: "bold" }));
+      const body: Cell[][] = sec.rows.map((row) => row.map((v) => toCell(v)));
+      sheets.push([header, ...body]);
+      sheetNames.push(name);
     });
 
-    const buf = await wb.xlsx.writeBuffer();
-    const blob = new Blob([buf], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${fileName}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    await writeXlsxFile(sheets as any, {
+      sheets: sheetNames,
+      fileName: `${fileName}.xlsx`,
+      rightToLeft: true,
+    } as any);
   } catch (err) {
     console.error("[exportToExcel] failed:", err);
     alert("فشل تصدير ملف Excel، يرجى المحاولة مجدداً");
   }
 }
+
 
 
 export type ReportMeta = {
