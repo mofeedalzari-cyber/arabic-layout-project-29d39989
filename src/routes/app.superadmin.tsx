@@ -348,7 +348,7 @@ function SuperAdminPage() {
                       </Td>
                       <Td>{c.package_name}</Td>
                       <Td>{c.network_name}</Td>
-                      <Td>{c.sold_username ?? c.assigned_username ?? "—"}</Td>
+                      <Td>{cleanPhoneLike(c.sold_username ?? c.assigned_username) || "—"}</Td>
                       <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(c.created_at)}</Td>
                       <Td className="whitespace-nowrap text-xs">{c.sold_at ? fmtArabicDateTime(c.sold_at) : "—"}</Td>
                     </tr>
