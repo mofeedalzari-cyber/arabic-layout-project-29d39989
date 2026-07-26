@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -234,6 +235,8 @@ function PackagesPage() {
         ) : undefined
       }
       />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
 
       <div className="mb-4 max-w-xs">
         <Label className="text-xs mb-1.5 block">تصفية حسب الشبكة</Label>

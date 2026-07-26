@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -80,6 +81,8 @@ function AgentsPage() {
   return (
     <>
       <PageHeader title="المناديب" description="إدارة حسابات المناديب وعرض إحصائياتهم" />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
       <div className="relative mb-4 max-w-md">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input placeholder="بحث..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />

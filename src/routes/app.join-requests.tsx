@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +30,8 @@ function JoinRequestsPage() {
         title="طلبات انضمام المناديب"
         description="مراجعة طلبات المناديب الجدد للانضمام إلى شبكتك"
       />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} dir="rtl">
         <TabsList dir="rtl" className="rounded-xl mb-4">
           <TabsTrigger value="PENDING" className="rounded-lg">قيد المراجعة</TabsTrigger>

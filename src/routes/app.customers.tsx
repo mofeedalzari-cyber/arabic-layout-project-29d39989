@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -286,6 +287,8 @@ function CustomersPage() {
   return (
     <>
       <PageHeader title="الزبائن" description="إدارة حسابات الزبائن وإحصائياتهم" />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         <StatCard icon={<Users className="h-4 w-4" />} label="إجمالي الزبائن" value={String(totals.customers)} />

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -116,6 +117,8 @@ function SuperAdminPage() {
   return (
     <div dir="rtl" className="space-y-4">
       <PageHeader title="مدير التطبيق العام" description="عرض شامل لكل الشبكات والمناديب والباقات والكروت." />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
