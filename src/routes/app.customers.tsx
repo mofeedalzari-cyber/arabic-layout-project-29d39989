@@ -102,6 +102,61 @@ function CustomersPage() {
   );
   const selectedTotal = selectedSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
 
+  async function handleDelete(c: Customer) {
+    const { error } = await supabase.from("customers").delete().eq("id", c.id);
+    if (error) {
+      toast.error("تعذر حذف الزبون: " + error.message);
+      return;
+    }
+    toast.success("تم حذف الزبون");
+    setConfirmDelete(null);
+    if (selected?.id === c.id) setSelected(null);
+    qc.invalidateQueries({ queryKey: ["customers-page"] });
+    qc.invalidateQueries({ queryKey: ["customer-sales"] });
+  }
+
+  async function sendStatementWhatsApp(c: Customer) {
+    if (sendingId) return;
+    const custSales = (sales ?? []).filter((s) => s.customer_id === c.id);
+    const total = custSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+    setSendingId(c.id);
+    try {
+      const { exportToPDF } = await import("@/lib/dashboard-export");
+      const summary = [
+        { label: "اسم الزبون", value: c.name },
+        { label: "واتساب", value: displayPhone(c.whatsapp, "—") },
+        { label: "عدد العمليات", value: custSales.length },
+        { label: "إجمالي المبيعات", value: fmtMoney(total) },
+      ];
+      const sections = [
+        {
+          title: "سجل المبيعات",
+          cols: ["رقم العملية", "الفئة", "الشبكة", "القيمة", "تاريخ البيع"],
+          rows: custSales.map((s) => [
+            s.transaction_no ?? "—",
+            s.package_name,
+            s.network_name,
+            fmtMoney(Number(s.price)),
+            fmtArabicDateTimePdf(s.sold_at),
+          ]),
+        },
+      ];
+      await exportToPDF(`كشف_حساب_${c.name}`, summary, sections, {
+        reportName: `كشف حساب الزبون — ${c.name}`,
+      });
+      const wa = String(c.whatsapp ?? "").replace(/\D/g, "");
+      if (wa) {
+        const msg = `كشف حساب ${c.name}\nعدد العمليات: ${custSales.length}\nإجمالي المبيعات: ${fmtMoney(total)}`;
+        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank");
+      }
+    } catch (err) {
+      toast.error("تعذر إنشاء الكشف: " + String((err as any)?.message || err).slice(0, 120));
+    } finally {
+      setSendingId(null);
+    }
+  }
+
+
   return (
     <>
       <PageHeader title="الزبائن" description="إدارة حسابات الزبائن وإحصائياتهم" />
