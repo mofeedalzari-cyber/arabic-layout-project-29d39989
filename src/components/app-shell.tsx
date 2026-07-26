@@ -18,6 +18,7 @@ const NAV: NavItem[] = [
   { to: "/app/superadmin", label: "إدارة التطبيق", icon: ShieldCheck, superOnly: true },
   { to: "/app/networks", label: "الشبكات", icon: Wifi },
   { to: "/app/cabin", label: "كبينة البيع", icon: Store, agentOnly: true },
+  { to: "/app/customers", label: "الزبائن", icon: Users, agentOnly: true },
   { to: "/app/packages", label: "الباقات", icon: Package },
   { to: "/app/requests", label: "الطلبات", icon: Inbox },
   { to: "/app/join-requests", label: "طلبات الانضمام", icon: UserPlus, adminOnly: true },
