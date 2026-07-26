@@ -425,3 +425,62 @@ function AddPackageDialog({ networks }: { networks: any[] }) {
     </Dialog>
   );
 }
+
+function MyNetworkPanel({ myNetwork, onCreated }: { myNetwork: any | null; onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const m = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("create_my_network", { _name: name.trim() });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم إنشاء شبكتك بنجاح");
+      setOpen(false); setName("");
+      onCreated();
+    },
+    onError: (e: any) => toast.error(e.message ?? "فشل الإنشاء"),
+  });
+
+  if (myNetwork) {
+    return (
+      <Card className="p-4 flex items-center justify-between gap-3 bg-primary/5 border-primary/30">
+        <div className="flex items-center gap-3">
+          <Wifi className="h-5 w-5 text-primary" />
+          <div>
+            <div className="text-sm text-muted-foreground">شبكتي الخاصة</div>
+            <div className="font-bold text-base">{myNetwork.name}</div>
+          </div>
+        </div>
+        <div className="text-xs text-muted-foreground text-left">
+          استخدم القائمة الجانبية لإدارة الباقات والمناديب والطلبات
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-4 flex items-center justify-between gap-3 border-dashed">
+      <div>
+        <div className="font-semibold">أنشئ شبكتك الخاصة كمدير تطبيق</div>
+        <div className="text-xs text-muted-foreground mt-1">ستستطيع إضافة باقات ومناديب وقبول طلبات الانضمام مثل أي مدير شبكة.</div>
+      </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button><Plus className="h-4 w-4 ml-1" />إنشاء شبكتي</Button>
+        </DialogTrigger>
+        <DialogContent dir="rtl">
+          <DialogHeader><DialogTitle>إنشاء شبكة خاصة</DialogTitle></DialogHeader>
+          <div className="space-y-2">
+            <Label>اسم الشبكة</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: شبكة مدير التطبيق" />
+          </div>
+          <DialogFooter>
+            <Button disabled={m.isPending || !name.trim()} onClick={() => m.mutate()}>حفظ</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
