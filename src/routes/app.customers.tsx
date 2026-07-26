@@ -118,43 +118,98 @@ function CustomersPage() {
   async function sendStatementWhatsApp(c: Customer) {
     if (sendingId) return;
     const custSales = (sales ?? []).filter((s) => s.customer_id === c.id);
-    const total = custSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+    if (custSales.length === 0) {
+      toast.error("لا توجد عمليات بيع لهذا الزبون");
+      return;
+    }
     setSendingId(c.id);
     try {
-      const { exportToPDF } = await import("@/lib/dashboard-export");
-      const summary = [
-        { label: "اسم الزبون", value: c.name },
-        { label: "واتساب", value: displayPhone(c.whatsapp, "—") },
-        { label: "عدد العمليات", value: custSales.length },
-        { label: "إجمالي المبيعات", value: fmtMoney(total) },
-      ];
-      const sections = [
-        {
-          title: "سجل المبيعات",
-          cols: ["رقم العملية", "الفئة", "الشبكة", "القيمة", "تاريخ البيع"],
-          rows: custSales.map((s) => [
-            s.transaction_no ?? "—",
-            s.package_name,
-            s.network_name,
-            fmtMoney(Number(s.price)),
-            fmtArabicDateTimePdf(s.sold_at),
-          ]),
-        },
-      ];
-      await exportToPDF(`كشف_حساب_${c.name}`, summary, sections, {
-        reportName: `كشف حساب الزبون — ${c.name}`,
+      // Fetch admin profile + network
+      const uid = user?.id;
+      let adminName = "";
+      let adminUsername = "";
+      let networkName = "";
+      let currency = "ر.س";
+      let networkPhone = "";
+      let networkRegion = "";
+      if (uid) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("username, full_name, phone, network_id")
+          .eq("id", uid)
+          .maybeSingle();
+        adminName = (prof as any)?.full_name || (prof as any)?.username || "";
+        adminUsername = (prof as any)?.username || "";
+        networkPhone = String((prof as any)?.phone || "").replace(/\D/g, "");
+        const netId = (prof as any)?.network_id;
+        if (netId) {
+          const { data: net } = await supabase
+            .from("networks")
+            .select("name, currency, description")
+            .eq("id", netId)
+            .maybeSingle();
+          networkName = (net as any)?.name || "";
+          currency = (net as any)?.currency || "ر.س";
+          networkRegion = (net as any)?.description || "";
+        }
+      }
+      // Fallback to sales data
+      if (!networkName) networkName = custSales[0]?.network_name || "";
+
+      // Group sales by package_name + price → qty
+      const map = new Map<string, { packageName: string; networkName: string; qty: number; price: number }>();
+      for (const s of custSales) {
+        const key = `${s.package_name}||${Number(s.price)}`;
+        const cur = map.get(key);
+        if (cur) cur.qty += 1;
+        else map.set(key, { packageName: s.package_name, networkName: s.network_name, qty: 1, price: Number(s.price) || 0 });
+      }
+      const items = Array.from(map.values());
+      const total = custSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+
+      // Arabic date d/m/yyyy
+      const now = new Date();
+      const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+
+      const { buildCustomerInvoicePdfBlob } = await import("@/lib/customer-invoice-pdf");
+      const { sharePdfBlob } = await import("@/lib/native-pdf");
+      const blob = await buildCustomerInvoicePdfBlob({
+        networkName,
+        networkRegion,
+        networkPhone,
+        adminName,
+        adminUsername,
+        customerName: c.name,
+        items,
+        currency,
+        dateStr,
       });
+      await sharePdfBlob({
+        blob,
+        filename: `فاتورة_${c.name}`,
+        dialogTitle: "مشاركة الفاتورة",
+      });
+
       const wa = String(c.whatsapp ?? "").replace(/\D/g, "");
       if (wa) {
-        const msg = `كشف حساب ${c.name}\nعدد العمليات: ${custSales.length}\nإجمالي المبيعات: ${fmtMoney(total)}`;
+        const msg =
+          `الأخ/  الكريم\n\n` +
+          `${c.name}\n\n` +
+          `التاريخ : ${dateStr}\n\n` +
+          `نود أن نبلغكم أنه قد تم إضافة مبلغ وقدره   ${fmtMoney(total)}.\n\n` +
+          `*(فاتورة بيع آجـــل)*\n\n` +
+          `الرصيد عليكم ${fmtMoney(total)}.\n\n` +
+          `مع خالص التقدير والاحترام،\n\n` +
+          `فريق ${networkName || "الشبكة"}`;
         window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank");
       }
     } catch (err) {
-      toast.error("تعذر إنشاء الكشف: " + String((err as any)?.message || err).slice(0, 120));
+      toast.error("تعذر إنشاء الفاتورة: " + String((err as any)?.message || err).slice(0, 120));
     } finally {
       setSendingId(null);
     }
   }
+
 
 
   return (
