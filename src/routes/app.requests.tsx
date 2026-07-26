@@ -76,6 +76,26 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
   const [reason, setReason] = useState("");
   const [payFor, setPayFor] = useState<any>(null);
   const [payAmount, setPayAmount] = useState<string>("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const del = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("card_requests").delete().in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم الحذف");
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["card-requests"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const toggleSel = (id: string) => setSelected((s) => {
+    const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n;
+  });
+  const allSelected = !!rows?.length && rows.every((r: any) => selected.has(r.id));
+  const toggleAll = () => setSelected(allSelected ? new Set() : new Set((rows ?? []).map((r: any) => r.id)));
 
   const approve = useMutation({
     mutationFn: async (id: string) => {
