@@ -37,7 +37,6 @@ function SalesPage() {
   const isAdmin = role === "admin";
   const qc = useQueryClient();
   const [q, setQ] = useState("");
-  const [toDelete, setToDelete] = useState<SaleRow | null>(null);
   const [toEdit, setToEdit] = useState<SaleRow | null>(null);
   const [editBuyer, setEditBuyer] = useState("");
   const [editPrice, setEditPrice] = useState("");
