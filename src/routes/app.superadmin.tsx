@@ -238,7 +238,7 @@ function SuperAdminPage() {
                   {(agents.data ?? []).filter((a: any) => !agentsNetFilter || a.network_id === agentsNetFilter).map((a: any) => (
                     <tr key={a.id} className="border-t">
                       <Td>{a.full_name ?? "—"}</Td>
-                      <Td>{a.username}</Td>
+                      <Td>{cleanPhoneLike(a.username)}</Td>
                       <Td dir="ltr">{displayPhone(a.phone, a.username)}</Td>
                       <Td>{a.network_name ?? "—"}</Td>
                       <Td>{a.role === "admin" ? "مدير" : "مندوب"}</Td>
