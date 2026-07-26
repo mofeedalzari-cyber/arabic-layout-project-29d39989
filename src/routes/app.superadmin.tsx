@@ -338,13 +338,19 @@ function SuperAdminPage() {
                 </thead>
                 <tbody>
                   {(cards.data ?? []).map((c: any) => (
-                    <tr key={c.id} className="border-t">
+                    <tr key={c.id} className={
+                      "border-t " + (
+                        c.status === "AVAILABLE" ? "bg-success/10" :
+                        c.status === "ASSIGNED" ? "bg-blue-500/10" :
+                        c.status === "SOLD" ? "bg-destructive/10" : ""
+                      )
+                    }>
                       <Td dir="ltr" className="font-mono">{c.username}</Td>
                       <Td dir="ltr" className="font-mono">{c.password ?? "—"}</Td>
                       <Td>
-                        {c.status === "SOLD" ? <Badge>مباع</Badge> :
-                         c.status === "ASSIGNED" ? <Badge variant="secondary">مسحوب</Badge> :
-                         <Badge variant="outline">متاح</Badge>}
+                        {c.status === "SOLD" ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-destructive/15 text-destructive border border-destructive/30">مباع</span> :
+                         c.status === "ASSIGNED" ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">مسحوب</span> :
+                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30">متاح</span>}
                       </Td>
                       <Td>{c.package_name}</Td>
                       <Td>{c.network_name}</Td>

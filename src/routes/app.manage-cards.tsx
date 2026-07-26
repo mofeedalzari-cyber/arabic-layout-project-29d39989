@@ -394,7 +394,18 @@ function ManageCardsPage() {
                   const isRevealed = revealed.has(c.id);
                   const code = c.password ?? c.username;
                   return (
-                    <tr key={c.id} className={selected.has(c.id) ? "bg-primary/5" : "hover:bg-muted/30"}>
+                    <tr key={c.id} className={
+                      selected.has(c.id)
+                        ? "bg-primary/10"
+                        : c.status === "AVAILABLE"
+                          ? "bg-success/10 hover:bg-success/15"
+                          : c.status === "ASSIGNED"
+                            ? "bg-blue-500/10 hover:bg-blue-500/15"
+                            : c.status === "SOLD"
+                              ? "bg-destructive/10 hover:bg-destructive/15"
+                              : "hover:bg-muted/30"
+                    }>
+
                       <td className="p-3"><Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggle(c.id)} /></td>
                       <td className="p-3 text-muted-foreground">{(currentPage - 1) * PAGE_SIZE + idx + 1}</td>
                       <td className="p-3 font-mono text-xs whitespace-nowrap">{isRevealed ? code : mask(code)}</td>
