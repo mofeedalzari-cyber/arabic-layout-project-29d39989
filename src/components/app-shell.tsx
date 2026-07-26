@@ -10,6 +10,7 @@ import {
   ScrollText, Settings, LogOut, Menu, Moon, Sun, Store, Inbox, CreditCard, Calculator, UserPlus, HandCoins, ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 
 interface NavItem { to: string; label: string; icon: typeof Wifi; adminOnly?: boolean; agentOnly?: boolean; superOnly?: boolean }
 
@@ -34,6 +35,7 @@ const NAV: NavItem[] = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { profile, role, isSuperadmin, signOut } = useAuth();
+  useRealtimeSync();
   const items = NAV.filter((n) => {
     if (n.superOnly) return isSuperadmin;
     if (n.adminOnly) return role === "admin" || isSuperadmin;
