@@ -452,42 +452,8 @@ function AgentHome({ name }: { name: string }) {
   return (
     <div dir="rtl" className="w-full max-w-full overflow-hidden text-right">
 
-      <PageHeader title={`أهلاً، ${name}`} description="اختر الباقة وابدأ البيع" />
+      <PageHeader title={`أهلاً، ${name}`} description="لوحة البيع" />
 
-      <div className="mb-3 flex items-center gap-2">
-        <Package className="h-4 w-4 text-primary" />
-        <h3 className="font-bold text-sm sm:text-base">الباقات المتاحة</h3>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
-        {packages?.map((p) => (
-          <Link key={p.id} to="/app/cabin" className="group block">
-            <Card className="overflow-hidden border-0 shadow-md transition-transform duration-200 active:scale-[0.98]">
-              <div
-                className="h-28 sm:h-32 relative flex items-center justify-center gradient-primary-bg"
-              >
-                <Package className="h-12 w-12 sm:h-14 sm:w-14 text-white drop-shadow-sm" />
-              </div>
-              <div className="p-4 bg-background text-right">
-                <h3 className="font-bold text-base sm:text-lg mb-1 [overflow-wrap:anywhere] text-foreground">{p.name}</h3>
-                {p.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{p.description}</p>}
-                <div className="flex items-center justify-between mt-2">
-                  <div className="text-sm font-bold text-primary">{fmtMoney(Number(p.price || 0))}</div>
-                  <div className="text-xs sm:text-sm font-semibold text-primary inline-flex items-center gap-1">
-                    بيع الآن
-                    <span>←</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </Link>
-        ))}
-        {packages?.length === 0 && (
-          <div className="col-span-full">
-            <EmptyMsg>لا توجد باقات متاحة حاليًا.</EmptyMsg>
-          </div>
-        )}
-      </div>
 
       {user && (
         <div className="mb-4">
