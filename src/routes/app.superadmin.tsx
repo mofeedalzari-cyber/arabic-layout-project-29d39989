@@ -18,10 +18,12 @@ import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search, Power
 export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
 
 function SuperAdminPage() {
-  const { role, loading, profile } = useAuth();
+  const { loading, profile, isSuperadmin } = useAuth();
   const qc = useQueryClient();
   if (loading) return null;
-  if (role !== "superadmin") return <Navigate to="/app" />;
+  if (!isSuperadmin) return <Navigate to="/app" />;
+
+
 
 
 

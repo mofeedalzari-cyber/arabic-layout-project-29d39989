@@ -18,10 +18,12 @@ interface AuthContextValue {
   session: Session | null;
   profile: Profile | null;
   role: Role | null;
+  isSuperadmin: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 }
+
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -34,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<Role | null>(null);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (uid: string) => {
@@ -42,12 +45,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
     setProfile(prof as Profile | null);
-    const r = roles?.find((x) => x.role === "superadmin")?.role
-      ?? roles?.find((x) => x.role === "admin")?.role
-      ?? roles?.find((x) => x.role === "agent")?.role
-      ?? null;
+    const has = (name: string) => !!roles?.find((x) => x.role === name);
+    setIsSuperadmin(has("superadmin"));
+    // Effective role: prefer admin/agent so superadmin users get the same UI
+    // as a network admin. isSuperadmin exposes the extra capability separately.
+    const r = has("admin") ? "admin"
+      : has("agent") ? "agent"
+      : has("superadmin") ? "superadmin"
+      : null;
     setRole((r as Role | null) ?? null);
   };
+
 
   useEffect(() => {
     let mounted = true;
@@ -61,8 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setRole(null);
+        setIsSuperadmin(false);
       }
     });
+
 
     (async () => {
       try {
@@ -91,13 +101,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
-    user, session, profile, role, loading,
+    user, session, profile, role, isSuperadmin, loading,
+
     signOut: async () => {
       // Clear local state first so UI updates immediately
       setSession(null);
       setUser(null);
       setProfile(null);
       setRole(null);
+      setIsSuperadmin(false);
+
       try {
         await supabase.auth.signOut({ scope: "local" });
       } catch (e) {
@@ -115,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     refresh: async () => { if (user) await loadProfile(user.id); },
-  }), [user, session, profile, role, loading]);
+  }), [user, session, profile, role, isSuperadmin, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

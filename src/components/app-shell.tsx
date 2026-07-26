@@ -15,7 +15,7 @@ interface NavItem { to: string; label: string; icon: typeof Wifi; adminOnly?: bo
 
 const NAV: NavItem[] = [
   { to: "/app", label: "الرئيسية", icon: LayoutDashboard },
-  { to: "/app/superadmin", label: "مدير التطبيق", icon: ShieldCheck, superOnly: true },
+  { to: "/app/superadmin", label: "إدارة التطبيق", icon: ShieldCheck, superOnly: true },
   { to: "/app/networks", label: "الشبكات", icon: Wifi },
   { to: "/app/cabin", label: "كبينة البيع", icon: Store, agentOnly: true },
   { to: "/app/packages", label: "الباقات", icon: Package },
@@ -32,13 +32,14 @@ const NAV: NavItem[] = [
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { profile, role, signOut } = useAuth();
+  const { profile, role, isSuperadmin, signOut } = useAuth();
   const items = NAV.filter((n) => {
-    if (n.superOnly) return role === "superadmin";
-    if (n.adminOnly) return role === "admin" || role === "superadmin";
-    if (n.agentOnly) return role === "agent";
+    if (n.superOnly) return isSuperadmin;
+    if (n.adminOnly) return role === "admin" || isSuperadmin;
+    if (n.agentOnly) return role === "agent" && !isSuperadmin;
     return true;
   });
+
   const [dark, setDark] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -75,7 +76,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
             {items.map((it) => <NavLink key={it.to} item={it} />)}
           </nav>
-          <UserFooter fullName={profile?.full_name ?? ""} username={profile?.username ?? ""} phone={profile?.phone ?? ""} role={role} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
+          <UserFooter fullName={profile?.full_name ?? ""} username={profile?.username ?? ""} phone={profile?.phone ?? ""} role={role} isSuperadmin={isSuperadmin} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
+
 
         </aside>
       )}
@@ -128,7 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {items.map((it) => <NavLink key={it.to} item={it} />)}
                 </nav>
                 <div className="shrink-0 pb-3">
-                  <UserFooter fullName={profile?.full_name ?? ""} username={profile?.username ?? ""} phone={profile?.phone ?? ""} role={role} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
+                  <UserFooter fullName={profile?.full_name ?? ""} username={profile?.username ?? ""} phone={profile?.phone ?? ""} role={role} isSuperadmin={isSuperadmin} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
                 </div>
               </SheetContent>
             </Sheet>
@@ -225,11 +227,12 @@ function BottomLink({ item }: { item: NavItem }) {
   );
 }
 
-function UserFooter({ fullName, username, phone, role, onSignOut, dark, onToggleTheme }: {
-  fullName?: string | null; username: string; phone?: string | null; role: string | null; onSignOut: () => void; dark: boolean; onToggleTheme: () => void;
+function UserFooter({ fullName, username, phone, role, isSuperadmin, onSignOut, dark, onToggleTheme }: {
+  fullName?: string | null; username: string; phone?: string | null; role: string | null; isSuperadmin?: boolean; onSignOut: () => void; dark: boolean; onToggleTheme: () => void;
 }) {
   const phoneText = displayPhone(phone, username);
   const displayName = (fullName && fullName.trim()) || phoneText;
+  const roleLabel = isSuperadmin ? "مدير التطبيق" : role === "admin" ? "مدير" : "مندوب";
   return (
     <div className="p-3 border-t border-sidebar-border space-y-2">
       <div className="flex items-center gap-3 p-2 rounded-xl bg-sidebar-accent/40">
@@ -238,9 +241,10 @@ function UserFooter({ fullName, username, phone, role, onSignOut, dark, onToggle
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold truncate">{displayName}</div>
-          <div className="text-[11px] text-muted-foreground">{role === "superadmin" ? "مدير التطبيق" : role === "admin" ? "مدير" : "مندوب"}</div>
+          <div className="text-[11px] text-muted-foreground">{roleLabel}</div>
         </div>
       </div>
+
 
       <div className="flex gap-2">
         <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={onToggleTheme}>
