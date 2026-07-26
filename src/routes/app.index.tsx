@@ -369,52 +369,57 @@ function SummaryItem({ label, value, tone }: { label: string; value: string; ton
 
 function AgentHome({ name }: { name: string }) {
   const { user, profile } = useAuth();
-  const { data: networks } = useQuery({
-    queryKey: ["agent-networks"],
+  const { data: packages } = useQuery({
+    queryKey: ["agent-packages", profile?.network_id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("networks")
-        .select("id, name, description, primary_color, secondary_color, logo_url, cover_url, currency")
-        .eq("is_active", true).order("created_at");
+      if (!profile?.network_id) return [];
+      const { data, error } = await supabase.from("packages")
+        .select("id, name, description, price, allowed_time, currency, network_id")
+        .eq("network_id", profile.network_id)
+        .eq("is_active", true)
+        .order("price", { ascending: true });
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
+    enabled: !!profile?.network_id,
   });
-
 
   return (
     <div dir="rtl" className="w-full max-w-full overflow-hidden text-right">
 
-      <PageHeader title={`أهلاً، ${name}`} description="اختر الشبكة ثم اطلع على إحصائياتك" />
+      <PageHeader title={`أهلاً، ${name}`} description="اختر الباقة وابدأ البيع" />
 
       <div className="mb-3 flex items-center gap-2">
-        <Wifi className="h-4 w-4 text-primary" />
-        <h3 className="font-bold text-sm sm:text-base">الشبكات المتاحة</h3>
+        <Package className="h-4 w-4 text-primary" />
+        <h3 className="font-bold text-sm sm:text-base">الباقات المتاحة</h3>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
-        {networks?.map((n) => (
-          <Link key={n.id} to="/app/networks/$id" params={{ id: n.id }} className="group block">
+        {packages?.map((p) => (
+          <Link key={p.id} to="/app/cabin" className="group block">
             <Card className="overflow-hidden border-0 shadow-md transition-transform duration-200 active:scale-[0.98]">
               <div
-                className="h-32 sm:h-36 relative flex items-center justify-center"
-                style={{ background: `linear-gradient(135deg, ${n.primary_color || "#ef4444"}, ${n.secondary_color || "#14b8a6"})` }}
+                className="h-28 sm:h-32 relative flex items-center justify-center gradient-primary-bg"
               >
-                <Wifi className="h-14 w-14 sm:h-16 sm:w-16 text-white drop-shadow-sm" />
+                <Package className="h-12 w-12 sm:h-14 sm:w-14 text-white drop-shadow-sm" />
               </div>
               <div className="p-4 bg-background text-right">
-                <h3 className="font-bold text-base sm:text-lg mb-1 [overflow-wrap:anywhere] text-foreground">{n.name}</h3>
-                {n.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{n.description}</p>}
-                <div className="text-xs sm:text-sm font-semibold text-primary inline-flex items-center gap-1">
-                  عرض الباقات
-                  <span>←</span>
+                <h3 className="font-bold text-base sm:text-lg mb-1 [overflow-wrap:anywhere] text-foreground">{p.name}</h3>
+                {p.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{p.description}</p>}
+                <div className="flex items-center justify-between mt-2">
+                  <div className="text-sm font-bold text-primary">{fmtMoney(Number(p.price || 0))}</div>
+                  <div className="text-xs sm:text-sm font-semibold text-primary inline-flex items-center gap-1">
+                    بيع الآن
+                    <span>←</span>
+                  </div>
                 </div>
               </div>
             </Card>
           </Link>
         ))}
-        {networks?.length === 0 && (
+        {packages?.length === 0 && (
           <div className="col-span-full">
-            <EmptyMsg>لا توجد شبكات متاحة حاليًا.</EmptyMsg>
+            <EmptyMsg>لا توجد باقات متاحة حاليًا.</EmptyMsg>
           </div>
         )}
       </div>
