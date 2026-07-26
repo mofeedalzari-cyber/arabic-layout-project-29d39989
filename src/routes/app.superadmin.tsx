@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { fmtMoney, displayPhone, fmtArabicDateTime } from "@/lib/format";
+import { fmtMoney, displayPhone, fmtArabicDateTime, cleanPhoneLike } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search, Power, PowerOff, Plus, Trash2 } from "lucide-react";
