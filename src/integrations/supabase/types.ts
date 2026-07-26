@@ -616,6 +616,14 @@ export type Database = {
         }[]
       }
       admin_network: { Args: { _uid: string }; Returns: string }
+      admin_reset_balance: {
+        Args: never
+        Returns: {
+          cleared: number
+          payments_deleted: number
+          requests_updated: number
+        }[]
+      }
       admin_stats: { Args: never; Returns: Json }
       admin_unassign_cards: { Args: { _ids: string[] }; Returns: number }
       admin_wipe_database: { Args: never; Returns: Json }
