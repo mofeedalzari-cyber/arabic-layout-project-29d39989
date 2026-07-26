@@ -169,13 +169,13 @@ function PaymentsPage() {
               <Row label="المندوب" value={agentName || "—"} />
               <Row label="الهاتف" value={agentPhone || "—"} />
               <Row label="الشبكة" value={network?.name ?? "—"} />
-              <Row label="إجمالي المستحق" value={`${fmtMoney(debt?.total ?? 0)} ${currency}`} />
-              <Row label="المدفوع سابقاً" value={`${fmtMoney(debt?.paid ?? 0)} ${currency}`} tone="success" />
-              <Row label="الدين المتبقي" value={`${fmtMoney(remaining)} ${currency}`} tone="warning" bold />
+              <Row label="إجمالي المستحق" value={fmtMoney(debt?.total ?? 0)} />
+              <Row label="المدفوع سابقاً" value={fmtMoney(debt?.paid ?? 0)} tone="success" />
+              <Row label="الدين المتبقي" value={fmtMoney(remaining)} tone="warning" bold />
               {Number(amount) > 0 && (
                 <Row
                   label="المتبقي بعد السداد"
-                  value={`${fmtMoney(Math.max(remaining - Number(amount), 0))} ${currency}`}
+                  value={fmtMoney(Math.max(remaining - Number(amount), 0))}
                   tone="primary" bold
                 />
               )}
@@ -216,8 +216,8 @@ function buildWhatsAppText(p: {
   return [
     `سند سداد — ${p.networkName}`,
     `المندوب: ${p.agentName}`,
-    `المبلغ المُسدَّد: ${fmtMoney(p.amount)} ${p.currency}`,
-    `الدين المتبقي: ${fmtMoney(p.remaining)} ${p.currency}`,
+    `المبلغ المُسدَّد: ${fmtMoney(p.amount)}`,
+    `الدين المتبقي: ${fmtMoney(p.remaining)}`,
     `التاريخ: ${new Date().toLocaleString("ar-EG")}`,
     `المدير: ${p.adminName}`,
     ``,
