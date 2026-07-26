@@ -45,20 +45,39 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
 
     // Fetch valid profile IDs belonging to this network (agents + owner).
     const { data: netProfiles } = await admin
-      .from("profiles").select("id").eq("network_id", networkId);
+      .from("profiles").select("id, username").eq("network_id", networkId);
     const allowedUserIds = new Set<string>(
       [userId, ...((netProfiles ?? []).map((p: any) => p.id as string))],
     );
+    // username -> current profile id, for remapping old agent IDs from backup
+    const usernameToId = new Map<string, string>();
+    for (const p of (netProfiles ?? [])) {
+      if (p?.username) usernameToId.set(String(p.username), p.id);
+    }
+    // old profile id -> username from backup
+    const oldIdToUsername = new Map<string, string>();
+    const backupProfiles = Array.isArray(payload.profiles) ? payload.profiles : [];
+    for (const p of backupProfiles) {
+      if (p?.id && p?.username) oldIdToUsername.set(String(p.id), String(p.username));
+    }
+    const remapUserId = (oldId: any): string | null => {
+      if (oldId == null) return null;
+      if (allowedUserIds.has(oldId)) return oldId;
+      const uname = oldIdToUsername.get(String(oldId));
+      if (uname && usernameToId.has(uname)) return usernameToId.get(uname)!;
+      return null;
+    };
 
     const remap = (rows: any): any[] =>
       Array.isArray(rows) ? rows.map((r) => ({ ...r, network_id: networkId })) : [];
 
-    // Strip any user-reference field that points outside this network.
+    // Remap user-reference fields to current profile IDs via username;
+    // set to null if the referenced user doesn't exist in the current network.
     const scrubUserRefs = (rows: any[], fields: string[]): any[] =>
       rows.map((r) => {
         const out = { ...r };
         for (const f of fields) {
-          if (out[f] != null && !allowedUserIds.has(out[f])) out[f] = null;
+          if (out[f] != null) out[f] = remapUserId(out[f]);
         }
         return out;
       });
