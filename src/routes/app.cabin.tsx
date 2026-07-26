@@ -35,7 +35,19 @@ interface Customer {
 }
 
 function normalizeWa(v: string) {
-  return String(v ?? "").replace(/\D/g, "");
+  let d = String(v ?? "").replace(/\D/g, "");
+  if (!d) return "";
+  // Strip existing country code / leading zero so we always store 967XXXXXXXXX
+  if (d.startsWith("967")) d = d.slice(3);
+  if (d.startsWith("0")) d = d.replace(/^0+/, "");
+  return "967" + d;
+}
+
+function localYemenDigits(v: string) {
+  let d = String(v ?? "").replace(/\D/g, "");
+  if (d.startsWith("967")) d = d.slice(3);
+  if (d.startsWith("0")) d = d.replace(/^0+/, "");
+  return d;
 }
 
 function CabinPage() {
@@ -236,7 +248,10 @@ function CabinPage() {
                 {addingCustomer ? (
                   <div className="space-y-2">
                     <Input placeholder="اسم الزبون" value={newName} onChange={(e) => setNewName(e.target.value)} className="rounded-xl bg-background" />
-                    <Input placeholder="رقم واتساب (مع رمز الدولة)" inputMode="tel" value={newWa} onChange={(e) => setNewWa(e.target.value)} className="rounded-xl bg-background" />
+                    <div className="flex items-stretch rounded-xl bg-background border border-input overflow-hidden" dir="ltr">
+                      <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">+967</span>
+                      <Input placeholder="7XXXXXXXX" inputMode="tel" value={localYemenDigits(newWa)} onChange={(e) => setNewWa(localYemenDigits(e.target.value))} className="flex-1 rounded-none border-0 bg-background font-mono" />
+                    </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setAddingCustomer(false); setNewName(""); setNewWa(""); }}>إلغاء</Button>
                       <Button size="sm" className="flex-1 rounded-xl gradient-primary-bg border-0" onClick={async () => { const c = await createCustomer(); if (c) setSelCustomer(c); }}>حفظ الزبون</Button>
@@ -300,7 +315,10 @@ function CabinPage() {
             <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
               <div className="text-xs text-muted-foreground font-semibold">إضافة زبون جديد</div>
               <Input placeholder="اسم الزبون" value={newName} onChange={(e) => setNewName(e.target.value)} className="rounded-xl bg-background" />
-              <Input placeholder="رقم واتساب (مع رمز الدولة)" inputMode="tel" value={newWa} onChange={(e) => setNewWa(e.target.value)} className="rounded-xl bg-background" />
+              <div className="flex items-stretch rounded-xl bg-background border border-input overflow-hidden" dir="ltr">
+                <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">+967</span>
+                <Input placeholder="7XXXXXXXX" inputMode="tel" value={localYemenDigits(newWa)} onChange={(e) => setNewWa(localYemenDigits(e.target.value))} className="flex-1 rounded-none border-0 bg-background font-mono" />
+              </div>
               <Button className="w-full rounded-xl gradient-primary-bg border-0" onClick={() => { void createCustomer(); }}>
                 <UserPlus className="h-4 w-4 ml-1" />حفظ
               </Button>
