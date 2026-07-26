@@ -294,7 +294,7 @@ function PackagesPage() {
               </div>
 
               {/* Actions */}
-              {isAdmin ? (
+              {canManage ? (
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setEditing(p); setOpen(true); }}>
                     <Edit3 className="h-4 w-4 ml-1" />تعديل
