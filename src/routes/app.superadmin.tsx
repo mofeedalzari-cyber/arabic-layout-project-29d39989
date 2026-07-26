@@ -161,7 +161,7 @@ function SuperAdminPage() {
                       <Td>{n.packages_count}</Td>
                       <Td>{n.cards_count}</Td>
                       <Td>{n.sold_count}</Td>
-                      <Td>{fmtMoney(Number(n.sold_value ?? 0))} {n.currency}</Td>
+                      <Td>{fmtMoney(Number(n.sold_value ?? 0))}</Td>
                       <Td>{n.is_active ? <Badge>نشطة</Badge> : <Badge variant="secondary">موقوفة</Badge>}</Td>
                       <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(n.created_at)}</Td>
                       <Td>
@@ -282,7 +282,7 @@ function SuperAdminPage() {
                     <tr key={p.id} className="border-t">
                       <Td className="font-semibold">{p.name}</Td>
                       <Td>{p.network_name}</Td>
-                      <Td>{fmtMoney(Number(p.price))} {p.currency}</Td>
+                      <Td>{fmtMoney(Number(p.price))}</Td>
                       <Td>{p.available}</Td>
                       <Td>{p.assigned}</Td>
                       <Td>{p.sold}</Td>
