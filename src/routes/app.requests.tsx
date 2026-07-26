@@ -153,6 +153,25 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
 
   return (
     <>
+      {isAdmin && (
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+            تحديد الكل
+          </label>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive border-destructive/40"
+            disabled={selected.size === 0 || del.isPending}
+            onClick={() => {
+              if (confirm(`حذف ${selected.size} طلب؟`)) del.mutate(Array.from(selected));
+            }}
+          >
+            <Trash2 className="h-4 w-4 ml-1" />حذف المحدد ({selected.size})
+          </Button>
+        </div>
+      )}
       <div className="space-y-3">
         {rows.map((r: any) => {
           const total = Number(r.total_value ?? 0);
@@ -165,6 +184,9 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
           return (
             <Card key={r.id} className="card-elegant border-0 p-4">
               <div className="flex items-start justify-between gap-2 mb-3">
+                {isAdmin && (
+                  <Checkbox className="mt-1" checked={selected.has(r.id)} onCheckedChange={() => toggleSel(r.id)} />
+                )}
                 <div className="min-w-0 flex-1 space-y-1 text-sm">
                   <div className="font-bold text-base">
                     <span className="text-muted-foreground text-xs font-normal">المندوب: </span>
