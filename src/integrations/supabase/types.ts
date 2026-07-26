@@ -686,7 +686,7 @@ export type Database = {
       username_from_phone: { Args: { _phone: string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "agent"
+      app_role: "admin" | "agent" | "superadmin"
       card_status: "AVAILABLE" | "ASSIGNED" | "SOLD"
     }
     CompositeTypes: {
@@ -815,7 +815,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "agent"],
+      app_role: ["admin", "agent", "superadmin"],
       card_status: ["AVAILABLE", "ASSIGNED", "SOLD"],
     },
   },
