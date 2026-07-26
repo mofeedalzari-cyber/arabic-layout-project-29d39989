@@ -235,7 +235,7 @@ function SuperAdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(agents.data ?? []).map((a: any) => (
+                  {(agents.data ?? []).filter((a: any) => !agentsNetFilter || a.network_id === agentsNetFilter).map((a: any) => (
                     <tr key={a.id} className="border-t">
                       <Td>{a.full_name ?? "—"}</Td>
                       <Td>{a.username}</Td>
