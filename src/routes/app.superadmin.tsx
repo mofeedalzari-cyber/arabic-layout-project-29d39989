@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { fmtMoney, displayPhone, fmtArabicDateTime } from "@/lib/format";
+import { fmtMoney, displayPhone, fmtArabicDateTime, cleanPhoneLike } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search, Power, PowerOff, Plus, Trash2 } from "lucide-react";
@@ -155,7 +155,7 @@ function SuperAdminPage() {
                   {(networks.data ?? []).map((n: any) => (
                     <tr key={n.id} className="border-t">
                       <Td className="font-semibold">{n.name}</Td>
-                      <Td>{n.owner_username ?? "—"}</Td>
+                      <Td>{cleanPhoneLike(n.owner_username) || "—"}</Td>
                       <Td dir="ltr">{displayPhone(n.owner_phone, n.owner_username)}</Td>
                       <Td>{n.agents_count}</Td>
                       <Td>{n.packages_count}</Td>
@@ -238,7 +238,7 @@ function SuperAdminPage() {
                   {(agents.data ?? []).filter((a: any) => !agentsNetFilter || a.network_id === agentsNetFilter).map((a: any) => (
                     <tr key={a.id} className="border-t">
                       <Td>{a.full_name ?? "—"}</Td>
-                      <Td>{a.username}</Td>
+                      <Td>{cleanPhoneLike(a.username)}</Td>
                       <Td dir="ltr">{displayPhone(a.phone, a.username)}</Td>
                       <Td>{a.network_name ?? "—"}</Td>
                       <Td>{a.role === "admin" ? "مدير" : "مندوب"}</Td>
@@ -348,7 +348,7 @@ function SuperAdminPage() {
                       </Td>
                       <Td>{c.package_name}</Td>
                       <Td>{c.network_name}</Td>
-                      <Td>{c.sold_username ?? c.assigned_username ?? "—"}</Td>
+                      <Td>{cleanPhoneLike(c.sold_username ?? c.assigned_username) || "—"}</Td>
                       <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(c.created_at)}</Td>
                       <Td className="whitespace-nowrap text-xs">{c.sold_at ? fmtArabicDateTime(c.sold_at) : "—"}</Td>
                     </tr>

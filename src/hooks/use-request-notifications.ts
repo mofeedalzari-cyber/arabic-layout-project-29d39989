@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { cleanPhoneLike } from "@/lib/format";
 
 /**
  * تنبيهات صوتية + إشعارات فورية:
@@ -92,7 +93,7 @@ export function useRequestNotifications() {
           if (!id || seenAdmin.current.has(id)) return;
           seenAdmin.current.add(id);
 
-          const agent = row?.agent_username ?? "مندوب";
+          const agent = cleanPhoneLike(row?.agent_username) || "مندوب";
           const pkg = row?.package_name ?? "باقة";
           const qty = row?.quantity ?? "";
 
