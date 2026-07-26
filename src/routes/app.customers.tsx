@@ -416,44 +416,72 @@ function CustomersPage() {
 
               <div>
                 <div className="text-sm font-semibold mb-2">سجل المبيعات</div>
-                <div className="grid gap-2">
-                  {selectedSales.map((s) => (
-                    <Card key={s.id} className="p-3 border-0 card-elegant">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="font-semibold truncate">{s.package_name}</div>
-                          <div className="text-[11px] text-muted-foreground">
-                            {s.network_name} · {fmtArabicDateTime(s.sold_at)}
-                          </div>
-                          <div className="text-[10px] text-muted-foreground font-mono">{s.transaction_no}</div>
-                          {s.card_username && (
-                            <div className="mt-1 flex items-center gap-1 text-[11px] text-primary font-mono">
-                              <CreditCard className="h-3 w-3" />
-                              <span>{s.card_username}</span>
-                              {s.card_password && <span className="text-muted-foreground">/ {s.card_password}</span>}
-                            </div>
-                          )}
-                          {s.buyer_name && <div className="text-[11px] text-muted-foreground">المشتري: {s.buyer_name}</div>}
-                        </div>
-                        <div className="flex flex-col items-end gap-1 shrink-0">
-                          <div className="text-primary font-bold text-sm">{fmtMoney(Number(s.price))}</div>
-                          <div className="flex gap-1">
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openSaleEdit(s)} title="تعديل">
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setSaleToDelete(s)} title="حذف">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                  {selectedSales.length === 0 && (
-                    <div className="text-center text-muted-foreground py-8 text-sm">لا توجد عمليات بيع لهذا الزبون.</div>
-                  )}
-                </div>
+                {selectedSales.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8 text-sm">لا توجد عمليات بيع لهذا الزبون.</div>
+                ) : (
+                  <Card className="border-0 card-elegant overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="text-right whitespace-nowrap">#</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">الباقة</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">الكرت</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">التاريخ</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">رقم العملية</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">السعر</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">إجراءات</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {selectedSales.map((s, idx) => (
+                            <TableRow key={s.id}>
+                              <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
+                              <TableCell>
+                                <div className="font-semibold">{s.package_name}</div>
+                                <div className="text-[11px] text-muted-foreground">{s.network_name}</div>
+                                {s.buyer_name && (
+                                  <div className="text-[11px] text-muted-foreground">المشتري: {s.buyer_name}</div>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {s.card_username ? (
+                                  <div className="flex items-center gap-1 text-[12px] text-primary font-mono">
+                                    <CreditCard className="h-3 w-3" />
+                                    <span>{s.card_username}</span>
+                                    {s.card_password && <span className="text-muted-foreground">/ {s.card_password}</span>}
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-[11px] whitespace-nowrap">{fmtArabicDateTime(s.sold_at)}</TableCell>
+                              <TableCell className="text-[10px] font-mono text-muted-foreground whitespace-nowrap">{s.transaction_no}</TableCell>
+                              <TableCell className="text-primary font-bold whitespace-nowrap">{fmtMoney(Number(s.price))}</TableCell>
+                              <TableCell>
+                                <div className="flex gap-1">
+                                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openSaleEdit(s)} title="تعديل">
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setSaleToDelete(s)} title="حذف">
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow className="bg-primary/5 font-bold">
+                            <TableCell colSpan={5} className="text-right">الإجمالي</TableCell>
+                            <TableCell className="text-primary whitespace-nowrap">{fmtMoney(selectedTotal)}</TableCell>
+                            <TableCell />
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Card>
+                )}
               </div>
+
             </div>
           )}
         </SheetContent>
