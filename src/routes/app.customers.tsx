@@ -182,33 +182,31 @@ function CustomersPage() {
       const now = new Date();
       const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
 
+      // Build items lines for the text message
+      const itemsLines = items
+        .map(
+          (it) =>
+            `• ${it.packageName} — ${it.qty} × ${fmtMoney(it.price)} = ${fmtMoney(it.qty * it.price)}`,
+        )
+        .join("\n");
+
       const msg =
         `الأخ/  الكريم\n\n` +
         `${c.name}\n\n` +
         `التاريخ : ${dateStr}\n\n` +
+        (itemsLines ? `${itemsLines}\n\n` : "") +
         `نود أن نبلغكم أنه قد تم إضافة إلى حسابكم مبلغ وقدره ${fmtMoney(total)}.\n\n` +
         `*(فاتورة بيع آجـــل)*\n\n` +
         `الرصيد عليكم ${fmtMoney(total)}.\n\n` +
         `مع خالص التقدير والاحترام،\n\n` +
         `فريق ${networkName || "الشبكة"}`;
 
-      const { shareInvoiceImageOnWhatsApp } = await import("@/lib/customer-invoice-image");
-      await shareInvoiceImageOnWhatsApp({
-        invoice: {
-          networkName,
-          networkRegion,
-          networkPhone,
-          adminName,
-          adminUsername,
-          customerName: c.name,
-          items,
-          currency,
-          dateStr,
-        },
-        message: msg,
-        whatsappPhone: c.whatsapp || undefined,
-        filenameBase: `كشف_${c.name}`,
-      });
+      if (!c.whatsapp) {
+        toast.error("لا يوجد رقم واتساب لهذا الزبون");
+        return;
+      }
+      await openWhatsApp(c.whatsapp, msg);
+
     } catch (err) {
       toast.error("تعذر إنشاء الفاتورة: " + String((err as any)?.message || err).slice(0, 120));
     } finally {
