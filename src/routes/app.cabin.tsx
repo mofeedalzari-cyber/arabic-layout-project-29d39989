@@ -113,7 +113,7 @@ function CabinPage() {
       toast.error(key ? map[key] : error.message);
       return;
     }
-    const sale = Array.isArray(data) ? data[0] : data;
+    const sale: any = Array.isArray(data) ? data[0] : data;
     if (selCustomer && sale?.sale_id) {
       await supabase.from("sales")
         .update({ customer_id: selCustomer.id, buyer_name: selCustomer.name })
