@@ -315,7 +315,10 @@ function CabinPage() {
             <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
               <div className="text-xs text-muted-foreground font-semibold">إضافة زبون جديد</div>
               <Input placeholder="اسم الزبون" value={newName} onChange={(e) => setNewName(e.target.value)} className="rounded-xl bg-background" />
-              <Input placeholder="رقم واتساب (مع رمز الدولة)" inputMode="tel" value={newWa} onChange={(e) => setNewWa(e.target.value)} className="rounded-xl bg-background" />
+              <div className="flex items-stretch rounded-xl bg-background border border-input overflow-hidden" dir="ltr">
+                <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">+967</span>
+                <Input placeholder="7XXXXXXXX" inputMode="tel" value={localYemenDigits(newWa)} onChange={(e) => setNewWa(localYemenDigits(e.target.value))} className="flex-1 rounded-none border-0 bg-background font-mono" />
+              </div>
               <Button className="w-full rounded-xl gradient-primary-bg border-0" onClick={() => { void createCustomer(); }}>
                 <UserPlus className="h-4 w-4 ml-1" />حفظ
               </Button>
