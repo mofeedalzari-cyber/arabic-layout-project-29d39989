@@ -227,11 +227,12 @@ function BottomLink({ item }: { item: NavItem }) {
   );
 }
 
-function UserFooter({ fullName, username, phone, role, onSignOut, dark, onToggleTheme }: {
-  fullName?: string | null; username: string; phone?: string | null; role: string | null; onSignOut: () => void; dark: boolean; onToggleTheme: () => void;
+function UserFooter({ fullName, username, phone, role, isSuperadmin, onSignOut, dark, onToggleTheme }: {
+  fullName?: string | null; username: string; phone?: string | null; role: string | null; isSuperadmin?: boolean; onSignOut: () => void; dark: boolean; onToggleTheme: () => void;
 }) {
   const phoneText = displayPhone(phone, username);
   const displayName = (fullName && fullName.trim()) || phoneText;
+  const roleLabel = isSuperadmin ? "مدير التطبيق" : role === "admin" ? "مدير" : "مندوب";
   return (
     <div className="p-3 border-t border-sidebar-border space-y-2">
       <div className="flex items-center gap-3 p-2 rounded-xl bg-sidebar-accent/40">
@@ -240,9 +241,10 @@ function UserFooter({ fullName, username, phone, role, onSignOut, dark, onToggle
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold truncate">{displayName}</div>
-          <div className="text-[11px] text-muted-foreground">{role === "superadmin" ? "مدير التطبيق" : role === "admin" ? "مدير" : "مندوب"}</div>
+          <div className="text-[11px] text-muted-foreground">{roleLabel}</div>
         </div>
       </div>
+
 
       <div className="flex gap-2">
         <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={onToggleTheme}>
