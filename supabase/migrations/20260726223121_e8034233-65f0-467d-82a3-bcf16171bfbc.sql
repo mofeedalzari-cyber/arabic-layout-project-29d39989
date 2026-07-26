@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.username_from_phone(text) FROM anon, PUBLIC;
