@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useState, useMemo } from "react";
-import { Search, Receipt, Trash2, Pencil } from "lucide-react";
+import { Search, Receipt, Trash2, Pencil, CreditCard } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
