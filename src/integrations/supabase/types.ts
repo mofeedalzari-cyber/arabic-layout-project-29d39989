@@ -155,6 +155,44 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          agent_id: string
+          created_at: string
+          id: string
+          name: string
+          network_id: string | null
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          id?: string
+          name: string
+          network_id?: string | null
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          network_id?: string | null
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "networks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       join_requests: {
         Row: {
           agent_full_name: string | null
@@ -433,6 +471,7 @@ export type Database = {
           agent_username: string
           buyer_name: string | null
           card_id: string
+          customer_id: string | null
           id: string
           network_id: string
           network_name: string
@@ -447,6 +486,7 @@ export type Database = {
           agent_username: string
           buyer_name?: string | null
           card_id: string
+          customer_id?: string | null
           id?: string
           network_id: string
           network_name: string
@@ -461,6 +501,7 @@ export type Database = {
           agent_username?: string
           buyer_name?: string | null
           card_id?: string
+          customer_id?: string | null
           id?: string
           network_id?: string
           network_name?: string
@@ -476,6 +517,13 @@ export type Database = {
             columns: ["card_id"]
             isOneToOne: false
             referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
           {

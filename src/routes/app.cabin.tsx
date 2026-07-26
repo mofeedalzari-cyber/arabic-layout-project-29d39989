@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
 } from "@/components/ui/sheet";
-import { Wifi, ShieldAlert, Check, Copy, Share2, MessageCircle, PackageOpen, Tag, RefreshCw, Search, User as UserIcon, Printer, Image as ImageIcon } from "lucide-react";
+import { Wifi, ShieldAlert, Check, Copy, Share2, MessageCircle, PackageOpen, Tag, RefreshCw, Search, User as UserIcon, Printer, Image as ImageIcon, UserPlus, Users, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
@@ -27,9 +27,20 @@ interface CabinRow {
   currency: string; available: number; sold_count: number;
 }
 
+interface Customer {
+  id: string;
+  name: string;
+  whatsapp: string;
+  network_id: string | null;
+}
+
+function normalizeWa(v: string) {
+  return String(v ?? "").replace(/\D/g, "");
+}
+
 function CabinPage() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { data: rows, isLoading } = useQuery({
     queryKey: ["agent-cabin"],
     queryFn: async () => {
@@ -39,18 +50,58 @@ function CabinPage() {
     },
   });
 
+  const { data: customers } = useQuery({
+    queryKey: ["my-customers", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, name, whatsapp, network_id")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Customer[];
+    },
+  });
+
   const [confirmPkg, setConfirmPkg] = useState<CabinRow | null>(null);
   const [saleResult, setSaleResult] = useState<any>(null);
   const [selling, setSelling] = useState(false);
   const [detailsPkg, setDetailsPkg] = useState<CabinRow | null>(null);
+  const [selCustomer, setSelCustomer] = useState<Customer | null>(null);
+  const [customersOpen, setCustomersOpen] = useState(false);
+  const [addingCustomer, setAddingCustomer] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newWa, setNewWa] = useState("");
 
+  async function createCustomer(): Promise<Customer | null> {
+    if (!user) return null;
+    const name = newName.trim();
+    const wa = normalizeWa(newWa);
+    if (!name) { toast.error("أدخل اسم الزبون"); return null; }
+    if (wa.length < 7) { toast.error("رقم واتساب غير صحيح"); return null; }
+    const { data, error } = await supabase.from("customers").insert({
+      agent_id: user.id, network_id: profile?.network_id ?? null, name, whatsapp: wa,
+    }).select("id, name, whatsapp, network_id").single();
+    if (error) { toast.error(error.message); return null; }
+    setNewName(""); setNewWa(""); setAddingCustomer(false);
+    qc.invalidateQueries({ queryKey: ["my-customers"] });
+    toast.success("تم إضافة الزبون");
+    return data as Customer;
+  }
+
+  async function deleteCustomer(id: string) {
+    const { error } = await supabase.from("customers").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ["my-customers"] });
+    toast.success("تم الحذف");
+  }
 
   async function confirmSell() {
     if (!confirmPkg) return;
     setSelling(true);
     const { data, error } = await supabase.rpc("sell_card", { _package_id: confirmPkg.package_id });
-    setSelling(false);
     if (error) {
+      setSelling(false);
       const map: Record<string, string> = {
         NO_CARDS_AVAILABLE: "لا توجد كروت في كبينتك لهذه الباقة",
         ACCOUNT_INACTIVE: "حسابك غير مفعّل",
@@ -62,12 +113,23 @@ function CabinPage() {
       toast.error(key ? map[key] : error.message);
       return;
     }
+    const sale: any = Array.isArray(data) ? data[0] : data;
+    if (selCustomer && sale?.sale_id) {
+      await supabase.from("sales")
+        .update({ customer_id: selCustomer.id, buyer_name: selCustomer.name })
+        .eq("id", sale.sale_id);
+      sale.customer = selCustomer;
+      sale.buyer_name = selCustomer.name;
+    }
+    setSelling(false);
     setConfirmPkg(null);
-    setSaleResult(Array.isArray(data) ? data[0] : data);
+    setSaleResult(sale);
+    setSelCustomer(null);
     qc.invalidateQueries({ queryKey: ["agent-cabin"] });
     qc.invalidateQueries({ queryKey: ["sales"] });
     qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
   }
+
 
   const totalAvail = rows?.reduce((a, r) => a + r.available, 0) ?? 0;
   const totalSold = rows?.reduce((a, r) => a + r.sold_count, 0) ?? 0;
@@ -76,6 +138,13 @@ function CabinPage() {
   return (
     <>
       <PageHeader title="كبينة البيع" description="الكروت المُخصّصة لك — جاهزة للبيع" />
+
+      <div className="mb-3 flex justify-end">
+        <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setCustomersOpen(true)}>
+          <Users className="h-4 w-4 ml-1" />
+          الزبائن ({customers?.length ?? 0})
+        </Button>
+      </div>
 
       <div className="grid grid-cols-3 gap-3 mb-5">
         <StatMini label="متوفر" value={String(totalAvail)} tone="success" />
@@ -141,8 +210,8 @@ function CabinPage() {
 
 
       {/* Confirm */}
-      <Sheet open={!!confirmPkg} onOpenChange={(o) => !o && setConfirmPkg(null)}>
-        <SheetContent side="bottom" className="rounded-t-3xl" dir="rtl">
+      <Sheet open={!!confirmPkg} onOpenChange={(o) => { if (!o) { setConfirmPkg(null); setSelCustomer(null); setAddingCustomer(false); } }}>
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto" dir="rtl">
           <SheetHeader>
             <SheetTitle>تأكيد البيع</SheetTitle>
             <SheetDescription>لن تظهر بيانات الكرت إلا بعد تأكيد البيع.</SheetDescription>
@@ -153,12 +222,55 @@ function CabinPage() {
                 <div className="opacity-80 text-sm">{confirmPkg.network_name} — {confirmPkg.package_name}</div>
                 <div className="text-3xl font-extrabold">{fmtMoney(Number(confirmPkg.price))} <span className="text-sm font-normal opacity-70">{confirmPkg.currency}</span></div>
               </div>
+
+              {/* Customer picker */}
+              <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-muted-foreground font-semibold">الزبون (اختياري)</div>
+                  {!addingCustomer && (
+                    <Button size="sm" variant="ghost" className="rounded-lg h-8" onClick={() => setAddingCustomer(true)}>
+                      <UserPlus className="h-4 w-4 ml-1" />زبون جديد
+                    </Button>
+                  )}
+                </div>
+
+                {addingCustomer ? (
+                  <div className="space-y-2">
+                    <Input placeholder="اسم الزبون" value={newName} onChange={(e) => setNewName(e.target.value)} className="rounded-xl bg-background" />
+                    <Input placeholder="رقم واتساب (مع رمز الدولة)" inputMode="tel" value={newWa} onChange={(e) => setNewWa(e.target.value)} className="rounded-xl bg-background" />
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setAddingCustomer(false); setNewName(""); setNewWa(""); }}>إلغاء</Button>
+                      <Button size="sm" className="flex-1 rounded-xl gradient-primary-bg border-0" onClick={async () => { const c = await createCustomer(); if (c) setSelCustomer(c); }}>حفظ الزبون</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      <button type="button" onClick={() => setSelCustomer(null)}
+                        className={`w-full text-right rounded-lg px-3 py-2 text-sm border ${!selCustomer ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border/50"}`}>
+                        بدون زبون
+                      </button>
+                      {(customers ?? []).map((c) => (
+                        <button key={c.id} type="button" onClick={() => setSelCustomer(c)}
+                          className={`w-full text-right rounded-lg px-3 py-2 text-sm border flex items-center justify-between ${selCustomer?.id === c.id ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border/50"}`}>
+                          <span className="font-bold truncate">{c.name}</span>
+                          <span className="text-[11px] text-muted-foreground font-mono">{c.whatsapp}</span>
+                        </button>
+                      ))}
+                      {(customers?.length ?? 0) === 0 && (
+                        <div className="text-center text-xs text-muted-foreground py-2">لا يوجد زبائن — أضف زبونًا جديدًا</div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div className="flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-xs text-warning-foreground">
                 <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-warning" />
-                <span>سيتم خصم أول كرت من كبينتك ولا يمكن التراجع.</span>
+                <span>سيتم خصم أول كرت من كبينتك ولا يمكن التراجع.{selCustomer ? ` سيُرسل الكرت إلى ${selCustomer.name} عبر واتساب.` : ""}</span>
               </div>
               <div className="flex gap-2 pb-4">
-                <Button variant="outline" className="flex-1 rounded-xl h-11" onClick={() => setConfirmPkg(null)}>إلغاء</Button>
+                <Button variant="outline" className="flex-1 rounded-xl h-11" onClick={() => { setConfirmPkg(null); setSelCustomer(null); }}>إلغاء</Button>
                 <Button disabled={selling} onClick={confirmSell} className="flex-1 rounded-xl h-11 gradient-primary-bg border-0 font-semibold">
                   {selling ? "..." : "تأكيد البيع"}
                 </Button>
@@ -175,6 +287,47 @@ function CabinPage() {
             <SheetTitle className="flex items-center gap-2 text-success"><Check className="h-5 w-5" />تم البيع بنجاح</SheetTitle>
           </SheetHeader>
           {saleResult && <SaleReceipt sale={saleResult} />}
+        </SheetContent>
+      </Sheet>
+
+      {/* Customers management */}
+      <Sheet open={customersOpen} onOpenChange={setCustomersOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto" dir="rtl">
+          <SheetHeader>
+            <SheetTitle>الزبائن</SheetTitle>
+            <SheetDescription>أضف زبونًا جديدًا أو أدر قائمة زبائنك.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 space-y-3 pb-4">
+            <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
+              <div className="text-xs text-muted-foreground font-semibold">إضافة زبون جديد</div>
+              <Input placeholder="اسم الزبون" value={newName} onChange={(e) => setNewName(e.target.value)} className="rounded-xl bg-background" />
+              <Input placeholder="رقم واتساب (مع رمز الدولة)" inputMode="tel" value={newWa} onChange={(e) => setNewWa(e.target.value)} className="rounded-xl bg-background" />
+              <Button className="w-full rounded-xl gradient-primary-bg border-0" onClick={() => { void createCustomer(); }}>
+                <UserPlus className="h-4 w-4 ml-1" />حفظ
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {(customers ?? []).map((c) => (
+                <Card key={c.id} className="card-elegant border-0 p-3 flex items-center justify-between">
+                  <div className="min-w-0">
+                    <div className="font-bold truncate">{c.name}</div>
+                    <div className="text-[11px] font-mono text-muted-foreground">{c.whatsapp}</div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button size="icon" variant="ghost" className="rounded-lg" onClick={() => window.open(`https://wa.me/${normalizeWa(c.whatsapp)}`, "_blank")}>
+                      <MessageCircle className="h-4 w-4 text-success" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="rounded-lg" onClick={() => deleteCustomer(c.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+              {(customers?.length ?? 0) === 0 && (
+                <div className="text-center py-8 text-sm text-muted-foreground">لا يوجد زبائن بعد.</div>
+              )}
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
 
@@ -505,8 +658,10 @@ function SaleReceipt({ sale }: { sale: any }) {
         }}><Share2 className="h-4 w-4 ml-1" />مشاركة</Button>
         <Button variant="outline" className="rounded-xl" onClick={async () => {
           try {
+            const waNumber = sale.customer?.whatsapp ? String(sale.customer.whatsapp).replace(/\D/g, "") : "";
+            const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(fullText)}`;
             const { isNativeApp } = await import("@/lib/native-pdf");
-            if (isNativeApp()) {
+            if (isNativeApp() && !waNumber) {
               try {
                 const { Share } = await import("@capacitor/share");
                 await Share.share({ text: fullText, dialogTitle: "إرسال عبر واتساب" });
@@ -515,12 +670,12 @@ function SaleReceipt({ sale }: { sale: any }) {
                 console.error("[SaleReceipt] WhatsApp Share failed:", e);
               }
             }
-            window.open(`https://wa.me/?text=${encodeURIComponent(fullText)}`, "_blank");
+            window.open(url, "_blank");
           } catch (err) {
             console.error("[SaleReceipt] WhatsApp error:", err);
             toast.error("فشل فتح واتساب");
           }
-        }}><MessageCircle className="h-4 w-4 ml-1" />واتساب</Button>
+        }}><MessageCircle className="h-4 w-4 ml-1" />واتساب{sale.customer?.name ? ` — ${sale.customer.name}` : ""}</Button>
         <Button variant="outline" className="rounded-xl" onClick={async () => {
           try {
             const esc = (s: any) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
