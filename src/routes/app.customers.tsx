@@ -225,13 +225,13 @@ function CustomersPage() {
     qc.invalidateQueries({ queryKey: ["sales"] });
   }
 
-  async function confirmSaleDelete() {
+  async function confirmSaleDelete(deleteCard: boolean) {
     if (!saleToDelete) return;
     setSaleBusy(true);
-    const { error } = await supabase.rpc("delete_sale", { _sale_id: saleToDelete.id });
+    const { error } = await supabase.rpc("delete_sale", { _sale_id: saleToDelete.id, _delete_card: deleteCard });
     setSaleBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("تم حذف عملية البيع");
+    toast.success(deleteCard ? "تم الحذف بدون إرجاع الكرت" : "تم حذف العملية وإرجاع الكرت");
     setSaleToDelete(null);
     qc.invalidateQueries({ queryKey: ["customer-sales"] });
     qc.invalidateQueries({ queryKey: ["sales"] });
