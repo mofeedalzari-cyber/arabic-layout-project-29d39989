@@ -182,24 +182,16 @@ function CustomersPage() {
       const now = new Date();
       const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
 
-      // Build items lines for the text message
-      const itemsLines = items
-        .map(
-          (it) =>
-            `• ${it.packageName} — ${it.qty} × ${fmtMoney(it.price)} = ${fmtMoney(it.qty * it.price)}`,
-        )
-        .join("\n");
-
       const msg =
         `الأخ/  الكريم\n\n` +
         `${c.name}\n\n` +
         `التاريخ : ${dateStr}\n\n` +
-        (itemsLines ? `${itemsLines}\n\n` : "") +
-        `نود أن نبلغكم أنه قد تم إضافة إلى حسابكم مبلغ وقدره ${fmtMoney(total)}.\n\n` +
+        `نود أن نبلغكم أنه  حسابكم  هو  مبلغ وقدره   ${fmtMoney(total)}.\n\n` +
         `*(فاتورة بيع آجـــل)*\n\n` +
         `الرصيد عليكم ${fmtMoney(total)}.\n\n` +
         `مع خالص التقدير والاحترام،\n\n` +
         `فريق ${networkName || "الشبكة"}`;
+
 
       if (!c.whatsapp) {
         toast.error("لا يوجد رقم واتساب لهذا الزبون");
