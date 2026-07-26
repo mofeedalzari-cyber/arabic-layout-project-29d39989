@@ -1,15 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { displayPhone, fmtMoney } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
-import { Wifi, Package, ShoppingCart, DollarSign, Users, TrendingUp, Activity, Layers, UserCheck, FileSpreadsheet, FileText } from "lucide-react";
+import { Wifi, Package, ShoppingCart, DollarSign, Users, TrendingUp, Activity, Layers, UserCheck, FileSpreadsheet, FileText, Eraser } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { TableSection, SummaryRow } from "@/lib/dashboard-export";
 
 // Lazy-loaded to keep exceljs/pdfmake out of the initial bundle
