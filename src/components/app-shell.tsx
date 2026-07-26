@@ -32,13 +32,14 @@ const NAV: NavItem[] = [
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { profile, role, signOut } = useAuth();
+  const { profile, role, isSuperadmin, signOut } = useAuth();
   const items = NAV.filter((n) => {
-    if (n.superOnly) return role === "superadmin";
-    if (n.adminOnly) return role === "admin" || role === "superadmin";
-    if (n.agentOnly) return role === "agent";
+    if (n.superOnly) return isSuperadmin;
+    if (n.adminOnly) return role === "admin" || isSuperadmin;
+    if (n.agentOnly) return role === "agent" && !isSuperadmin;
     return true;
   });
+
   const [dark, setDark] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
