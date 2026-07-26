@@ -127,14 +127,15 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
     await ins("cards", newCards);
 
     const scrubbedReqs = reqsIn
-      .filter((r: any) => r.agent_id == null || allowedUserIds.has(r.agent_id))
       .map((r: any) => ({
         ...r,
         id: reqMap.get(r.id)!,
         network_id: networkId,
+        agent_id: remapUserId(r.agent_id),
         package_id: pkgMap.get(r.package_id) ?? r.package_id,
+        decided_by: remapUserId(r.decided_by),
       }))
-      .filter((r: any) => validPkgIds.has(r.package_id));
+      .filter((r: any) => r.agent_id != null && validPkgIds.has(r.package_id));
     await ins("card_requests", scrubbedReqs);
     const insertedReqIds = new Set<string>(scrubbedReqs.map((r: any) => r.id));
 
