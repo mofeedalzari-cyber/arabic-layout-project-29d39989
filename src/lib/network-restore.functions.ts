@@ -155,8 +155,14 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
     await ins(
       "join_requests",
       (Array.isArray(payload.join_requests) ? payload.join_requests : [])
-        .filter((r: any) => r.agent_id == null || allowedUserIds.has(r.agent_id))
-        .map((r: any) => ({ ...r, id: genId(), network_id: networkId })),
+        .map((r: any) => ({
+          ...r,
+          id: genId(),
+          network_id: networkId,
+          agent_id: remapUserId(r.agent_id),
+          decided_by: remapUserId(r.decided_by),
+        }))
+        .filter((r: any) => r.agent_id != null),
     );
 
     const paymentsIn = Array.isArray(payload.request_payments) ? payload.request_payments : [];
@@ -165,8 +171,7 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
         ...r,
         id: genId(),
         request_id: reqMap.get(r.request_id) ?? r.request_id,
-        recorded_by:
-          r.recorded_by && allowedUserIds.has(r.recorded_by) ? r.recorded_by : userId,
+        recorded_by: remapUserId(r.recorded_by) ?? userId,
       }))
       .filter((r: any) => r.request_id && insertedReqIds.has(r.request_id));
     await ins("request_payments", scrubbedPayments);
