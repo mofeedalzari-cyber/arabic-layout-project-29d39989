@@ -92,7 +92,7 @@ export function useRequestNotifications() {
           if (!id || seenAdmin.current.has(id)) return;
           seenAdmin.current.add(id);
 
-          const agent = row?.agent_username ?? "مندوب";
+          const agent = cleanPhoneLike(row?.agent_username) || "مندوب";
           const pkg = row?.package_name ?? "باقة";
           const qty = row?.quantity ?? "";
 
