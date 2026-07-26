@@ -30,7 +30,7 @@ function JoinRequestsPage() {
         description="مراجعة طلبات المناديب الجدد للانضمام إلى شبكتك"
       />
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} dir="rtl">
-        <TabsList className="rounded-xl mb-4">
+        <TabsList dir="rtl" className="rounded-xl mb-4">
           <TabsTrigger value="PENDING" className="rounded-lg">قيد المراجعة</TabsTrigger>
           <TabsTrigger value="APPROVED" className="rounded-lg">مقبولة</TabsTrigger>
           <TabsTrigger value="REJECTED" className="rounded-lg">مرفوضة</TabsTrigger>
