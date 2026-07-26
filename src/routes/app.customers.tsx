@@ -319,6 +319,22 @@ function CustomersPage() {
                     <div className="font-bold text-lg text-primary">{fmtMoney(selectedTotal)}</div>
                   </div>
                 </div>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    disabled={sendingId === selected.id}
+                    onClick={() => sendStatementWhatsApp(selected)}
+                  >
+                    <FileText className="h-4 w-4 ml-1" />
+                    {sendingId === selected.id ? "جاري..." : "كشف حساب واتساب"}
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(selected)}>
+                    <Trash2 className="h-4 w-4 ml-1" />
+                    حذف
+                  </Button>
+                </div>
               </Card>
 
               <div>
