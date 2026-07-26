@@ -99,28 +99,26 @@ function PackagesPage() {
       if (editing) {
         const { error } = await supabase.from("packages").update(form).eq("id", editing.id);
         if (error) throw error;
-      } else if (isSuperadmin && !isAdmin) {
-        // Superadmin without own network → add to any network via RPC
-        const { error } = await supabase.rpc("superadmin_create_package", {
-          _network_id: form.network_id, _name: form.name, _price: form.price,
-          _data_size: form.data_size ?? null, _speed: form.speed ?? null,
-          _validity: form.validity ?? null, _allowed_time: form.allowed_time ?? null,
-          _color: form.color,
-        });
-        if (error) throw error;
-      } else if (isSuperadmin && form.network_id !== undefined) {
-        // Superadmin adding to a network they don't own → use RPC
-        // Check if selected network is theirs; if not, use RPC
-        const { data: mine } = await supabase.rpc("admin_network", { _uid: (await supabase.auth.getUser()).data.user?.id });
+      } else if (isSuperadmin) {
+        // Superadmin: check if selected network belongs to them
+        const { data: userData } = await supabase.auth.getUser();
+        const uid = userData.user?.id;
+        const { data: mine } = uid
+          ? await supabase.rpc("admin_network", { _uid: uid })
+          : { data: null as string | null };
         if (mine && form.network_id === mine) {
           const { error } = await supabase.from("packages").insert(form);
           if (error) throw error;
         } else {
           const { error } = await supabase.rpc("superadmin_create_package", {
-            _network_id: form.network_id, _name: form.name, _price: form.price,
-            _data_size: form.data_size ?? null, _speed: form.speed ?? null,
-            _validity: form.validity ?? null, _allowed_time: form.allowed_time ?? null,
-            _color: form.color,
+            _network_id: form.network_id,
+            _name: form.name,
+            _price: form.price,
+            _data_size: form.data_size ?? undefined,
+            _speed: form.speed ?? undefined,
+            _validity: form.validity ?? undefined,
+            _allowed_time: form.allowed_time ?? undefined,
+            _color: form.color ?? undefined,
           });
           if (error) throw error;
         }
@@ -128,6 +126,7 @@ function PackagesPage() {
         const { error } = await supabase.from("packages").insert(form);
         if (error) throw error;
       }
+
     },
     onSuccess: () => {
       toast.success(editing ? "تم التحديث" : "تم إنشاء الباقة");
