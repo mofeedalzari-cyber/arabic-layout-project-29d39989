@@ -120,7 +120,7 @@ function SuperAdminPage() {
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الشبكة</Th><Th>المالك</Th><Th>الهاتف</Th><Th>مناديب</Th><Th>باقات</Th>
-                    <Th>كروت</Th><Th>مباع</Th><Th>قيمة المبيعات</Th><Th>الحالة</Th><Th>الإنشاء</Th>
+                    <Th>كروت</Th><Th>مباع</Th><Th>قيمة المبيعات</Th><Th>الحالة</Th><Th>الإنشاء</Th><Th>إجراء</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -136,9 +136,24 @@ function SuperAdminPage() {
                       <Td>{fmtMoney(Number(n.sold_value ?? 0))} {n.currency}</Td>
                       <Td>{n.is_active ? <Badge>نشطة</Badge> : <Badge variant="secondary">موقوفة</Badge>}</Td>
                       <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(n.created_at)}</Td>
+                      <Td>
+                        <Button
+                          size="sm"
+                          variant={n.is_active ? "destructive" : "default"}
+                          disabled={toggleNet.isPending}
+                          onClick={() => {
+                            const msg = n.is_active
+                              ? `إيقاف شبكة "${n.name}"؟ لن يتمكن مستخدموها من الدخول.`
+                              : `إعادة تفعيل شبكة "${n.name}"؟`;
+                            if (window.confirm(msg)) toggleNet.mutate({ id: n.id, active: !n.is_active });
+                          }}
+                        >
+                          {n.is_active ? <><PowerOff className="h-4 w-4 ml-1" />إيقاف</> : <><Power className="h-4 w-4 ml-1" />تفعيل</>}
+                        </Button>
+                      </Td>
                     </tr>
                   ))}
-                  {networks.data?.length === 0 && <tr><Td colSpan={10} className="text-center text-muted-foreground py-8">لا توجد شبكات</Td></tr>}
+                  {networks.data?.length === 0 && <tr><Td colSpan={11} className="text-center text-muted-foreground py-8">لا توجد شبكات</Td></tr>}
                 </tbody>
               </table>
             </div>
