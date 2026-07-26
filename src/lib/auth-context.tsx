@@ -69,8 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setRole(null);
+        setIsSuperadmin(false);
       }
     });
+
 
     (async () => {
       try {
