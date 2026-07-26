@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Desktop sidebar (toggleable) */}
       {sidebarOpen && (
         <aside
-          className="hidden lg:flex w-64 shrink-0 flex-col border-l bg-sidebar text-sidebar-foreground"
+          className="hidden lg:flex w-56 shrink-0 flex-col border-l bg-sidebar text-sidebar-foreground"
           style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <BrandHeader />
