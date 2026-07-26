@@ -40,6 +40,22 @@ function SuperAdminPage() {
     onError: (e: any) => toast.error(e.message ?? "فشل"),
   });
 
+  const deleteNet = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.rpc as any)("superadmin_delete_network", { _network_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف الشبكة بالكامل");
+      qc.invalidateQueries({ queryKey: ["sa-networks"] });
+      qc.invalidateQueries({ queryKey: ["sa-stats"] });
+      qc.invalidateQueries({ queryKey: ["sa-agents"] });
+      qc.invalidateQueries({ queryKey: ["sa-packages"] });
+      qc.invalidateQueries({ queryKey: ["sa-cards"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "فشل الحذف"),
+  });
+
   const stats = useQuery({
     queryKey: ["sa-stats"],
     queryFn: async () => {
