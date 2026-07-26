@@ -658,8 +658,10 @@ function SaleReceipt({ sale }: { sale: any }) {
         }}><Share2 className="h-4 w-4 ml-1" />مشاركة</Button>
         <Button variant="outline" className="rounded-xl" onClick={async () => {
           try {
+            const waNumber = sale.customer?.whatsapp ? String(sale.customer.whatsapp).replace(/\D/g, "") : "";
+            const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(fullText)}`;
             const { isNativeApp } = await import("@/lib/native-pdf");
-            if (isNativeApp()) {
+            if (isNativeApp() && !waNumber) {
               try {
                 const { Share } = await import("@capacitor/share");
                 await Share.share({ text: fullText, dialogTitle: "إرسال عبر واتساب" });
@@ -668,12 +670,12 @@ function SaleReceipt({ sale }: { sale: any }) {
                 console.error("[SaleReceipt] WhatsApp Share failed:", e);
               }
             }
-            window.open(`https://wa.me/?text=${encodeURIComponent(fullText)}`, "_blank");
+            window.open(url, "_blank");
           } catch (err) {
             console.error("[SaleReceipt] WhatsApp error:", err);
             toast.error("فشل فتح واتساب");
           }
-        }}><MessageCircle className="h-4 w-4 ml-1" />واتساب</Button>
+        }}><MessageCircle className="h-4 w-4 ml-1" />واتساب{sale.customer?.name ? ` — ${sale.customer.name}` : ""}</Button>
         <Button variant="outline" className="rounded-xl" onClick={async () => {
           try {
             const esc = (s: any) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
