@@ -15,6 +15,7 @@ import { useMemo, useState } from "react";
 import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
 import { openWhatsApp } from "@/lib/wa-open";
+import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/customers")({ component: CustomersPage });
