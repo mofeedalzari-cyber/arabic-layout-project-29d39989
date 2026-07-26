@@ -565,6 +565,28 @@ function CustomersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={addOpen} onOpenChange={(o) => { if (!addBusy) setAddOpen(o); }}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>إضافة زبون جديد</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>اسم الزبون</Label>
+              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="مثال: محمد أمين" />
+            </div>
+            <div>
+              <Label>رقم الواتساب</Label>
+              <Input value={newWhats} onChange={(e) => setNewWhats(e.target.value)} placeholder="7XXXXXXXX" inputMode="tel" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={addBusy}>إلغاء</Button>
+            <Button onClick={handleAddCustomer} disabled={addBusy}>{addBusy ? "جاري..." : "إضافة"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
