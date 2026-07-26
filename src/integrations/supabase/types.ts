@@ -726,6 +726,23 @@ export type Database = {
           username: string
         }[]
       }
+      superadmin_create_network: {
+        Args: { _currency?: string; _name: string }
+        Returns: string
+      }
+      superadmin_create_package: {
+        Args: {
+          _allowed_time?: string
+          _color?: string
+          _data_size?: string
+          _name: string
+          _network_id: string
+          _price: number
+          _speed?: string
+          _validity?: string
+        }
+        Returns: string
+      }
       superadmin_networks: {
         Args: never
         Returns: {
