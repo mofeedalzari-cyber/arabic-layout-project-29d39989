@@ -23,6 +23,7 @@ import { Route as AppNetworksRouteImport } from './routes/app.networks'
 import { Route as AppManageCardsRouteImport } from './routes/app.manage-cards'
 import { Route as AppLogsRouteImport } from './routes/app.logs'
 import { Route as AppJoinRequestsRouteImport } from './routes/app.join-requests'
+import { Route as AppCustomersRouteImport } from './routes/app.customers'
 import { Route as AppCardsRouteImport } from './routes/app.cards'
 import { Route as AppCabinRouteImport } from './routes/app.cabin'
 import { Route as AppAgentsRouteImport } from './routes/app.agents'
@@ -100,6 +101,11 @@ const AppJoinRequestsRoute = AppJoinRequestsRouteImport.update({
   path: '/join-requests',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCustomersRoute = AppCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCardsRoute = AppCardsRouteImport.update({
   id: '/cards',
   path: '/cards',
@@ -139,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/app/agents': typeof AppAgentsRoute
   '/app/cabin': typeof AppCabinRoute
   '/app/cards': typeof AppCardsRoute
+  '/app/customers': typeof AppCustomersRoute
   '/app/join-requests': typeof AppJoinRequestsRoute
   '/app/logs': typeof AppLogsRoute
   '/app/manage-cards': typeof AppManageCardsRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByTo {
   '/app/agents': typeof AppAgentsRoute
   '/app/cabin': typeof AppCabinRoute
   '/app/cards': typeof AppCardsRoute
+  '/app/customers': typeof AppCustomersRoute
   '/app/join-requests': typeof AppJoinRequestsRoute
   '/app/logs': typeof AppLogsRoute
   '/app/manage-cards': typeof AppManageCardsRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/app/agents': typeof AppAgentsRoute
   '/app/cabin': typeof AppCabinRoute
   '/app/cards': typeof AppCardsRoute
+  '/app/customers': typeof AppCustomersRoute
   '/app/join-requests': typeof AppJoinRequestsRoute
   '/app/logs': typeof AppLogsRoute
   '/app/manage-cards': typeof AppManageCardsRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/app/agents'
     | '/app/cabin'
     | '/app/cards'
+    | '/app/customers'
     | '/app/join-requests'
     | '/app/logs'
     | '/app/manage-cards'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/app/agents'
     | '/app/cabin'
     | '/app/cards'
+    | '/app/customers'
     | '/app/join-requests'
     | '/app/logs'
     | '/app/manage-cards'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/app/agents'
     | '/app/cabin'
     | '/app/cards'
+    | '/app/customers'
     | '/app/join-requests'
     | '/app/logs'
     | '/app/manage-cards'
@@ -369,6 +381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJoinRequestsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/customers': {
+      id: '/app/customers'
+      path: '/customers'
+      fullPath: '/app/customers'
+      preLoaderRoute: typeof AppCustomersRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/cards': {
       id: '/app/cards'
       path: '/cards'
@@ -433,6 +452,7 @@ interface AppRouteChildren {
   AppAgentsRoute: typeof AppAgentsRoute
   AppCabinRoute: typeof AppCabinRoute
   AppCardsRoute: typeof AppCardsRoute
+  AppCustomersRoute: typeof AppCustomersRoute
   AppJoinRequestsRoute: typeof AppJoinRequestsRoute
   AppLogsRoute: typeof AppLogsRoute
   AppManageCardsRoute: typeof AppManageCardsRoute
@@ -451,6 +471,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAgentsRoute: AppAgentsRoute,
   AppCabinRoute: AppCabinRoute,
   AppCardsRoute: AppCardsRoute,
+  AppCustomersRoute: AppCustomersRoute,
   AppJoinRequestsRoute: AppJoinRequestsRoute,
   AppLogsRoute: AppLogsRoute,
   AppManageCardsRoute: AppManageCardsRoute,
