@@ -109,6 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setProfile(null);
       setRole(null);
+      setIsSuperadmin(false);
+
       try {
         await supabase.auth.signOut({ scope: "local" });
       } catch (e) {
