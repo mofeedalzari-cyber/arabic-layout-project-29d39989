@@ -155,7 +155,7 @@ function SuperAdminPage() {
                   {(networks.data ?? []).map((n: any) => (
                     <tr key={n.id} className="border-t">
                       <Td className="font-semibold">{n.name}</Td>
-                      <Td>{n.owner_username ?? "—"}</Td>
+                      <Td>{cleanPhoneLike(n.owner_username) || "—"}</Td>
                       <Td dir="ltr">{displayPhone(n.owner_phone, n.owner_username)}</Td>
                       <Td>{n.agents_count}</Td>
                       <Td>{n.packages_count}</Td>
