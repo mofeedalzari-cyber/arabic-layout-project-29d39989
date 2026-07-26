@@ -216,7 +216,7 @@ function SuperAdminPage() {
         <TabsContent value="agents" className="mt-3">
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse border">
+              <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الاسم</Th><Th>المستخدم</Th><Th>الهاتف</Th><Th>الشبكة</Th><Th>الدور</Th>
@@ -248,7 +248,7 @@ function SuperAdminPage() {
 
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse border">
+              <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الباقة</Th><Th>الشبكة</Th><Th>السعر</Th>
@@ -307,7 +307,7 @@ function SuperAdminPage() {
 
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse border">
+              <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الرقم</Th><Th>كلمة السر</Th><Th>الحالة</Th><Th>الباقة</Th><Th>الشبكة</Th>
