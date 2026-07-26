@@ -198,7 +198,28 @@ function CustomersPage() {
         toast.error("لا يوجد رقم واتساب لهذا الزبون");
         return;
       }
-      await openWhatsApp(c.whatsapp, msg);
+
+      await shareInvoiceImageOnWhatsApp({
+        invoice: {
+          networkName: networkName || "الشبكة",
+          networkRegion,
+          networkPhone,
+          adminName,
+          adminUsername,
+          customerName: c.name,
+          items: items.map((it) => ({
+            packageName: it.packageName,
+            networkName: it.networkName,
+            qty: it.qty,
+            price: it.price,
+          })) as any,
+          currency,
+          dateStr,
+        },
+        message: msg,
+        whatsappPhone: c.whatsapp,
+        filenameBase: `كشف_${c.name}`,
+      });
 
     } catch (err) {
       toast.error("تعذر إنشاء الفاتورة: " + String((err as any)?.message || err).slice(0, 120));
