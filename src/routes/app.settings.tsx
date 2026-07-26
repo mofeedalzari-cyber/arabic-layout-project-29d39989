@@ -120,7 +120,7 @@ function BackupCard() {
     onSuccess: (res: any) => {
       const s = res?.stats ?? {};
       toast.success(
-        `تم الاستعادة — باقات: ${s.packages ?? 0}, كروت: ${s.cards ?? 0}, مبيعات: ${s.sales ?? 0}`
+        `تم الاستعادة — مناديب: ${s.profiles ?? 0}, باقات: ${s.packages ?? 0}, كروت: ${s.cards ?? 0}, مبيعات: ${s.sales ?? 0}`
       );
       setPendingPayload(null);
       setPendingName("");
