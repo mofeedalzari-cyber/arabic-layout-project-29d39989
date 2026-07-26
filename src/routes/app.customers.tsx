@@ -502,25 +502,6 @@ function CustomersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <AlertDialog open={!!saleToDelete} onOpenChange={(o) => !o && setSaleToDelete(null)}>
-        <AlertDialogContent dir="rtl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>حذف عملية البيع؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              اختر طريقة الحذف للعملية {saleToDelete?.transaction_no}: إما إرجاع الكرت إلى حسابك، أو حذف بدون إرجاع (حذف الكرت نهائياً).
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-            <Button onClick={() => confirmSaleDelete(false)} disabled={saleBusy} className="w-full">
-              {saleBusy ? "جاري..." : "إرجاع الكرت إلى حسابي"}
-            </Button>
-            <Button onClick={() => confirmSaleDelete(true)} disabled={saleBusy} variant="destructive" className="w-full">
-              {saleBusy ? "جاري..." : "حذف بدون إرجاع"}
-            </Button>
-            <AlertDialogCancel disabled={saleBusy} className="w-full mt-0">إلغاء</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Dialog open={!!saleToEdit} onOpenChange={(o) => !o && setSaleToEdit(null)}>
         <DialogContent dir="rtl">
