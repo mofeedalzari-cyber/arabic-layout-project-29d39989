@@ -174,14 +174,17 @@ function SalesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>حذف عملية البيع؟</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم حذف عملية البيع {toDelete?.transaction_no} وإرجاع الكرت إلى حساب المندوب. لا يمكن التراجع.
+              اختر طريقة الحذف للعملية {toDelete?.transaction_no}: إما إرجاع الكرت إلى حساب المندوب، أو حذف بدون إرجاع (حذف الكرت نهائياً).
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy}>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} disabled={busy} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {busy ? "جاري..." : "حذف"}
-            </AlertDialogAction>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button onClick={() => confirmDelete(false)} disabled={busy} className="w-full">
+              {busy ? "جاري..." : "إرجاع الكرت إلى المندوب"}
+            </Button>
+            <Button onClick={() => confirmDelete(true)} disabled={busy} variant="destructive" className="w-full">
+              {busy ? "جاري..." : "حذف بدون إرجاع"}
+            </Button>
+            <AlertDialogCancel disabled={busy} className="w-full mt-0">إلغاء</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
