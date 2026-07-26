@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useMemo, useState } from "react";
 import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
+import { openWhatsApp } from "@/lib/wa-open";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/customers")({ component: CustomersPage });
@@ -190,8 +191,7 @@ function CustomersPage() {
         dialogTitle: "مشاركة الفاتورة",
       });
 
-      const wa = String(c.whatsapp ?? "").replace(/\D/g, "");
-      if (wa) {
+      if (c.whatsapp) {
         const msg =
           `الأخ/  الكريم\n\n` +
           `${c.name}\n\n` +
@@ -201,7 +201,7 @@ function CustomersPage() {
           `الرصيد عليكم ${fmtMoney(total)}.\n\n` +
           `مع خالص التقدير والاحترام،\n\n` +
           `فريق ${networkName || "الشبكة"}`;
-        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank");
+        await openWhatsApp(c.whatsapp, msg);
       }
     } catch (err) {
       toast.error("تعذر إنشاء الفاتورة: " + String((err as any)?.message || err).slice(0, 120));
@@ -299,10 +299,7 @@ function CustomersPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
-                          const n = String(c.whatsapp).replace(/\D/g, "");
-                          window.open(`https://wa.me/${n}`, "_blank");
-                        }}
+                        onClick={() => openWhatsApp(c.whatsapp!)}
                       >
                         <MessageCircle className="h-4 w-4 ml-1" />
                         واتساب
@@ -354,10 +351,7 @@ function CustomersPage() {
                   {selected.whatsapp && (
                     <Button
                       size="sm"
-                      onClick={() => {
-                        const n = String(selected.whatsapp).replace(/\D/g, "");
-                        window.open(`https://wa.me/${n}`, "_blank");
-                      }}
+                      onClick={() => openWhatsApp(selected.whatsapp!)}
                     >
                       <MessageCircle className="h-4 w-4 ml-1" />
                       واتساب
