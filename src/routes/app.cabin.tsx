@@ -595,7 +595,7 @@ function SaleReceipt({ sale }: { sale: any }) {
     toast.success(name ? "تم حفظ اسم المشتري" : "تم مسح اسم المشتري");
   }
 
-  const fullText = `بيانات الكرت:\n\nاليوزر: ${sale.card_username}\n${sale.card_password ? `كلمة المرور: ${sale.card_password}\n` : ""}الفئة: ${sale.package_name}\nالشبكة: ${sale.network_name}${savedName ? `\nالمشتري: ${savedName}` : ""}`;
+  const fullText = `بيانات الكرت:\n\nاليوزر: ${sale.card_username}\n${sale.card_password ? `كلمة المرور: ${sale.card_password}\n` : ""}الفئة: ${sale.package_name}\nالشبكة: ${sale.network_name}\nالسعر: ${fmtMoney(Number(sale.price))}${sale.currency ? ` ${sale.currency}` : ""}${savedName ? `\nالمشتري: ${savedName}` : ""}`;
 
   return (
     <div className="mt-4 space-y-3 pb-4">
