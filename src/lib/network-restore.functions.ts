@@ -5,7 +5,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * Restore a previously downloaded backup JSON into the caller's own network.
  * Wipes the current network's data (packages, cards, sales, requests, payments,
  * join requests) and re-inserts rows from the payload, remapping network_id
- * to the caller's network. Profiles and logs are not restored.
+ * to the caller's network. Agent profiles referenced by restored records are
+ * matched by username/phone, or recreated as inactive agents for this network.
  */
 export const restoreMyNetwork = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -29,6 +30,13 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
+
+    const genId = () =>
+      (globalThis.crypto as any)?.randomUUID?.() ??
+      "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+      });
 
     // Delete existing data in FK-safe order.
     const { data: existingReqs } = await admin
@@ -119,6 +127,7 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       return candidate;
     };
 
+    let createdProfiles = 0;
     for (const oldId of Array.from(agentRefIds)) {
       if (findExistingProfileId(oldId)) continue;
       const prof = oldIdToProfile.get(oldId);
@@ -140,15 +149,20 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       if (createErr) throw new Error(`profiles: ${createErr.message}`);
       const createdId = created?.user?.id;
       if (!createdId) throw new Error("profiles: تعذر إنشاء حساب المندوب من النسخة");
-      await admin.from("profiles").update({
+      const { error: profileErr } = await admin.from("profiles").update({
         username,
         full_name: prof?.full_name ?? null,
         phone: prof?.phone ?? null,
         network_id: networkId,
         is_active: false,
       }).eq("id", createdId);
-      await admin.from("user_roles").insert({ user_id: createdId, role: "agent" });
+      if (profileErr) throw new Error(`profiles: ${profileErr.message}`);
+      const { error: roleErr } = await admin
+        .from("user_roles")
+        .upsert({ user_id: createdId, role: "agent" }, { onConflict: "user_id,role" });
+      if (roleErr) throw new Error(`user_roles: ${roleErr.message}`);
       await admin.from("join_requests").delete().eq("network_id", networkId).eq("agent_id", createdId);
+      createdProfiles += 1;
       allowedUserIds.add(createdId);
       usernameToId.set(username, createdId);
       const phoneKey = cleanPhone(prof?.phone);
@@ -177,19 +191,13 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       });
 
     const stats: Record<string, number> = {};
+    stats.profiles = createdProfiles;
     async function ins(table: string, rows: any[]) {
       if (!rows.length) { stats[table] = 0; return; }
       const { error } = await admin.from(table).insert(rows);
       if (error) throw new Error(`${table}: ${error.message}`);
       stats[table] = rows.length;
     }
-
-    const genId = () =>
-      (globalThis.crypto as any)?.randomUUID?.() ??
-      "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-        const r = (Math.random() * 16) | 0;
-        return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-      });
 
     // Build ID remaps to avoid PK collisions with rows in other networks.
     const pkgMap = new Map<string, string>();
