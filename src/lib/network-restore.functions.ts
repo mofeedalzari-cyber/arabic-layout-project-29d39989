@@ -176,9 +176,6 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       return findExistingProfileId(oldId);
     };
 
-    const remap = (rows: any): any[] =>
-      Array.isArray(rows) ? rows.map((r) => ({ ...r, network_id: networkId })) : [];
-
     // Remap user-reference fields to current profile IDs via username;
     // set to null if the referenced user doesn't exist in the current network.
     const scrubUserRefs = (rows: any[], fields: string[]): any[] =>
