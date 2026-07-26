@@ -222,6 +222,38 @@ function CustomersPage() {
 
 
 
+  function openSaleEdit(s: Sale) {
+    setSaleToEdit(s);
+    setEditBuyer(s.buyer_name ?? "");
+  }
+
+  async function saveSaleEdit() {
+    if (!saleToEdit) return;
+    setSaleBusy(true);
+    const { error } = await supabase.from("sales").update({ buyer_name: editBuyer.trim() || null }).eq("id", saleToEdit.id);
+    setSaleBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم حفظ التعديلات");
+    setSaleToEdit(null);
+    qc.invalidateQueries({ queryKey: ["customer-sales"] });
+    qc.invalidateQueries({ queryKey: ["sales"] });
+  }
+
+  async function confirmSaleDelete() {
+    if (!saleToDelete) return;
+    setSaleBusy(true);
+    const { error } = await supabase.rpc("delete_sale", { _sale_id: saleToDelete.id });
+    setSaleBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم حذف عملية البيع");
+    setSaleToDelete(null);
+    qc.invalidateQueries({ queryKey: ["customer-sales"] });
+    qc.invalidateQueries({ queryKey: ["sales"] });
+    qc.invalidateQueries({ queryKey: ["cabin-cards"] });
+    qc.invalidateQueries({ queryKey: ["agent-cabin"] });
+    qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
+  }
+
   return (
     <>
       <PageHeader title="الزبائن" description="إدارة حسابات الزبائن وإحصائياتهم" />
