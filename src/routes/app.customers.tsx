@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useMemo, useState } from "react";
-import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText } from "lucide-react";
+import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
 import { openWhatsApp } from "@/lib/wa-open";
 import { toast } from "sonner";
@@ -18,7 +20,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/app/customers")({ component: CustomersPage });
 
 type Customer = { id: string; name: string; whatsapp: string | null; created_at: string };
-type Sale = { id: string; transaction_no: string; package_name: string; network_name: string; price: number; sold_at: string; customer_id: string | null; buyer_name: string | null };
+type Sale = { id: string; transaction_no: string; package_name: string; network_name: string; price: number; sold_at: string; customer_id: string | null; buyer_name: string | null; card_username: string | null; card_password: string | null };
 
 function CustomersPage() {
   const { user } = useAuth();
@@ -27,6 +29,10 @@ function CustomersPage() {
   const [selected, setSelected] = useState<Customer | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Customer | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
+  const [saleToEdit, setSaleToEdit] = useState<Sale | null>(null);
+  const [editBuyer, setEditBuyer] = useState("");
+  const [saleBusy, setSaleBusy] = useState(false);
 
   const { data: customers } = useQuery({
     queryKey: ["customers-page", user?.id],
@@ -48,11 +54,15 @@ function CustomersPage() {
     queryFn: async (): Promise<Sale[]> => {
       const { data, error } = await supabase
         .from("sales")
-        .select("id, transaction_no, package_name, network_name, price, sold_at, customer_id, buyer_name")
+        .select("id, transaction_no, package_name, network_name, price, sold_at, customer_id, buyer_name, cards ( username, password )")
         .eq("agent_id", user!.id)
         .order("sold_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Sale[];
+      return (data ?? []).map((s: any) => ({
+        ...s,
+        card_username: s.cards?.username ?? null,
+        card_password: s.cards?.password ?? null,
+      })) as Sale[];
     },
   });
 
@@ -211,6 +221,38 @@ function CustomersPage() {
   }
 
 
+
+  function openSaleEdit(s: Sale) {
+    setSaleToEdit(s);
+    setEditBuyer(s.buyer_name ?? "");
+  }
+
+  async function saveSaleEdit() {
+    if (!saleToEdit) return;
+    setSaleBusy(true);
+    const { error } = await supabase.from("sales").update({ buyer_name: editBuyer.trim() || null }).eq("id", saleToEdit.id);
+    setSaleBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم حفظ التعديلات");
+    setSaleToEdit(null);
+    qc.invalidateQueries({ queryKey: ["customer-sales"] });
+    qc.invalidateQueries({ queryKey: ["sales"] });
+  }
+
+  async function confirmSaleDelete() {
+    if (!saleToDelete) return;
+    setSaleBusy(true);
+    const { error } = await supabase.rpc("delete_sale", { _sale_id: saleToDelete.id });
+    setSaleBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم حذف عملية البيع");
+    setSaleToDelete(null);
+    qc.invalidateQueries({ queryKey: ["customer-sales"] });
+    qc.invalidateQueries({ queryKey: ["sales"] });
+    qc.invalidateQueries({ queryKey: ["cabin-cards"] });
+    qc.invalidateQueries({ queryKey: ["agent-cabin"] });
+    qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
+  }
 
   return (
     <>
@@ -392,14 +434,32 @@ function CustomersPage() {
                   {selectedSales.map((s) => (
                     <Card key={s.id} className="p-3 border-0 card-elegant">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="font-semibold truncate">{s.package_name}</div>
                           <div className="text-[11px] text-muted-foreground">
                             {s.network_name} · {fmtArabicDateTime(s.sold_at)}
                           </div>
                           <div className="text-[10px] text-muted-foreground font-mono">{s.transaction_no}</div>
+                          {s.card_username && (
+                            <div className="mt-1 flex items-center gap-1 text-[11px] text-primary font-mono">
+                              <CreditCard className="h-3 w-3" />
+                              <span>{s.card_username}</span>
+                              {s.card_password && <span className="text-muted-foreground">/ {s.card_password}</span>}
+                            </div>
+                          )}
+                          {s.buyer_name && <div className="text-[11px] text-muted-foreground">المشتري: {s.buyer_name}</div>}
                         </div>
-                        <div className="text-primary font-bold text-sm">{fmtMoney(Number(s.price))}</div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <div className="text-primary font-bold text-sm">{fmtMoney(Number(s.price))}</div>
+                          <div className="flex gap-1">
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openSaleEdit(s)} title="تعديل">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setSaleToDelete(s)} title="حذف">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     </Card>
                   ))}
@@ -427,6 +487,40 @@ function CustomersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <AlertDialog open={!!saleToDelete} onOpenChange={(o) => !o && setSaleToDelete(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف عملية البيع؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف العملية {saleToDelete?.transaction_no} وإرجاع الكرت إلى حسابك. لا يمكن التراجع.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saleBusy}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSaleDelete} disabled={saleBusy} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {saleBusy ? "جاري..." : "حذف"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={!!saleToEdit} onOpenChange={(o) => !o && setSaleToEdit(null)}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل عملية البيع</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>اسم المشتري</Label>
+              <Input value={editBuyer} onChange={(e) => setEditBuyer(e.target.value)} placeholder="اختياري" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaleToEdit(null)} disabled={saleBusy}>إلغاء</Button>
+            <Button onClick={saveSaleEdit} disabled={saleBusy}>{saleBusy ? "جاري..." : "حفظ"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

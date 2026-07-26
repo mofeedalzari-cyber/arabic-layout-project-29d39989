@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useState, useMemo } from "react";
-import { Search, Receipt, Trash2, Pencil } from "lucide-react";
+import { Search, Receipt, Trash2, Pencil, CreditCard } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
@@ -32,6 +32,8 @@ type SaleRow = {
   price: number;
   sold_at: string;
   buyer_name: string | null;
+  card_username: string | null;
+  card_password: string | null;
 };
 
 function SalesPage() {
@@ -50,10 +52,14 @@ function SalesPage() {
     queryKey: ["sales"],
     queryFn: async () => {
       const { data, error } = await supabase.from("sales")
-        .select("id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name")
+        .select("id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, cards ( username, password )")
         .order("sold_at", { ascending: false }).limit(500);
       if (error) throw error;
-      return data as SaleRow[];
+      return (data ?? []).map((s: any) => ({
+        ...s,
+        card_username: s.cards?.username ?? null,
+        card_password: s.cards?.password ?? null,
+      })) as SaleRow[];
     },
   });
 
@@ -137,6 +143,13 @@ function SalesPage() {
                   {s.network_name} · {displayName(s.agent_username)} · {fmtArabicDateTime(s.sold_at)}
                 </div>
                 <div className="text-[10px] text-muted-foreground font-mono">{s.transaction_no}</div>
+                {s.card_username && (
+                  <div className="mt-1 flex items-center gap-1 text-[11px] text-primary font-mono">
+                    <CreditCard className="h-3 w-3" />
+                    <span>{s.card_username}</span>
+                    {s.card_password && <span className="text-muted-foreground">/ {s.card_password}</span>}
+                  </div>
+                )}
                 {s.buyer_name && <div className="text-[11px] text-primary">المشتري: {s.buyer_name}</div>}
               </div>
               <div className="text-primary font-bold text-sm whitespace-nowrap">{fmtMoney(Number(s.price))}</div>
