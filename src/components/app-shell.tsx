@@ -238,7 +238,7 @@ function UserFooter({ fullName, username, phone, role, onSignOut, dark, onToggle
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold truncate">{displayName}</div>
-          <div className="text-[11px] text-muted-foreground">{role === "admin" ? "مدير" : "مندوب"}</div>
+          <div className="text-[11px] text-muted-foreground">{role === "superadmin" ? "مدير التطبيق" : role === "admin" ? "مدير" : "مندوب"}</div>
         </div>
       </div>
 
