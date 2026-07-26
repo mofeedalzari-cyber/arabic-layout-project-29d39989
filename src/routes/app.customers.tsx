@@ -225,13 +225,13 @@ function CustomersPage() {
     qc.invalidateQueries({ queryKey: ["sales"] });
   }
 
-  async function confirmSaleDelete() {
+  async function confirmSaleDelete(deleteCard: boolean) {
     if (!saleToDelete) return;
     setSaleBusy(true);
-    const { error } = await supabase.rpc("delete_sale", { _sale_id: saleToDelete.id });
+    const { error } = await supabase.rpc("delete_sale", { _sale_id: saleToDelete.id, _delete_card: deleteCard });
     setSaleBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("تم حذف عملية البيع");
+    toast.success(deleteCard ? "تم الحذف بدون إرجاع الكرت" : "تم حذف العملية وإرجاع الكرت");
     setSaleToDelete(null);
     qc.invalidateQueries({ queryKey: ["customer-sales"] });
     qc.invalidateQueries({ queryKey: ["sales"] });
@@ -506,14 +506,17 @@ function CustomersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>حذف عملية البيع؟</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم حذف العملية {saleToDelete?.transaction_no} وإرجاع الكرت إلى حسابك. لا يمكن التراجع.
+              اختر طريقة الحذف للعملية {saleToDelete?.transaction_no}: إما إرجاع الكرت إلى حسابك، أو حذف بدون إرجاع (حذف الكرت نهائياً).
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={saleBusy}>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmSaleDelete} disabled={saleBusy} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {saleBusy ? "جاري..." : "حذف"}
-            </AlertDialogAction>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button onClick={() => confirmSaleDelete(false)} disabled={saleBusy} className="w-full">
+              {saleBusy ? "جاري..." : "إرجاع الكرت إلى حسابي"}
+            </Button>
+            <Button onClick={() => confirmSaleDelete(true)} disabled={saleBusy} variant="destructive" className="w-full">
+              {saleBusy ? "جاري..." : "حذف بدون إرجاع"}
+            </Button>
+            <AlertDialogCancel disabled={saleBusy} className="w-full mt-0">إلغاء</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

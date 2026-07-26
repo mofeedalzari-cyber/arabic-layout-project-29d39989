@@ -656,7 +656,12 @@ export type Database = {
         }[]
       }
       create_my_network: { Args: { _name: string }; Returns: string }
-      delete_sale: { Args: { _sale_id: string }; Returns: undefined }
+      delete_sale:
+        | { Args: { _sale_id: string }; Returns: undefined }
+        | {
+            Args: { _delete_card?: boolean; _sale_id: string }
+            Returns: undefined
+          }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
