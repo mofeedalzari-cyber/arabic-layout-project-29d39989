@@ -226,29 +226,31 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
     margin: [4, 0, 4, 6],
   };
 
-  // ---------- Items table: cols right→left: الصنف | الوحدة | الكمية | السعر | الإجمالي ----------
+  // ---------- Items table (RTL): visual order right→left is
+  //   الصنف | الوحدة | الكمية | السعر | الإجمالي
+  // pdfmake renders LTR, so we reverse the array to place الصنف on the right.
   const headerRowCells = [
-    cell("الصنف", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
-    cell("الوحدة", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
-    cell("الكمية", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
-    cell("السعر", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
     cell("الإجمالي", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
+    cell("السعر", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
+    cell("الكمية", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
+    cell("الوحدة", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
+    cell("الصنف", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
   ];
 
   const itemRows = input.items.map((i, idx) => {
     const bg = idx % 2 === 0 ? "#fafafa" : undefined;
     return [
-      cell(i.packageName, { alignment: "right", fillColor: bg, margin: [8, 6, 8, 6] }),
-      cell(i.unit || "حبة", { fillColor: bg }),
-      cell(String(i.qty), { color: RED, bold: true, fillColor: bg }),
-      cell(String(i.price), { fillColor: bg }),
       cell(String(Math.floor((Number(i.qty) || 0) * (Number(i.price) || 0))), { color: BLUE, bold: true, fillColor: bg }),
+      cell(String(i.price), { fillColor: bg }),
+      cell(String(i.qty), { color: RED, bold: true, fillColor: bg }),
+      cell(i.unit || "حبة", { fillColor: bg }),
+      cell(i.packageName, { alignment: "right", fillColor: bg, margin: [8, 6, 8, 6] }),
     ];
   });
 
   const itemsTable = {
     table: {
-      widths: ["*", 60, 60, 60, 80],
+      widths: [80, 60, 60, 60, "*"],
       body: [headerRowCells, ...itemRows],
     },
     layout: {
@@ -257,6 +259,7 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
     },
     margin: [0, 0, 0, 6],
   };
+
 
   // ---------- Totals row ----------
   const totalsRow = {
