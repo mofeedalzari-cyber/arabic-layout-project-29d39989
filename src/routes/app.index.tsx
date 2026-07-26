@@ -179,7 +179,7 @@ function AdminBreakdowns() {
         cols: ["الشبكة", "الفئة", "إجمالي الكروت", "مباعة", "متبقية", "إجمالي القيمة"],
         rows: salesByPkg.map((r) => [
           r.network, r.pkg, r.total, r.sold, r.remaining,
-          `${fmtMoney(r.value)}${r.currency ? " " + r.currency : ""}`,
+          fmtMoney(r.value),
         ]),
       },
       {
@@ -187,7 +187,7 @@ function AdminBreakdowns() {
         cols: ["المندوب", "الهاتف", "الفئة", "لديه", "السعر"],
         rows: agentStats.map((r) => [
           r.agent, r.phone, r.pkg, r.holding,
-          `${fmtMoney(r.price)}${r.currency ? " " + r.currency : ""}`,
+          fmtMoney(r.price),
         ]),
       },
       {
@@ -231,10 +231,10 @@ function AdminBreakdowns() {
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-          <SummaryItem label="إجمالي الكروت المُضافة" value={fmtMoney(summary.total)} />
-          <SummaryItem label="الكروت المُباعة" value={fmtMoney(summary.sold)} tone="success" />
-          <SummaryItem label="الكروت المتبقية" value={fmtMoney(summary.remaining)} tone="warning" />
-          <SummaryItem label="عدد المناديب" value={fmtMoney(summary.agentsCount)} />
+          <SummaryItem label="إجمالي الكروت المُضافة" value={String(summary.total)} />
+          <SummaryItem label="الكروت المُباعة" value={String(summary.sold)} tone="success" />
+          <SummaryItem label="الكروت المتبقية" value={String(summary.remaining)} tone="warning" />
+          <SummaryItem label="عدد المناديب" value={String(summary.agentsCount)} />
           <SummaryItem label="إجمالي قيمة المبيعات" value={fmtMoney(summary.salesValue)} tone="primary" />
           <SummaryItem label="إجمالي ديون المناديب" value={fmtMoney(summary.debts)} tone="danger" />
           <SummaryItem label="الرصيد" value={fmtMoney(summary.collected)} tone="success" />
@@ -259,7 +259,7 @@ function AdminBreakdowns() {
               const totalValue = salesByPkg.reduce((s, r) => s + r.value, 0);
               const rows: (string | number)[][] = salesByPkg.map((r) => [
                 r.network, r.pkg, r.total, r.sold, r.remaining,
-                `${fmtMoney(r.value)}${r.currency ? " " + r.currency : ""}`,
+                fmtMoney(r.value),
               ]);
               rows.push(["الإجمالي", "", totalCards, totalSold, totalRemaining, fmtMoney(totalValue)]);
               const stamp = new Date().toISOString().slice(0, 10);
@@ -298,15 +298,15 @@ function AdminBreakdowns() {
                   r.agent,
                   r.phone,
                   r.pkg,
-                  `${fmtMoney(r.price)}${r.currency ? " " + r.currency : ""}`,
-                  r.currency ?? "",
+                  fmtMoney(r.price),
+                  "",
                   r.holding,
                 ]);
                 const sumRows: SummaryRow[] = [
-                  { label: "إجمالي الكروت المُضافة", value: fmtMoney(summary.total) },
-                  { label: "الكروت المُباعة", value: fmtMoney(summary.sold) },
-                  { label: "الكروت المتبقية", value: fmtMoney(summary.remaining) },
-                  { label: "عدد المناديب", value: fmtMoney(summary.agentsCount) },
+                  { label: "إجمالي الكروت المُضافة", value: String(summary.total) },
+                  { label: "الكروت المُباعة", value: String(summary.sold) },
+                  { label: "الكروت المتبقية", value: String(summary.remaining) },
+                  { label: "عدد المناديب", value: String(summary.agentsCount) },
                   { label: "إجمالي قيمة المبيعات", value: fmtMoney(summary.salesValue) },
                   { label: "إجمالي ديون المناديب", value: fmtMoney(summary.debts) },
                   { label: "الرصيد", value: fmtMoney(summary.collected) },

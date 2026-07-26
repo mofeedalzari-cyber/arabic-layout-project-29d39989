@@ -261,7 +261,7 @@ function AgentAccountsPage() {
                       </div>
                     </div>
                     <div className="text-sm font-bold shrink-0">
-                      {fmtMoney(Number(s.price))} {netMap.get(s.network_id)?.currency ?? ""}
+                      {fmtMoney(Number(s.price))}
                     </div>
                   </div>
                 ))}
@@ -391,7 +391,7 @@ async function printAgentReport(a: PrintArgs) {
         r.label,
         r.withdrawn,
         r.sold,
-        `${fmtMoney(r.value)} ${r.currency ?? ""}`.trim(),
+        fmtMoney(r.value),
       ]),
     },
     {
@@ -400,10 +400,10 @@ async function printAgentReport(a: PrintArgs) {
       rows: a.byPackage.map((r) => [
         r.label,
         r.sub ?? "—",
-        r.price != null ? `${fmtMoney(r.price)} ${r.currency ?? ""}`.trim() : "—",
+        r.price != null ? fmtMoney(r.price) : "—",
         r.withdrawn,
         r.sold,
-        `${fmtMoney(r.value)} ${r.currency ?? ""}`.trim(),
+        fmtMoney(r.value),
       ]),
     },
     {
@@ -413,7 +413,7 @@ async function printAgentReport(a: PrintArgs) {
         s.transaction_no ?? "—",
         s.package_name,
         s.network_name,
-        `${fmtMoney(Number(s.price))} ${a.netMap.get(s.network_id)?.currency ?? ""}`.trim(),
+        fmtMoney(Number(s.price)),
         fmtArabicDateTimePdf(s.sold_at),
       ]),
     },

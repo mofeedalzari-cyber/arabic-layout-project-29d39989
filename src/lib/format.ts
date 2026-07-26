@@ -1,5 +1,6 @@
 export function fmtMoney(n: number) {
-  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n);
+  const formatted = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n);
+  return `${formatted} ﷼`;
 }
 
 export function cleanPhoneLike(value?: string | null) {

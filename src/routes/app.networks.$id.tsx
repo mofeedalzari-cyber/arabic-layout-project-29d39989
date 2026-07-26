@@ -205,7 +205,7 @@ function PackagesPage() {
                   </div>
                 </div>
                 <div className="rounded-full border bg-accent px-3 py-1 text-sm font-bold text-accent-foreground shrink-0">
-                  {network?.currency} {fmtMoney(Number(p.price))}
+                  {fmtMoney(Number(p.price))}
                 </div>
               </div>
 
@@ -283,7 +283,7 @@ function PackagesPage() {
             <div className="mt-4 space-y-4">
               <div className="rounded-2xl p-5 text-white" style={{ background: `linear-gradient(135deg, ${confirmPkg.color}, ${confirmPkg.color}dd)` }}>
                 <div className="opacity-80 text-sm">{confirmPkg.name}</div>
-                <div className="text-3xl font-extrabold">{fmtMoney(Number(confirmPkg.price))} <span className="text-sm font-normal opacity-70">{network?.currency}</span></div>
+                <div className="text-3xl font-extrabold">{fmtMoney(Number(confirmPkg.price))}</div>
               </div>
               <div className="flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-xs text-warning-foreground">
                 <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-warning" />
@@ -322,7 +322,7 @@ function PackagesPage() {
             <div className="mt-4 space-y-4">
               <div className="rounded-2xl p-5 text-white" style={{ background: `linear-gradient(135deg, ${requestPkg.color}, ${requestPkg.color}dd)` }}>
                 <div className="opacity-80 text-sm">{requestPkg.name}</div>
-                <div className="text-3xl font-extrabold">{fmtMoney(Number(requestPkg.price))} <span className="text-sm font-normal opacity-70">{network?.currency}</span></div>
+                <div className="text-3xl font-extrabold">{fmtMoney(Number(requestPkg.price))}</div>
               </div>
               <div>
                 <Label className="text-xs mb-1.5 block">الكمية المطلوبة</Label>
@@ -356,7 +356,7 @@ function PackagesPage() {
               <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">القيمة الإجمالية</span>
                 <span className="font-extrabold text-primary text-base">
-                  {fmtMoney(Number(requestPkg.price) * reqQty)} <span className="text-xs font-normal opacity-70">{network?.currency}</span>
+                  {fmtMoney(Number(requestPkg.price) * reqQty)}
                 </span>
               </div>
               <div>
@@ -393,7 +393,7 @@ function SaleCard({ sale, currency, networkName }: { sale: any; currency: string
   async function copy(text: string, label: string) {
     await navigator.clipboard.writeText(text); toast.success(`تم نسخ ${label}`);
   }
-  const fullText = `الشبكة: ${networkName}\nالباقة: ${sale.package_name}\nالمستخدم: ${sale.card_username}\n${sale.card_password ? `كلمة المرور: ${sale.card_password}\n` : ""}السعر: ${fmtMoney(Number(sale.price))} ${currency}\nرقم العملية: ${sale.transaction_no}`;
+  const fullText = `الشبكة: ${networkName}\nالباقة: ${sale.package_name}\nالمستخدم: ${sale.card_username}\n${sale.card_password ? `كلمة المرور: ${sale.card_password}\n` : ""}السعر: ${fmtMoney(Number(sale.price))}\nرقم العملية: ${sale.transaction_no}`;
 
   async function share() {
     // Native → share sheet (WhatsApp, Telegram, Gmail…). Web → navigator.share or copy.
@@ -426,7 +426,7 @@ function SaleCard({ sale, currency, networkName }: { sale: any; currency: string
     const net = esc(networkName);
     const user = esc(sale.card_username);
     const pass = sale.card_password ? esc(sale.card_password) : "";
-    const price = esc(`${fmtMoney(Number(sale.price))} ${currency}`);
+    const price = esc(fmtMoney(Number(sale.price)));
     const html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>${tx}</title><style>body{font-family:Cairo,sans-serif;padding:20px;text-align:center;background:#fff}.b{border:2px dashed #009688;border-radius:12px;padding:16px;margin:12px auto;max-width:320px}h1{color:#009688;margin:0 0 8px}.k{color:#666;font-size:12px}.v{font-weight:bold;font-size:18px;margin-bottom:8px}</style></head><body><div class="b"><h1>${net}</h1><div class="k">${pkg}</div><hr/><div class="k">اسم المستخدم</div><div class="v">${user}</div>${pass?`<div class="k">كلمة المرور</div><div class="v">${pass}</div>`:""}<div class="k">السعر</div><div class="v">${price}</div><div class="k" style="margin-top:8px">رقم العملية: ${tx}</div></div><script>window.onload=()=>setTimeout(()=>window.print(),300)</script></body></html>`;
     const { sharePdfOrPrint } = await import("@/lib/native-pdf");
     await sharePdfOrPrint({ html, filename: `فاتورة_${sale.transaction_no}`, dialogTitle: "طباعة أو مشاركة الفاتورة" });
@@ -440,7 +440,7 @@ function SaleCard({ sale, currency, networkName }: { sale: any; currency: string
         <div className="grid gap-2">
           <Row label="اسم المستخدم" value={sale.card_username} onCopy={() => copy(sale.card_username, "اسم المستخدم")} />
           {sale.card_password && <Row label="كلمة المرور" value={sale.card_password} onCopy={() => copy(sale.card_password, "كلمة المرور")} />}
-          <Row label="السعر" value={`${fmtMoney(Number(sale.price))} ${currency}`} />
+          <Row label="السعر" value={fmtMoney(Number(sale.price))} />
           <Row label="رقم العملية" value={sale.transaction_no} onCopy={() => copy(sale.transaction_no, "رقم العملية")} />
         </div>
       </div>

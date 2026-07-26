@@ -266,7 +266,7 @@ function PackagesPage() {
                   <div className="text-[11px] text-muted-foreground truncate">{net?.name ?? "—"}</div>
                 </div>
                 <div className="rounded-full bg-destructive/10 text-destructive text-xs font-bold px-3 py-1.5 whitespace-nowrap">
-                  {fmtMoney(Number(p.price))} {net?.currency ?? "ر.س"}
+                  {fmtMoney(Number(p.price))}
                 </div>
               </div>
 
@@ -348,7 +348,7 @@ function PackagesPage() {
                 <div className="rounded-2xl p-5 text-white" style={{ background: `linear-gradient(135deg, ${requestPkg.color ?? "#009688"}, ${(requestPkg.color ?? "#009688")}dd)` }}>
                   <div className="opacity-80 text-sm">{net?.name ?? ""}</div>
                   <div className="text-base font-bold">{requestPkg.name}</div>
-                  <div className="text-3xl font-extrabold mt-1">{fmtMoney(Number(requestPkg.price))} <span className="text-sm font-normal opacity-70">{net?.currency}</span></div>
+                  <div className="text-3xl font-extrabold mt-1">{fmtMoney(Number(requestPkg.price))}</div>
                   <div className="text-xs opacity-80 mt-1">المتاح الآن: {counts?.get(requestPkg.id)?.avail ?? 0}</div>
                 </div>
                 <div>
@@ -383,7 +383,7 @@ function PackagesPage() {
                 <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">القيمة الإجمالية</span>
                   <span className="font-extrabold text-primary text-base">
-                    {fmtMoney(Number(requestPkg.price) * reqQty)} <span className="text-xs font-normal opacity-70">{net?.currency}</span>
+                    {fmtMoney(Number(requestPkg.price) * reqQty)}
                   </span>
                 </div>
                 <div>

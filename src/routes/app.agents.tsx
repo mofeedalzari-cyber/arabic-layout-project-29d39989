@@ -502,7 +502,7 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
                       </div>
                       <div className="mt-2 pt-2 border-t border-border/50 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                         <Tag className="h-3 w-3" />
-                        القيمة الاسمية: {n.currency} {fmtMoney(p.price)}
+                        القيمة الاسمية: {fmtMoney(p.price)}
                       </div>
                     </div>
                   ))}

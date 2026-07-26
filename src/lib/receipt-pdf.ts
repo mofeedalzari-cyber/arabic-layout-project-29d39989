@@ -2,6 +2,7 @@
 // Formal Arabic credit-notice receipt (سند إشعار دائن) matching the reference layout.
 import type { TDocumentDefinitions } from "pdfmake/interfaces";
 import { ar } from "./pdfmake-report";
+import { fmtMoney } from "./format";
 
 // pdfmake + font loader are reused via a private helper module pattern.
 // We duplicate the minimal loader here to avoid circular refactors.
@@ -240,7 +241,7 @@ export async function buildCreditReceiptPdfBlob(input: CreditReceiptInput): Prom
       body: [
         [
           cell("العملة  " + curLabel, { color: "#1e3a8a", bold: true }),
-          cell(`${amountInt.toLocaleString("en-US")} ${curLabel.includes("سعودي") ? "ريال ر.س." : curLabel}`, { bold: true }),
+          cell(fmtMoney(amountInt), { bold: true }),
           cell("المبلغ", { color: "#1e3a8a", bold: true }),
         ],
         [cell(words, { colSpan: 3, alignment: "center", bold: true, margin: [4, 6, 4, 6] }), {}, {}],
