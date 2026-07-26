@@ -190,7 +190,7 @@ function CardsPage() {
         </div>
 
         <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="mb-4">
-          <TabsList className="rounded-xl">
+          <TabsList dir="rtl" className="rounded-xl">
             <TabsTrigger value="user_pass" className="rounded-lg">مستخدم | كلمة مرور</TabsTrigger>
             <TabsTrigger value="user_only" className="rounded-lg">مستخدم فقط</TabsTrigger>
           </TabsList>
