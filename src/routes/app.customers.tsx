@@ -465,14 +465,9 @@ function CustomersPage() {
                               <TableCell className="text-[10px] font-mono text-muted-foreground whitespace-nowrap">{s.transaction_no}</TableCell>
                               <TableCell className="text-primary font-bold whitespace-nowrap">{fmtMoney(Number(s.price))}</TableCell>
                               <TableCell>
-                                <div className="flex gap-1">
-                                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openSaleEdit(s)} title="تعديل">
-                                    <Pencil className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setSaleToDelete(s)} title="حذف">
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                </div>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openSaleEdit(s)} title="تعديل">
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
                               </TableCell>
                             </TableRow>
                           ))}
