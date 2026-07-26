@@ -127,13 +127,6 @@ function SuperAdminPage() {
         <MiniStat label="قيمة المتاح" value={fmtMoney(Number(s.available_value ?? 0))} />
       </div>
 
-      <MyNetworkPanel
-        myNetwork={(networks.data ?? []).find((n: any) => n.owner_id === profile?.id) ?? null}
-        onCreated={() => {
-          qc.invalidateQueries({ queryKey: ["sa-networks"] });
-          qc.invalidateQueries({ queryKey: ["sa-stats"] });
-        }}
-      />
 
 
       <Tabs defaultValue="networks" className="mt-4" dir="rtl">
