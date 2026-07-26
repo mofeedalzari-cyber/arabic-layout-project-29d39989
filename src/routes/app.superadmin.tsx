@@ -208,7 +208,7 @@ function SuperAdminPage() {
         </TabsContent>
 
         <TabsContent value="packages" className="mt-3 space-y-3">
-          <div className="flex justify-end"><AddPackageDialog networks={networks.data ?? []} /></div>
+
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse border">
