@@ -210,8 +210,8 @@ function CabinPage() {
 
 
       {/* Confirm */}
-      <Sheet open={!!confirmPkg} onOpenChange={(o) => !o && setConfirmPkg(null)}>
-        <SheetContent side="bottom" className="rounded-t-3xl" dir="rtl">
+      <Sheet open={!!confirmPkg} onOpenChange={(o) => { if (!o) { setConfirmPkg(null); setSelCustomer(null); setAddingCustomer(false); } }}>
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto" dir="rtl">
           <SheetHeader>
             <SheetTitle>تأكيد البيع</SheetTitle>
             <SheetDescription>لن تظهر بيانات الكرت إلا بعد تأكيد البيع.</SheetDescription>
@@ -222,12 +222,55 @@ function CabinPage() {
                 <div className="opacity-80 text-sm">{confirmPkg.network_name} — {confirmPkg.package_name}</div>
                 <div className="text-3xl font-extrabold">{fmtMoney(Number(confirmPkg.price))} <span className="text-sm font-normal opacity-70">{confirmPkg.currency}</span></div>
               </div>
+
+              {/* Customer picker */}
+              <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-muted-foreground font-semibold">الزبون (اختياري)</div>
+                  {!addingCustomer && (
+                    <Button size="sm" variant="ghost" className="rounded-lg h-8" onClick={() => setAddingCustomer(true)}>
+                      <UserPlus className="h-4 w-4 ml-1" />زبون جديد
+                    </Button>
+                  )}
+                </div>
+
+                {addingCustomer ? (
+                  <div className="space-y-2">
+                    <Input placeholder="اسم الزبون" value={newName} onChange={(e) => setNewName(e.target.value)} className="rounded-xl bg-background" />
+                    <Input placeholder="رقم واتساب (مع رمز الدولة)" inputMode="tel" value={newWa} onChange={(e) => setNewWa(e.target.value)} className="rounded-xl bg-background" />
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setAddingCustomer(false); setNewName(""); setNewWa(""); }}>إلغاء</Button>
+                      <Button size="sm" className="flex-1 rounded-xl gradient-primary-bg border-0" onClick={async () => { const c = await createCustomer(); if (c) setSelCustomer(c); }}>حفظ الزبون</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      <button type="button" onClick={() => setSelCustomer(null)}
+                        className={`w-full text-right rounded-lg px-3 py-2 text-sm border ${!selCustomer ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border/50"}`}>
+                        بدون زبون
+                      </button>
+                      {(customers ?? []).map((c) => (
+                        <button key={c.id} type="button" onClick={() => setSelCustomer(c)}
+                          className={`w-full text-right rounded-lg px-3 py-2 text-sm border flex items-center justify-between ${selCustomer?.id === c.id ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border/50"}`}>
+                          <span className="font-bold truncate">{c.name}</span>
+                          <span className="text-[11px] text-muted-foreground font-mono">{c.whatsapp}</span>
+                        </button>
+                      ))}
+                      {(customers?.length ?? 0) === 0 && (
+                        <div className="text-center text-xs text-muted-foreground py-2">لا يوجد زبائن — أضف زبونًا جديدًا</div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div className="flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-xs text-warning-foreground">
                 <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-warning" />
-                <span>سيتم خصم أول كرت من كبينتك ولا يمكن التراجع.</span>
+                <span>سيتم خصم أول كرت من كبينتك ولا يمكن التراجع.{selCustomer ? ` سيُرسل الكرت إلى ${selCustomer.name} عبر واتساب.` : ""}</span>
               </div>
               <div className="flex gap-2 pb-4">
-                <Button variant="outline" className="flex-1 rounded-xl h-11" onClick={() => setConfirmPkg(null)}>إلغاء</Button>
+                <Button variant="outline" className="flex-1 rounded-xl h-11" onClick={() => { setConfirmPkg(null); setSelCustomer(null); }}>إلغاء</Button>
                 <Button disabled={selling} onClick={confirmSell} className="flex-1 rounded-xl h-11 gradient-primary-bg border-0 font-semibold">
                   {selling ? "..." : "تأكيد البيع"}
                 </Button>
@@ -244,6 +287,47 @@ function CabinPage() {
             <SheetTitle className="flex items-center gap-2 text-success"><Check className="h-5 w-5" />تم البيع بنجاح</SheetTitle>
           </SheetHeader>
           {saleResult && <SaleReceipt sale={saleResult} />}
+        </SheetContent>
+      </Sheet>
+
+      {/* Customers management */}
+      <Sheet open={customersOpen} onOpenChange={setCustomersOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto" dir="rtl">
+          <SheetHeader>
+            <SheetTitle>الزبائن</SheetTitle>
+            <SheetDescription>أضف زبونًا جديدًا أو أدر قائمة زبائنك.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 space-y-3 pb-4">
+            <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
+              <div className="text-xs text-muted-foreground font-semibold">إضافة زبون جديد</div>
+              <Input placeholder="اسم الزبون" value={newName} onChange={(e) => setNewName(e.target.value)} className="rounded-xl bg-background" />
+              <Input placeholder="رقم واتساب (مع رمز الدولة)" inputMode="tel" value={newWa} onChange={(e) => setNewWa(e.target.value)} className="rounded-xl bg-background" />
+              <Button className="w-full rounded-xl gradient-primary-bg border-0" onClick={() => { void createCustomer(); }}>
+                <UserPlus className="h-4 w-4 ml-1" />حفظ
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {(customers ?? []).map((c) => (
+                <Card key={c.id} className="card-elegant border-0 p-3 flex items-center justify-between">
+                  <div className="min-w-0">
+                    <div className="font-bold truncate">{c.name}</div>
+                    <div className="text-[11px] font-mono text-muted-foreground">{c.whatsapp}</div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button size="icon" variant="ghost" className="rounded-lg" onClick={() => window.open(`https://wa.me/${normalizeWa(c.whatsapp)}`, "_blank")}>
+                      <MessageCircle className="h-4 w-4 text-success" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="rounded-lg" onClick={() => deleteCustomer(c.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+              {(customers?.length ?? 0) === 0 && (
+                <div className="text-center py-8 text-sm text-muted-foreground">لا يوجد زبائن بعد.</div>
+              )}
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
 
