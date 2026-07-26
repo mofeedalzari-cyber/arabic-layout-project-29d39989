@@ -52,10 +52,14 @@ function SalesPage() {
     queryKey: ["sales"],
     queryFn: async () => {
       const { data, error } = await supabase.from("sales")
-        .select("id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name")
+        .select("id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, cards ( username, password )")
         .order("sold_at", { ascending: false }).limit(500);
       if (error) throw error;
-      return data as SaleRow[];
+      return (data ?? []).map((s: any) => ({
+        ...s,
+        card_username: s.cards?.username ?? null,
+        card_password: s.cards?.password ?? null,
+      })) as SaleRow[];
     },
   });
 
