@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<Role | null>(null);
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (uid: string) => {
@@ -44,12 +45,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
     setProfile(prof as Profile | null);
-    const r = roles?.find((x) => x.role === "superadmin")?.role
-      ?? roles?.find((x) => x.role === "admin")?.role
-      ?? roles?.find((x) => x.role === "agent")?.role
-      ?? null;
+    const has = (name: string) => !!roles?.find((x) => x.role === name);
+    setIsSuperadmin(has("superadmin"));
+    // Effective role: prefer admin/agent so superadmin users get the same UI
+    // as a network admin. isSuperadmin exposes the extra capability separately.
+    const r = has("admin") ? "admin"
+      : has("agent") ? "agent"
+      : has("superadmin") ? "superadmin"
+      : null;
     setRole((r as Role | null) ?? null);
   };
+
 
   useEffect(() => {
     let mounted = true;
