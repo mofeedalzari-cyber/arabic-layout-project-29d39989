@@ -35,7 +35,19 @@ interface Customer {
 }
 
 function normalizeWa(v: string) {
-  return String(v ?? "").replace(/\D/g, "");
+  let d = String(v ?? "").replace(/\D/g, "");
+  if (!d) return "";
+  // Strip existing country code / leading zero so we always store 967XXXXXXXXX
+  if (d.startsWith("967")) d = d.slice(3);
+  if (d.startsWith("0")) d = d.replace(/^0+/, "");
+  return "967" + d;
+}
+
+function localYemenDigits(v: string) {
+  let d = String(v ?? "").replace(/\D/g, "");
+  if (d.startsWith("967")) d = d.slice(3);
+  if (d.startsWith("0")) d = d.replace(/^0+/, "");
+  return d;
 }
 
 function CabinPage() {
