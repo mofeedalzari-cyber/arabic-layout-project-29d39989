@@ -256,6 +256,17 @@ function SuperAdminPage() {
         </TabsContent>
 
         <TabsContent value="packages" className="mt-3 space-y-3">
+          <div className="flex flex-wrap gap-2 items-center">
+            <select
+              className="h-10 rounded-md border bg-background px-3 text-sm"
+              value={packagesNetFilter}
+              onChange={(e) => setPackagesNetFilter(e.target.value)}
+            >
+              <option value="">كل الشبكات</option>
+              {(networks.data ?? []).map((n: any) => <option key={n.id} value={n.id}>{n.name}</option>)}
+            </select>
+          </div>
+
 
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
