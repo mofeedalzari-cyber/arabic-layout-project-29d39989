@@ -294,9 +294,15 @@ function CustomersPage() {
         <StatCard icon={<Receipt className="h-4 w-4" />} label="إجمالي المبيعات" value={fmtMoney(totals.revenue)} />
       </div>
 
-      <div className="relative mb-4 max-w-md">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="بحث باسم أو رقم واتساب..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />
+      <div className="flex gap-2 mb-4 items-center">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="بحث باسم أو رقم واتساب..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />
+        </div>
+        <Button onClick={() => setAddOpen(true)} className="rounded-xl gradient-primary-bg text-white">
+          <UserPlus className="h-4 w-4 ml-1" />
+          إضافة زبون
+        </Button>
       </div>
 
       {/* Mobile cards */}
