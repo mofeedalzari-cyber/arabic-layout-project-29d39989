@@ -30,7 +30,6 @@ function CustomersPage() {
   const [selected, setSelected] = useState<Customer | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Customer | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
-  const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null);
   const [saleToEdit, setSaleToEdit] = useState<Sale | null>(null);
   const [editBuyer, setEditBuyer] = useState("");
   const [saleBusy, setSaleBusy] = useState(false);
