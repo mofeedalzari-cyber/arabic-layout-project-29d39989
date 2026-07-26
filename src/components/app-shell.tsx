@@ -76,7 +76,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
             {items.map((it) => <NavLink key={it.to} item={it} />)}
           </nav>
-          <UserFooter fullName={profile?.full_name ?? ""} username={profile?.username ?? ""} phone={profile?.phone ?? ""} role={role} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
+          <UserFooter fullName={profile?.full_name ?? ""} username={profile?.username ?? ""} phone={profile?.phone ?? ""} role={role} isSuperadmin={isSuperadmin} onSignOut={signOut} dark={dark} onToggleTheme={toggleTheme} />
+
 
         </aside>
       )}
