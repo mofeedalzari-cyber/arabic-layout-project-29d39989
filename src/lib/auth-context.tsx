@@ -18,10 +18,12 @@ interface AuthContextValue {
   session: Session | null;
   profile: Profile | null;
   role: Role | null;
+  isSuperadmin: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 }
+
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
