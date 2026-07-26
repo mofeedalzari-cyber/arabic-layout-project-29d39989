@@ -33,6 +33,7 @@ function CustomersPage() {
   const [saleToEdit, setSaleToEdit] = useState<Sale | null>(null);
   const [editBuyer, setEditBuyer] = useState("");
   const [saleBusy, setSaleBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const { data: customers } = useQuery({
     queryKey: ["customers-page", user?.id],
@@ -114,16 +115,24 @@ function CustomersPage() {
   const selectedTotal = selectedSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
 
   async function handleDelete(c: Customer) {
-    const { error } = await supabase.from("customers").delete().eq("id", c.id);
-    if (error) {
-      toast.error("تعذر حذف الزبون: " + error.message);
-      return;
+    setDeleteBusy(true);
+    try {
+      const { error } = await supabase.rpc("delete_customer", { _customer_id: c.id });
+      if (error) {
+        toast.error("تعذر حذف الزبون: " + error.message);
+        return;
+      }
+      toast.success("تم حذف الزبون وإرجاع الكروت");
+      setConfirmDelete(null);
+      if (selected?.id === c.id) setSelected(null);
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
+      qc.invalidateQueries({ queryKey: ["customer-sales"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["cards"] });
+      qc.invalidateQueries({ queryKey: ["agent-cabin"] });
+    } finally {
+      setDeleteBusy(false);
     }
-    toast.success("تم حذف الزبون");
-    setConfirmDelete(null);
-    if (selected?.id === c.id) setSelected(null);
-    qc.invalidateQueries({ queryKey: ["customers-page"] });
-    qc.invalidateQueries({ queryKey: ["customer-sales"] });
   }
 
   async function sendStatementWhatsApp(c: Customer) {
@@ -493,12 +502,14 @@ function CustomersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>حذف الزبون</AlertDialogTitle>
             <AlertDialogDescription>
-              هل أنت متأكد من حذف "{confirmDelete?.name}"؟ لا يمكن التراجع عن هذا الإجراء.
+              هل أنت متأكد من حذف "{confirmDelete?.name}"؟ سيتم حذف سجل المبيعات المرتبطة به وإرجاع الكروت إلى حسابك. لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={() => confirmDelete && handleDelete(confirmDelete)}>حذف</AlertDialogAction>
+            <AlertDialogCancel disabled={deleteBusy}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDelete && handleDelete(confirmDelete)} disabled={deleteBusy}>
+              {deleteBusy ? "جاري..." : "حذف"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
