@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Wifi, Package, ShoppingCart, DollarSign, Users, TrendingUp, Activity, Layers, UserCheck, FileSpreadsheet, FileText, Eraser } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -54,6 +55,7 @@ function AdminDashboard() {
   return (
     <div className="w-full max-w-full overflow-hidden">
       <PageHeader title="لوحة التحكم" description="نظرة شاملة على أداء المتجر" />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 mb-5">
         <StatCard icon={Package} label="إجمالي الكروت" value={stats?.total_cards ?? 0} tone="primary" />
         <StatCard icon={ShoppingCart} label="المتوفر" value={stats?.available ?? 0} tone="success" />
@@ -453,6 +455,7 @@ function AgentHome({ name }: { name: string }) {
     <div dir="rtl" className="w-full max-w-full overflow-hidden text-right">
 
       <PageHeader title={`أهلاً، ${name}`} description="لوحة البيع" />
+      <div className="mb-4 flex justify-start"><RefreshButton /></div>
 
 
       {user && (
