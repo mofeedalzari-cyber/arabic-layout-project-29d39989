@@ -56,9 +56,12 @@ function AuthPage() {
     if (!identifier) return toast.error("أدخل رقم الجوال");
     if (!p.success) return toast.error(p.error.issues[0].message);
     setBusy(true);
-    const { data: username, error: rpcErr } = await (supabase.rpc as any)("username_from_phone", { _phone: identifier });
-    const loginName = (username as string | null) ?? (/^[a-zA-Z0-9._-]{3,30}$/.test(identifier) ? identifier : null);
-    if (rpcErr || !loginName) { setBusy(false); return toast.error("رقم الجوال غير مسجّل"); }
+    // Derive username deterministically from phone (same rule as registration).
+    // No server lookup — avoids leaking whether a phone is registered.
+    const digits = identifier.replace(/\D/g, "");
+    const loginName = digits ? `u${digits}`.slice(0, 30)
+      : (/^[a-zA-Z0-9._-]{3,30}$/.test(identifier) ? identifier : null);
+    if (!loginName) { setBusy(false); return toast.error("رقم الجوال غير صحيح"); }
     const { error } = await supabase.auth.signInWithPassword({ email: usernameToEmail(loginName), password: p.data });
     setBusy(false);
     if (error) return toast.error("رقم الجوال أو كلمة المرور غير صحيحة");
