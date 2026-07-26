@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { fmtMoney, displayPhone, fmtArabicDateTime } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search, Power, PowerOff, Plus } from "lucide-react";
+import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search, Power, PowerOff, Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
 
@@ -38,6 +38,22 @@ function SuperAdminPage() {
       qc.invalidateQueries({ queryKey: ["sa-stats"] });
     },
     onError: (e: any) => toast.error(e.message ?? "فشل"),
+  });
+
+  const deleteNet = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.rpc as any)("superadmin_delete_network", { _network_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف الشبكة بالكامل");
+      qc.invalidateQueries({ queryKey: ["sa-networks"] });
+      qc.invalidateQueries({ queryKey: ["sa-stats"] });
+      qc.invalidateQueries({ queryKey: ["sa-agents"] });
+      qc.invalidateQueries({ queryKey: ["sa-packages"] });
+      qc.invalidateQueries({ queryKey: ["sa-cards"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "فشل الحذف"),
   });
 
   const stats = useQuery({
@@ -132,11 +148,11 @@ function SuperAdminPage() {
 
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse border">
+              <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الشبكة</Th><Th>المالك</Th><Th>الهاتف</Th><Th>مناديب</Th><Th>باقات</Th>
-                    <Th>كروت</Th><Th>مباع</Th><Th>قيمة المبيعات</Th><Th>الحالة</Th><Th>الإنشاء</Th><Th>إجراء</Th>
+                    <Th>كروت</Th><Th>مباع</Th><Th>قيمة المبيعات</Th><Th>الحالة</Th><Th>الإنشاء</Th><Th>إجراءات</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -153,19 +169,40 @@ function SuperAdminPage() {
                       <Td>{n.is_active ? <Badge>نشطة</Badge> : <Badge variant="secondary">موقوفة</Badge>}</Td>
                       <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(n.created_at)}</Td>
                       <Td>
-                        <Button
-                          size="sm"
-                          variant={n.is_active ? "destructive" : "default"}
-                          disabled={toggleNet.isPending}
-                          onClick={() => {
-                            const msg = n.is_active
-                              ? `إيقاف شبكة "${n.name}"؟ لن يتمكن مستخدموها من الدخول.`
-                              : `إعادة تفعيل شبكة "${n.name}"؟`;
-                            if (window.confirm(msg)) toggleNet.mutate({ id: n.id, active: !n.is_active });
-                          }}
-                        >
-                          {n.is_active ? <><PowerOff className="h-4 w-4 ml-1" />إيقاف</> : <><Power className="h-4 w-4 ml-1" />تفعيل</>}
-                        </Button>
+                        <div className="flex gap-1 flex-wrap">
+                          <Button
+                            size="sm"
+                            variant={n.is_active ? "destructive" : "default"}
+                            disabled={toggleNet.isPending}
+                            onClick={() => {
+                              const msg = n.is_active
+                                ? `إيقاف شبكة "${n.name}"؟ لن يتمكن مستخدموها من الدخول.`
+                                : `إعادة تفعيل شبكة "${n.name}"؟`;
+                              if (window.confirm(msg)) toggleNet.mutate({ id: n.id, active: !n.is_active });
+                            }}
+                          >
+                            {n.is_active ? <><PowerOff className="h-4 w-4 ml-1" />إيقاف</> : <><Power className="h-4 w-4 ml-1" />تفعيل</>}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={deleteNet.isPending}
+                            onClick={() => {
+                              const first = window.confirm(
+                                `⚠️ حذف نهائي لشبكة "${n.name}"؟\nسيتم حذف جميع المناديب والباقات والكروت والطلبات والمبيعات المرتبطة بها.`
+                              );
+                              if (!first) return;
+                              const confirm2 = window.prompt(`للتأكيد اكتب اسم الشبكة: ${n.name}`);
+                              if (confirm2 !== n.name) {
+                                toast.error("تم إلغاء الحذف — الاسم غير مطابق");
+                                return;
+                              }
+                              deleteNet.mutate(n.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 ml-1" />حذف
+                          </Button>
+                        </div>
                       </Td>
                     </tr>
                   ))}
@@ -179,7 +216,7 @@ function SuperAdminPage() {
         <TabsContent value="agents" className="mt-3">
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse border">
+              <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الاسم</Th><Th>المستخدم</Th><Th>الهاتف</Th><Th>الشبكة</Th><Th>الدور</Th>
@@ -211,7 +248,7 @@ function SuperAdminPage() {
 
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse border">
+              <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الباقة</Th><Th>الشبكة</Th><Th>السعر</Th>
@@ -270,7 +307,7 @@ function SuperAdminPage() {
 
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse border">
+              <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الرقم</Th><Th>كلمة السر</Th><Th>الحالة</Th><Th>الباقة</Th><Th>الشبكة</Th>

@@ -743,6 +743,10 @@ export type Database = {
         }
         Returns: string
       }
+      superadmin_delete_network: {
+        Args: { _network_id: string }
+        Returns: Json
+      }
       superadmin_networks: {
         Args: never
         Returns: {
