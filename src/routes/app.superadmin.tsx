@@ -94,6 +94,8 @@ function SuperAdminPage() {
   });
 
   const [cardsFilter, setCardsFilter] = useState<{ network_id?: string; status?: string; search?: string }>({});
+  const [agentsNetFilter, setAgentsNetFilter] = useState<string>("");
+  const [packagesNetFilter, setPackagesNetFilter] = useState<string>("");
   const cards = useQuery({
     queryKey: ["sa-cards", cardsFilter],
     queryFn: async () => {
@@ -212,7 +214,17 @@ function SuperAdminPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="agents" className="mt-3">
+        <TabsContent value="agents" className="mt-3 space-y-3">
+          <div className="flex flex-wrap gap-2 items-center">
+            <select
+              className="h-10 rounded-md border bg-background px-3 text-sm"
+              value={agentsNetFilter}
+              onChange={(e) => setAgentsNetFilter(e.target.value)}
+            >
+              <option value="">كل الشبكات</option>
+              {(networks.data ?? []).map((n: any) => <option key={n.id} value={n.id}>{n.name}</option>)}
+            </select>
+          </div>
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table dir="rtl" className="w-full text-sm border-collapse border">
@@ -223,7 +235,7 @@ function SuperAdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(agents.data ?? []).map((a: any) => (
+                  {(agents.data ?? []).filter((a: any) => !agentsNetFilter || a.network_id === agentsNetFilter).map((a: any) => (
                     <tr key={a.id} className="border-t">
                       <Td>{a.full_name ?? "—"}</Td>
                       <Td>{a.username}</Td>
@@ -244,6 +256,17 @@ function SuperAdminPage() {
         </TabsContent>
 
         <TabsContent value="packages" className="mt-3 space-y-3">
+          <div className="flex flex-wrap gap-2 items-center">
+            <select
+              className="h-10 rounded-md border bg-background px-3 text-sm"
+              value={packagesNetFilter}
+              onChange={(e) => setPackagesNetFilter(e.target.value)}
+            >
+              <option value="">كل الشبكات</option>
+              {(networks.data ?? []).map((n: any) => <option key={n.id} value={n.id}>{n.name}</option>)}
+            </select>
+          </div>
+
 
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
@@ -255,7 +278,7 @@ function SuperAdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(packages.data ?? []).map((p: any) => (
+                  {(packages.data ?? []).filter((p: any) => !packagesNetFilter || p.network_id === packagesNetFilter).map((p: any) => (
                     <tr key={p.id} className="border-t">
                       <Td className="font-semibold">{p.name}</Td>
                       <Td>{p.network_name}</Td>
