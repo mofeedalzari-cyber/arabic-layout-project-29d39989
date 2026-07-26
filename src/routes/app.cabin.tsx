@@ -608,7 +608,7 @@ function SaleReceipt({ sale }: { sale: any }) {
       </div>
 
       <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
-        <div className="text-xs text-muted-foreground font-semibold">ملاحظة — اسم المشتري (اختياري)</div>
+        
         <div className="flex gap-2">
           <Input
             value={buyerName}
