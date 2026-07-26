@@ -1,5 +1,5 @@
 // dashboard-export.ts
-import writeXlsxFile from "write-excel-file";
+import writeXlsxFile from "write-excel-file/browser";
 import { cleanPhoneLike } from "@/lib/format";
 
 export type SummaryRow = { label: string; value: string | number };
