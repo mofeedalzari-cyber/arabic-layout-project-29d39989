@@ -71,40 +71,84 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       stats[table] = rows.length;
     }
 
-    await ins("packages", remap(payload.packages));
-    await ins(
-      "cards",
-      scrubUserRefs(remap(payload.cards), ["assigned_to", "sold_to"]),
-    );
-    // card_requests.agent_id references profiles; drop rows for foreign agents.
-    const scrubbedReqs = remap(payload.card_requests).filter((r: any) =>
-      r.agent_id == null || allowedUserIds.has(r.agent_id),
-    );
-    await ins("card_requests", scrubbedReqs);
-    const insertedReqIds = new Set<string>(scrubbedReqs.map((r: any) => r.id).filter(Boolean));
+    const genId = () =>
+      (globalThis.crypto as any)?.randomUUID?.() ??
+      "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+      });
 
-    await ins(
-      "sales",
-      scrubUserRefs(remap(payload.sales), ["agent_id"]).filter(
-        (r: any) => r.agent_id != null,
-      ),
-    );
-    await ins(
-      "join_requests",
-      remap(payload.join_requests).filter((r: any) =>
-        r.agent_id == null || allowedUserIds.has(r.agent_id),
-      ),
-    );
-    // request_payments: only keep rows whose request_id was just re-inserted for this network,
-    // and whose recorded_by belongs to this network.
-    const paymentsIn = Array.isArray(payload.request_payments) ? payload.request_payments : [];
-    const scrubbedPayments = paymentsIn
-      .filter((r: any) => r.request_id && insertedReqIds.has(r.request_id))
+    // Build ID remaps to avoid PK collisions with rows in other networks.
+    const pkgMap = new Map<string, string>();
+    const cardMap = new Map<string, string>();
+    const reqMap = new Map<string, string>();
+
+    const packagesIn = Array.isArray(payload.packages) ? payload.packages : [];
+    for (const p of packagesIn) if (p?.id) pkgMap.set(p.id, genId());
+    const cardsIn = Array.isArray(payload.cards) ? payload.cards : [];
+    for (const c of cardsIn) if (c?.id) cardMap.set(c.id, genId());
+    const reqsIn = Array.isArray(payload.card_requests) ? payload.card_requests : [];
+    for (const r of reqsIn) if (r?.id) reqMap.set(r.id, genId());
+
+    const newPackages = packagesIn.map((p: any) => ({
+      ...p, id: pkgMap.get(p.id)!, network_id: networkId,
+    }));
+    await ins("packages", newPackages);
+    const validPkgIds = new Set<string>(newPackages.map((p: any) => p.id));
+
+    const newCards = scrubUserRefs(
+      cardsIn.map((c: any) => ({
+        ...c,
+        id: cardMap.get(c.id)!,
+        network_id: networkId,
+        package_id: pkgMap.get(c.package_id) ?? c.package_id,
+      })),
+      ["assigned_to", "sold_to"],
+    ).filter((c: any) => validPkgIds.has(c.package_id));
+    await ins("cards", newCards);
+
+    const scrubbedReqs = reqsIn
+      .filter((r: any) => r.agent_id == null || allowedUserIds.has(r.agent_id))
       .map((r: any) => ({
         ...r,
+        id: reqMap.get(r.id)!,
+        network_id: networkId,
+        package_id: pkgMap.get(r.package_id) ?? r.package_id,
+      }))
+      .filter((r: any) => validPkgIds.has(r.package_id));
+    await ins("card_requests", scrubbedReqs);
+    const insertedReqIds = new Set<string>(scrubbedReqs.map((r: any) => r.id));
+
+    const salesIn = Array.isArray(payload.sales) ? payload.sales : [];
+    const newSales = scrubUserRefs(
+      salesIn.map((s: any) => ({
+        ...s,
+        id: genId(),
+        network_id: networkId,
+        package_id: pkgMap.get(s.package_id) ?? s.package_id,
+        card_id: cardMap.get(s.card_id) ?? s.card_id,
+      })),
+      ["agent_id"],
+    ).filter((s: any) => s.agent_id != null && validPkgIds.has(s.package_id));
+    await ins("sales", newSales);
+
+    await ins(
+      "join_requests",
+      (Array.isArray(payload.join_requests) ? payload.join_requests : [])
+        .filter((r: any) => r.agent_id == null || allowedUserIds.has(r.agent_id))
+        .map((r: any) => ({ ...r, id: genId(), network_id: networkId })),
+    );
+
+    const paymentsIn = Array.isArray(payload.request_payments) ? payload.request_payments : [];
+    const scrubbedPayments = paymentsIn
+      .map((r: any) => ({
+        ...r,
+        id: genId(),
+        request_id: reqMap.get(r.request_id) ?? r.request_id,
         recorded_by:
           r.recorded_by && allowedUserIds.has(r.recorded_by) ? r.recorded_by : userId,
-      }));
+      }))
+      .filter((r: any) => r.request_id && insertedReqIds.has(r.request_id));
     await ins("request_payments", scrubbedPayments);
 
     return { network_id: networkId, stats };
