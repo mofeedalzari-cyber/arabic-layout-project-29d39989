@@ -43,8 +43,9 @@ const pkgSchema = z.object({
 type PkgForm = z.infer<typeof pkgSchema>;
 
 function PackagesPage() {
-  const { role } = useAuth();
+  const { role, isSuperadmin } = useAuth();
   const isAdmin = role === "admin";
+  const canManage = isAdmin || isSuperadmin;
   const qc = useQueryClient();
 
   const { data: networks } = useQuery({
@@ -98,19 +99,45 @@ function PackagesPage() {
       if (editing) {
         const { error } = await supabase.from("packages").update(form).eq("id", editing.id);
         if (error) throw error;
+      } else if (isSuperadmin) {
+        // Superadmin: check if selected network belongs to them
+        const { data: userData } = await supabase.auth.getUser();
+        const uid = userData.user?.id;
+        const { data: mine } = uid
+          ? await supabase.rpc("admin_network", { _uid: uid })
+          : { data: null as string | null };
+        if (mine && form.network_id === mine) {
+          const { error } = await supabase.from("packages").insert(form);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.rpc("superadmin_create_package", {
+            _network_id: form.network_id,
+            _name: form.name,
+            _price: form.price,
+            _data_size: form.data_size ?? undefined,
+            _speed: form.speed ?? undefined,
+            _validity: form.validity ?? undefined,
+            _allowed_time: form.allowed_time ?? undefined,
+            _color: form.color ?? undefined,
+          });
+          if (error) throw error;
+        }
       } else {
         const { error } = await supabase.from("packages").insert(form);
         if (error) throw error;
       }
+
     },
     onSuccess: () => {
       toast.success(editing ? "تم التحديث" : "تم إنشاء الباقة");
       qc.invalidateQueries({ queryKey: ["packages-all"] });
       qc.invalidateQueries({ queryKey: ["packages"] });
+      qc.invalidateQueries({ queryKey: ["sa-packages"] });
       setOpen(false); setEditing(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   const del = useMutation({
     mutationFn: async (p: { id: string; name: string }) => {
@@ -186,7 +213,8 @@ function PackagesPage() {
         title="الباقات"
         description="إدارة كل الباقات عبر الشبكات"
       action={
-        isAdmin ? (
+        canManage ? (
+
           <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
             <DialogTrigger asChild>
               <Button className="rounded-xl gradient-primary-bg border-0 font-semibold">
@@ -266,7 +294,7 @@ function PackagesPage() {
               </div>
 
               {/* Actions */}
-              {isAdmin ? (
+              {canManage ? (
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="flex-1 rounded-xl" onClick={() => { setEditing(p); setOpen(true); }}>
                     <Edit3 className="h-4 w-4 ml-1" />تعديل
@@ -297,7 +325,7 @@ function PackagesPage() {
           <div className="col-span-full text-center py-16 space-y-4">
             <PackageIcon className="h-10 w-10 text-muted-foreground mx-auto" />
             <div className="text-muted-foreground">لا توجد باقات بعد.</div>
-            {isAdmin && (
+            {canManage && (
               <Button onClick={() => { setEditing(null); setOpen(true); }} className="rounded-xl gradient-primary-bg border-0 font-semibold">
                 <Plus className="h-4 w-4 ml-1" />إضافة أول باقة
               </Button>

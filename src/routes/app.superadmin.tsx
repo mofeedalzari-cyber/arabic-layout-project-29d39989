@@ -129,7 +129,7 @@ function SuperAdminPage() {
         </TabsList>
 
         <TabsContent value="networks" className="mt-3 space-y-3">
-          <div className="flex justify-end"><AddNetworkDialog /></div>
+
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse border">
@@ -208,7 +208,7 @@ function SuperAdminPage() {
         </TabsContent>
 
         <TabsContent value="packages" className="mt-3 space-y-3">
-          <div className="flex justify-end"><AddPackageDialog networks={networks.data ?? []} /></div>
+
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse border">
@@ -334,99 +334,6 @@ function Td({ children, className, colSpan, dir }: { children: React.ReactNode; 
   return <td colSpan={colSpan} dir={dir} className={`px-3 py-2 border ${className ?? ""}`}>{children}</td>;
 }
 
-function AddNetworkDialog() {
-  const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [currency, setCurrency] = useState("ر.س");
-  const m = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.rpc("superadmin_create_network", { _name: name, _currency: currency });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("تم إنشاء الشبكة");
-      qc.invalidateQueries({ queryKey: ["sa-networks"] });
-      qc.invalidateQueries({ queryKey: ["sa-stats"] });
-      setOpen(false); setName(""); setCurrency("ر.س");
-    },
-    onError: (e: any) => toast.error(e.message ?? "فشل الإنشاء"),
-  });
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 ml-1" />إضافة شبكة</Button></DialogTrigger>
-      <DialogContent dir="rtl">
-        <DialogHeader><DialogTitle>إضافة شبكة جديدة</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div><Label>اسم الشبكة</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div><Label>العملة</Label><Input value={currency} onChange={(e) => setCurrency(e.target.value)} /></div>
-        </div>
-        <DialogFooter>
-          <Button disabled={m.isPending || !name.trim()} onClick={() => m.mutate()}>حفظ</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function AddPackageDialog({ networks }: { networks: any[] }) {
-  const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [networkId, setNetworkId] = useState("");
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [dataSize, setDataSize] = useState("");
-  const [speed, setSpeed] = useState("");
-  const [validity, setValidity] = useState("");
-  const [allowedTime, setAllowedTime] = useState("");
-  const m = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.rpc("superadmin_create_package", {
-        _network_id: networkId, _name: name, _price: Number(price),
-        _data_size: dataSize || undefined, _speed: speed || undefined,
-        _validity: validity || undefined, _allowed_time: allowedTime || undefined,
-        _color: undefined,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("تم إنشاء الباقة");
-      qc.invalidateQueries({ queryKey: ["sa-packages"] });
-      qc.invalidateQueries({ queryKey: ["sa-stats"] });
-      setOpen(false);
-      setNetworkId(""); setName(""); setPrice(""); setDataSize(""); setSpeed(""); setValidity(""); setAllowedTime("");
-    },
-    onError: (e: any) => toast.error(e.message ?? "فشل الإنشاء"),
-  });
-  const valid = networkId && name.trim() && Number(price) >= 0 && price !== "";
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 ml-1" />إضافة باقة</Button></DialogTrigger>
-      <DialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>إضافة باقة جديدة</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>الشبكة</Label>
-            <select className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              value={networkId} onChange={(e) => setNetworkId(e.target.value)}>
-              <option value="">اختر شبكة</option>
-              {networks.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}
-            </select>
-          </div>
-          <div><Label>اسم الباقة</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-          <div><Label>السعر</Label><Input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
-          <div><Label>حجم البيانات (اختياري)</Label><Input value={dataSize} onChange={(e) => setDataSize(e.target.value)} /></div>
-          <div><Label>السرعة (اختياري)</Label><Input value={speed} onChange={(e) => setSpeed(e.target.value)} /></div>
-          <div><Label>المدة (اختياري)</Label><Input value={validity} onChange={(e) => setValidity(e.target.value)} /></div>
-          <div><Label>الوقت المسموح (اختياري)</Label><Input value={allowedTime} onChange={(e) => setAllowedTime(e.target.value)} /></div>
-        </div>
-        <DialogFooter>
-          <Button disabled={m.isPending || !valid} onClick={() => m.mutate()}>حفظ</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function MyNetworkPanel({ myNetwork, onCreated }: { myNetwork: any | null; onCreated: () => void }) {
   const [open, setOpen] = useState(false);
