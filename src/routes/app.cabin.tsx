@@ -210,7 +210,7 @@ function CabinPage() {
 
       {/* Confirm */}
       <Sheet open={!!confirmPkg} onOpenChange={(o) => { if (!o) { setConfirmPkg(null); setSelCustomer(null); setAddingCustomer(false); } }}>
-        <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto" dir="rtl">
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+5rem)]" dir="rtl">
           <SheetHeader>
             <SheetTitle>تأكيد البيع</SheetTitle>
             <SheetDescription>لن تظهر بيانات الكرت إلا بعد تأكيد البيع.</SheetDescription>
@@ -281,7 +281,7 @@ function CabinPage() {
 
       {/* Result */}
       <Sheet open={!!saleResult} onOpenChange={(o) => !o && setSaleResult(null)}>
-        <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto" dir="rtl">
+        <SheetContent side="bottom" className="rounded-t-3xl max-h-[92vh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+5rem)]" dir="rtl">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2 text-success"><Check className="h-5 w-5" />تم البيع بنجاح</SheetTitle>
           </SheetHeader>
