@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { fmtMoney, displayPhone, fmtArabicDateTime } from "@/lib/format";
@@ -176,25 +177,30 @@ function SuperAdminPage() {
                           >
                             {n.is_active ? <><PowerOff className="h-4 w-4 ml-1" />إيقاف</> : <><Power className="h-4 w-4 ml-1" />تفعيل</>}
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={deleteNet.isPending}
-                            onClick={() => {
-                              const first = window.confirm(
-                                `⚠️ حذف نهائي لشبكة "${n.name}"؟\nسيتم حذف جميع المناديب والباقات والكروت والطلبات والمبيعات المرتبطة بها.`
-                              );
-                              if (!first) return;
-                              const confirm2 = window.prompt(`للتأكيد اكتب اسم الشبكة: ${n.name}`);
-                              if (confirm2 !== n.name) {
-                                toast.error("تم إلغاء الحذف — الاسم غير مطابق");
-                                return;
-                              }
-                              deleteNet.mutate(n.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 ml-1" />حذف
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive" disabled={deleteNet.isPending}>
+                                <Trash2 className="h-4 w-4 ml-1" />حذف
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent dir="rtl">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>حذف نهائي لشبكة "{n.name}"؟</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  سيتم حذف جميع المناديب والباقات والكروت والطلبات والمبيعات المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={() => deleteNet.mutate(n.id)}
+                                >
+                                  نعم، حذف نهائي
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </Td>
                     </tr>
