@@ -59,10 +59,10 @@ function SuperAdminPage() {
     queryKey: ["sa-cards", cardsFilter],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("superadmin_cards", {
-        _network_id: cardsFilter.network_id ?? null,
-        _package_id: null,
-        _status: cardsFilter.status ?? null,
-        _search: cardsFilter.search ?? null,
+        _network_id: cardsFilter.network_id ?? undefined,
+        _package_id: undefined,
+        _status: cardsFilter.status ?? undefined,
+        _search: cardsFilter.search ?? undefined,
         _limit: 1000,
       });
       if (error) throw error;
