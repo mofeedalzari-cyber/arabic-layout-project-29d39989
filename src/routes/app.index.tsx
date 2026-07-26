@@ -1,15 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { displayPhone, fmtMoney } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
-import { Wifi, Package, ShoppingCart, DollarSign, Users, TrendingUp, Activity, Layers, UserCheck, FileSpreadsheet, FileText } from "lucide-react";
+import { Wifi, Package, ShoppingCart, DollarSign, Users, TrendingUp, Activity, Layers, UserCheck, FileSpreadsheet, FileText, Eraser } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { TableSection, SummaryRow } from "@/lib/dashboard-export";
 
 // Lazy-loaded to keep exceljs/pdfmake out of the initial bundle
@@ -237,8 +242,12 @@ function AdminBreakdowns() {
           <SummaryItem label="عدد المناديب" value={String(summary.agentsCount)} />
           <SummaryItem label="إجمالي قيمة المبيعات" value={fmtMoney(summary.salesValue)} tone="primary" />
           <SummaryItem label="إجمالي ديون المناديب" value={fmtMoney(summary.debts)} tone="danger" />
-          <SummaryItem label="الرصيد" value={fmtMoney(summary.collected)} tone="success" />
-
+          <SummaryItem
+            label="الرصيد"
+            value={fmtMoney(summary.collected)}
+            tone="success"
+            action={<ResetBalanceButton amount={summary.collected} />}
+          />
         </div>
       </Card>
 
@@ -353,7 +362,7 @@ function AdminBreakdowns() {
   );
 }
 
-function SummaryItem({ label, value, tone }: { label: string; value: string; tone?: "primary" | "success" | "warning" | "danger" }) {
+function SummaryItem({ label, value, tone, action }: { label: string; value: string; tone?: "primary" | "success" | "warning" | "danger"; action?: React.ReactNode }) {
   const toneClass = tone === "success" ? "text-success"
     : tone === "warning" ? "text-warning"
     : tone === "danger" ? "text-destructive"
@@ -361,9 +370,65 @@ function SummaryItem({ label, value, tone }: { label: string; value: string; ton
     : "text-foreground";
   return (
     <div className="rounded-xl bg-muted/40 p-2.5 sm:p-3 min-w-0">
-      <div className="text-[11px] text-muted-foreground mb-1 [overflow-wrap:anywhere]">{label}</div>
+      <div className="flex items-center justify-between gap-1">
+        <div className="text-[11px] text-muted-foreground mb-1 [overflow-wrap:anywhere]">{label}</div>
+        {action}
+      </div>
       <div className={`text-sm sm:text-base font-bold ${toneClass} [overflow-wrap:anywhere]`}>{value}</div>
     </div>
+  );
+}
+
+function ResetBalanceButton({ amount }: { amount: number }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const m = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc("admin_reset_balance" as any);
+      if (error) throw error;
+      const r: any = Array.isArray(data) ? data[0] : data;
+      return { cleared: Number(r?.cleared ?? 0) };
+    },
+    onSuccess: (r) => {
+      toast.success(`تم تصفير الرصيد — ${fmtMoney(r.cleared)}`);
+      qc.invalidateQueries();
+      setOpen(false);
+    },
+    onError: (e: Error) => {
+      toast.error(e.message.includes("FORBIDDEN") ? "غير مسموح" : e.message);
+    },
+  });
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <Button
+        size="sm" variant="ghost"
+        className="h-6 px-1.5 text-[10px] gap-1 text-muted-foreground hover:text-destructive"
+        onClick={() => setOpen(true)}
+        disabled={amount <= 0}
+        title="تصفير الرصيد"
+      >
+        <Eraser className="h-3 w-3" /> تصفير
+      </Button>
+      <AlertDialogContent dir="rtl" className="text-right">
+        <AlertDialogHeader>
+          <AlertDialogTitle>تصفير الرصيد</AlertDialogTitle>
+          <AlertDialogDescription>
+            سيتم تصفير الرصيد الحالي ({fmtMoney(amount)}) وخصم المبلغ المدفوع من إجمالي الدين لكل طلب. لن يتأثر الدين المتبقي على المناديب. لا يمكن التراجع عن هذه العملية.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={m.isPending}>إلغاء</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => { e.preventDefault(); m.mutate(); }}
+            disabled={m.isPending}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {m.isPending ? "جارٍ التصفير..." : "تأكيد التصفير"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
