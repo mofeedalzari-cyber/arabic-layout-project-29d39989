@@ -24,6 +24,7 @@ import { OfflineBanner } from "@/components/offline-banner";
 import { initCapacitorNative } from "@/lib/capacitor-native";
 import { initSentry } from "@/lib/sentry";
 import { initOfflineQueueAutoSync } from "@/lib/offline-queue";
+import { registerServiceWorker } from "@/lib/register-sw";
 
 function NotFoundComponent() {
   return (
@@ -128,6 +129,7 @@ function RootComponent() {
   useEffect(() => {
     initSentry();
     initOfflineQueueAutoSync();
+    registerServiceWorker();
     initCapacitorNative(router);
 
     // Auto-recover from stale chunk hashes after a redeploy:
