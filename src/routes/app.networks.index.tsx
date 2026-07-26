@@ -112,8 +112,8 @@ function NetworksPage() {
     <>
       <PageHeader
         title="الشبكات"
-        description={isAdmin ? "إدارة شبكات الإنترنت المتاحة" : "الشبكات المتاحة للبيع"}
-        action={isAdmin ? (
+        description={canCreate ? "إدارة شبكات الإنترنت المتاحة" : "الشبكات المتاحة للبيع"}
+        action={canCreate ? (
           <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
             <DialogTrigger asChild>
               <Button className="rounded-xl gradient-primary-bg border-0 font-semibold"><Plus className="h-4 w-4 ml-1" />شبكة جديدة</Button>
@@ -125,6 +125,7 @@ function NetworksPage() {
           </Dialog>
         ) : undefined}
       />
+
 
       {isLoading ? <SkeletonGrid /> : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
