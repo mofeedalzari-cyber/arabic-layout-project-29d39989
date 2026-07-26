@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useMemo, useState } from "react";
-import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag } from "lucide-react";
-import { fmtMoney, fmtArabicDateTime, displayPhone } from "@/lib/format";
+import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText } from "lucide-react";
+import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/customers")({ component: CustomersPage });
 
@@ -19,8 +21,11 @@ type Sale = { id: string; transaction_no: string; package_name: string; network_
 
 function CustomersPage() {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Customer | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Customer | null>(null);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   const { data: customers } = useQuery({
     queryKey: ["customers-page", user?.id],
@@ -97,6 +102,61 @@ function CustomersPage() {
   );
   const selectedTotal = selectedSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
 
+  async function handleDelete(c: Customer) {
+    const { error } = await supabase.from("customers").delete().eq("id", c.id);
+    if (error) {
+      toast.error("تعذر حذف الزبون: " + error.message);
+      return;
+    }
+    toast.success("تم حذف الزبون");
+    setConfirmDelete(null);
+    if (selected?.id === c.id) setSelected(null);
+    qc.invalidateQueries({ queryKey: ["customers-page"] });
+    qc.invalidateQueries({ queryKey: ["customer-sales"] });
+  }
+
+  async function sendStatementWhatsApp(c: Customer) {
+    if (sendingId) return;
+    const custSales = (sales ?? []).filter((s) => s.customer_id === c.id);
+    const total = custSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+    setSendingId(c.id);
+    try {
+      const { exportToPDF } = await import("@/lib/dashboard-export");
+      const summary = [
+        { label: "اسم الزبون", value: c.name },
+        { label: "واتساب", value: displayPhone(c.whatsapp, "—") },
+        { label: "عدد العمليات", value: custSales.length },
+        { label: "إجمالي المبيعات", value: fmtMoney(total) },
+      ];
+      const sections = [
+        {
+          title: "سجل المبيعات",
+          cols: ["رقم العملية", "الفئة", "الشبكة", "القيمة", "تاريخ البيع"],
+          rows: custSales.map((s) => [
+            s.transaction_no ?? "—",
+            s.package_name,
+            s.network_name,
+            fmtMoney(Number(s.price)),
+            fmtArabicDateTimePdf(s.sold_at),
+          ]),
+        },
+      ];
+      await exportToPDF(`كشف_حساب_${c.name}`, summary, sections, {
+        reportName: `كشف حساب الزبون — ${c.name}`,
+      });
+      const wa = String(c.whatsapp ?? "").replace(/\D/g, "");
+      if (wa) {
+        const msg = `كشف حساب ${c.name}\nعدد العمليات: ${custSales.length}\nإجمالي المبيعات: ${fmtMoney(total)}`;
+        window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank");
+      }
+    } catch (err) {
+      toast.error("تعذر إنشاء الكشف: " + String((err as any)?.message || err).slice(0, 120));
+    } finally {
+      setSendingId(null);
+    }
+  }
+
+
   return (
     <>
       <PageHeader title="الزبائن" description="إدارة حسابات الزبائن وإحصائياتهم" />
@@ -133,6 +193,25 @@ function CustomersPage() {
             {c.last && (
               <div className="text-[10px] text-muted-foreground mt-2">آخر عملية: {fmtArabicDateTime(c.last)}</div>
             )}
+            <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                disabled={sendingId === c.id}
+                onClick={() => sendStatementWhatsApp(c as any)}
+              >
+                <FileText className="h-4 w-4 ml-1" />
+                {sendingId === c.id ? "جاري..." : "كشف واتساب"}
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setConfirmDelete(c as any)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </Card>
         ))}
         {rows.length === 0 && <div className="text-center py-16 text-muted-foreground">لا يوجد زبائن.</div>}
@@ -159,21 +238,34 @@ function CustomersPage() {
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
                 <TableCell className="text-xs">{c.last ? fmtArabicDateTime(c.last) : "—"}</TableCell>
-                <TableCell>
-                  {c.whatsapp && (
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <div className="flex gap-2 justify-end">
+                    {c.whatsapp && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const n = String(c.whatsapp).replace(/\D/g, "");
+                          window.open(`https://wa.me/${n}`, "_blank");
+                        }}
+                      >
+                        <MessageCircle className="h-4 w-4 ml-1" />
+                        واتساب
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const n = String(c.whatsapp).replace(/\D/g, "");
-                        window.open(`https://wa.me/${n}`, "_blank");
-                      }}
+                      disabled={sendingId === c.id}
+                      onClick={() => sendStatementWhatsApp(c as any)}
                     >
-                      <MessageCircle className="h-4 w-4 ml-1" />
-                      واتساب
+                      <FileText className="h-4 w-4 ml-1" />
+                      {sendingId === c.id ? "جاري..." : "كشف واتساب"}
                     </Button>
-                  )}
+                    <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(c as any)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -227,6 +319,22 @@ function CustomersPage() {
                     <div className="font-bold text-lg text-primary">{fmtMoney(selectedTotal)}</div>
                   </div>
                 </div>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    disabled={sendingId === selected.id}
+                    onClick={() => sendStatementWhatsApp(selected)}
+                  >
+                    <FileText className="h-4 w-4 ml-1" />
+                    {sendingId === selected.id ? "جاري..." : "كشف حساب واتساب"}
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(selected)}>
+                    <Trash2 className="h-4 w-4 ml-1" />
+                    حذف
+                  </Button>
+                </div>
               </Card>
 
               <div>
@@ -255,6 +363,21 @@ function CustomersPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف الزبون</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف "{confirmDelete?.name}"؟ لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDelete && handleDelete(confirmDelete)}>حذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
