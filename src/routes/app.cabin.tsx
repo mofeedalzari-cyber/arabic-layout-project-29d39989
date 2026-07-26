@@ -172,7 +172,6 @@ function CabinPage() {
                   <div className="text-white text-sm mb-1">{r.package_name}</div>
                   <div className="text-white text-2xl font-extrabold">
                     {fmtMoney(Number(r.price))}
-                    <span className="text-xs font-normal opacity-70 mr-1">{r.currency}</span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] text-white/90">
                     {r.data_size && <span className="bg-white/20 px-2 py-0.5 rounded-full">{r.data_size}</span>}
@@ -220,7 +219,7 @@ function CabinPage() {
             <div className="mt-4 space-y-4">
               <div className="rounded-2xl p-5 text-white" style={{ background: `linear-gradient(135deg, ${confirmPkg.color}, ${confirmPkg.color}dd)` }}>
                 <div className="opacity-80 text-sm">{confirmPkg.network_name} — {confirmPkg.package_name}</div>
-                <div className="text-3xl font-extrabold">{fmtMoney(Number(confirmPkg.price))} <span className="text-sm font-normal opacity-70">{confirmPkg.currency}</span></div>
+                <div className="text-3xl font-extrabold">{fmtMoney(Number(confirmPkg.price))}</div>
               </div>
 
               {/* Customer picker */}
@@ -524,7 +523,7 @@ function PackageDetails({ pkg, agentId, onClose }: { pkg: CabinRow; agentId: str
               </div>
             </div>
             <div className="rounded-xl bg-muted/50 px-3 py-2 flex items-center justify-between text-sm">
-              <span className="font-bold">{pkg.currency} {fmtMoney(Number(pkg.price))}</span>
+              <span className="font-bold">{fmtMoney(Number(pkg.price))}</span>
               <span className="text-muted-foreground">القيمة :</span>
             </div>
             {c.status === "SOLD" && c.sold_at && (
@@ -595,7 +594,7 @@ function SaleReceipt({ sale }: { sale: any }) {
     toast.success(name ? "تم حفظ اسم المشتري" : "تم مسح اسم المشتري");
   }
 
-  const fullText = `بيانات الكرت:\n\nاليوزر: ${sale.card_username}\n${sale.card_password ? `كلمة المرور: ${sale.card_password}\n` : ""}الفئة: ${sale.package_name}\nالشبكة: ${sale.network_name}\nالسعر: ${fmtMoney(Number(sale.price))}${sale.currency ? ` ${sale.currency}` : ""}${savedName ? `\nالمشتري: ${savedName}` : ""}`;
+  const fullText = `بيانات الكرت:\n\nاليوزر: ${sale.card_username}\n${sale.card_password ? `كلمة المرور: ${sale.card_password}\n` : ""}الفئة: ${sale.package_name}\nالشبكة: ${sale.network_name}\nالسعر: ${fmtMoney(Number(sale.price))}${savedName ? `\nالمشتري: ${savedName}` : ""}`;
 
   return (
     <div className="mt-4 space-y-3 pb-4">
