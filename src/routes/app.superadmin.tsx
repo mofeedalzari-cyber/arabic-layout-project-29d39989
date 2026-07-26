@@ -94,6 +94,8 @@ function SuperAdminPage() {
   });
 
   const [cardsFilter, setCardsFilter] = useState<{ network_id?: string; status?: string; search?: string }>({});
+  const [agentsNetFilter, setAgentsNetFilter] = useState<string>("");
+  const [packagesNetFilter, setPackagesNetFilter] = useState<string>("");
   const cards = useQuery({
     queryKey: ["sa-cards", cardsFilter],
     queryFn: async () => {
