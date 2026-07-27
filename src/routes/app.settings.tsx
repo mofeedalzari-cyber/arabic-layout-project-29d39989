@@ -116,7 +116,11 @@ function AgentBackupCard() {
   const restore = useMutation({
     mutationFn: async (payload: any) => await restoreFn({ data: { payload } }),
     onSuccess: (res: any) => {
-      toast.success(`تم استعادة ${res?.customers_restored ?? 0} زبون`);
+      const c = res?.customers_restored ?? 0;
+      const r = res?.requests_restored ?? 0;
+      toast.success(`تم استعادة ${c} زبون و${r} طلب`);
+      const notes: string[] = Array.isArray(res?.notes) ? res.notes : [];
+      notes.forEach((n) => toast.message(n));
       setPendingPayload(null);
       setPendingName("");
       qc.invalidateQueries();
@@ -149,7 +153,7 @@ function AgentBackupCard() {
         <h3 className="font-bold">النسخة الاحتياطية لبياناتي</h3>
       </div>
       <p className="text-xs text-muted-foreground mb-3">
-        تنزيل ملف يحتوي زبائنك، مبيعاتك، طلباتك وكروتك. الاستعادة تُعيد الزبائن فقط إلى حسابك.
+        تنزيل ملف يحتوي زبائنك، مبيعاتك، طلباتك وكروتك. الاستعادة تُعيد الزبائن وطلبات الكروت (كطلبات جديدة بانتظار موافقة المدير). المبيعات والكروت مملوكة للشبكة ولا يمكن استعادتها مباشرة من حساب المندوب.
       </p>
 
       <div className="space-y-2">
@@ -177,7 +181,7 @@ function AgentBackupCard() {
           className="w-full rounded-xl font-semibold"
         >
           <Upload className="h-4 w-4 ml-1" />
-          {restore.isPending ? "جاري الاستعادة…" : "استعادة الزبائن من ملف"}
+          {restore.isPending ? "جاري الاستعادة…" : "استعادة من ملف"}
         </Button>
       </div>
 
@@ -199,9 +203,9 @@ function AgentBackupCard() {
       <AlertDialog open={confirmRestore} onOpenChange={setConfirmRestore}>
         <AlertDialogContent dir="rtl" className="text-right">
           <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد استعادة الزبائن</AlertDialogTitle>
+            <AlertDialogTitle>تأكيد الاستعادة</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم إضافة الزبائن الموجودين في الملف إلى حسابك (مع تخطي الأرقام المكررة).
+              سيتم استعادة الزبائن (مع تخطي الأرقام المكررة) وإعادة إنشاء طلبات الكروت كطلبات جديدة بانتظار موافقة المدير. لن تُستعاد المبيعات والكروت لأن ملكيتها للشبكة.
               <span className="block mt-1 font-mono text-xs">{pendingName}</span>
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -55,9 +55,11 @@ export const backupMyAgentData = createServerFn({ method: "POST" })
   });
 
 /**
- * Restore the agent's own customers from a backup file.
- * Only customers are restored (upsert by whatsapp) since sales/cards
- * are network-owned and controlled by the admin.
+ * Restore the agent's own data from a backup file.
+ * - customers: upsert by whatsapp (per-agent)
+ * - card_requests: recreate PENDING requests for still-existing packages (agents can only insert PENDING via RLS)
+ * Sales & cards are network-owned inventory and cannot be re-inserted by an agent (RLS denies it);
+ * they are re-created automatically by the admin when they approve requests and by the sell flow.
  */
 export const restoreMyAgentData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -67,42 +69,110 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
     const payload = data.payload;
     if (!payload || typeof payload !== "object") throw new Error("ملف غير صالح");
 
-    const customers = Array.isArray(payload.customers) ? payload.customers : [];
-    if (!customers.length) {
-      return { customers_restored: 0 };
-    }
-
-    // Get agent's network_id
+    // Agent's network + username
     const { data: profile } = await supabase
       .from("profiles")
-      .select("network_id")
+      .select("network_id, username")
       .eq("id", userId)
       .maybeSingle();
+    const networkId = profile?.network_id ?? null;
+    const agentUsername = profile?.username ?? "";
 
-    // Existing customers by whatsapp
-    const { data: existing } = await supabase
-      .from("customers")
-      .select("id, whatsapp")
-      .eq("agent_id", userId);
-    const existingSet = new Set((existing ?? []).map((c: any) => (c.whatsapp || "").trim()));
+    let customersRestored = 0;
+    let customersSkipped = 0;
+    let requestsRestored = 0;
+    let requestsSkipped = 0;
+    const notes: string[] = [];
 
-    const toInsert = customers
-      .filter((c: any) => c?.whatsapp && !existingSet.has(String(c.whatsapp).trim()))
-      .map((c: any) => ({
-        agent_id: userId,
-        network_id: profile?.network_id ?? null,
-        name: String(c.name ?? "").trim() || "زبون",
-        whatsapp: String(c.whatsapp).trim(),
-      }));
-
-    let inserted = 0;
-    if (toInsert.length) {
-      const { error, count } = await supabase
+    // 1) Customers — insert new only (dedupe by whatsapp per agent)
+    const customers = Array.isArray(payload.customers) ? payload.customers : [];
+    if (customers.length) {
+      const { data: existing } = await supabase
         .from("customers")
-        .insert(toInsert, { count: "exact" });
-      if (error) throw new Error(error.message);
-      inserted = count ?? toInsert.length;
+        .select("id, whatsapp")
+        .eq("agent_id", userId);
+      const existingSet = new Set((existing ?? []).map((c: any) => String(c.whatsapp || "").trim()));
+
+      const toInsert = customers
+        .filter((c: any) => c?.whatsapp && !existingSet.has(String(c.whatsapp).trim()))
+        .map((c: any) => ({
+          agent_id: userId,
+          network_id: networkId,
+          name: String(c.name ?? "").trim() || "زبون",
+          whatsapp: String(c.whatsapp).trim(),
+        }));
+
+      customersSkipped = customers.length - toInsert.length;
+      if (toInsert.length) {
+        const { error, count } = await supabase
+          .from("customers")
+          .insert(toInsert, { count: "exact" });
+        if (error) throw new Error(`فشل استعادة الزبائن: ${error.message}`);
+        customersRestored = count ?? toInsert.length;
+      }
     }
 
-    return { customers_restored: inserted, skipped_duplicates: customers.length - inserted };
+    // 2) Card requests — recreate as PENDING for packages still in the agent's network
+    const requests = Array.isArray(payload.card_requests) ? payload.card_requests : [];
+    if (requests.length && networkId) {
+      const pkgIds = Array.from(new Set(requests.map((r: any) => r.package_id).filter(Boolean))) as string[];
+      const { data: pkgs } = await supabase
+        .from("packages")
+        .select("id, name, price, network_id")
+        .in("id", pkgIds);
+      const pkgMap = new Map((pkgs ?? []).map((p: any) => [p.id, p]));
+
+      const toInsertReq = requests
+        .map((r: any) => {
+          const pkg = pkgMap.get(r.package_id);
+          if (!pkg || pkg.network_id !== networkId) return null;
+          const qty = Number(r.quantity);
+          if (!Number.isFinite(qty) || qty <= 0) return null;
+          const unitPrice = Number(pkg.price) || 0;
+          return {
+            agent_id: userId,
+            agent_username: agentUsername,
+            package_id: pkg.id,
+            network_id: networkId,
+            package_name: pkg.name,
+            network_name: r.network_name ?? "",
+            quantity: qty,
+            status: "PENDING",
+            payment_method: (r.payment_method === "CASH" ? "CASH" : "CREDIT"),
+            unit_price: unitPrice,
+            total_value: unitPrice * qty,
+            paid_amount: 0,
+            notes: r.notes ?? null,
+          };
+        })
+        .filter(Boolean) as any[];
+
+      requestsSkipped = requests.length - toInsertReq.length;
+      if (toInsertReq.length) {
+        const { error, count } = await supabase
+          .from("card_requests")
+          .insert(toInsertReq, { count: "exact" });
+        if (error) throw new Error(`فشل استعادة الطلبات: ${error.message}`);
+        requestsRestored = count ?? toInsertReq.length;
+      }
+    } else if (requests.length && !networkId) {
+      notes.push("لا يمكن استعادة الطلبات: حسابك غير مرتبط بشبكة.");
+    }
+
+    const salesCount = Array.isArray(payload.sales) ? payload.sales.length : 0;
+    const cardsCount = Array.isArray(payload.cards) ? payload.cards.length : 0;
+    if (salesCount || cardsCount) {
+      notes.push(
+        "لا يمكن استعادة المبيعات والكروت مباشرة (ملكيتها للشبكة). أُعيد إنشاء الطلبات كطلبات جديدة بانتظار موافقة المدير."
+      );
+    }
+
+    return {
+      customers_restored: customersRestored,
+      customers_skipped: customersSkipped,
+      requests_restored: requestsRestored,
+      requests_skipped: requestsSkipped,
+      notes,
+    };
   });
+
