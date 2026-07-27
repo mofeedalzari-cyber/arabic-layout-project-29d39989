@@ -183,6 +183,13 @@ function AgentsPage() {
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
+                <Button
+                  variant="outline" size="icon"
+                  className="rounded-xl h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setDeleteFor({ id: a.id, name: a.full_name || displayPhone((a as any).phone, a.username) })}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
 
               </div>
             </div>
