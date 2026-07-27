@@ -111,10 +111,13 @@ function CabinPage() {
   }
 
   async function deleteCustomer(id: string) {
-    const { error } = await supabase.from("customers").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    const { error } = await supabase.rpc("delete_customer", { _customer_id: id });
+    if (error) { toast.error("تعذر حذف الزبون: " + error.message); return; }
     qc.invalidateQueries({ queryKey: ["my-customers"] });
-    toast.success("تم الحذف");
+    qc.invalidateQueries({ queryKey: ["agent-cabin"] });
+    qc.invalidateQueries({ queryKey: ["sales"] });
+    qc.invalidateQueries({ queryKey: ["cards"] });
+    toast.success("تم حذف الزبون وإرجاع الكروت");
   }
 
   async function confirmSell() {
