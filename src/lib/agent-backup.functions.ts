@@ -115,7 +115,7 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
     // 2) Card requests — recreate as PENDING for packages still in the agent's network
     const requests = Array.isArray(payload.card_requests) ? payload.card_requests : [];
     if (requests.length && networkId) {
-      const pkgIds = Array.from(new Set(requests.map((r: any) => r.package_id).filter(Boolean)));
+      const pkgIds = Array.from(new Set(requests.map((r: any) => r.package_id).filter(Boolean))) as string[];
       const { data: pkgs } = await supabase
         .from("packages")
         .select("id, name, price, network_id")
