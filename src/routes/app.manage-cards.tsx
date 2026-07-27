@@ -397,9 +397,34 @@ function ManageCardsPage() {
           <Button variant="outline" className="rounded-lg h-9" onClick={unselectPage} disabled={!pageRows.length}>إلغاء تحديد الصفحة</Button>
           <Button variant="outline" className="rounded-lg h-9 text-destructive border-destructive/40" onClick={selectAllSold} disabled={!cards?.some((c) => c.status === "SOLD")}>تحديد كل المباع</Button>
           <Button variant="outline" className="rounded-lg h-9 text-blue-600 border-blue-500/40" onClick={selectAllAssigned} disabled={!cards?.some((c) => c.status === "ASSIGNED")}>تحديد كل المسحوب</Button>
+          <Button variant="outline" className="rounded-lg h-9 text-emerald-600 border-emerald-500/40" onClick={selectAllAvailable} disabled={!availableCount}>تحديد كل المتاح</Button>
           <Button variant="outline" className="rounded-lg h-9 text-blue-600 border-blue-500/40" onClick={printAssigned} disabled={!cards?.some((c) => c.status === "ASSIGNED")}>
             <Printer className="h-4 w-4 ml-1" />طباعة المسحوب
           </Button>
+          <Button variant="outline" className="rounded-lg h-9 text-emerald-600 border-emerald-500/40" onClick={printAvailable} disabled={!availableCount}>
+            <Printer className="h-4 w-4 ml-1" />طباعة المتاح
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="rounded-lg h-9 text-destructive border-destructive/40" disabled={!availableCount}>
+                <Trash2 className="h-4 w-4 ml-1" />حذف المتاح{selectedAvailableIds.length ? ` (${selectedAvailableIds.length})` : ""}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent dir="rtl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>حذف الكروت المتاحة؟</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {selectedAvailableIds.length
+                    ? `سيتم حذف ${selectedAvailableIds.length} كرت متاح من المحدد.`
+                    : `سيتم حذف جميع الكروت المتاحة (${availableCount}) للشبكة/الفلتر الحالي.`}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                <AlertDialogAction onClick={() => delAvailable.mutate()} className="bg-destructive text-destructive-foreground">تأكيد الحذف</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button variant="outline" className="rounded-lg h-9" onClick={() => setSelected(new Set())} disabled={!selected.size}>مسح التحديد</Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
