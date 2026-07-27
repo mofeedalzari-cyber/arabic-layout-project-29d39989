@@ -518,6 +518,11 @@ async function printSalesPdf(args: {
   const { sales, isAdmin, agentFilter, agentOptions, displayName } = args;
   const { exportToPDF } = await import("@/lib/dashboard-export");
 
+  // Replace internal spaces with non-breaking spaces so multi-word Arabic
+  // names never wrap inside a narrow cell (wrapping breaks the RTL
+  // token-reversal used by the PDF renderer and scrambles word order).
+  const nb = (s: string | null | undefined) => String(s ?? "").replace(/ /g, "\u00A0");
+
   const agentLabel =
     agentFilter === "all"
       ? "كل المناديب"
@@ -526,7 +531,7 @@ async function printSalesPdf(args: {
   const total = sales.reduce((sum, s) => sum + Number(s.price || 0), 0);
 
   const summary = [
-    { label: "المندوب", value: agentLabel },
+    { label: "المندوب", value: nb(agentLabel) },
     { label: "عدد العمليات", value: sales.length },
     { label: "إجمالي القيمة", value: fmtMoney(total) },
   ];
@@ -548,13 +553,13 @@ async function printSalesPdf(args: {
       s.network_name,
     ];
     const tail = [
-      s.customer_name ?? s.buyer_name ?? "—",
+      nb(s.customer_name ?? s.buyer_name ?? "—"),
       card,
       fmtArabicDateTimePdf(s.sold_at),
       fmtMoney(Number(s.price)),
     ];
     return isAdmin
-      ? [...base, displayName(s.agent_username), ...tail]
+      ? [...base, nb(displayName(s.agent_username)), ...tail]
       : [...base, ...tail];
   });
 
