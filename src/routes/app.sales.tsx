@@ -343,15 +343,15 @@ function SalesPage() {
       </div>
 
       <Card className="card-elegant relative mb-[calc(env(safe-area-inset-bottom)+5rem)] flex flex-col overflow-hidden border-0">
-        <div
+        <ScrollContainer
           ref={tableScrollRef}
-          className="sales-scroll max-h-[calc(100dvh-24rem)] overflow-x-auto overflow-y-scroll overscroll-contain pb-24 md:max-h-[calc(100dvh-19rem)] md:pb-4"
+          className="max-h-[calc(100dvh-24rem)] pb-24 md:max-h-[calc(100dvh-19rem)] md:pb-4"
         >
           <Table className="min-w-[900px]">
             <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
               <TableRow className="border-b-2">
                 {isAdmin && (
-                  <TableHead className="w-10 bg-card sticky top-0">
+                  <TableHead className="w-10 bg-card sticky top-0" data-no-drag>
                     <Checkbox
                       checked={allSelected}
                       onCheckedChange={toggleAll}
@@ -385,7 +385,7 @@ function SalesPage() {
               ) : displayedSales.map((s, i) => (
                 <TableRow key={s.id} className={selected.has(s.id) ? "bg-primary/5" : ""}>
                   {isAdmin && (
-                    <TableCell>
+                    <TableCell data-no-drag>
                       <Checkbox
                         checked={selected.has(s.id)}
                         onCheckedChange={() => toggleOne(s.id)}
@@ -404,7 +404,7 @@ function SalesPage() {
                   </TableCell>
                   <TableCell className="text-xs whitespace-nowrap">{fmtArabicDateTime(s.sold_at)}</TableCell>
                   <TableCell className="text-primary font-bold whitespace-nowrap">{fmtMoney(Number(s.price))}</TableCell>
-                  <TableCell>
+                  <TableCell data-no-drag>
                     {canModify(s) && (
                       <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)} title="تعديل">
                         <Pencil className="h-3.5 w-3.5" />
@@ -415,7 +415,7 @@ function SalesPage() {
               ))}
             </TableBody>
           </Table>
-        </div>
+        </ScrollContainer>
         {showScrollBtns && (
           <div className="pointer-events-none absolute bottom-3 left-3 z-20 flex gap-1 md:hidden animate-in fade-in duration-200">
             <Button
