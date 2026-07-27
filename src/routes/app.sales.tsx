@@ -276,6 +276,16 @@ function SalesPage() {
             </button>
           )}
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => printSalesPdf({ sales: filtered, isAdmin, agentFilter, agentOptions, displayName })}
+          className="gap-1"
+          disabled={filtered.length === 0}
+        >
+          <Printer className="h-4 w-4" />
+          طباعة PDF
+        </Button>
         {isAdmin && someSelected && (
           <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} className="gap-1">
             <Trash2 className="h-4 w-4" />
