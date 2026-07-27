@@ -547,7 +547,6 @@ async function printSalesPdf(args: {
         : s.card_username
       : "—";
     const base = [
-      i + 1,
       s.transaction_no,
       s.package_name,
       s.network_name,
