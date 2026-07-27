@@ -23,8 +23,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
-import { Search, Pencil, Trash2, ChevronUp, ChevronDown, X } from "lucide-react";
-import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
+import { Search, Pencil, Trash2, ChevronUp, ChevronDown, X, Printer } from "lucide-react";
+import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
 import { ScrollContainer } from "@/components/scroll-container";
@@ -276,6 +276,16 @@ function SalesPage() {
             </button>
           )}
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => printSalesPdf({ sales: filtered, isAdmin, agentFilter, agentOptions, displayName })}
+          className="gap-1"
+          disabled={filtered.length === 0}
+        >
+          <Printer className="h-4 w-4" />
+          طباعة PDF
+        </Button>
         {isAdmin && someSelected && (
           <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} className="gap-1">
             <Trash2 className="h-4 w-4" />
@@ -495,5 +505,64 @@ function SalesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+async function printSalesPdf(args: {
+  sales: SaleRow[];
+  isAdmin: boolean;
+  agentFilter: string;
+  agentOptions: { username: string; name: string }[];
+  displayName: (u: string) => string;
+}) {
+  const { sales, isAdmin, agentFilter, agentOptions, displayName } = args;
+  const { exportToPDF } = await import("@/lib/dashboard-export");
+
+  const agentLabel =
+    agentFilter === "all"
+      ? "كل المناديب"
+      : agentOptions.find((a) => a.username === agentFilter)?.name || displayName(agentFilter);
+
+  const total = sales.reduce((sum, s) => sum + Number(s.price || 0), 0);
+
+  const summary = [
+    { label: "المندوب", value: agentLabel },
+    { label: "عدد العمليات", value: sales.length },
+    { label: "إجمالي القيمة", value: fmtMoney(total) },
+  ];
+
+  const cols = isAdmin
+    ? ["#", "رقم العملية", "الباقة", "الشبكة", "المندوب", "الزبون", "الكرت", "التاريخ", "السعر"]
+    : ["#", "رقم العملية", "الباقة", "الشبكة", "الزبون", "الكرت", "التاريخ", "السعر"];
+
+  const rows = sales.map((s, i) => {
+    const card = s.card_username
+      ? s.card_password
+        ? `${s.card_username} / ${s.card_password}`
+        : s.card_username
+      : "—";
+    const base = [
+      i + 1,
+      s.transaction_no,
+      s.package_name,
+      s.network_name,
+    ];
+    const tail = [
+      s.customer_name ?? s.buyer_name ?? "—",
+      card,
+      fmtArabicDateTimePdf(s.sold_at),
+      fmtMoney(Number(s.price)),
+    ];
+    return isAdmin
+      ? [...base, displayName(s.agent_username), ...tail]
+      : [...base, ...tail];
+  });
+
+  const title = `تقرير_المبيعات_${agentLabel}`;
+  await exportToPDF(
+    title,
+    summary,
+    [{ title: "جميع المبيعات", cols, rows }],
+    { reportName: `تقرير المبيعات — ${agentLabel}` },
   );
 }
