@@ -384,9 +384,14 @@ export async function buildReportPdfBlob(opts: {
   });
 
 
+  // Wide tables (many columns) get landscape orientation so nothing gets clipped.
+  const maxCols = opts.sections.reduce((m, s) => Math.max(m, s.cols.length + 1), 0);
+  const landscape = maxCols >= 7;
+  const lineWidth = landscape ? 781 : 535;
+
   const content: any[] = [
     headerBlock(opts.title, meta, dateStr),
-    { canvas: [{ type: "line", x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.2, lineColor: COLORS.brand }], margin: [0, 0, 0, 10] },
+    { canvas: [{ type: "line", x1: 0, y1: 0, x2: lineWidth, y2: 0, lineWidth: 1.2, lineColor: COLORS.brand }], margin: [0, 0, 0, 10] },
   ];
   const sum = summaryBlock(opts.summary);
   if (sum) content.push(sum);
@@ -394,7 +399,8 @@ export async function buildReportPdfBlob(opts: {
 
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
-    pageMargins: [30, 36, 30, 42],
+    pageOrientation: landscape ? "landscape" : "portrait",
+    pageMargins: [24, 32, 24, 40],
     content,
     footer: (currentPage: number, pageCount: number) => ({
       margin: [30, 0, 30, 0],
