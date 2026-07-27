@@ -287,30 +287,27 @@ function CabinPage() {
                 ) : (
                   <>
                     <div className="text-xs font-semibold text-destructive mb-1">* اختيار الزبون إلزامي</div>
-                    <div className="relative mb-2">
-                      <Search className="h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        placeholder="ابحث باسم الزبون أو الرقم"
-                        value={custSearch}
-                        onChange={(e) => setCustSearch(e.target.value)}
-                        className="rounded-xl bg-background pr-9 h-9 text-sm"
-                      />
-                    </div>
-                    <div className="max-h-40 overflow-y-auto space-y-1">
-                      {filteredCustomers.map((c) => (
-                        <button key={c.id} type="button" onClick={() => setSelCustomer(c)}
-                          className={`w-full text-right rounded-lg px-3 py-2 text-sm border flex items-center justify-between ${selCustomer?.id === c.id ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border/50"}`}>
-                          <span className="font-bold truncate">{c.name}</span>
-                          <span className="text-[11px] text-muted-foreground font-mono">{c.whatsapp}</span>
-                        </button>
-                      ))}
-                      {(customers?.length ?? 0) === 0 && (
-                        <div className="text-center text-xs text-muted-foreground py-2">لا يوجد زبائن — أضف زبونًا جديدًا</div>
-                      )}
-                      {(customers?.length ?? 0) > 0 && filteredCustomers.length === 0 && (
-                        <div className="text-center text-xs text-muted-foreground py-2">لا توجد نتائج مطابقة</div>
-                      )}
-                    </div>
+                    <Select
+                      value={selCustomer?.id ?? ""}
+                      onValueChange={(id) => {
+                        const c = (customers ?? []).find((x) => x.id === id) ?? null;
+                        setSelCustomer(c);
+                      }}
+                    >
+                      <SelectTrigger className="rounded-xl bg-background h-10">
+                        <SelectValue placeholder={(customers?.length ?? 0) === 0 ? "لا يوجد زبائن — أضف زبونًا" : "اختر الزبون"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(customers ?? []).map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            <span className="flex items-center gap-2">
+                              <span className="font-bold">{c.name}</span>
+                              <span className="text-[11px] text-muted-foreground font-mono">{c.whatsapp}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </>
 
                 )}
