@@ -9,6 +9,7 @@
     - حذف مجلد android القديم (إن وجد)
     - npx cap add android
     - npx cap sync android
+    - تجهيز إضافة جهات الاتصال لأندرويد
     - فتح Android Studio (اختياري)
 .NOTES
     يجب تشغيل هذا السكربت من داخل مجلد المشروع الجذر.
@@ -70,8 +71,12 @@ Write-Step "4/5 - إضافة منصة Android (npx cap add android)"
 Invoke-CommandWithCheck -Command "npx" -Arguments "cap add android"
 
 # 5) npx cap sync android
-Write-Step "5/5 - مزامنة Capacitor مع Android (npx cap sync android)"
+Write-Step "5/6 - مزامنة Capacitor مع Android (npx cap sync android)"
 Invoke-CommandWithCheck -Command "npx" -Arguments "cap sync android"
+
+# 6) ضمان تسجيل إضافة جهات الاتصال وأذوناتها في Android
+Write-Step "6/6 - تجهيز إضافة جهات الاتصال لأندرويد"
+Invoke-CommandWithCheck -Command "node" -Arguments "scripts/ensure-capacitor-contacts.mjs"
 
 Write-Step "اكتمل البناء بنجاح"
 Write-Host "يمكنك الآن فتح المشروع في Android Studio بتشغيل:" -ForegroundColor Green

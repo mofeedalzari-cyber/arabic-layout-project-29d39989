@@ -9,7 +9,7 @@
 - `capacitor.config.ts` — إعدادات التطبيق (اسم، هوية، رابط الموقع، ألوان)
 - `www/index.html` — صفحة انتقال احتياطية
 - `public/app-icon.png` — أيقونة التطبيق (1024×1024)
-- الحزم المثبتة: `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`, `@capacitor/splash-screen`, `@capacitor/status-bar`
+- الحزم المثبتة: `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`, `@capacitor/splash-screen`, `@capacitor/status-bar`, `@capacitor-community/contacts`
 
 ---
 
@@ -47,6 +47,7 @@ npx cap add android
 ### 4) زامن الإعدادات
 ```bash
 npx cap sync android
+npm run prepare:android
 ```
 
 ### 5) افتح المشروع في Android Studio
@@ -111,7 +112,7 @@ npx cap open android
 
 1. **Render Free Plan** — الموقع ينام بعد 15 دقيقة خمول. أول فتح للتطبيق قد يستغرق 30-40 ثانية. الحل: ترقية إلى Starter ($7/شهر).
 2. **الاتصال بالإنترنت مطلوب** — التطبيق يفتح موقعاً بعيداً، لن يعمل بدون إنترنت.
-3. **الأذونات** — لا يحتاج التطبيق أي أذونات خاصة (INTERNET فقط، مضاف تلقائياً).
+3. **الأذونات** — تم تجهيز أذونات جهات الاتصال تلقائياً عند تشغيل سكربت البناء أو `npm run prepare:android`.
 4. **إذا فشل Gradle Sync**: تأكد من JDK 17 (ليس 8 ولا 11):
    ```bash
    java -version
@@ -127,6 +128,7 @@ npx cap open android
 | `Failed to install the following Android SDK` | افتح SDK Manager وثبّت المطلوب |
 | شاشة بيضاء عند فتح التطبيق | تأكد أن رابط Render يعمل في المتصفح |
 | `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | احذف التطبيق القديم من الجهاز قبل التثبيت |
+| `Contacts plugin is not implemented on android` | شغّل `npm install` ثم `npx cap sync android` ثم `npm run prepare:android`، وبعدها أعد بناء APK وثبّته من جديد |
 
 ---
 

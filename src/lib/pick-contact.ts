@@ -26,6 +26,14 @@ export async function pickContact(): Promise<PickContactResult> {
   // Native Capacitor
   if (Capacitor.isNativePlatform()) {
     try {
+      if (!Capacitor.isPluginAvailable("Contacts")) {
+        return {
+          ok: false,
+          error: "unsupported",
+          message: "إضافة جهات الاتصال غير مفعّلة في نسخة APK الحالية — أعد بناء التطبيق بآخر تحديث ثم ثبّته من جديد",
+        };
+      }
+
       const mod = await import("@capacitor-community/contacts");
       const Contacts: any = (mod as any).Contacts;
       const perm = await Contacts.requestPermissions();
@@ -42,7 +50,15 @@ export async function pickContact(): Promise<PickContactResult> {
       if (!name && !phone) return { ok: false, error: "cancelled" };
       return { ok: true, contact: { name: name.trim(), phone: String(phone).trim() } };
     } catch (err: any) {
-      return { ok: false, error: "failed", message: err?.message ?? "فشل الوصول لجهات الاتصال" };
+      const msg = String(err?.message ?? "");
+      if (/not implemented|not available|plugin/i.test(msg)) {
+        return {
+          ok: false,
+          error: "unsupported",
+          message: "إضافة جهات الاتصال غير مسجلة في نسخة APK الحالية — أعد بناء التطبيق بعد تشغيل npx cap sync android",
+        };
+      }
+      return { ok: false, error: "failed", message: msg || "فشل الوصول لجهات الاتصال" };
     }
   }
 
