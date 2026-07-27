@@ -388,10 +388,10 @@ export async function buildReportPdfBlob(opts: {
   });
 
 
-  // Wide tables (many columns) get landscape orientation so nothing gets clipped.
+  // Always portrait; compact layout when many columns to fit all in width.
   const maxCols = opts.sections.reduce((m, s) => Math.max(m, s.cols.length + 1), 0);
-  const landscape = maxCols >= 7;
-  const lineWidth = landscape ? 781 : 535;
+  const dense = maxCols >= 7;
+  const lineWidth = 547;
 
   const content: any[] = [
     headerBlock(opts.title, meta, dateStr),
@@ -399,12 +399,12 @@ export async function buildReportPdfBlob(opts: {
   ];
   const sum = summaryBlock(opts.summary);
   if (sum) content.push(sum);
-  for (const sec of opts.sections) content.push(tableSection(sec));
+  for (const sec of opts.sections) content.push(tableSection(sec, dense));
 
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
-    pageOrientation: landscape ? "landscape" : "portrait",
-    pageMargins: [24, 32, 24, 40],
+    pageOrientation: "portrait",
+    pageMargins: [18, 28, 18, 36],
     content,
     footer: (currentPage: number, pageCount: number) => ({
       margin: [30, 0, 30, 0],
