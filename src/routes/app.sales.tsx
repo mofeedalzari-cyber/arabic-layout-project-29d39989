@@ -53,6 +53,7 @@ function SalesPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteCards, setDeleteCards] = useState(false);
+  const [pageSize, setPageSize] = useState(25);
   const { display: displayName } = useUserNames();
 
   const { data: sales, isLoading } = useQuery({
@@ -86,6 +87,12 @@ function SalesPage() {
 
   const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
   const someSelected = selected.size > 0;
+  const displayedSales = filtered.slice(0, pageSize);
+  const hasMore = filtered.length > displayedSales.length;
+
+  function loadMore() {
+    setPageSize((prev) => prev + 25);
+  }
 
   function toggleAll() {
     if (allSelected) setSelected(new Set());
@@ -170,10 +177,10 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant border-0 overflow-hidden">
-        <div className="overflow-x-auto">
+      <Card className="card-elegant border-0 overflow-hidden flex flex-col">
+        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-18rem)] md:max-h-[calc(100dvh-16rem)]">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
                 {isAdmin && (
                   <TableHead className="w-10">
@@ -206,7 +213,7 @@ function SalesPage() {
                     لا توجد مبيعات.
                   </TableCell>
                 </TableRow>
-              ) : filtered.map((s, i) => (
+              ) : displayedSales.map((s, i) => (
                 <TableRow key={s.id} className={selected.has(s.id) ? "bg-primary/5" : ""}>
                   {isAdmin && (
                     <TableCell>
@@ -239,6 +246,13 @@ function SalesPage() {
             </TableBody>
           </Table>
         </div>
+        {hasMore && (
+          <div className="p-3 border-t bg-muted/30 text-center">
+            <Button variant="outline" size="sm" onClick={loadMore} className="gap-1 rounded-xl">
+              عرض المزيد ({filtered.length - displayedSales.length} متبقي)
+            </Button>
+          </div>
+        )}
       </Card>
 
       <Dialog open={!!toEdit} onOpenChange={(o) => !o && setToEdit(null)}>
