@@ -5,45 +5,69 @@ export interface PickedContact {
   phone: string;
 }
 
+export type PickContactError =
+  | "unsupported"
+  | "permission_denied"
+  | "cancelled"
+  | "failed";
+
+export interface PickContactResult {
+  ok: boolean;
+  contact?: PickedContact;
+  error?: PickContactError;
+  message?: string;
+}
+
 /**
- * Opens the device contact picker and returns the selected contact's
- * display name + first phone number. Returns null if user cancels or on error.
- * Works on Capacitor Android/iOS and on browsers supporting the Contact Picker API.
+ * Opens the device contact picker. Works on Capacitor Android/iOS.
+ * On web browsers, uses the Contact Picker API when available (Chrome on Android over HTTPS).
  */
-export async function pickContact(): Promise<PickedContact | null> {
-  try {
-    if (Capacitor.isNativePlatform()) {
+export async function pickContact(): Promise<PickContactResult> {
+  // Native Capacitor
+  if (Capacitor.isNativePlatform()) {
+    try {
       const mod = await import("@capacitor-community/contacts");
       const Contacts: any = (mod as any).Contacts;
-      // Request permission
       const perm = await Contacts.requestPermissions();
       const granted = perm?.contacts === "granted" || perm?.contacts === true;
-      if (!granted) return null;
-      const res = await Contacts.pickContact({
-        projection: { name: true, phones: true },
-      });
+      if (!granted) {
+        return { ok: false, error: "permission_denied", message: "لم يتم منح صلاحية الوصول لجهات الاتصال" };
+      }
+      const res = await Contacts.pickContact({ projection: { name: true, phones: true } });
       const c = res?.contact;
-      if (!c) return null;
+      if (!c) return { ok: false, error: "cancelled" };
       const name: string =
         c.name?.display || [c.name?.given, c.name?.family].filter(Boolean).join(" ") || "";
       const phone: string = c.phones?.[0]?.number || "";
-      if (!name && !phone) return null;
-      return { name: name.trim(), phone: String(phone).trim() };
+      if (!name && !phone) return { ok: false, error: "cancelled" };
+      return { ok: true, contact: { name: name.trim(), phone: String(phone).trim() } };
+    } catch (err: any) {
+      return { ok: false, error: "failed", message: err?.message ?? "فشل الوصول لجهات الاتصال" };
     }
+  }
 
-    // Web Contact Picker API (Chrome Android on secure origins)
-    const anyNav = navigator as any;
-    if (anyNav?.contacts && typeof anyNav.contacts.select === "function") {
+  // Web Contact Picker API
+  const anyNav = navigator as any;
+  if (anyNav?.contacts && typeof anyNav.contacts.select === "function") {
+    try {
       const contacts = await anyNav.contacts.select(["name", "tel"], { multiple: false });
       const c = contacts?.[0];
-      if (!c) return null;
+      if (!c) return { ok: false, error: "cancelled" };
       return {
-        name: (c.name?.[0] ?? "").trim(),
-        phone: (c.tel?.[0] ?? "").trim(),
+        ok: true,
+        contact: {
+          name: (c.name?.[0] ?? "").trim(),
+          phone: (c.tel?.[0] ?? "").trim(),
+        },
       };
+    } catch (err: any) {
+      return { ok: false, error: "failed", message: err?.message ?? "فشل جلب جهة الاتصال" };
     }
-  } catch (err) {
-    console.warn("pickContact failed", err);
   }
-  return null;
+
+  return {
+    ok: false,
+    error: "unsupported",
+    message: "جهات الاتصال متاحة داخل تطبيق أندرويد فقط — أدخل البيانات يدوياً هنا",
+  };
 }

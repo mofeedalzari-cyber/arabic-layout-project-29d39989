@@ -266,10 +266,10 @@ function CabinPage() {
                       <Input placeholder="7XXXXXXXX" inputMode="tel" value={localYemenDigits(newWa)} onChange={(e) => setNewWa(localYemenDigits(e.target.value))} className="flex-1 rounded-none border-0 bg-background font-mono" />
                     </div>
                     <Button variant="outline" size="sm" className="w-full rounded-xl" onClick={async () => {
-                      const c = await pickContact();
-                      if (!c) { toast.error("تعذّر جلب جهة الاتصال"); return; }
-                      if (c.name) setNewName(c.name);
-                      if (c.phone) setNewWa(localYemenDigits(c.phone));
+                      const r = await pickContact();
+                      if (!r.ok) { if (r.error !== "cancelled") toast.error(r.message ?? "تعذّر جلب جهة الاتصال"); return; }
+                      if (r.contact?.name) setNewName(r.contact.name);
+                      if (r.contact?.phone) setNewWa(localYemenDigits(r.contact.phone));
                     }}>
                       <UserIcon className="h-4 w-4 ml-1" />اختيار من جهات الاتصال
                     </Button>
@@ -351,10 +351,10 @@ function CabinPage() {
                 <Input placeholder="7XXXXXXXX" inputMode="tel" value={localYemenDigits(newWa)} onChange={(e) => setNewWa(localYemenDigits(e.target.value))} className="flex-1 rounded-none border-0 bg-background font-mono" />
               </div>
               <Button variant="outline" className="w-full rounded-xl" onClick={async () => {
-                const c = await pickContact();
-                if (!c) { toast.error("تعذّر جلب جهة الاتصال"); return; }
-                if (c.name) setNewName(c.name);
-                if (c.phone) setNewWa(localYemenDigits(c.phone));
+                const r = await pickContact();
+                if (!r.ok) { if (r.error !== "cancelled") toast.error(r.message ?? "تعذّر جلب جهة الاتصال"); return; }
+                if (r.contact?.name) setNewName(r.contact.name);
+                if (r.contact?.phone) setNewWa(localYemenDigits(r.contact.phone));
               }}>
                 <UserIcon className="h-4 w-4 ml-1" />اختيار من جهات الاتصال
               </Button>
