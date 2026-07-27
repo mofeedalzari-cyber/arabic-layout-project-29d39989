@@ -139,31 +139,10 @@ export const adminDeleteAgent = createServerFn({ method: "POST" })
     if (profErr) throw new Error(profErr.message);
     if (!prof || prof.network_id !== net.id) throw new Error("FORBIDDEN");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    // Unassign cards still held by this agent (available cards go back to pool).
-    await (supabaseAdmin.from("cards") as any)
-      .update({ status: "AVAILABLE", assigned_to: null, assigned_at: null })
-      .eq("assigned_to", agentId)
-      .eq("status", "ASSIGNED");
-
-    // Delete role rows and profile (sales history keeps agent_id/agent_username as orphan snapshot).
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", agentId);
-    const { error: delProfErr } = await supabaseAdmin.from("profiles").delete().eq("id", agentId);
-    if (delProfErr) throw new Error(delProfErr.message);
-
-    // Delete auth user
-    const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(agentId);
-    if (authErr) throw new Error(authErr.message);
-
-    // Log
-    await (supabaseAdmin.from("logs") as any).insert({
-      user_id: userId,
-      action: "DELETE_AGENT",
-      entity: "profile",
-      entity_id: agentId,
-      metadata: { username: prof.username, network_id: net.id },
+    const { data: result, error } = await (supabase.rpc as any)("admin_delete_agent", {
+      _agent_id: agentId,
     });
+    if (error) throw new Error(error.message);
 
-    return { ok: true };
+    return result ?? { ok: true };
   });
