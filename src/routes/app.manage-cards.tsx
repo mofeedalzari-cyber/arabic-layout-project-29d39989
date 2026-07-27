@@ -236,6 +236,13 @@ function ManageCardsPage() {
       return n;
     });
   }
+  function selectAllAvailable() {
+    setSelected((s) => {
+      const n = new Set(s);
+      (cards ?? []).filter((c) => c.status === "AVAILABLE").forEach((c) => n.add(c.id));
+      return n;
+    });
+  }
   async function printAssigned() {
     const src = (cards ?? []).filter((c) => c.status === "ASSIGNED");
     const chosen = selected.size ? src.filter((c) => selected.has(c.id)) : src;
@@ -257,6 +264,52 @@ function ManageCardsPage() {
       toast.error("فشلت طباعة الكشف");
     }
   }
+
+  async function printAvailable() {
+    const src = (cards ?? []).filter((c) => c.status === "AVAILABLE");
+    const chosen = selected.size ? src.filter((c) => selected.has(c.id)) : src;
+    if (!chosen.length) { toast.error("لا توجد كروت متاحة للطباعة"); return; }
+    const netName = networks?.find((n) => n.id === networkId)?.name ?? "";
+    try {
+      await printAssignedCards({
+        title: "كشف الكروت المتاحة",
+        networkName: netName,
+        rows: chosen.map((c) => ({
+          code: c.password ?? c.username,
+          username: c.username,
+          package_name: c.package_name,
+          agent_name: "—",
+          assigned_at: c.created_at,
+        })),
+      });
+    } catch (err) {
+      console.error("[printAvailable] failed:", err);
+      toast.error("فشلت طباعة الكشف");
+    }
+  }
+
+  const availableCount = (cards ?? []).filter((c) => c.status === "AVAILABLE").length;
+  const selectedAvailableIds = (cards ?? []).filter((c) => c.status === "AVAILABLE" && selected.has(c.id)).map((c) => c.id);
+
+  const delAvailable = useMutation({
+    mutationFn: async () => {
+      const ids = selectedAvailableIds.length
+        ? selectedAvailableIds
+        : (cards ?? []).filter((c) => c.status === "AVAILABLE").map((c) => c.id);
+      if (!ids.length) return { deleted: 0 };
+      const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: ids, _force: false });
+      if (error) throw error;
+      const r = Array.isArray(data) ? data[0] : data;
+      return { deleted: r?.deleted ?? 0 };
+    },
+    onSuccess: (r: any) => {
+      toast.success(r.deleted ? `تم حذف ${r.deleted} كرت متاح` : "لا يوجد كروت متاحة للحذف");
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["admin-cards"] });
+      qc.invalidateQueries({ queryKey: ["aa-cards"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   function toggleReveal(id: string) {
     setRevealed((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
