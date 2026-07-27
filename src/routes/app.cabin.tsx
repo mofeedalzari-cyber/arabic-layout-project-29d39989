@@ -286,7 +286,7 @@ function CabinPage() {
               </div>
               <div className="flex gap-2 pb-4">
                 <Button variant="outline" className="flex-1 rounded-xl h-11" onClick={() => { setConfirmPkg(null); setSelCustomer(null); }}>إلغاء</Button>
-                <Button disabled={selling} onClick={confirmSell} className="flex-1 rounded-xl h-11 gradient-primary-bg border-0 font-semibold">
+                <Button disabled={selling || !selCustomer} onClick={confirmSell} className="flex-1 rounded-xl h-11 gradient-primary-bg border-0 font-semibold">
                   {selling ? "..." : "تأكيد البيع"}
                 </Button>
               </div>
