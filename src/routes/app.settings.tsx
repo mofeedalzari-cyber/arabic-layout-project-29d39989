@@ -203,9 +203,9 @@ function AgentBackupCard() {
       <AlertDialog open={confirmRestore} onOpenChange={setConfirmRestore}>
         <AlertDialogContent dir="rtl" className="text-right">
           <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد استعادة الزبائن</AlertDialogTitle>
+            <AlertDialogTitle>تأكيد الاستعادة</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم إضافة الزبائن الموجودين في الملف إلى حسابك (مع تخطي الأرقام المكررة).
+              سيتم استعادة الزبائن (مع تخطي الأرقام المكررة) وإعادة إنشاء طلبات الكروت كطلبات جديدة بانتظار موافقة المدير. لن تُستعاد المبيعات والكروت لأن ملكيتها للشبكة.
               <span className="block mt-1 font-mono text-xs">{pendingName}</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
