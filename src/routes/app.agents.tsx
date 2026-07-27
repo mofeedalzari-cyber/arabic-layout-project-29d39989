@@ -14,12 +14,16 @@ import {
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Search, BarChart3, Wifi, RefreshCw, Wallet, Receipt, Coins, Shapes, Network, Tag, Pencil,
+  Search, BarChart3, Wifi, RefreshCw, Wallet, Receipt, Coins, Shapes, Network, Tag, Pencil, Trash2,
 } from "lucide-react";
 import { displayPhone, fmtMoney } from "@/lib/format";
 import { useServerFn } from "@tanstack/react-start";
-import { adminUpdateAgent } from "@/lib/admin-agents.functions";
+import { adminUpdateAgent, adminDeleteAgent } from "@/lib/admin-agents.functions";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 export const Route = createFileRoute("/app/agents")({ component: AgentsPage });
@@ -31,6 +35,24 @@ function AgentsPage() {
   const [q, setQ] = useState("");
   const [statsFor, setStatsFor] = useState<{ id: string; name: string; username: string } | null>(null);
   const [editFor, setEditFor] = useState<{ id: string; username: string; full_name: string | null; phone?: string | null } | null>(null);
+  const [deleteFor, setDeleteFor] = useState<{ id: string; name: string } | null>(null);
+  const deleteFn = useServerFn(adminDeleteAgent);
+  const [deleting, setDeleting] = useState(false);
+
+  const doDelete = async () => {
+    if (!deleteFor) return;
+    setDeleting(true);
+    try {
+      await deleteFn({ data: { agentId: deleteFor.id } });
+      toast.success("تم حذف المندوب نهائياً");
+      setDeleteFor(null);
+      qc.invalidateQueries({ queryKey: ["agents"] });
+    } catch (e: any) {
+      toast.error(e?.message || "فشل حذف المندوب");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
 
   const { data: networks } = useQuery({
@@ -113,6 +135,14 @@ function AgentsPage() {
               >
                 <Pencil className="h-4 w-4" />
               </Button>
+              <Button
+                variant="outline" size="icon"
+                className="hidden sm:inline-flex rounded-xl shrink-0 h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                title="حذف المندوب نهائياً"
+                onClick={() => setDeleteFor({ id: a.id, name: a.full_name || displayPhone((a as any).phone, a.username) })}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
               <div className="flex items-center gap-2 shrink-0">
                 <span className={`hidden sm:inline text-[11px] font-semibold ${a.is_active ? "text-success" : "text-muted-foreground"}`}>
                   {a.is_active ? "مفعّل" : "موقوف"}
@@ -153,6 +183,13 @@ function AgentsPage() {
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
+                <Button
+                  variant="outline" size="icon"
+                  className="rounded-xl h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => setDeleteFor({ id: a.id, name: a.full_name || displayPhone((a as any).phone, a.username) })}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
 
               </div>
             </div>
@@ -173,6 +210,29 @@ function AgentsPage() {
         onClose={() => setEditFor(null)}
         onSaved={() => { setEditFor(null); qc.invalidateQueries({ queryKey: ["agents"] }); }}
       />
+
+      <AlertDialog open={!!deleteFor} onOpenChange={(o) => !o && !deleting && setDeleteFor(null)}>
+        <AlertDialogContent dir="rtl" className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف المندوب نهائياً</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف المندوب <span className="font-bold">{deleteFor?.name}</span> نهائياً؟
+              سيتم حذف حسابه بالكامل ولا يمكن التراجع. الكروت المتاحة لديه ستعود إلى المخزون،
+              وسجلّ المبيعات السابقة سيبقى محفوظاً.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting} className="rounded-xl">إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e) => { e.preventDefault(); doDelete(); }}
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "جارٍ الحذف..." : "حذف نهائي"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
