@@ -135,6 +135,14 @@ function AgentsPage() {
               >
                 <Pencil className="h-4 w-4" />
               </Button>
+              <Button
+                variant="outline" size="icon"
+                className="hidden sm:inline-flex rounded-xl shrink-0 h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                title="حذف المندوب نهائياً"
+                onClick={() => setDeleteFor({ id: a.id, name: a.full_name || displayPhone((a as any).phone, a.username) })}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
               <div className="flex items-center gap-2 shrink-0">
                 <span className={`hidden sm:inline text-[11px] font-semibold ${a.is_active ? "text-success" : "text-muted-foreground"}`}>
                   {a.is_active ? "مفعّل" : "موقوف"}
