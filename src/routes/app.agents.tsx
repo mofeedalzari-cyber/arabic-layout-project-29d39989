@@ -14,12 +14,16 @@ import {
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Search, BarChart3, Wifi, RefreshCw, Wallet, Receipt, Coins, Shapes, Network, Tag, Pencil,
+  Search, BarChart3, Wifi, RefreshCw, Wallet, Receipt, Coins, Shapes, Network, Tag, Pencil, Trash2,
 } from "lucide-react";
 import { displayPhone, fmtMoney } from "@/lib/format";
 import { useServerFn } from "@tanstack/react-start";
-import { adminUpdateAgent } from "@/lib/admin-agents.functions";
+import { adminUpdateAgent, adminDeleteAgent } from "@/lib/admin-agents.functions";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 export const Route = createFileRoute("/app/agents")({ component: AgentsPage });
