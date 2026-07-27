@@ -116,7 +116,11 @@ function AgentBackupCard() {
   const restore = useMutation({
     mutationFn: async (payload: any) => await restoreFn({ data: { payload } }),
     onSuccess: (res: any) => {
-      toast.success(`تم استعادة ${res?.customers_restored ?? 0} زبون`);
+      const c = res?.customers_restored ?? 0;
+      const r = res?.requests_restored ?? 0;
+      toast.success(`تم استعادة ${c} زبون و${r} طلب`);
+      const notes: string[] = Array.isArray(res?.notes) ? res.notes : [];
+      notes.forEach((n) => toast.message(n));
       setPendingPayload(null);
       setPendingName("");
       qc.invalidateQueries();
