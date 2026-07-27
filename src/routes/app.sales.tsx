@@ -19,8 +19,11 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { useState, useMemo, useRef } from "react";
-import { Search, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
+import { Search, Pencil, Trash2, ChevronUp, ChevronDown, X } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
@@ -37,16 +40,37 @@ type SaleRow = {
   price: number;
   sold_at: string;
   buyer_name: string | null;
+  customer_id: string | null;
   customer_name: string | null;
   card_username: string | null;
   card_password: string | null;
 };
+
+type StatusFilter = "all" | "customer" | "direct";
+
+function highlight(text: string, term: string) {
+  if (!term) return text;
+  const t = term.trim();
+  if (!t) return text;
+  try {
+    const re = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "ig");
+    const parts = text.split(re);
+    return parts.map((p, i) =>
+      re.test(p) ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-700/60 rounded px-0.5">{p}</mark> : <span key={i}>{p}</span>
+    );
+  } catch {
+    return text;
+  }
+}
 
 function SalesPage() {
   const { role, user } = useAuth();
   const isAdmin = role === "admin";
   const qc = useQueryClient();
   const [q, setQ] = useState("");
+  const [customerFilter, setCustomerFilter] = useState<string>("all");
+  const [agentFilter, setAgentFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [toEdit, setToEdit] = useState<SaleRow | null>(null);
   const [editBuyer, setEditBuyer] = useState("");
   const [editPrice, setEditPrice] = useState("");
@@ -55,6 +79,7 @@ function SalesPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteCards, setDeleteCards] = useState(false);
   const [pageSize, setPageSize] = useState(25);
+  const [showScrollBtns, setShowScrollBtns] = useState(false);
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
   const { display: displayName } = useUserNames();
 
@@ -74,25 +99,71 @@ function SalesPage() {
     },
   });
 
+  const customerOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    (sales ?? []).forEach((s) => {
+      if (s.customer_id && s.customer_name) map.set(s.customer_id, s.customer_name);
+    });
+    return Array.from(map, ([id, name]) => ({ id, name }));
+  }, [sales]);
+
+  const agentOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    (sales ?? []).forEach((s) => {
+      if (s.agent_username) map.set(s.agent_username, displayName(s.agent_username));
+    });
+    return Array.from(map, ([u, name]) => ({ username: u, name }));
+  }, [sales, displayName]);
+
   const filtered = useMemo(() => {
-    if (!q) return sales ?? [];
-    const s = q.toLowerCase();
-    return (sales ?? []).filter((r) =>
-      r.transaction_no.toLowerCase().includes(s) ||
-      r.package_name.toLowerCase().includes(s) ||
-      r.network_name.toLowerCase().includes(s) ||
-      r.agent_username.toLowerCase().includes(s) ||
-      (r.buyer_name ?? "").toLowerCase().includes(s) ||
-      (r.customer_name ?? "").toLowerCase().includes(s) ||
-      (r.card_username ?? "").toLowerCase().includes(s) ||
-      displayName(r.agent_username).toLowerCase().includes(s)
-    );
-  }, [sales, q, displayName]);
+    const s = q.trim().toLowerCase();
+    return (sales ?? []).filter((r) => {
+      if (customerFilter !== "all" && r.customer_id !== customerFilter) return false;
+      if (agentFilter !== "all" && r.agent_username !== agentFilter) return false;
+      if (statusFilter === "customer" && !r.customer_id) return false;
+      if (statusFilter === "direct" && r.customer_id) return false;
+      if (!s) return true;
+      return (
+        r.transaction_no.toLowerCase().includes(s) ||
+        r.package_name.toLowerCase().includes(s) ||
+        r.network_name.toLowerCase().includes(s) ||
+        r.agent_username.toLowerCase().includes(s) ||
+        (r.buyer_name ?? "").toLowerCase().includes(s) ||
+        (r.customer_name ?? "").toLowerCase().includes(s) ||
+        (r.card_username ?? "").toLowerCase().includes(s) ||
+        displayName(r.agent_username).toLowerCase().includes(s)
+      );
+    });
+  }, [sales, q, customerFilter, agentFilter, statusFilter, displayName]);
 
   const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
   const someSelected = selected.size > 0;
-  const displayedSales = filtered.slice(0, pageSize);
+  const displayedSales = pageSize === -1 ? filtered : filtered.slice(0, pageSize);
   const hasMore = filtered.length > displayedSales.length;
+  const activeFilters = (customerFilter !== "all" ? 1 : 0) + (agentFilter !== "all" ? 1 : 0) + (statusFilter !== "all" ? 1 : 0);
+
+  // Auto-hide scroll buttons based on scrollability
+  useLayoutEffect(() => {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    const check = () => setShowScrollBtns(el.scrollHeight > el.clientHeight + 8);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    el.addEventListener("scroll", check, { passive: true });
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", check);
+    };
+  }, [displayedSales.length, isLoading]);
+
+  // Auto-scroll first result into view on search
+  useEffect(() => {
+    if (!q.trim()) return;
+    const el = tableScrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: 0, behavior: "smooth" });
+  }, [q]);
 
   function loadMore() {
     setPageSize((prev) => prev + 25);
@@ -105,6 +176,13 @@ function SalesPage() {
       top: direction === "down" ? target.clientHeight * 0.85 : -target.clientHeight * 0.85,
       behavior: "smooth",
     });
+  }
+
+  function resetFilters() {
+    setQ("");
+    setCustomerFilter("all");
+    setAgentFilter("all");
+    setStatusFilter("all");
   }
 
   function toggleAll() {
@@ -176,11 +254,26 @@ function SalesPage() {
       <PageHeader title={isAdmin ? "جميع المبيعات" : "مبيعاتي"} description={`${filtered.length} عملية`} />
       <div className="mb-4 flex justify-start"><RefreshButton /></div>
 
-
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      {/* Search + Bulk */}
+      <div className="flex flex-wrap items-center gap-2 mb-3">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="بحث برقم العملية أو الاسم..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />
+          <Input
+            placeholder="بحث برقم العملية / الاسم / الكرت..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="pr-9 rounded-xl"
+          />
+          {q && (
+            <button
+              type="button"
+              onClick={() => setQ("")}
+              className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="مسح"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
         {isAdmin && someSelected && (
           <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} className="gap-1">
@@ -190,16 +283,75 @@ function SalesPage() {
         )}
       </div>
 
+      {/* Quick filters */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+          <SelectTrigger className="w-[140px] rounded-xl">
+            <SelectValue placeholder="الحالة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الحالات</SelectItem>
+            <SelectItem value="customer">بيع آجل</SelectItem>
+            <SelectItem value="direct">بيع مباشر</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={customerFilter} onValueChange={setCustomerFilter}>
+          <SelectTrigger className="w-[160px] rounded-xl">
+            <SelectValue placeholder="الزبون" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الزبائن</SelectItem>
+            {customerOptions.map((c) => (
+              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {isAdmin && (
+          <Select value={agentFilter} onValueChange={setAgentFilter}>
+            <SelectTrigger className="w-[160px] rounded-xl">
+              <SelectValue placeholder="المندوب" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل المناديب</SelectItem>
+              {agentOptions.map((a) => (
+                <SelectItem key={a.username} value={a.username}>{a.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+          <SelectTrigger className="w-[130px] rounded-xl">
+            <SelectValue placeholder="السجلات" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="10">10 لكل صفحة</SelectItem>
+            <SelectItem value="25">25 لكل صفحة</SelectItem>
+            <SelectItem value="50">50 لكل صفحة</SelectItem>
+            <SelectItem value="100">100 لكل صفحة</SelectItem>
+            <SelectItem value="-1">عرض الكل</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {(activeFilters > 0 || q) && (
+          <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-muted-foreground">
+            <X className="h-3.5 w-3.5" /> مسح الفلاتر
+          </Button>
+        )}
+      </div>
+
       <Card className="card-elegant relative mb-[calc(env(safe-area-inset-bottom)+5rem)] flex flex-col overflow-hidden border-0">
         <div
           ref={tableScrollRef}
-          className="max-h-[calc(100dvh-21rem)] overflow-x-auto overflow-y-scroll overscroll-contain pb-16 md:max-h-[calc(100dvh-16rem)] md:pb-0"
+          className="max-h-[calc(100dvh-24rem)] overflow-x-auto overflow-y-auto overscroll-contain pb-16 md:max-h-[calc(100dvh-19rem)] md:pb-0"
         >
-          <Table>
-            <TableHeader className="sticky top-0 bg-card z-10">
-              <TableRow>
+          <Table className="min-w-[900px]">
+            <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
+              <TableRow className="border-b-2">
                 {isAdmin && (
-                  <TableHead className="w-10">
+                  <TableHead className="w-10 bg-card sticky top-0">
                     <Checkbox
                       checked={allSelected}
                       onCheckedChange={toggleAll}
@@ -207,16 +359,16 @@ function SalesPage() {
                     />
                   </TableHead>
                 )}
-                <TableHead className="text-right">#</TableHead>
-                <TableHead className="text-right">رقم العملية</TableHead>
-                <TableHead className="text-right">الباقة</TableHead>
-                <TableHead className="text-right">الشبكة</TableHead>
-                <TableHead className="text-right">المندوب</TableHead>
-                <TableHead className="text-right">الزبون</TableHead>
-                <TableHead className="text-right">الكرت</TableHead>
-                <TableHead className="text-right">التاريخ</TableHead>
-                <TableHead className="text-right">السعر</TableHead>
-                <TableHead className="text-right">إجراء</TableHead>
+                <TableHead className="text-right bg-card sticky top-0">#</TableHead>
+                <TableHead className="text-right bg-card sticky top-0">رقم العملية</TableHead>
+                <TableHead className="text-right bg-card sticky top-0">الباقة</TableHead>
+                <TableHead className="text-right bg-card sticky top-0">الشبكة</TableHead>
+                <TableHead className="text-right bg-card sticky top-0">المندوب</TableHead>
+                <TableHead className="text-right bg-card sticky top-0">الزبون</TableHead>
+                <TableHead className="text-right bg-card sticky top-0">الكرت</TableHead>
+                <TableHead className="text-right bg-card sticky top-0">التاريخ</TableHead>
+                <TableHead className="text-right bg-card sticky top-0">السعر</TableHead>
+                <TableHead className="text-right bg-card sticky top-0">إجراء</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -227,7 +379,7 @@ function SalesPage() {
               ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={isAdmin ? 11 : 10} className="text-center py-12 text-muted-foreground">
-                    لا توجد مبيعات.
+                    لا توجد مبيعات مطابقة.
                   </TableCell>
                 </TableRow>
               ) : displayedSales.map((s, i) => (
@@ -241,13 +393,13 @@ function SalesPage() {
                     </TableCell>
                   )}
                   <TableCell className="text-muted-foreground text-xs">{i + 1}</TableCell>
-                  <TableCell className="font-mono text-[11px] whitespace-nowrap">{s.transaction_no}</TableCell>
-                  <TableCell className="font-semibold">{s.package_name}</TableCell>
-                  <TableCell className="text-xs">{s.network_name}</TableCell>
-                  <TableCell className="text-xs">{displayName(s.agent_username)}</TableCell>
-                  <TableCell className="text-xs font-medium">{s.customer_name ?? s.buyer_name ?? "—"}</TableCell>
+                  <TableCell className="font-mono text-[11px] whitespace-nowrap">{highlight(s.transaction_no, q)}</TableCell>
+                  <TableCell className="font-semibold">{highlight(s.package_name, q)}</TableCell>
+                  <TableCell className="text-xs">{highlight(s.network_name, q)}</TableCell>
+                  <TableCell className="text-xs">{highlight(displayName(s.agent_username), q)}</TableCell>
+                  <TableCell className="text-xs font-medium">{highlight(s.customer_name ?? s.buyer_name ?? "—", q)}</TableCell>
                   <TableCell className="font-mono text-xs text-primary whitespace-nowrap">
-                    {s.card_username ?? "—"}
+                    {s.card_username ? highlight(s.card_username, q) : "—"}
                     {s.card_password && <span className="text-muted-foreground"> / {s.card_password}</span>}
                   </TableCell>
                   <TableCell className="text-xs whitespace-nowrap">{fmtArabicDateTime(s.sold_at)}</TableCell>
@@ -264,30 +416,30 @@ function SalesPage() {
             </TableBody>
           </Table>
         </div>
-        <div className="absolute left-2 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2 md:hidden">
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon"
-            className="h-10 w-10 rounded-full shadow-elegant"
-            onClick={() => scrollSales("up")}
-            aria-label="تمرير للأعلى"
-            title="تمرير للأعلى"
-          >
-            <ChevronUp className="h-5 w-5" />
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon"
-            className="h-10 w-10 rounded-full shadow-elegant"
-            onClick={() => scrollSales("down")}
-            aria-label="تمرير للأسفل"
-            title="تمرير للأسفل"
-          >
-            <ChevronDown className="h-5 w-5" />
-          </Button>
-        </div>
+        {showScrollBtns && (
+          <div className="absolute left-2 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2 md:hidden animate-in fade-in duration-200">
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="h-10 w-10 rounded-full shadow-elegant opacity-90"
+              onClick={() => scrollSales("up")}
+              aria-label="تمرير للأعلى"
+            >
+              <ChevronUp className="h-5 w-5" />
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="h-10 w-10 rounded-full shadow-elegant opacity-90"
+              onClick={() => scrollSales("down")}
+              aria-label="تمرير للأسفل"
+            >
+              <ChevronDown className="h-5 w-5" />
+            </Button>
+          </div>
+        )}
         {hasMore && (
           <div className="border-t bg-muted/30 p-3 text-center">
             <Button variant="outline" size="sm" onClick={loadMore} className="gap-1 rounded-xl">
