@@ -217,6 +217,27 @@
   }
 }
 
+@utility sales-scroll {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--color-primary) 70%, transparent) var(--color-muted);
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--color-muted);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--color-primary) 70%, transparent);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
+  }
+}
+
 @utility scroll-range {
   appearance: none;
   -webkit-appearance: none;

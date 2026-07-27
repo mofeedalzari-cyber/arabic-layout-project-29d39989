@@ -345,7 +345,7 @@ function SalesPage() {
       <Card className="card-elegant relative mb-[calc(env(safe-area-inset-bottom)+5rem)] flex flex-col overflow-hidden border-0">
         <div
           ref={tableScrollRef}
-          className="max-h-[calc(100dvh-24rem)] overflow-x-auto overflow-y-auto overscroll-contain pb-16 md:max-h-[calc(100dvh-19rem)] md:pb-0"
+          className="sales-scroll max-h-[calc(100dvh-24rem)] overflow-x-auto overflow-y-scroll overscroll-contain pb-24 md:max-h-[calc(100dvh-19rem)] md:pb-4"
         >
           <Table className="min-w-[900px]">
             <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
@@ -417,26 +417,26 @@ function SalesPage() {
           </Table>
         </div>
         {showScrollBtns && (
-          <div className="absolute left-2 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2 md:hidden animate-in fade-in duration-200">
+          <div className="pointer-events-none absolute bottom-3 left-3 z-20 flex gap-1 md:hidden animate-in fade-in duration-200">
             <Button
               type="button"
               variant="secondary"
               size="icon"
-              className="h-10 w-10 rounded-full shadow-elegant opacity-90"
+              className="pointer-events-auto h-8 w-8 rounded-full shadow-elegant opacity-80"
               onClick={() => scrollSales("up")}
               aria-label="تمرير للأعلى"
             >
-              <ChevronUp className="h-5 w-5" />
+              <ChevronUp className="h-4 w-4" />
             </Button>
             <Button
               type="button"
               variant="secondary"
               size="icon"
-              className="h-10 w-10 rounded-full shadow-elegant opacity-90"
+              className="pointer-events-auto h-8 w-8 rounded-full shadow-elegant opacity-80"
               onClick={() => scrollSales("down")}
               aria-label="تمرير للأسفل"
             >
-              <ChevronDown className="h-5 w-5" />
+              <ChevronDown className="h-4 w-4" />
             </Button>
           </div>
         )}
