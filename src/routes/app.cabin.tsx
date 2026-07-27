@@ -264,10 +264,7 @@ function CabinPage() {
                 ) : (
                   <>
                     <div className="max-h-40 overflow-y-auto space-y-1">
-                      <button type="button" onClick={() => setSelCustomer(null)}
-                        className={`w-full text-right rounded-lg px-3 py-2 text-sm border ${!selCustomer ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border/50"}`}>
-                        بدون زبون
-                      </button>
+                      <div className="text-xs font-semibold text-destructive mb-1">* اختيار الزبون إلزامي</div>
                       {(customers ?? []).map((c) => (
                         <button key={c.id} type="button" onClick={() => setSelCustomer(c)}
                           className={`w-full text-right rounded-lg px-3 py-2 text-sm border flex items-center justify-between ${selCustomer?.id === c.id ? "bg-primary/10 border-primary/40 text-primary" : "bg-background border-border/50"}`}>
