@@ -177,10 +177,10 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant border-0 overflow-hidden">
-        <div className="overflow-x-auto">
+      <Card className="card-elegant border-0 overflow-hidden flex flex-col">
+        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-18rem)] md:max-h-[calc(100dvh-16rem)]">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
                 {isAdmin && (
                   <TableHead className="w-10">
@@ -213,7 +213,7 @@ function SalesPage() {
                     لا توجد مبيعات.
                   </TableCell>
                 </TableRow>
-              ) : filtered.map((s, i) => (
+              ) : displayedSales.map((s, i) => (
                 <TableRow key={s.id} className={selected.has(s.id) ? "bg-primary/5" : ""}>
                   {isAdmin && (
                     <TableCell>
@@ -246,6 +246,13 @@ function SalesPage() {
             </TableBody>
           </Table>
         </div>
+        {hasMore && (
+          <div className="p-3 border-t bg-muted/30 text-center">
+            <Button variant="outline" size="sm" onClick={loadMore} className="gap-1 rounded-xl">
+              عرض المزيد ({filtered.length - displayedSales.length} متبقي)
+            </Button>
+          </div>
+        )}
       </Card>
 
       <Dialog open={!!toEdit} onOpenChange={(o) => !o && setToEdit(null)}>
