@@ -37,6 +37,7 @@ type SaleRow = {
   price: number;
   sold_at: string;
   buyer_name: string | null;
+  customer_name: string | null;
   card_username: string | null;
   card_password: string | null;
 };
@@ -60,11 +61,12 @@ function SalesPage() {
     queryKey: ["sales"],
     queryFn: async () => {
       const { data, error } = await supabase.from("sales")
-        .select("id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, cards ( username, password )")
+        .select("id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, customers ( name ), cards ( username, password )")
         .order("sold_at", { ascending: false }).limit(500);
       if (error) throw error;
       return (data ?? []).map((s: any) => ({
         ...s,
+        customer_name: s.customers?.name ?? null,
         card_username: s.cards?.username ?? null,
         card_password: s.cards?.password ?? null,
       })) as SaleRow[];
@@ -80,6 +82,7 @@ function SalesPage() {
       r.network_name.toLowerCase().includes(s) ||
       r.agent_username.toLowerCase().includes(s) ||
       (r.buyer_name ?? "").toLowerCase().includes(s) ||
+      (r.customer_name ?? "").toLowerCase().includes(s) ||
       (r.card_username ?? "").toLowerCase().includes(s) ||
       displayName(r.agent_username).toLowerCase().includes(s)
     );
@@ -196,6 +199,7 @@ function SalesPage() {
                 <TableHead className="text-right">الباقة</TableHead>
                 <TableHead className="text-right">الشبكة</TableHead>
                 <TableHead className="text-right">المندوب</TableHead>
+                <TableHead className="text-right">الزبون</TableHead>
                 <TableHead className="text-right">الكرت</TableHead>
                 <TableHead className="text-right">التاريخ</TableHead>
                 <TableHead className="text-right">السعر</TableHead>
@@ -205,11 +209,11 @@ function SalesPage() {
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={isAdmin ? 10 : 9} className="h-10 animate-pulse" /></TableRow>
+                  <TableRow key={i}><TableCell colSpan={isAdmin ? 11 : 10} className="h-10 animate-pulse" /></TableRow>
                 ))
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 10 : 9} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={isAdmin ? 11 : 10} className="text-center py-12 text-muted-foreground">
                     لا توجد مبيعات.
                   </TableCell>
                 </TableRow>
@@ -228,6 +232,7 @@ function SalesPage() {
                   <TableCell className="font-semibold">{s.package_name}</TableCell>
                   <TableCell className="text-xs">{s.network_name}</TableCell>
                   <TableCell className="text-xs">{displayName(s.agent_username)}</TableCell>
+                  <TableCell className="text-xs font-medium">{s.customer_name ?? s.buyer_name ?? "—"}</TableCell>
                   <TableCell className="font-mono text-xs text-primary whitespace-nowrap">
                     {s.card_username ?? "—"}
                     {s.card_password && <span className="text-muted-foreground"> / {s.card_password}</span>}
