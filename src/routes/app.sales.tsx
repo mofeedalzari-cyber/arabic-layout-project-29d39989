@@ -19,8 +19,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { useState, useMemo } from "react";
-import { Search, Pencil, Trash2 } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { Search, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
@@ -55,6 +55,7 @@ function SalesPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteCards, setDeleteCards] = useState(false);
   const [pageSize, setPageSize] = useState(25);
+  const tableScrollRef = useRef<HTMLDivElement | null>(null);
   const { display: displayName } = useUserNames();
 
   const { data: sales, isLoading } = useQuery({
@@ -95,6 +96,15 @@ function SalesPage() {
 
   function loadMore() {
     setPageSize((prev) => prev + 25);
+  }
+
+  function scrollSales(direction: "up" | "down") {
+    const target = tableScrollRef.current;
+    if (!target) return;
+    target.scrollBy({
+      top: direction === "down" ? target.clientHeight * 0.85 : -target.clientHeight * 0.85,
+      behavior: "smooth",
+    });
   }
 
   function toggleAll() {
@@ -180,8 +190,11 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant border-0 overflow-hidden flex flex-col">
-        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100dvh-18rem)] md:max-h-[calc(100dvh-16rem)]">
+      <Card className="card-elegant relative mb-[calc(env(safe-area-inset-bottom)+5rem)] flex flex-col overflow-hidden border-0">
+        <div
+          ref={tableScrollRef}
+          className="max-h-[calc(100dvh-21rem)] overflow-x-auto overflow-y-scroll overscroll-contain pb-16 md:max-h-[calc(100dvh-16rem)] md:pb-0"
+        >
           <Table>
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow>
@@ -251,8 +264,32 @@ function SalesPage() {
             </TableBody>
           </Table>
         </div>
+        <div className="absolute left-2 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2 md:hidden">
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            className="h-10 w-10 rounded-full shadow-elegant"
+            onClick={() => scrollSales("up")}
+            aria-label="تمرير للأعلى"
+            title="تمرير للأعلى"
+          >
+            <ChevronUp className="h-5 w-5" />
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            className="h-10 w-10 rounded-full shadow-elegant"
+            onClick={() => scrollSales("down")}
+            aria-label="تمرير للأسفل"
+            title="تمرير للأسفل"
+          >
+            <ChevronDown className="h-5 w-5" />
+          </Button>
+        </div>
         {hasMore && (
-          <div className="p-3 border-t bg-muted/30 text-center">
+          <div className="border-t bg-muted/30 p-3 text-center">
             <Button variant="outline" size="sm" onClick={loadMore} className="gap-1 rounded-xl">
               عرض المزيد ({filtered.length - displayedSales.length} متبقي)
             </Button>
