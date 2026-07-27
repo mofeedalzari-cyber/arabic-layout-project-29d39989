@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "start": "node .output/server/index.mjs"
+    "start": "node .output/server/index.mjs",
+    "prepare:android": "node scripts/ensure-capacitor-contacts.mjs"
   },
   "dependencies": {
     "@capacitor-community/contacts": "^8.0.0",

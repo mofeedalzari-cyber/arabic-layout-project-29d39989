@@ -62,9 +62,16 @@ if errorlevel 1 goto failed
 
 echo.
 echo ========================================
-echo 5/5 - مزامنة Android: npx cap sync android
+echo 5/6 - مزامنة Android: npx cap sync android
 echo ========================================
 call npx cap sync android
+if errorlevel 1 goto failed
+
+echo.
+echo ========================================
+echo 6/6 - تجهيز إضافة جهات الاتصال لأندرويد
+echo ========================================
+call node scripts\ensure-capacitor-contacts.mjs
 if errorlevel 1 goto failed
 
 echo.
