@@ -597,7 +597,7 @@ function CustomersPage() {
           <div className="space-y-3">
             <div>
               <Label>اسم الزبون</Label>
-              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="مثال: محمد أمين" />
+              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="مثال: مفيد الزري" />
             </div>
             <div>
               <Label>رقم الواتساب</Label>
