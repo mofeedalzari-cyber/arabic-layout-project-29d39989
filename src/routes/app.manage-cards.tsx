@@ -236,6 +236,13 @@ function ManageCardsPage() {
       return n;
     });
   }
+  function selectAllAvailable() {
+    setSelected((s) => {
+      const n = new Set(s);
+      (cards ?? []).filter((c) => c.status === "AVAILABLE").forEach((c) => n.add(c.id));
+      return n;
+    });
+  }
   async function printAssigned() {
     const src = (cards ?? []).filter((c) => c.status === "ASSIGNED");
     const chosen = selected.size ? src.filter((c) => selected.has(c.id)) : src;
@@ -257,6 +264,52 @@ function ManageCardsPage() {
       toast.error("فشلت طباعة الكشف");
     }
   }
+
+  async function printAvailable() {
+    const src = (cards ?? []).filter((c) => c.status === "AVAILABLE");
+    const chosen = selected.size ? src.filter((c) => selected.has(c.id)) : src;
+    if (!chosen.length) { toast.error("لا توجد كروت متاحة للطباعة"); return; }
+    const netName = networks?.find((n) => n.id === networkId)?.name ?? "";
+    try {
+      await printAssignedCards({
+        title: "كشف الكروت المتاحة",
+        networkName: netName,
+        rows: chosen.map((c) => ({
+          code: c.password ?? c.username,
+          username: c.username,
+          package_name: c.package_name,
+          agent_name: "—",
+          assigned_at: c.created_at,
+        })),
+      });
+    } catch (err) {
+      console.error("[printAvailable] failed:", err);
+      toast.error("فشلت طباعة الكشف");
+    }
+  }
+
+  const availableCount = (cards ?? []).filter((c) => c.status === "AVAILABLE").length;
+  const selectedAvailableIds = (cards ?? []).filter((c) => c.status === "AVAILABLE" && selected.has(c.id)).map((c) => c.id);
+
+  const delAvailable = useMutation({
+    mutationFn: async () => {
+      const ids = selectedAvailableIds.length
+        ? selectedAvailableIds
+        : (cards ?? []).filter((c) => c.status === "AVAILABLE").map((c) => c.id);
+      if (!ids.length) return { deleted: 0 };
+      const { data, error } = await supabase.rpc("admin_delete_cards", { _ids: ids, _force: false });
+      if (error) throw error;
+      const r = Array.isArray(data) ? data[0] : data;
+      return { deleted: r?.deleted ?? 0 };
+    },
+    onSuccess: (r: any) => {
+      toast.success(r.deleted ? `تم حذف ${r.deleted} كرت متاح` : "لا يوجد كروت متاحة للحذف");
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["admin-cards"] });
+      qc.invalidateQueries({ queryKey: ["aa-cards"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   function toggleReveal(id: string) {
     setRevealed((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -344,9 +397,34 @@ function ManageCardsPage() {
           <Button variant="outline" className="rounded-lg h-9" onClick={unselectPage} disabled={!pageRows.length}>إلغاء تحديد الصفحة</Button>
           <Button variant="outline" className="rounded-lg h-9 text-destructive border-destructive/40" onClick={selectAllSold} disabled={!cards?.some((c) => c.status === "SOLD")}>تحديد كل المباع</Button>
           <Button variant="outline" className="rounded-lg h-9 text-blue-600 border-blue-500/40" onClick={selectAllAssigned} disabled={!cards?.some((c) => c.status === "ASSIGNED")}>تحديد كل المسحوب</Button>
+          <Button variant="outline" className="rounded-lg h-9 text-emerald-600 border-emerald-500/40" onClick={selectAllAvailable} disabled={!availableCount}>تحديد كل المتاح</Button>
           <Button variant="outline" className="rounded-lg h-9 text-blue-600 border-blue-500/40" onClick={printAssigned} disabled={!cards?.some((c) => c.status === "ASSIGNED")}>
             <Printer className="h-4 w-4 ml-1" />طباعة المسحوب
           </Button>
+          <Button variant="outline" className="rounded-lg h-9 text-emerald-600 border-emerald-500/40" onClick={printAvailable} disabled={!availableCount}>
+            <Printer className="h-4 w-4 ml-1" />طباعة المتاح
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="rounded-lg h-9 text-destructive border-destructive/40" disabled={!availableCount}>
+                <Trash2 className="h-4 w-4 ml-1" />حذف المتاح{selectedAvailableIds.length ? ` (${selectedAvailableIds.length})` : ""}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent dir="rtl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>حذف الكروت المتاحة؟</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {selectedAvailableIds.length
+                    ? `سيتم حذف ${selectedAvailableIds.length} كرت متاح من المحدد.`
+                    : `سيتم حذف جميع الكروت المتاحة (${availableCount}) للشبكة/الفلتر الحالي.`}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                <AlertDialogAction onClick={() => delAvailable.mutate()} className="bg-destructive text-destructive-foreground">تأكيد الحذف</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button variant="outline" className="rounded-lg h-9" onClick={() => setSelected(new Set())} disabled={!selected.size}>مسح التحديد</Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
