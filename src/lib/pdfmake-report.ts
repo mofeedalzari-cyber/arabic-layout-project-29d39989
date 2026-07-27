@@ -271,9 +271,13 @@ function summaryBlock(summary: PdfSummaryRow[]): any {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function tableSection(sec: PdfTableSection): any {
+function tableSection(sec: PdfTableSection, dense = false): any {
   const cols = ["#", ...sec.cols];
-  const widths: (string | number)[] = [24, ...sec.cols.map(() => "*")];
+  const widths: (string | number)[] = [dense ? 16 : 24, ...sec.cols.map(() => "*")];
+  const headPad = dense ? [2, 4, 2, 4] : [4, 6, 4, 6];
+  const cellPad = dense ? [2, 3, 2, 3] : [4, 4, 4, 4];
+  const headSize = dense ? 8 : 10;
+  const cellSize = dense ? 7.5 : 9.5;
 
   const header = cols
     .slice()
@@ -285,8 +289,8 @@ function tableSection(sec: PdfTableSection): any {
       color: COLORS.ink,
       fillColor: COLORS.header,
       alignment: "right",
-      margin: [4, 6, 4, 6],
-      fontSize: 10,
+      margin: headPad,
+      fontSize: headSize,
     }));
 
   const body = sec.rows.length
@@ -295,8 +299,8 @@ function tableSection(sec: PdfTableSection): any {
           text: rtlText(c),
           direction: "rtl",
           alignment: /^-?\d/.test(String(c).trim()) ? "center" : "right",
-          margin: [4, 4, 4, 4],
-          fontSize: 9.5,
+          margin: cellPad,
+          fontSize: cellSize,
           color: COLORS.ink,
         }));
         return cells;
