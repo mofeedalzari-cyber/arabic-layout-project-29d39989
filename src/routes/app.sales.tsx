@@ -540,7 +540,7 @@ async function printSalesPdf(args: {
     ? ["رقم العملية", "الباقة", "الشبكة", "المندوب", "الزبون", "الكرت", "التاريخ", "السعر"]
     : ["رقم العملية", "الباقة", "الشبكة", "الزبون", "الكرت", "التاريخ", "السعر"];
 
-  const rows = sales.map((s, i) => {
+  const rows = sales.map((s) => {
     const card = s.card_username
       ? s.card_password
         ? `${s.card_username} / ${s.card_password}`
