@@ -278,24 +278,31 @@ function summaryBlock(summary: PdfSummaryRow[]): any {
 function tableSection(sec: PdfTableSection, dense = false): any {
   const cols = ["#", ...sec.cols];
   // Columns that need narrow width + tight padding + character wrapping
-  const NARROW_HEADERS = new Set(["رقم العملية", "الكرت"]);
+  const NARROW_HEADERS = new Set(["رقم العملية", "الكرت", "السعر", "التاريخ"]);
   const isNarrow = (idx: number) => idx > 0 && NARROW_HEADERS.has(String(sec.cols[idx - 1] ?? "").trim());
-  const narrowWidth = dense ? 42 : 54;
+  const narrowWidthFor = (idx: number) => {
+    const h = String(sec.cols[idx - 1] ?? "").trim();
+    if (h === "السعر") return dense ? 34 : 44;
+    if (h === "التاريخ") return dense ? 74 : 92;
+    return dense ? 42 : 54;
+  };
   const widths: (string | number)[] = [
-    dense ? 14 : 20,
-    ...sec.cols.map((_, i) => (isNarrow(i + 1) ? narrowWidth : "*")),
+    dense ? 12 : 18,
+    ...sec.cols.map((_, i) => (isNarrow(i + 1) ? narrowWidthFor(i + 1) : "*")),
   ];
-  const headPad = dense ? [2, 4, 2, 4] : [3, 5, 3, 5];
-  const cellPad = dense ? [2, 3, 2, 3] : [3, 4, 3, 4];
-  const narrowHeadPad = dense ? [1, 4, 1, 4] : [2, 5, 2, 5];
-  const narrowCellPad = dense ? [1, 3, 1, 3] : [2, 4, 2, 4];
-  const headSize = dense ? 8 : 10;
-  const cellSize = dense ? 7.5 : 9.5;
-  const narrowCellSize = dense ? 7 : 8.5;
+  const headPad = dense ? [1, 3, 1, 3] : [3, 5, 3, 5];
+  const cellPad = dense ? [1, 2, 1, 2] : [3, 4, 3, 4];
+  const narrowHeadPad = dense ? [1, 3, 1, 3] : [2, 5, 2, 5];
+  const narrowCellPad = dense ? [1, 2, 1, 2] : [2, 4, 2, 4];
+  const headSize = dense ? 7.5 : 10;
+  const cellSize = dense ? 7 : 9.5;
+  const narrowCellSize = dense ? 6.5 : 8.5;
 
-  // Insert zero-width spaces inside long tokens so any cell can wrap without clipping
+  // Insert zero-width spaces inside long tokens so any cell can wrap without clipping.
+  // Also allow non-breaking-space-joined names to break between words so long agent
+  // names wrap inside their column instead of overflowing.
   const wrapLongToken = (s: string, every = 6) => {
-    const str = String(s ?? "");
+    const str = String(s ?? "").replace(/\u00A0/g, "\u00A0\u200B");
     if (str.length <= every + 2) return str;
     return str.replace(new RegExp(`(\\S{${every}})`, "g"), "$1\u200B");
   };
