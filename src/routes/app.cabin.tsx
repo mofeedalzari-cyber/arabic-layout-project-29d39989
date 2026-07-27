@@ -329,6 +329,14 @@ function CabinPage() {
                 <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">+967</span>
                 <Input placeholder="7XXXXXXXX" inputMode="tel" value={localYemenDigits(newWa)} onChange={(e) => setNewWa(localYemenDigits(e.target.value))} className="flex-1 rounded-none border-0 bg-background font-mono" />
               </div>
+              <Button variant="outline" className="w-full rounded-xl" onClick={async () => {
+                const c = await pickContact();
+                if (!c) { toast.error("تعذّر جلب جهة الاتصال"); return; }
+                if (c.name) setNewName(c.name);
+                if (c.phone) setNewWa(localYemenDigits(c.phone));
+              }}>
+                <UserIcon className="h-4 w-4 ml-1" />اختيار من جهات الاتصال
+              </Button>
               <Button className="w-full rounded-xl gradient-primary-bg border-0" onClick={() => { void createCustomer(); }}>
                 <UserPlus className="h-4 w-4 ml-1" />حفظ
               </Button>
