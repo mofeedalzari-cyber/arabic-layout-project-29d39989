@@ -537,17 +537,16 @@ async function printSalesPdf(args: {
   ];
 
   const cols = isAdmin
-    ? ["#", "رقم العملية", "الباقة", "الشبكة", "المندوب", "الزبون", "الكرت", "التاريخ", "السعر"]
-    : ["#", "رقم العملية", "الباقة", "الشبكة", "الزبون", "الكرت", "التاريخ", "السعر"];
+    ? ["رقم العملية", "الباقة", "الشبكة", "المندوب", "الزبون", "الكرت", "التاريخ", "السعر"]
+    : ["رقم العملية", "الباقة", "الشبكة", "الزبون", "الكرت", "التاريخ", "السعر"];
 
-  const rows = sales.map((s, i) => {
+  const rows = sales.map((s) => {
     const card = s.card_username
       ? s.card_password
         ? `${s.card_username} / ${s.card_password}`
         : s.card_username
       : "—";
     const base = [
-      i + 1,
       s.transaction_no,
       s.package_name,
       s.network_name,
