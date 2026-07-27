@@ -73,10 +73,152 @@ function SettingsPage() {
       </Card>
 
       {role === "admin" && <BackupCard />}
+      {role === "agent" && <AgentBackupCard />}
       {role === "admin" && <DangerZone adminId={profile?.id} />}
     </>
   );
 }
+
+
+import { backupMyAgentData, restoreMyAgentData } from "@/lib/agent-backup.functions";
+
+function AgentBackupCard() {
+  const qc = useQueryClient();
+  const backupFn = useServerFn(backupMyAgentData);
+  const restoreFn = useServerFn(restoreMyAgentData);
+  const [confirmBackup, setConfirmBackup] = useState(false);
+  const [confirmRestore, setConfirmRestore] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<any>(null);
+  const [pendingName, setPendingName] = useState<string>("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const backup = useMutation({
+    mutationFn: async () => await backupFn(),
+    onSuccess: async (data: any) => {
+      const username = data?.profile?.username ?? "agent";
+      const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+      const filename = `agent-backup-${username}-${stamp}.json`;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      try {
+        const { saveBlobToDevice } = await import("@/lib/native-pdf");
+        const res = await saveBlobToDevice({
+          blob, filename, mimeType: "application/json",
+          dialogTitle: "حفظ النسخة الاحتياطية",
+        });
+        toast.success(res.shared ? "تم تجهيز النسخة — اختر مكان الحفظ" : "تم حفظ النسخة في مجلد التنزيلات");
+      } catch (err: any) {
+        toast.error(`تعذر حفظ الملف: ${err?.message ?? ""}`);
+      }
+    },
+    onError: (e: Error) => toast.error(`فشل النسخ: ${e.message}`),
+  });
+
+  const restore = useMutation({
+    mutationFn: async (payload: any) => await restoreFn({ data: { payload } }),
+    onSuccess: (res: any) => {
+      toast.success(`تم استعادة ${res?.customers_restored ?? 0} زبون`);
+      setPendingPayload(null);
+      setPendingName("");
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(`فشل الاستعادة: ${e.message}`),
+  });
+
+  const onFilePicked = async (file: File | null) => {
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!parsed || (parsed.kind && parsed.kind !== "agent-backup" && !Array.isArray(parsed.customers))) {
+        throw new Error("الملف ليس نسخة احتياطية للمندوب");
+      }
+      setPendingPayload(parsed);
+      setPendingName(file.name);
+      setConfirmRestore(true);
+    } catch (e: any) {
+      toast.error(`ملف غير صالح: ${e?.message ?? ""}`);
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  return (
+    <Card className="card-elegant border-0 p-5 max-w-md mt-6">
+      <div className="flex items-center gap-2 mb-2">
+        <Download className="h-4 w-4 text-primary" />
+        <h3 className="font-bold">النسخة الاحتياطية لبياناتي</h3>
+      </div>
+      <p className="text-xs text-muted-foreground mb-3">
+        تنزيل ملف يحتوي زبائنك، مبيعاتك، طلباتك وكروتك. الاستعادة تُعيد الزبائن فقط إلى حسابك.
+      </p>
+
+      <div className="space-y-2">
+        <Button
+          disabled={backup.isPending}
+          onClick={() => setConfirmBackup(true)}
+          className="w-full rounded-xl gradient-primary-bg border-0 font-semibold"
+        >
+          <Download className="h-4 w-4 ml-1" />
+          {backup.isPending ? "جاري التحضير…" : "تنزيل نسخة احتياطية"}
+        </Button>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => onFilePicked(e.target.files?.[0] ?? null)}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          disabled={restore.isPending}
+          onClick={() => fileRef.current?.click()}
+          className="w-full rounded-xl font-semibold"
+        >
+          <Upload className="h-4 w-4 ml-1" />
+          {restore.isPending ? "جاري الاستعادة…" : "استعادة الزبائن من ملف"}
+        </Button>
+      </div>
+
+      <AlertDialog open={confirmBackup} onOpenChange={setConfirmBackup}>
+        <AlertDialogContent dir="rtl" className="text-right">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد تنزيل النسخة الاحتياطية</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم إنشاء ملف JSON يحتوي بياناتك الخاصة (الزبائن، المبيعات، الطلبات، الكروت المخصصة لك).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={() => backup.mutate()}>تنزيل</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmRestore} onOpenChange={setConfirmRestore}>
+        <AlertDialogContent dir="rtl" className="text-right">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد استعادة الزبائن</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم إضافة الزبائن الموجودين في الملف إلى حسابك (مع تخطي الأرقام المكررة).
+              <span className="block mt-1 font-mono text-xs">{pendingName}</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setPendingPayload(null); setPendingName(""); }}>
+              إلغاء
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => pendingPayload && restore.mutate(pendingPayload)}>
+              استعادة الآن
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
+  );
+}
+
 
 function BackupCard() {
   const qc = useQueryClient();
