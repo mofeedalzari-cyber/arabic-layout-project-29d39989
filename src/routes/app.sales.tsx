@@ -199,6 +199,7 @@ function SalesPage() {
                 <TableHead className="text-right">الباقة</TableHead>
                 <TableHead className="text-right">الشبكة</TableHead>
                 <TableHead className="text-right">المندوب</TableHead>
+                <TableHead className="text-right">الزبون</TableHead>
                 <TableHead className="text-right">الكرت</TableHead>
                 <TableHead className="text-right">التاريخ</TableHead>
                 <TableHead className="text-right">السعر</TableHead>
@@ -208,11 +209,11 @@ function SalesPage() {
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={isAdmin ? 10 : 9} className="h-10 animate-pulse" /></TableRow>
+                  <TableRow key={i}><TableCell colSpan={isAdmin ? 11 : 10} className="h-10 animate-pulse" /></TableRow>
                 ))
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 10 : 9} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={isAdmin ? 11 : 10} className="text-center py-12 text-muted-foreground">
                     لا توجد مبيعات.
                   </TableCell>
                 </TableRow>
@@ -231,6 +232,7 @@ function SalesPage() {
                   <TableCell className="font-semibold">{s.package_name}</TableCell>
                   <TableCell className="text-xs">{s.network_name}</TableCell>
                   <TableCell className="text-xs">{displayName(s.agent_username)}</TableCell>
+                  <TableCell className="text-xs font-medium">{s.customer_name ?? s.buyer_name ?? "—"}</TableCell>
                   <TableCell className="font-mono text-xs text-primary whitespace-nowrap">
                     {s.card_username ?? "—"}
                     {s.card_password && <span className="text-muted-foreground"> / {s.card_password}</span>}
