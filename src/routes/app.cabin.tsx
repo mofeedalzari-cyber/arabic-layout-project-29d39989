@@ -110,6 +110,10 @@ function CabinPage() {
 
   async function confirmSell() {
     if (!confirmPkg) return;
+    if (!selCustomer) {
+      toast.error("يجب اختيار الزبون قبل تأكيد البيع");
+      return;
+    }
     setSelling(true);
     const { data, error } = await supabase.rpc("sell_card", { _package_id: confirmPkg.package_id });
     if (error) {
