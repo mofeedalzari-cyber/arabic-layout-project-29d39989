@@ -13,11 +13,23 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useMemo, useState } from "react";
-import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard, UserPlus } from "lucide-react";
+import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard, UserPlus, User as UserIcon } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
 import { openWhatsApp } from "@/lib/wa-open";
 import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
+import { pickContact } from "@/lib/pick-contact";
 import { toast } from "sonner";
+
+function localYemenDigits(v: string) {
+  let d = String(v ?? "").replace(/\D/g, "");
+  if (d.startsWith("967")) d = d.slice(3);
+  if (d.startsWith("0")) d = d.replace(/^0+/, "");
+  return d;
+}
+function normalizeWa(v: string) {
+  const d = localYemenDigits(v);
+  return d ? "967" + d : "";
+}
 
 export const Route = createFileRoute("/app/customers")({ component: CustomersPage });
 
