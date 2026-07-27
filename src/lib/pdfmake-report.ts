@@ -440,7 +440,7 @@ export async function buildReportPdfBlob(opts: {
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
     pageOrientation: "portrait",
-    pageMargins: [18, 28, 18, 36],
+    pageMargins: [14, 24, 14, 32],
     content,
     footer: (currentPage: number, pageCount: number) => ({
       margin: [30, 0, 30, 0],
