@@ -601,9 +601,23 @@ function CustomersPage() {
             </div>
             <div>
               <Label>رقم الواتساب</Label>
-              <Input value={newWhats} onChange={(e) => setNewWhats(e.target.value)} placeholder="7XXXXXXXX" inputMode="tel" />
+              <div className="flex items-stretch rounded-md border border-input overflow-hidden" dir="ltr">
+                <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">+967</span>
+                <Input
+                  value={localYemenDigits(newWhats)}
+                  onChange={(e) => setNewWhats(localYemenDigits(e.target.value))}
+                  placeholder="7XXXXXXXX"
+                  inputMode="tel"
+                  className="flex-1 rounded-none border-0 font-mono"
+                />
+              </div>
             </div>
+            <Button variant="outline" className="w-full" onClick={pickFromContacts} disabled={addBusy}>
+              <UserIcon className="h-4 w-4 ml-1" />
+              اختيار من جهات الاتصال
+            </Button>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)} disabled={addBusy}>إلغاء</Button>
             <Button onClick={handleAddCustomer} disabled={addBusy}>{addBusy ? "جاري..." : "إضافة"}</Button>
