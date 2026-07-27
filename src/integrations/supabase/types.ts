@@ -467,7 +467,7 @@ export type Database = {
       }
       sales: {
         Row: {
-          agent_id: string
+          agent_id: string | null
           agent_username: string
           buyer_name: string | null
           card_id: string
@@ -482,7 +482,7 @@ export type Database = {
           transaction_no: string
         }
         Insert: {
-          agent_id: string
+          agent_id?: string | null
           agent_username: string
           buyer_name?: string | null
           card_id: string
@@ -497,7 +497,7 @@ export type Database = {
           transaction_no?: string
         }
         Update: {
-          agent_id?: string
+          agent_id?: string | null
           agent_username?: string
           buyer_name?: string | null
           card_id?: string
@@ -568,6 +568,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_agent: { Args: { _agent_id: string }; Returns: Json }
       admin_delete_cards:
         | {
             Args: { _ids: string[] }
