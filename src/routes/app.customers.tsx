@@ -54,9 +54,9 @@ function CustomersPage() {
 
   async function handleAddCustomer() {
     const name = newName.trim();
-    const whatsapp = newWhats.trim();
+    const whatsapp = normalizeWa(newWhats);
     if (!name) { toast.error("أدخل اسم الزبون"); return; }
-    if (!whatsapp) { toast.error("أدخل رقم واتساب"); return; }
+    if (whatsapp.length < 10) { toast.error("رقم واتساب غير صحيح"); return; }
     if (!user?.id) return;
     setAddBusy(true);
     try {
@@ -75,6 +75,14 @@ function CustomersPage() {
       setAddBusy(false);
     }
   }
+
+  async function pickFromContacts() {
+    const r = await pickContact();
+    if (!r.ok) { if (r.error !== "cancelled") toast.error(r.message ?? "تعذّر جلب جهة الاتصال"); return; }
+    if (r.contact?.name) setNewName(r.contact.name);
+    if (r.contact?.phone) setNewWhats(localYemenDigits(r.contact.phone));
+  }
+
 
   const { data: customers } = useQuery({
     queryKey: ["customers-page", user?.id],
