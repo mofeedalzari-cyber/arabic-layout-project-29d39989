@@ -120,7 +120,11 @@ function CabinPage() {
     qc.invalidateQueries({ queryKey: ["agent-cabin"] });
     qc.invalidateQueries({ queryKey: ["sales"] });
     qc.invalidateQueries({ queryKey: ["cards"] });
-    toast.success("تم حذف الزبون وإرجاع الكروت");
+    qc.invalidateQueries({ queryKey: ["admin-stats"] });
+    qc.invalidateQueries({ queryKey: ["dash-cards"] });
+    qc.invalidateQueries({ queryKey: ["dash-sales-all"] });
+    qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
+    toast.success("تم حذف حساب الزبون مع بقاء المبيعات كما هي");
   }
 
   async function confirmSell() {

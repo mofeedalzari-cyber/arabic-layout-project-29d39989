@@ -171,7 +171,7 @@ function CustomersPage() {
         toast.error("تعذر حذف الزبون: " + error.message);
         return;
       }
-      toast.success("تم حذف الزبون وإرجاع الكروت");
+      toast.success("تم حذف حساب الزبون مع بقاء المبيعات كما هي");
       setConfirmDelete(null);
       if (selected?.id === c.id) setSelected(null);
       qc.invalidateQueries({ queryKey: ["customers-page"] });
@@ -179,6 +179,10 @@ function CustomersPage() {
       qc.invalidateQueries({ queryKey: ["sales"] });
       qc.invalidateQueries({ queryKey: ["cards"] });
       qc.invalidateQueries({ queryKey: ["agent-cabin"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+      qc.invalidateQueries({ queryKey: ["dash-cards"] });
+      qc.invalidateQueries({ queryKey: ["dash-sales-all"] });
+      qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
     } finally {
       setDeleteBusy(false);
     }
