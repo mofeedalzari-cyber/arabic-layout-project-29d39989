@@ -427,7 +427,7 @@ export async function buildReportPdfBlob(opts: {
   // Always portrait; compact layout when many columns to fit all in width.
   const maxCols = opts.sections.reduce((m, s) => Math.max(m, s.cols.length + 1), 0);
   const dense = maxCols >= 7;
-  const lineWidth = 547;
+  const lineWidth = 567;
 
   const content: any[] = [
     headerBlock(opts.title, meta, dateStr),
