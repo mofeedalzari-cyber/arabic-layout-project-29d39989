@@ -73,10 +73,12 @@ function SettingsPage() {
       </Card>
 
       {role === "admin" && <BackupCard />}
+      {role === "agent" && <AgentBackupCard />}
       {role === "admin" && <DangerZone adminId={profile?.id} />}
     </>
   );
 }
+
 
 import { backupMyAgentData, restoreMyAgentData } from "@/lib/agent-backup.functions";
 
