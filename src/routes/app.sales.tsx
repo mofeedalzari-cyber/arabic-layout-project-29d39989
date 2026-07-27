@@ -23,8 +23,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
-import { Search, Pencil, Trash2, ChevronUp, ChevronDown, X } from "lucide-react";
-import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
+import { Search, Pencil, Trash2, ChevronUp, ChevronDown, X, Printer } from "lucide-react";
+import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
 import { ScrollContainer } from "@/components/scroll-container";
