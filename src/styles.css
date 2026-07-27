@@ -219,23 +219,24 @@
 
 @utility sales-scroll {
   scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in oklch, var(--color-primary) 70%, transparent) var(--color-muted);
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  &::-webkit-scrollbar-track {
-    background: var(--color-muted);
-    border-radius: 9999px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: color-mix(in oklch, var(--color-primary) 70%, transparent);
-    border-radius: 9999px;
-  }
-  &::-webkit-scrollbar-thumb:hover {
-    background: var(--color-primary);
-  }
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; width: 0; height: 0; }
+}
+
+@utility scroll-container {
+  overflow: auto;
+  scroll-behavior: smooth;
+  touch-action: pan-x pan-y;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+  &::-webkit-scrollbar { display: none; width: 0; height: 0; }
+  &.is-dragging,
+  &:active { cursor: grabbing; }
+  &.is-dragging { scroll-behavior: auto; user-select: none; }
 }
 
 @utility scroll-range {
