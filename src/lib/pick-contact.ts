@@ -46,9 +46,10 @@ export async function pickContact(): Promise<PickContactResult> {
     }
   }
 
-  // Web Contact Picker API
+  // Web Contact Picker API — only works in the top frame, over HTTPS, on Chrome Android.
   const anyNav = navigator as any;
-  if (anyNav?.contacts && typeof anyNav.contacts.select === "function") {
+  const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+  if (anyNav?.contacts && typeof anyNav.contacts.select === "function" && !inIframe) {
     try {
       const contacts = await anyNav.contacts.select(["name", "tel"], { multiple: false });
       const c = contacts?.[0];
@@ -61,7 +62,11 @@ export async function pickContact(): Promise<PickContactResult> {
         },
       };
     } catch (err: any) {
-      return { ok: false, error: "failed", message: err?.message ?? "فشل جلب جهة الاتصال" };
+      const msg = String(err?.message ?? "");
+      if (/top frame/i.test(msg)) {
+        return { ok: false, error: "unsupported", message: "جهات الاتصال متاحة داخل تطبيق أندرويد فقط — أدخل البيانات يدوياً" };
+      }
+      return { ok: false, error: "failed", message: msg || "فشل جلب جهة الاتصال" };
     }
   }
 
