@@ -37,6 +37,7 @@ type SaleRow = {
   price: number;
   sold_at: string;
   buyer_name: string | null;
+  customer_name: string | null;
   card_username: string | null;
   card_password: string | null;
 };
