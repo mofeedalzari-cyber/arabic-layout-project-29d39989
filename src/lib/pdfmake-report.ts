@@ -23,7 +23,11 @@ export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
   const value = String(input);
   if (!ARABIC_CHAR.test(value)) return value;
-  const parts = value.split(/(\s+)/);
+  // Split only on regular spaces. Non-breaking spaces (\u00A0) are treated as
+  // part of the token so multi-word names joined by nb-spaces (see app.sales)
+  // keep their original in-memory order and are rendered RTL by pdfmake
+  // without extra token reversal (which would flip word order incorrectly).
+  const parts = value.split(/( +)/);
   return parts.reverse().join("");
 }
 
