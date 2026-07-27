@@ -23,11 +23,16 @@ export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
   const value = String(input);
   if (!ARABIC_CHAR.test(value)) return value;
-  // Split on regular spaces AND non-breaking spaces so multi-word names
-  // (which callers join with nb-spaces to keep the name on one line) also
-  // get their token order reversed. Reversing at whitespace only — never
-  // inside a token — keeps Arabic letter shaping/joining intact.
-  const parts = value.split(/([ \u00A0]+)/);
+  // Names are passed with non-breaking spaces to preserve their Arabic word
+  // order. Do not split/reverse those names; otherwise "ماجد حميد احمد الحائط"
+  // becomes visually reversed in the generated PDF.
+  if (value.includes("\u00A0")) {
+    return value.replace(/\u200B/g, "");
+  }
+
+  // Split on regular spaces only. Reversing at whitespace — never inside a
+  // token — keeps Arabic letter shaping/joining intact for ordinary labels.
+  const parts = value.split(/( +)/);
   return parts.reverse().join("");
 }
 
