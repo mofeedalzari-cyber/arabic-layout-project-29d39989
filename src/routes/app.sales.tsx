@@ -82,6 +82,7 @@ function SalesPage() {
       r.network_name.toLowerCase().includes(s) ||
       r.agent_username.toLowerCase().includes(s) ||
       (r.buyer_name ?? "").toLowerCase().includes(s) ||
+      (r.customer_name ?? "").toLowerCase().includes(s) ||
       (r.card_username ?? "").toLowerCase().includes(s) ||
       displayName(r.agent_username).toLowerCase().includes(s)
     );
