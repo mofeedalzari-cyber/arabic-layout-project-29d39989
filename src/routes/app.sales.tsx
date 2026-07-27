@@ -53,6 +53,7 @@ function SalesPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteCards, setDeleteCards] = useState(false);
+  const [pageSize, setPageSize] = useState(25);
   const { display: displayName } = useUserNames();
 
   const { data: sales, isLoading } = useQuery({
