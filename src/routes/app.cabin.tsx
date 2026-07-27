@@ -85,6 +85,14 @@ function CabinPage() {
   const [addingCustomer, setAddingCustomer] = useState(false);
   const [newName, setNewName] = useState("");
   const [newWa, setNewWa] = useState("");
+  const [custSearch, setCustSearch] = useState("");
+  const filteredCustomers = useMemo(() => {
+    const q = custSearch.trim().toLowerCase();
+    if (!q) return customers ?? [];
+    return (customers ?? []).filter((c) =>
+      c.name.toLowerCase().includes(q) || String(c.whatsapp ?? "").includes(q)
+    );
+  }, [customers, custSearch]);
 
   async function createCustomer(): Promise<Customer | null> {
     if (!user) return null;
