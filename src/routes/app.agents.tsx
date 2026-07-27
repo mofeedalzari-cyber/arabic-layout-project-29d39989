@@ -35,6 +35,24 @@ function AgentsPage() {
   const [q, setQ] = useState("");
   const [statsFor, setStatsFor] = useState<{ id: string; name: string; username: string } | null>(null);
   const [editFor, setEditFor] = useState<{ id: string; username: string; full_name: string | null; phone?: string | null } | null>(null);
+  const [deleteFor, setDeleteFor] = useState<{ id: string; name: string } | null>(null);
+  const deleteFn = useServerFn(adminDeleteAgent);
+  const [deleting, setDeleting] = useState(false);
+
+  const doDelete = async () => {
+    if (!deleteFor) return;
+    setDeleting(true);
+    try {
+      await deleteFn({ data: { agentId: deleteFor.id } });
+      toast.success("تم حذف المندوب نهائياً");
+      setDeleteFor(null);
+      qc.invalidateQueries({ queryKey: ["agents"] });
+    } catch (e: any) {
+      toast.error(e?.message || "فشل حذف المندوب");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
 
   const { data: networks } = useQuery({
