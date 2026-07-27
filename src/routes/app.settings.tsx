@@ -181,7 +181,7 @@ function AgentBackupCard() {
           className="w-full rounded-xl font-semibold"
         >
           <Upload className="h-4 w-4 ml-1" />
-          {restore.isPending ? "جاري الاستعادة…" : "استعادة الزبائن من ملف"}
+          {restore.isPending ? "جاري الاستعادة…" : "استعادة من ملف"}
         </Button>
       </div>
 
