@@ -210,6 +210,29 @@ function AgentsPage() {
         onClose={() => setEditFor(null)}
         onSaved={() => { setEditFor(null); qc.invalidateQueries({ queryKey: ["agents"] }); }}
       />
+
+      <AlertDialog open={!!deleteFor} onOpenChange={(o) => !o && !deleting && setDeleteFor(null)}>
+        <AlertDialogContent dir="rtl" className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف المندوب نهائياً</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من حذف المندوب <span className="font-bold">{deleteFor?.name}</span> نهائياً؟
+              سيتم حذف حسابه بالكامل ولا يمكن التراجع. الكروت المتاحة لديه ستعود إلى المخزون،
+              وسجلّ المبيعات السابقة سيبقى محفوظاً.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting} className="rounded-xl">إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e) => { e.preventDefault(); doDelete(); }}
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "جارٍ الحذف..." : "حذف نهائي"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
