@@ -87,6 +87,12 @@ function SalesPage() {
 
   const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
   const someSelected = selected.size > 0;
+  const displayedSales = filtered.slice(0, pageSize);
+  const hasMore = filtered.length > displayedSales.length;
+
+  function loadMore() {
+    setPageSize((prev) => prev + 25);
+  }
 
   function toggleAll() {
     if (allSelected) setSelected(new Set());
