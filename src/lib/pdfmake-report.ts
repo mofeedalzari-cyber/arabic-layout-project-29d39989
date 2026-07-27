@@ -273,36 +273,67 @@ function summaryBlock(summary: PdfSummaryRow[]): any {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function tableSection(sec: PdfTableSection, dense = false): any {
   const cols = ["#", ...sec.cols];
-  const widths: (string | number)[] = [dense ? 16 : 24, ...sec.cols.map(() => "*")];
+  // Columns that need narrow width + tight padding + character wrapping
+  const NARROW_HEADERS = new Set(["رقم العملية", "الكرت"]);
+  const isNarrow = (idx: number) => idx > 0 && NARROW_HEADERS.has(String(sec.cols[idx - 1] ?? "").trim());
+  const narrowWidth = dense ? 46 : 58;
+  const widths: (string | number)[] = [
+    dense ? 16 : 24,
+    ...sec.cols.map((_, i) => (isNarrow(i + 1) ? narrowWidth : "*")),
+  ];
   const headPad = dense ? [2, 4, 2, 4] : [4, 6, 4, 6];
   const cellPad = dense ? [2, 3, 2, 3] : [4, 4, 4, 4];
+  const narrowHeadPad = dense ? [1, 4, 1, 4] : [2, 6, 2, 6];
+  const narrowCellPad = dense ? [1, 3, 1, 3] : [2, 4, 2, 4];
   const headSize = dense ? 8 : 10;
   const cellSize = dense ? 7.5 : 9.5;
+  const narrowCellSize = dense ? 7 : 8.5;
+
+  // Insert zero-width spaces every 6 chars so long tokens (IDs, card numbers) can wrap
+  const wrapLongToken = (s: string) => {
+    const str = String(s ?? "");
+    if (str.length <= 10) return str;
+    return str.replace(/(\S{6})/g, "$1\u200B");
+  };
 
   const header = cols
     .slice()
     .reverse()
-    .map((c) => ({
-      text: rtlText(c),
-      direction: "rtl",
-      bold: true,
-      color: COLORS.ink,
-      fillColor: COLORS.header,
-      alignment: "right",
-      margin: headPad,
-      fontSize: headSize,
-    }));
+    .map((c, revIdx) => {
+      const idx = cols.length - 1 - revIdx;
+      const narrow = isNarrow(idx);
+      return {
+        text: rtlText(c),
+        direction: "rtl",
+        bold: true,
+        color: COLORS.ink,
+        fillColor: COLORS.header,
+        alignment: narrow ? "center" : "right",
+        margin: narrow ? narrowHeadPad : headPad,
+        fontSize: headSize,
+      };
+    });
 
   const body = sec.rows.length
     ? sec.rows.map((row, i) => {
-        const cells = [i + 1, ...row].reverse().map((c) => ({
-          text: rtlText(c),
-          direction: "rtl",
-          alignment: /^-?\d/.test(String(c).trim()) ? "center" : "right",
-          margin: cellPad,
-          fontSize: cellSize,
-          color: COLORS.ink,
-        }));
+        const full = [i + 1, ...row];
+        const cells = full
+          .map((c, idx) => ({ c, idx }))
+          .reverse()
+          .map(({ c, idx }) => {
+            const narrow = isNarrow(idx);
+            const raw = String(c ?? "");
+            const text = narrow ? wrapLongToken(raw) : raw;
+            return {
+              text: rtlText(text),
+              direction: "rtl",
+              alignment: narrow ? "center" : (/^-?\d/.test(raw.trim()) ? "center" : "right"),
+              margin: narrow ? narrowCellPad : cellPad,
+              fontSize: narrow ? narrowCellSize : cellSize,
+              color: COLORS.ink,
+              noWrap: false,
+            };
+          });
         return cells;
       })
     : [
