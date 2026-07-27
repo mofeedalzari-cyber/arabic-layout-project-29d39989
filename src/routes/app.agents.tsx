@@ -75,7 +75,13 @@ function AgentsPage() {
 
       const { data: salesData } = await supabase.from("sales").select("agent_id, price");
       const m = new Map<string, { count: number; total: number }>();
-      salesData?.forEach((s) => { const cur = m.get(s.agent_id) ?? { count: 0, total: 0 }; cur.count++; cur.total += Number(s.price); m.set(s.agent_id, cur); });
+      salesData?.forEach((s) => {
+        if (!s.agent_id) return;
+        const cur = m.get(s.agent_id) ?? { count: 0, total: 0 };
+        cur.count++;
+        cur.total += Number(s.price);
+        m.set(s.agent_id, cur);
+      });
       return (profs ?? []).map((p) => ({ ...p, sales: m.get(p.id) ?? { count: 0, total: 0 } }));
     },
   });
