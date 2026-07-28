@@ -14,6 +14,7 @@ import {
 import { Wifi, ShieldAlert, Check, Copy, Share2, MessageCircle, PackageOpen, Tag, RefreshCw, Search, User as UserIcon, Printer, Image as ImageIcon, UserPlus, Users, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { RevealText } from "@/components/reveal-text";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { CardTemplateDialog } from "@/components/card-template-dialog";
@@ -581,8 +582,12 @@ function PackageDetails({ pkg, agentId, onClose }: { pkg: CabinRow; agentId: str
               <span className={`rounded-full px-3 py-1 text-xs font-bold ${c.status === "SOLD" ? "bg-warning/15 text-warning border border-warning/30" : "bg-success/15 text-success border border-success/30"}`}>
                 {c.status === "SOLD" ? "مباع" : "متاح"}
               </span>
-              <div className="flex items-center gap-2 font-mono font-extrabold text-base">
-                <span>{c.status === "SOLD" ? c.username : "••••••••"}</span>
+              <div className="flex items-center gap-2">
+                {c.status === "SOLD" ? (
+                  <RevealText username={c.username} />
+                ) : (
+                  <span className="font-mono font-extrabold text-base">••••••••</span>
+                )}
                 <UserIcon className={`h-4 w-4 ${c.status === "SOLD" ? "text-success" : "text-muted-foreground"}`} />
               </div>
             </div>

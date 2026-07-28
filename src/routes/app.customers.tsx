@@ -19,6 +19,7 @@ import { openWhatsApp } from "@/lib/wa-open";
 import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
 import { pickContact } from "@/lib/pick-contact";
 import { toast } from "sonner";
+import { RevealText } from "@/components/reveal-text";
 
 function localYemenDigits(v: string) {
   let d = String(v ?? "").replace(/\D/g, "");
@@ -522,10 +523,9 @@ function CustomersPage() {
                               </TableCell>
                               <TableCell>
                                 {s.card_username ? (
-                                  <div className="flex items-center gap-1 text-[12px] text-primary font-mono">
-                                    <CreditCard className="h-3 w-3" />
-                                    <span>{s.card_username}</span>
-                                    {s.card_password && <span className="text-muted-foreground">/ {s.card_password}</span>}
+                                  <div className="flex items-center gap-1">
+                                    <CreditCard className="h-3 w-3 text-primary" />
+                                    <RevealText username={s.card_username} password={s.card_password} />
                                   </div>
                                 ) : (
                                   <span className="text-muted-foreground">—</span>
