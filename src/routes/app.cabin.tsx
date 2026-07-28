@@ -11,7 +11,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Wifi, ShieldAlert, Check, Copy, Share2, MessageCircle, PackageOpen, Tag, RefreshCw, Search, User as UserIcon, Printer, Image as ImageIcon, UserPlus, Users, Trash2 } from "lucide-react";
+import { Wifi, ShieldAlert, Check, Copy, Share2, MessageCircle, PackageOpen, Tag, RefreshCw, Search, User as UserIcon, Printer, Image as ImageIcon, UserPlus, Users, Trash2, Eye, EyeOff } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { RevealText } from "@/components/reveal-text";
@@ -669,8 +669,8 @@ function SaleReceipt({ sale }: { sale: any }) {
     <div className="mt-4 space-y-3 pb-4">
       <div className="rounded-2xl border-2 border-dashed border-primary/40 p-5 bg-primary/5 space-y-2">
         <Row label="الشبكة" value={`${sale.network_name} — ${sale.package_name}`} />
-        <Row label="اسم المستخدم" value={sale.card_username} onCopy={() => copy(sale.card_username, "اسم المستخدم")} />
-        {sale.card_password && <Row label="كلمة المرور" value={sale.card_password} onCopy={() => copy(sale.card_password, "كلمة المرور")} />}
+        <Row label="اسم المستخدم" value={sale.card_username} onCopy={() => copy(sale.card_username, "اسم المستخدم")} hideable />
+        {sale.card_password && <Row label="كلمة المرور" value={sale.card_password} onCopy={() => copy(sale.card_password, "كلمة المرور")} hideable />}
         <Row label="السعر" value={fmtMoney(Number(sale.price))} />
         <Row label="رقم العملية" value={sale.transaction_no} onCopy={() => copy(sale.transaction_no, "رقم العملية")} />
         {savedName && <Row label="المشتري" value={savedName} />}
@@ -760,14 +760,22 @@ function SaleReceipt({ sale }: { sale: any }) {
   );
 }
 
-function Row({ label, value, onCopy }: { label: string; value: string; onCopy?: () => void }) {
+function Row({ label, value, onCopy, hideable }: { label: string; value: string; onCopy?: () => void; hideable?: boolean }) {
+  const [shown, setShown] = useState(!hideable);
   return (
     <div className="flex items-center justify-between gap-2 bg-background rounded-lg p-2.5">
       <div className="min-w-0">
         <div className="text-[11px] text-muted-foreground">{label}</div>
-        <div className="font-mono font-bold truncate">{value}</div>
+        <div className="font-mono font-bold truncate">{shown ? value : "•".repeat(Math.max(6, Math.min(12, value.length)))}</div>
       </div>
-      {onCopy && <Button size="icon" variant="ghost" className="rounded-lg shrink-0" onClick={onCopy}><Copy className="h-4 w-4" /></Button>}
+      <div className="flex items-center gap-1 shrink-0">
+        {hideable && (
+          <Button size="icon" variant="ghost" className="rounded-lg" onClick={() => setShown((s) => !s)} title={shown ? "إخفاء" : "إظهار"}>
+            {shown ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        )}
+        {onCopy && shown && <Button size="icon" variant="ghost" className="rounded-lg" onClick={onCopy}><Copy className="h-4 w-4" /></Button>}
+      </div>
     </div>
   );
 }
