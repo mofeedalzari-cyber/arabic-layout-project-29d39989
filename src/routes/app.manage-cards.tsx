@@ -573,7 +573,7 @@ function ManageCardsPage() {
               <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}><ChevronsLeft className="h-4 w-4" /></Button>
             </div>
             <div className="text-muted-foreground">
-              الصفحة {currentPage} من {totalPages} — إجمالي {cards?.length ?? 0}
+              الصفحة {currentPage} من {totalPages} — إجمالي {sortedCards.length}
             </div>
           </div>
         </Card>
