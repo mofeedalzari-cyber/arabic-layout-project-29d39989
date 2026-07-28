@@ -155,6 +155,44 @@ export type Database = {
           },
         ]
       }
+      customer_payments: {
+        Row: {
+          agent_id: string
+          amount: number
+          created_at: string
+          customer_id: string
+          id: string
+          network_id: string | null
+          note: string | null
+        }
+        Insert: {
+          agent_id: string
+          amount: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          network_id?: string | null
+          note?: string | null
+        }
+        Update: {
+          agent_id?: string
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          network_id?: string | null
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           agent_id: string

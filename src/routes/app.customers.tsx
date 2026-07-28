@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useMemo, useState } from "react";
-import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard, UserPlus, User as UserIcon } from "lucide-react";
+import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard, UserPlus, User as UserIcon, Banknote, Wallet } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
 import { openWhatsApp } from "@/lib/wa-open";
 import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
@@ -52,6 +52,10 @@ function CustomersPage() {
   const [newName, setNewName] = useState("");
   const [newWhats, setNewWhats] = useState("");
   const [addBusy, setAddBusy] = useState(false);
+  const [payFor, setPayFor] = useState<Customer | null>(null);
+  const [payAmount, setPayAmount] = useState("");
+  const [payNote, setPayNote] = useState("");
+  const [payBusy, setPayBusy] = useState(false);
 
   async function handleAddCustomer() {
     const name = newName.trim();
@@ -117,6 +121,28 @@ function CustomersPage() {
     },
   });
 
+  const { data: payments } = useQuery({
+    queryKey: ["customer-payments", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_payments")
+        .select("id, customer_id, amount, note, created_at")
+        .eq("agent_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as { id: string; customer_id: string; amount: number; note: string | null; created_at: string }[];
+    },
+  });
+
+  const paidByCustomer = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of payments ?? []) {
+      m.set(p.customer_id, (m.get(p.customer_id) ?? 0) + Number(p.amount || 0));
+    }
+    return m;
+  }, [payments]);
+
   const statsByCustomer = useMemo(() => {
     const m = new Map<string, { count: number; total: number; last: string | null }>();
     for (const s of sales ?? []) {
@@ -145,7 +171,9 @@ function CustomersPage() {
   const rows = useMemo(() => {
     const list = (customers ?? []).map((c) => {
       const st = statsByCustomer.get(c.id) ?? { count: 0, total: 0, last: null };
-      return { ...c, ...st };
+      const paid = paidByCustomer.get(c.id) ?? 0;
+      const balance = Math.max(st.total - paid, 0);
+      return { ...c, ...st, paid, balance };
     });
     const s = q.trim().toLowerCase();
     const filtered = s
@@ -155,14 +183,51 @@ function CustomersPage() {
             (c.whatsapp ?? "").toLowerCase().includes(s),
         )
       : list;
-    return filtered.sort((a, b) => b.total - a.total);
-  }, [customers, statsByCustomer, q]);
+    return filtered.sort((a, b) => b.balance - a.balance);
+  }, [customers, statsByCustomer, paidByCustomer, q]);
 
   const selectedSales = useMemo(
     () => (selected ? (sales ?? []).filter((s) => s.customer_id === selected.id) : []),
     [selected, sales],
   );
+  const selectedPayments = useMemo(
+    () => (selected ? (payments ?? []).filter((p) => p.customer_id === selected.id) : []),
+    [selected, payments],
+  );
   const selectedTotal = selectedSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+  const selectedPaid = selectedPayments.reduce((a, p) => a + Number(p.amount || 0), 0);
+  const selectedBalance = Math.max(selectedTotal - selectedPaid, 0);
+
+  async function handleCustomerPayment() {
+    if (!payFor || !user?.id) return;
+    const amount = Number(payAmount);
+    if (!amount || amount <= 0) { toast.error("أدخل مبلغاً صحيحاً"); return; }
+    setPayBusy(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("network_id").eq("id", user.id).maybeSingle();
+      const { error } = await supabase.from("customer_payments").insert({
+        customer_id: payFor.id,
+        agent_id: user.id,
+        network_id: prof?.network_id ?? null,
+        amount,
+        note: payNote.trim() || null,
+      });
+      if (error) { toast.error("تعذر التسديد: " + error.message); return; }
+      toast.success(`تم تسديد ${fmtMoney(amount)}`);
+      setPayFor(null); setPayAmount(""); setPayNote("");
+      qc.invalidateQueries({ queryKey: ["customer-payments"] });
+    } finally {
+      setPayBusy(false);
+    }
+  }
+
+  async function deleteCustomerPayment(id: string) {
+    const { error } = await supabase.from("customer_payments").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم حذف الدفعة");
+    qc.invalidateQueries({ queryKey: ["customer-payments"] });
+  }
+
 
   async function handleDelete(c: Customer) {
     setDeleteBusy(true);
@@ -348,21 +413,33 @@ function CustomersPage() {
               <div className="text-left">
                 <div className="text-primary font-bold text-sm">{fmtMoney(c.total)}</div>
                 <div className="text-[10px] text-muted-foreground">{c.count} عملية</div>
+                <div className={`text-[11px] font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}>
+                  الرصيد: {fmtMoney(c.balance)}
+                </div>
               </div>
             </div>
             {c.last && (
               <div className="text-[10px] text-muted-foreground mt-2">آخر عملية: {fmtArabicDateTime(c.last)}</div>
             )}
-            <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-2 mt-3 flex-wrap" onClick={(e) => e.stopPropagation()}>
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1"
+                className="flex-1 min-w-[110px]"
                 disabled={sendingId === c.id}
                 onClick={() => sendStatementWhatsApp(c as any)}
               >
                 <FileText className="h-4 w-4 ml-1" />
                 {sendingId === c.id ? "جاري..." : "كشف واتساب"}
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 min-w-[100px] bg-success hover:bg-success/90 text-white"
+                disabled={c.balance <= 0}
+                onClick={() => { setPayFor(c as any); setPayAmount(String(c.balance)); setPayNote(""); }}
+              >
+                <Banknote className="h-4 w-4 ml-1" />
+                تسديد
               </Button>
               <Button
                 size="sm"
@@ -386,6 +463,8 @@ function CustomersPage() {
               <TableHead className="text-right">واتساب</TableHead>
               <TableHead className="text-right">عدد العمليات</TableHead>
               <TableHead className="text-right">إجمالي المبيعات</TableHead>
+              <TableHead className="text-right">المدفوع</TableHead>
+              <TableHead className="text-right">الرصيد</TableHead>
               <TableHead className="text-right">آخر عملية</TableHead>
               <TableHead className="text-right">إجراءات</TableHead>
             </TableRow>
@@ -397,9 +476,20 @@ function CustomersPage() {
                 <TableCell className="font-mono text-xs">{displayPhone(c.whatsapp, "")}</TableCell>
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
+                <TableCell className="text-success font-bold">{fmtMoney(c.paid)}</TableCell>
+                <TableCell className={`font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}>{fmtMoney(c.balance)}</TableCell>
                 <TableCell className="text-xs">{c.last ? fmtArabicDateTime(c.last) : "—"}</TableCell>
                 <TableCell onClick={(e) => e.stopPropagation()}>
-                  <div className="flex gap-2 justify-end">
+                  <div className="flex gap-2 justify-end flex-wrap">
+                    <Button
+                      size="sm"
+                      className="bg-success hover:bg-success/90 text-white"
+                      disabled={c.balance <= 0}
+                      onClick={() => { setPayFor(c as any); setPayAmount(String(c.balance)); setPayNote(""); }}
+                    >
+                      <Banknote className="h-4 w-4 ml-1" />
+                      تسديد
+                    </Button>
                     {c.whatsapp && (
                       <Button
                         size="sm"
@@ -428,7 +518,7 @@ function CustomersPage() {
             ))}
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
                   لا يوجد زبائن.
                 </TableCell>
               </TableRow>
@@ -472,12 +562,29 @@ function CustomersPage() {
                     <div className="text-[11px] text-muted-foreground">إجمالي المبيعات</div>
                     <div className="font-bold text-lg text-primary">{fmtMoney(selectedTotal)}</div>
                   </div>
+                  <div className="rounded-xl bg-success/10 p-3 text-center">
+                    <div className="text-[11px] text-muted-foreground">المدفوع</div>
+                    <div className="font-bold text-lg text-success">{fmtMoney(selectedPaid)}</div>
+                  </div>
+                  <div className={`rounded-xl p-3 text-center ${selectedBalance > 0 ? "bg-warning/10" : "bg-success/10"}`}>
+                    <div className="text-[11px] text-muted-foreground">الرصيد المتبقي</div>
+                    <div className={`font-bold text-lg ${selectedBalance > 0 ? "text-warning" : "text-success"}`}>{fmtMoney(selectedBalance)}</div>
+                  </div>
                 </div>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-3 flex-wrap">
+                  <Button
+                    size="sm"
+                    className="flex-1 min-w-[110px] bg-success hover:bg-success/90 text-white"
+                    disabled={selectedBalance <= 0}
+                    onClick={() => { setPayFor(selected); setPayAmount(String(selectedBalance)); setPayNote(""); }}
+                  >
+                    <Banknote className="h-4 w-4 ml-1" />
+                    تسديد الزبون
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 min-w-[110px]"
                     disabled={sendingId === selected.id}
                     onClick={() => sendStatementWhatsApp(selected)}
                   >
@@ -490,6 +597,29 @@ function CustomersPage() {
                   </Button>
                 </div>
               </Card>
+
+              {selectedPayments.length > 0 && (
+                <div>
+                  <div className="text-sm font-semibold mb-2">سجل التسديدات</div>
+                  <Card className="border-0 card-elegant p-2 space-y-1.5">
+                    {selectedPayments.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 p-2 text-sm">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Wallet className="h-4 w-4 text-success shrink-0" />
+                          <div className="min-w-0">
+                            <div className="font-bold text-success">{fmtMoney(Number(p.amount))}</div>
+                            <div className="text-[10px] text-muted-foreground">{fmtArabicDateTime(p.created_at)}</div>
+                            {p.note && <div className="text-[11px] text-muted-foreground truncate">{p.note}</div>}
+                          </div>
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => { if (confirm("حذف هذه الدفعة؟")) deleteCustomerPayment(p.id); }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </Card>
+                </div>
+              )}
 
               <div>
                 <div className="text-sm font-semibold mb-2">سجل المبيعات</div>
@@ -628,7 +758,68 @@ function CustomersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!payFor} onOpenChange={(o) => { if (!payBusy && !o) { setPayFor(null); setPayAmount(""); setPayNote(""); } }}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>تسديد الزبون</DialogTitle>
+          </DialogHeader>
+          {payFor && (() => {
+            const custStats = statsByCustomer.get(payFor.id) ?? { total: 0, count: 0, last: null };
+            const paid = paidByCustomer.get(payFor.id) ?? 0;
+            const remaining = Math.max(custStats.total - paid, 0);
+            return (
+              <div className="space-y-3">
+                <div className="text-sm">
+                  <div className="text-muted-foreground">الزبون: <b className="text-foreground">{payFor.name}</b></div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-xl bg-primary/10 p-2">
+                    <div className="font-extrabold text-primary text-sm">{fmtMoney(custStats.total)}</div>
+                    <div className="text-[10px] text-muted-foreground">الإجمالي</div>
+                  </div>
+                  <div className="rounded-xl bg-success/10 p-2">
+                    <div className="font-extrabold text-success text-sm">{fmtMoney(paid)}</div>
+                    <div className="text-[10px] text-muted-foreground">المدفوع</div>
+                  </div>
+                  <div className="rounded-xl bg-warning/10 p-2">
+                    <div className="font-extrabold text-warning text-sm">{fmtMoney(remaining)}</div>
+                    <div className="text-[10px] text-muted-foreground">المتبقي</div>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs mb-1.5 block">مبلغ التسديد</Label>
+                  <Input
+                    type="number" min={0} step="0.01"
+                    value={payAmount}
+                    onChange={(e) => setPayAmount(e.target.value)}
+                    className="rounded-xl h-11 text-center font-bold"
+                    autoFocus
+                  />
+                  <div className="flex gap-1.5 mt-2">
+                    <button type="button" onClick={() => setPayAmount(String(remaining))}
+                      className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70">كامل المتبقي</button>
+                    <button type="button" onClick={() => setPayAmount(String(remaining / 2))}
+                      className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70">نصف</button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs mb-1.5 block">ملاحظة (اختياري)</Label>
+                  <Input value={payNote} onChange={(e) => setPayNote(e.target.value)} className="rounded-xl" />
+                </div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPayFor(null)} disabled={payBusy}>إلغاء</Button>
+            <Button onClick={handleCustomerPayment} disabled={payBusy} className="bg-success hover:bg-success/90 text-white">
+              {payBusy ? "جاري..." : "تأكيد التسديد"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
+
   );
 }
 
