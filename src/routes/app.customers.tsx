@@ -562,12 +562,29 @@ function CustomersPage() {
                     <div className="text-[11px] text-muted-foreground">إجمالي المبيعات</div>
                     <div className="font-bold text-lg text-primary">{fmtMoney(selectedTotal)}</div>
                   </div>
+                  <div className="rounded-xl bg-success/10 p-3 text-center">
+                    <div className="text-[11px] text-muted-foreground">المدفوع</div>
+                    <div className="font-bold text-lg text-success">{fmtMoney(selectedPaid)}</div>
+                  </div>
+                  <div className={`rounded-xl p-3 text-center ${selectedBalance > 0 ? "bg-warning/10" : "bg-success/10"}`}>
+                    <div className="text-[11px] text-muted-foreground">الرصيد المتبقي</div>
+                    <div className={`font-bold text-lg ${selectedBalance > 0 ? "text-warning" : "text-success"}`}>{fmtMoney(selectedBalance)}</div>
+                  </div>
                 </div>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-3 flex-wrap">
+                  <Button
+                    size="sm"
+                    className="flex-1 min-w-[110px] bg-success hover:bg-success/90 text-white"
+                    disabled={selectedBalance <= 0}
+                    onClick={() => { setPayFor(selected); setPayAmount(String(selectedBalance)); setPayNote(""); }}
+                  >
+                    <Banknote className="h-4 w-4 ml-1" />
+                    تسديد الزبون
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 min-w-[110px]"
                     disabled={sendingId === selected.id}
                     onClick={() => sendStatementWhatsApp(selected)}
                   >
@@ -580,6 +597,29 @@ function CustomersPage() {
                   </Button>
                 </div>
               </Card>
+
+              {selectedPayments.length > 0 && (
+                <div>
+                  <div className="text-sm font-semibold mb-2">سجل التسديدات</div>
+                  <Card className="border-0 card-elegant p-2 space-y-1.5">
+                    {selectedPayments.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 p-2 text-sm">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Wallet className="h-4 w-4 text-success shrink-0" />
+                          <div className="min-w-0">
+                            <div className="font-bold text-success">{fmtMoney(Number(p.amount))}</div>
+                            <div className="text-[10px] text-muted-foreground">{fmtArabicDateTime(p.created_at)}</div>
+                            {p.note && <div className="text-[11px] text-muted-foreground truncate">{p.note}</div>}
+                          </div>
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => { if (confirm("حذف هذه الدفعة؟")) deleteCustomerPayment(p.id); }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </Card>
+                </div>
+              )}
 
               <div>
                 <div className="text-sm font-semibold mb-2">سجل المبيعات</div>
