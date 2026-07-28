@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { displayPhone } from "@/lib/format";
 import {
   LayoutDashboard, Wifi, Package, Upload, Users, Receipt,
-  ScrollText, Settings, LogOut, Menu, Moon, Sun, Store, Inbox, CreditCard, Calculator, UserPlus, HandCoins, ShieldCheck,
+  ScrollText, Settings, LogOut, Menu, Moon, Sun, Store, Inbox, CreditCard, Calculator, UserPlus, HandCoins, ShieldCheck, Router,
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
