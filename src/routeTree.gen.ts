@@ -20,6 +20,7 @@ import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppPaymentsRouteImport } from './routes/app.payments'
 import { Route as AppPackagesRouteImport } from './routes/app.packages'
 import { Route as AppNetworksRouteImport } from './routes/app.networks'
+import { Route as AppMikrotiksRouteImport } from './routes/app.mikrotiks'
 import { Route as AppManageCardsRouteImport } from './routes/app.manage-cards'
 import { Route as AppLogsRouteImport } from './routes/app.logs'
 import { Route as AppJoinRequestsRouteImport } from './routes/app.join-requests'
@@ -86,6 +87,11 @@ const AppNetworksRoute = AppNetworksRouteImport.update({
   path: '/networks',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMikrotiksRoute = AppMikrotiksRouteImport.update({
+  id: '/mikrotiks',
+  path: '/mikrotiks',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppManageCardsRoute = AppManageCardsRouteImport.update({
   id: '/manage-cards',
   path: '/manage-cards',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/app/join-requests': typeof AppJoinRequestsRoute
   '/app/logs': typeof AppLogsRoute
   '/app/manage-cards': typeof AppManageCardsRoute
+  '/app/mikrotiks': typeof AppMikrotiksRoute
   '/app/networks': typeof AppNetworksRouteWithChildren
   '/app/packages': typeof AppPackagesRoute
   '/app/payments': typeof AppPaymentsRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/app/join-requests': typeof AppJoinRequestsRoute
   '/app/logs': typeof AppLogsRoute
   '/app/manage-cards': typeof AppManageCardsRoute
+  '/app/mikrotiks': typeof AppMikrotiksRoute
   '/app/packages': typeof AppPackagesRoute
   '/app/payments': typeof AppPaymentsRoute
   '/app/requests': typeof AppRequestsRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/app/join-requests': typeof AppJoinRequestsRoute
   '/app/logs': typeof AppLogsRoute
   '/app/manage-cards': typeof AppManageCardsRoute
+  '/app/mikrotiks': typeof AppMikrotiksRoute
   '/app/networks': typeof AppNetworksRouteWithChildren
   '/app/packages': typeof AppPackagesRoute
   '/app/payments': typeof AppPaymentsRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/app/join-requests'
     | '/app/logs'
     | '/app/manage-cards'
+    | '/app/mikrotiks'
     | '/app/networks'
     | '/app/packages'
     | '/app/payments'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/app/join-requests'
     | '/app/logs'
     | '/app/manage-cards'
+    | '/app/mikrotiks'
     | '/app/packages'
     | '/app/payments'
     | '/app/requests'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/app/join-requests'
     | '/app/logs'
     | '/app/manage-cards'
+    | '/app/mikrotiks'
     | '/app/networks'
     | '/app/packages'
     | '/app/payments'
@@ -358,6 +370,13 @@ declare module '@tanstack/react-router' {
       path: '/networks'
       fullPath: '/app/networks'
       preLoaderRoute: typeof AppNetworksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mikrotiks': {
+      id: '/app/mikrotiks'
+      path: '/mikrotiks'
+      fullPath: '/app/mikrotiks'
+      preLoaderRoute: typeof AppMikrotiksRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/manage-cards': {
@@ -456,6 +475,7 @@ interface AppRouteChildren {
   AppJoinRequestsRoute: typeof AppJoinRequestsRoute
   AppLogsRoute: typeof AppLogsRoute
   AppManageCardsRoute: typeof AppManageCardsRoute
+  AppMikrotiksRoute: typeof AppMikrotiksRoute
   AppNetworksRoute: typeof AppNetworksRouteWithChildren
   AppPackagesRoute: typeof AppPackagesRoute
   AppPaymentsRoute: typeof AppPaymentsRoute
@@ -475,6 +495,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppJoinRequestsRoute: AppJoinRequestsRoute,
   AppLogsRoute: AppLogsRoute,
   AppManageCardsRoute: AppManageCardsRoute,
+  AppMikrotiksRoute: AppMikrotiksRoute,
   AppNetworksRoute: AppNetworksRouteWithChildren,
   AppPackagesRoute: AppPackagesRoute,
   AppPaymentsRoute: AppPaymentsRoute,
