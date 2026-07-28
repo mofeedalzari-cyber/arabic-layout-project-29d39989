@@ -760,14 +760,22 @@ function SaleReceipt({ sale }: { sale: any }) {
   );
 }
 
-function Row({ label, value, onCopy }: { label: string; value: string; onCopy?: () => void }) {
+function Row({ label, value, onCopy, hideable }: { label: string; value: string; onCopy?: () => void; hideable?: boolean }) {
+  const [shown, setShown] = useState(!hideable);
   return (
     <div className="flex items-center justify-between gap-2 bg-background rounded-lg p-2.5">
       <div className="min-w-0">
         <div className="text-[11px] text-muted-foreground">{label}</div>
-        <div className="font-mono font-bold truncate">{value}</div>
+        <div className="font-mono font-bold truncate">{shown ? value : "•".repeat(Math.max(6, Math.min(12, value.length)))}</div>
       </div>
-      {onCopy && <Button size="icon" variant="ghost" className="rounded-lg shrink-0" onClick={onCopy}><Copy className="h-4 w-4" /></Button>}
+      <div className="flex items-center gap-1 shrink-0">
+        {hideable && (
+          <Button size="icon" variant="ghost" className="rounded-lg" onClick={() => setShown((s) => !s)} title={shown ? "إخفاء" : "إظهار"}>
+            {shown ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        )}
+        {onCopy && shown && <Button size="icon" variant="ghost" className="rounded-lg" onClick={onCopy}><Copy className="h-4 w-4" /></Button>}
+      </div>
     </div>
   );
 }
