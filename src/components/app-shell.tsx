@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { displayPhone } from "@/lib/format";
 import {
   LayoutDashboard, Wifi, Package, Upload, Users, Receipt,
-  ScrollText, Settings, LogOut, Menu, Moon, Sun, Store, Inbox, CreditCard, Calculator, UserPlus, HandCoins, ShieldCheck,
+  ScrollText, Settings, LogOut, Menu, Moon, Sun, Store, Inbox, CreditCard, Calculator, UserPlus, HandCoins, ShieldCheck, Router,
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
@@ -29,6 +29,7 @@ const NAV: NavItem[] = [
   { to: "/app/agents", label: "إدارة المناديب", icon: Users, adminOnly: true },
   { to: "/app/agent-accounts", label: "حسابات المناديب", icon: Calculator, adminOnly: true },
   { to: "/app/payments", label: "السداد", icon: HandCoins, adminOnly: true },
+  { to: "/app/mikrotiks", label: "الميكروتيك", icon: Router, adminOnly: true },
   { to: "/app/logs", label: "السجلات", icon: ScrollText, adminOnly: true },
   { to: "/app/settings", label: "الإعدادات", icon: Settings },
 ];
