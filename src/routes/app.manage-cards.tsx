@@ -119,11 +119,38 @@ function ManageCardsPage() {
     enabled: !!networkId,
   });
 
-  const totalPages = Math.max(1, Math.ceil((cards?.length ?? 0) / PAGE_SIZE));
+  const sortedCards = useMemo(() => {
+    const src = cards ?? [];
+    const statusOrder: Record<string, number> = { AVAILABLE: 0, ASSIGNED: 1, SOLD: 2 };
+    switch (sortBy) {
+      case "created_asc":
+        return [...src].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      case "created_desc":
+        return [...src].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      case "available_first":
+        return [...src].sort((a, b) => (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99));
+      case "assigned_first":
+        return [...src].sort((a, b) => {
+          const pa = a.status === "ASSIGNED" ? 0 : (statusOrder[a.status] ?? 99) + 1;
+          const pb = b.status === "ASSIGNED" ? 0 : (statusOrder[b.status] ?? 99) + 1;
+          return pa - pb;
+        });
+      case "sold_first":
+        return [...src].sort((a, b) => {
+          const pa = a.status === "SOLD" ? 0 : (statusOrder[a.status] ?? 99) + 1;
+          const pb = b.status === "SOLD" ? 0 : (statusOrder[b.status] ?? 99) + 1;
+          return pa - pb;
+        });
+      default:
+        return src;
+    }
+  }, [cards, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil((sortedCards.length ?? 0) / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pageRows = useMemo(
-    () => (cards ?? []).slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [cards, currentPage],
+    () => sortedCards.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [sortedCards, currentPage],
   );
   const pageIds = pageRows.map((r) => r.id);
   const pageAllSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
