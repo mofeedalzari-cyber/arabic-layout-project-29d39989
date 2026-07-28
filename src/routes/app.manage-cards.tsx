@@ -360,6 +360,19 @@ function ManageCardsPage() {
                 value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} disabled={!networkId} />
             </div>
           </div>
+          <div>
+            <Label className="text-xs mb-1.5 block">الترتيب</Label>
+            <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setPage(1); }} disabled={!networkId}>
+              <SelectTrigger className="rounded-xl"><SelectValue placeholder="الترتيب" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_desc">الأحدث أولاً</SelectItem>
+                <SelectItem value="created_asc">الأقدم أولاً</SelectItem>
+                <SelectItem value="available_first">المتاح أولاً</SelectItem>
+                <SelectItem value="assigned_first">المسحوب أولاً</SelectItem>
+                <SelectItem value="sold_first">المباع أولاً</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 pt-1 border-t">
