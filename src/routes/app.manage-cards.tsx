@@ -63,6 +63,7 @@ function ManageCardsPage() {
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [extendedDelete, setExtendedDelete] = useState(false);
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<string>("created_desc");
 
   const { data: networks } = useQuery({
     queryKey: ["networks-all"],
