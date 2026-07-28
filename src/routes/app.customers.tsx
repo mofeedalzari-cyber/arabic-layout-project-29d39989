@@ -758,7 +758,68 @@ function CustomersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!payFor} onOpenChange={(o) => { if (!payBusy && !o) { setPayFor(null); setPayAmount(""); setPayNote(""); } }}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>تسديد الزبون</DialogTitle>
+          </DialogHeader>
+          {payFor && (() => {
+            const custStats = statsByCustomer.get(payFor.id) ?? { total: 0, count: 0, last: null };
+            const paid = paidByCustomer.get(payFor.id) ?? 0;
+            const remaining = Math.max(custStats.total - paid, 0);
+            return (
+              <div className="space-y-3">
+                <div className="text-sm">
+                  <div className="text-muted-foreground">الزبون: <b className="text-foreground">{payFor.name}</b></div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-xl bg-primary/10 p-2">
+                    <div className="font-extrabold text-primary text-sm">{fmtMoney(custStats.total)}</div>
+                    <div className="text-[10px] text-muted-foreground">الإجمالي</div>
+                  </div>
+                  <div className="rounded-xl bg-success/10 p-2">
+                    <div className="font-extrabold text-success text-sm">{fmtMoney(paid)}</div>
+                    <div className="text-[10px] text-muted-foreground">المدفوع</div>
+                  </div>
+                  <div className="rounded-xl bg-warning/10 p-2">
+                    <div className="font-extrabold text-warning text-sm">{fmtMoney(remaining)}</div>
+                    <div className="text-[10px] text-muted-foreground">المتبقي</div>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs mb-1.5 block">مبلغ التسديد</Label>
+                  <Input
+                    type="number" min={0} step="0.01"
+                    value={payAmount}
+                    onChange={(e) => setPayAmount(e.target.value)}
+                    className="rounded-xl h-11 text-center font-bold"
+                    autoFocus
+                  />
+                  <div className="flex gap-1.5 mt-2">
+                    <button type="button" onClick={() => setPayAmount(String(remaining))}
+                      className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70">كامل المتبقي</button>
+                    <button type="button" onClick={() => setPayAmount(String(remaining / 2))}
+                      className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70">نصف</button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs mb-1.5 block">ملاحظة (اختياري)</Label>
+                  <Input value={payNote} onChange={(e) => setPayNote(e.target.value)} className="rounded-xl" />
+                </div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPayFor(null)} disabled={payBusy}>إلغاء</Button>
+            <Button onClick={handleCustomerPayment} disabled={payBusy} className="bg-success hover:bg-success/90 text-white">
+              {payBusy ? "جاري..." : "تأكيد التسديد"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
+
   );
 }
 
