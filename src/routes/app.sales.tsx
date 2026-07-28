@@ -409,9 +409,8 @@ function SalesPage() {
                   <TableCell className="text-xs">{highlight(s.network_name, q)}</TableCell>
                   <TableCell className="text-xs">{highlight(displayName(s.agent_username), q)}</TableCell>
                   <TableCell className="text-xs font-medium">{highlight(s.customer_name ?? s.buyer_name ?? "—", q)}</TableCell>
-                  <TableCell className="font-mono text-xs text-primary whitespace-nowrap">
-                    {s.card_username ? highlight(s.card_username, q) : "—"}
-                    {s.card_password && <span className="text-muted-foreground"> / {s.card_password}</span>}
+                  <TableCell className="font-mono text-xs text-primary whitespace-nowrap" data-no-drag>
+                    <RevealText username={s.card_username} password={s.card_password} />
                   </TableCell>
                   <TableCell className="text-xs whitespace-nowrap">{fmtArabicDateTime(s.sold_at)}</TableCell>
                   <TableCell className="text-primary font-bold whitespace-nowrap">{fmtMoney(Number(s.price))}</TableCell>
