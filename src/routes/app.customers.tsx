@@ -19,6 +19,7 @@ import { openWhatsApp } from "@/lib/wa-open";
 import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
 import { pickContact } from "@/lib/pick-contact";
 import { toast } from "sonner";
+import { RevealText } from "@/components/reveal-text";
 
 function localYemenDigits(v: string) {
   let d = String(v ?? "").replace(/\D/g, "");
