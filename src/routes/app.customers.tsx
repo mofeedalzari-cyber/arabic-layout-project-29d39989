@@ -52,6 +52,10 @@ function CustomersPage() {
   const [newName, setNewName] = useState("");
   const [newWhats, setNewWhats] = useState("");
   const [addBusy, setAddBusy] = useState(false);
+  const [payFor, setPayFor] = useState<Customer | null>(null);
+  const [payAmount, setPayAmount] = useState("");
+  const [payNote, setPayNote] = useState("");
+  const [payBusy, setPayBusy] = useState(false);
 
   async function handleAddCustomer() {
     const name = newName.trim();
