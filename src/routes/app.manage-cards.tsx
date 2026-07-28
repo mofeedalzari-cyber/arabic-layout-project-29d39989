@@ -63,6 +63,7 @@ function ManageCardsPage() {
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [extendedDelete, setExtendedDelete] = useState(false);
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState<string>("created_desc");
 
   const { data: networks } = useQuery({
     queryKey: ["networks-all"],
@@ -118,11 +119,38 @@ function ManageCardsPage() {
     enabled: !!networkId,
   });
 
-  const totalPages = Math.max(1, Math.ceil((cards?.length ?? 0) / PAGE_SIZE));
+  const sortedCards = useMemo(() => {
+    const src = cards ?? [];
+    const statusOrder: Record<string, number> = { AVAILABLE: 0, ASSIGNED: 1, SOLD: 2 };
+    switch (sortBy) {
+      case "created_asc":
+        return [...src].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      case "created_desc":
+        return [...src].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      case "available_first":
+        return [...src].sort((a, b) => (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99));
+      case "assigned_first":
+        return [...src].sort((a, b) => {
+          const pa = a.status === "ASSIGNED" ? 0 : (statusOrder[a.status] ?? 99) + 1;
+          const pb = b.status === "ASSIGNED" ? 0 : (statusOrder[b.status] ?? 99) + 1;
+          return pa - pb;
+        });
+      case "sold_first":
+        return [...src].sort((a, b) => {
+          const pa = a.status === "SOLD" ? 0 : (statusOrder[a.status] ?? 99) + 1;
+          const pb = b.status === "SOLD" ? 0 : (statusOrder[b.status] ?? 99) + 1;
+          return pa - pb;
+        });
+      default:
+        return src;
+    }
+  }, [cards, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil((sortedCards.length ?? 0) / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pageRows = useMemo(
-    () => (cards ?? []).slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [cards, currentPage],
+    () => sortedCards.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [sortedCards, currentPage],
   );
   const pageIds = pageRows.map((r) => r.id);
   const pageAllSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
@@ -359,6 +387,19 @@ function ManageCardsPage() {
                 value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} disabled={!networkId} />
             </div>
           </div>
+          <div>
+            <Label className="text-xs mb-1.5 block">الترتيب</Label>
+            <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setPage(1); }} disabled={!networkId}>
+              <SelectTrigger className="rounded-xl"><SelectValue placeholder="الترتيب" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_desc">الأحدث أولاً</SelectItem>
+                <SelectItem value="created_asc">الأقدم أولاً</SelectItem>
+                <SelectItem value="available_first">المتاح أولاً</SelectItem>
+                <SelectItem value="assigned_first">المسحوب أولاً</SelectItem>
+                <SelectItem value="sold_first">المباع أولاً</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 pt-1 border-t">
@@ -532,7 +573,7 @@ function ManageCardsPage() {
               <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}><ChevronsLeft className="h-4 w-4" /></Button>
             </div>
             <div className="text-muted-foreground">
-              الصفحة {currentPage} من {totalPages} — إجمالي {cards?.length ?? 0}
+              الصفحة {currentPage} من {totalPages} — إجمالي {sortedCards.length}
             </div>
           </div>
         </Card>
