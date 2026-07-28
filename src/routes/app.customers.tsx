@@ -463,6 +463,8 @@ function CustomersPage() {
               <TableHead className="text-right">واتساب</TableHead>
               <TableHead className="text-right">عدد العمليات</TableHead>
               <TableHead className="text-right">إجمالي المبيعات</TableHead>
+              <TableHead className="text-right">المدفوع</TableHead>
+              <TableHead className="text-right">الرصيد</TableHead>
               <TableHead className="text-right">آخر عملية</TableHead>
               <TableHead className="text-right">إجراءات</TableHead>
             </TableRow>
@@ -474,9 +476,20 @@ function CustomersPage() {
                 <TableCell className="font-mono text-xs">{displayPhone(c.whatsapp, "")}</TableCell>
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
+                <TableCell className="text-success font-bold">{fmtMoney(c.paid)}</TableCell>
+                <TableCell className={`font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}>{fmtMoney(c.balance)}</TableCell>
                 <TableCell className="text-xs">{c.last ? fmtArabicDateTime(c.last) : "—"}</TableCell>
                 <TableCell onClick={(e) => e.stopPropagation()}>
-                  <div className="flex gap-2 justify-end">
+                  <div className="flex gap-2 justify-end flex-wrap">
+                    <Button
+                      size="sm"
+                      className="bg-success hover:bg-success/90 text-white"
+                      disabled={c.balance <= 0}
+                      onClick={() => { setPayFor(c as any); setPayAmount(String(c.balance)); setPayNote(""); }}
+                    >
+                      <Banknote className="h-4 w-4 ml-1" />
+                      تسديد
+                    </Button>
                     {c.whatsapp && (
                       <Button
                         size="sm"
@@ -505,7 +518,7 @@ function CustomersPage() {
             ))}
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
                   لا يوجد زبائن.
                 </TableCell>
               </TableRow>
