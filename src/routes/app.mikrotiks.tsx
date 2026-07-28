@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription,
 } from "@/components/ui/dialog";
@@ -16,8 +21,11 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
-import { Router, Plus, Pencil, Trash2, ExternalLink, RefreshCw, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Router, Plus, Pencil, Trash2, ExternalLink, RefreshCw, Eye, EyeOff, Loader2,
+  Wifi, Users, CreditCard, Package as PackageIcon, LogOut,
+} from "lucide-react";
 import { RevealText } from "@/components/reveal-text";
 
 export const Route = createFileRoute("/app/mikrotiks")({ component: MikrotiksPage });
@@ -141,7 +149,7 @@ function MikrotiksPage() {
     <div dir="rtl">
       <PageHeader
         title="الميكروتيك"
-        description="إدارة أجهزة الميكروتيك التابعة لشبكتك والدخول إلى واجهتها."
+        description="إدارة أجهزة الميكروتيك والاتصال بها عبر REST API (RouterOS v7+). استخدم التطبيق من داخل نفس الشبكة المحلية."
         action={
           <Dialog open={openForm} onOpenChange={(o) => { setOpenForm(o); if (!o) setEditing(null); }}>
             <DialogTrigger asChild>
@@ -154,26 +162,27 @@ function MikrotiksPage() {
               <DialogHeader>
                 <DialogTitle>{editing ? "تعديل الميكروتيك" : "إضافة ميكروتيك"}</DialogTitle>
                 <DialogDescription>
-                  أدخل بيانات جهاز الميكروتيك للاتصال به. المنفذ الافتراضي 8728.
+                  للاتصال عبر REST يوصى بمنفذ 80 (HTTP) أو 443 (HTTPS) وتفعيل www / www-ssl في IP → Services.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-3">
                 <FormRow label="اسم الجهاز">
                   <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: راوتر الفرع الرئيسي" />
                 </FormRow>
-                <FormRow label="عنوان IP أو الدومين">
+                <FormRow label="عنوان IP المحلي أو الدومين">
                   <Input value={form.host} onChange={(e) => setForm({ ...form, host: e.target.value })} placeholder="192.168.88.1" dir="ltr" />
                 </FormRow>
                 <div className="grid grid-cols-2 gap-3">
                   <FormRow label="اسم المستخدم">
                     <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} dir="ltr" />
                   </FormRow>
-                  <FormRow label="المنفذ">
+                  <FormRow label="منفذ REST">
                     <Input
                       type="number"
                       value={form.port}
                       onChange={(e) => setForm({ ...form, port: Number(e.target.value) })}
                       dir="ltr"
+                      placeholder="80"
                     />
                   </FormRow>
                 </div>
@@ -183,7 +192,7 @@ function MikrotiksPage() {
                 <div className="flex items-center justify-between p-3 rounded-xl border">
                   <div>
                     <div className="text-sm font-medium">استخدام HTTPS</div>
-                    <div className="text-xs text-muted-foreground">فعّل إذا كان الميكروتيك يستخدم شهادة SSL</div>
+                    <div className="text-xs text-muted-foreground">فعّل لو www-ssl مُشغّل في الميكروتيك</div>
                   </div>
                   <Switch checked={form.use_https} onCheckedChange={(v) => setForm({ ...form, use_https: v })} />
                 </div>
@@ -201,6 +210,16 @@ function MikrotiksPage() {
           </Dialog>
         }
       />
+
+      <Card className="p-3 mb-4 bg-info/10 border-info/30 text-xs leading-6">
+        <strong>ملاحظات اتصال:</strong>
+        <ul className="list-disc pr-5 mt-1 space-y-0.5">
+          <li>يجب أن يكون جوالك متصلاً بنفس شبكة الميكروتيك الواي فاي.</li>
+          <li>فعّل REST API في الميكروتيك: <span dir="ltr">/ip service enable www</span> (RouterOS v7).</li>
+          <li>منفذ REST الافتراضي: 80 (HTTP) أو 443 (HTTPS) — وليس 8728.</li>
+          <li>إذا فشل الاتصال من المتصفح بسبب CORS، استخدم تطبيق الأندرويد (APK).</li>
+        </ul>
+      </Card>
 
       {isLoading ? (
         <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
@@ -336,6 +355,40 @@ function InfoPill({ label, value, ltr }: { label: string; value: string; ltr?: b
   );
 }
 
+// ============================================================
+// MikroTik REST API client (browser-side, LAN only)
+// ============================================================
+
+function useMikrotikApi(item: Mikrotik | null) {
+  return useMemo(() => {
+    if (!item) return null;
+    const scheme = item.use_https ? "https" : "http";
+    const port = item.port && item.port !== 80 && item.port !== 443 ? `:${item.port}` : "";
+    const base = `${scheme}://${item.host}${port}/rest`;
+    const auth = "Basic " + btoa(`${item.username}:${item.password}`);
+    const headers: HeadersInit = { Authorization: auth, "Content-Type": "application/json" };
+
+    async function req(path: string, init?: RequestInit) {
+      const res = await fetch(`${base}${path}`, { ...init, headers: { ...headers, ...(init?.headers ?? {}) } });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`${res.status} ${res.statusText} ${text}`.trim());
+      }
+      const ct = res.headers.get("content-type") ?? "";
+      if (ct.includes("application/json")) return res.json();
+      return null;
+    }
+
+    return {
+      get: (path: string) => req(path),
+      post: (path: string, body: unknown) => req(path, { method: "POST", body: JSON.stringify(body) }),
+      del: (path: string, id: string) => req(`${path}/${encodeURIComponent(id)}`, { method: "DELETE" }),
+      patch: (path: string, id: string, body: unknown) =>
+        req(`${path}/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) }),
+    };
+  }, [item]);
+}
+
 type MikrotikInfo = {
   identity?: string;
   version?: string;
@@ -344,36 +397,93 @@ type MikrotikInfo = {
   cpuLoad?: string;
   freeMemory?: string;
   totalMemory?: string;
-  activeUsers?: number;
 };
 
 function MikrotikDetailsDialog({ item, onClose }: { item: Mikrotik | null; onClose: () => void }) {
-  const [loading, setLoading] = useState(false);
-  const [info, setInfo] = useState<MikrotikInfo | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const api = useMikrotikApi(item);
+  const webUrl = item ? `${item.use_https ? "https" : "http"}://${item.host}` : "";
 
-  const baseUrl = item ? `${item.use_https ? "https" : "http"}://${item.host}` : "";
-  const webUrl = baseUrl;
+  return (
+    <Dialog open={!!item} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent dir="rtl" className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Router className="h-5 w-5 text-primary" />
+            {item?.name}
+          </DialogTitle>
+          <DialogDescription>
+            <span dir="ltr" className="inline-block">{item?.host}:{item?.port}</span> — REST API
+          </DialogDescription>
+        </DialogHeader>
 
-  async function tryFetch() {
-    if (!item) return;
-    setLoading(true);
-    setError(null);
-    setInfo(null);
-    try {
-      const auth = "Basic " + btoa(`${item.username}:${item.password}`);
-      const headers = { Authorization: auth, "Content-Type": "application/json" };
-      const [resource, identity, hotspot] = await Promise.allSettled([
-        fetch(`${baseUrl}/rest/system/resource`, { headers }).then((r) => r.json()),
-        fetch(`${baseUrl}/rest/system/identity`, { headers }).then((r) => r.json()),
-        fetch(`${baseUrl}/rest/ip/hotspot/active`, { headers }).then((r) => r.json()).catch(() => null),
+        <Tabs defaultValue="overview" dir="rtl">
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="overview" className="gap-1"><Wifi className="h-4 w-4" /> نظرة عامة</TabsTrigger>
+            <TabsTrigger value="active" className="gap-1"><Users className="h-4 w-4" /> النشطون</TabsTrigger>
+            <TabsTrigger value="users" className="gap-1"><CreditCard className="h-4 w-4" /> الكروت</TabsTrigger>
+            <TabsTrigger value="profiles" className="gap-1"><PackageIcon className="h-4 w-4" /> الباقات</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="mt-4">
+            {api && <OverviewTab api={api} />}
+          </TabsContent>
+          <TabsContent value="active" className="mt-4">
+            {api && <ActiveTab api={api} />}
+          </TabsContent>
+          <TabsContent value="users" className="mt-4">
+            {api && <UsersTab api={api} />}
+          </TabsContent>
+          <TabsContent value="profiles" className="mt-4">
+            {api && <ProfilesTab api={api} />}
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter>
+          <a href={webUrl} target="_blank" rel="noreferrer">
+            <Button variant="outline" className="rounded-xl gap-1">
+              <ExternalLink className="h-4 w-4" />
+              فتح WebFig
+            </Button>
+          </a>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type Api = NonNullable<ReturnType<typeof useMikrotikApi>>;
+
+function ErrorBox({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
+  const msg = error instanceof Error ? error.message : String(error);
+  return (
+    <div className="p-3 rounded-xl bg-warning/10 border border-warning/30 text-sm space-y-2">
+      <div className="font-semibold">تعذّر الاتصال بالميكروتيك</div>
+      <div className="text-xs text-muted-foreground break-all" dir="ltr">{msg}</div>
+      <ul className="text-xs list-disc pr-5 space-y-0.5 text-muted-foreground">
+        <li>تأكد أن جوالك على نفس شبكة الميكروتيك المحلية.</li>
+        <li>تأكد من تفعيل REST (RouterOS v7): <span dir="ltr">/ip service enable www</span>.</li>
+        <li>جرّب تعديل المنفذ إلى 80 أو 443 بدلاً من 8728.</li>
+      </ul>
+      {onRetry && (
+        <Button size="sm" variant="outline" className="rounded-xl gap-1" onClick={onRetry}>
+          <RefreshCw className="h-3 w-3" /> إعادة المحاولة
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function OverviewTab({ api }: { api: Api }) {
+  const q = useQuery({
+    queryKey: ["mt-overview"],
+    queryFn: async () => {
+      const [resource, identity] = await Promise.all([
+        api.get("/system/resource"),
+        api.get("/system/identity"),
       ]);
-
-      const res: Record<string, string> | null = resource.status === "fulfilled" ? resource.value : null;
-      const idn: Record<string, string> | null = identity.status === "fulfilled" ? identity.value : null;
-      if (!res && !idn) throw new Error("تعذّر الاتصال بالميكروتيك");
-
-      setInfo({
+      const res = resource as Record<string, string>;
+      const idn = identity as Record<string, string>;
+      const info: MikrotikInfo = {
         identity: idn?.name,
         version: res?.version,
         boardName: res?.["board-name"],
@@ -381,26 +491,11 @@ function MikrotikDetailsDialog({ item, onClose }: { item: Mikrotik | null; onClo
         cpuLoad: res?.["cpu-load"],
         freeMemory: res?.["free-memory"],
         totalMemory: res?.["total-memory"],
-        activeUsers: Array.isArray(hotspot.status === "fulfilled" ? hotspot.value : null)
-          ? (hotspot.status === "fulfilled" ? (hotspot.value as unknown[]).length : undefined)
-          : undefined,
-      });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "تعذّر الاتصال بالميكروتيك";
-      setError(msg + " — قد يكون الجهاز خلف شبكة محلية أو REST API غير مفعّل. استخدم WebFig للدخول المباشر.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    if (item) tryFetch();
-    else {
-      setInfo(null);
-      setError(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item?.id]);
+      };
+      return info;
+    },
+    retry: false,
+  });
 
   const bytesToMB = (v?: string) => {
     if (!v) return "—";
@@ -409,59 +504,358 @@ function MikrotikDetailsDialog({ item, onClose }: { item: Mikrotik | null; onClo
     return `${(n / 1024 / 1024).toFixed(1)} MB`;
   };
 
+  if (q.isLoading) return <LoadingRow />;
+  if (q.error) return <ErrorBox error={q.error} onRetry={() => q.refetch()} />;
+  const info = q.data!;
+
   return (
-    <Dialog open={!!item} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent dir="rtl" className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Router className="h-5 w-5 text-primary" />
-            {item?.name}
-          </DialogTitle>
-          <DialogDescription>
-            <span dir="ltr" className="inline-block">{item?.host}:{item?.port}</span>
-          </DialogDescription>
-        </DialogHeader>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <StatCell label="اسم الجهاز" value={info.identity ?? "—"} />
+      <StatCell label="الإصدار" value={info.version ?? "—"} />
+      <StatCell label="اللوحة" value={info.boardName ?? "—"} />
+      <StatCell label="مدة التشغيل" value={info.uptime ?? "—"} />
+      <StatCell label="حمل المعالج" value={info.cpuLoad ? `${info.cpuLoad}%` : "—"} />
+      <StatCell label="الذاكرة الحرة" value={bytesToMB(info.freeMemory)} />
+      <StatCell label="إجمالي الذاكرة" value={bytesToMB(info.totalMemory)} />
+      <div className="col-span-2 md:col-span-4">
+        <Button size="sm" variant="outline" className="rounded-xl gap-1 w-full" onClick={() => q.refetch()}>
+          <RefreshCw className="h-4 w-4" /> تحديث
+        </Button>
+      </div>
+    </div>
+  );
+}
 
-        {loading && (
-          <div className="flex flex-col items-center py-6 gap-2 text-muted-foreground">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span className="text-sm">جاري الاتصال بالميكروتيك…</span>
-          </div>
-        )}
+function ActiveTab({ api }: { api: Api }) {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["mt-active"],
+    queryFn: async () => (await api.get("/ip/hotspot/active")) as Array<Record<string, string>>,
+    retry: false,
+    refetchInterval: 10000,
+  });
 
-        {!loading && error && (
-          <div className="p-3 rounded-xl bg-warning/10 border border-warning/30 text-sm text-warning-foreground">
-            {error}
-          </div>
-        )}
+  const kick = useMutation({
+    mutationFn: async (id: string) => api.del("/ip/hotspot/active", id),
+    onSuccess: () => {
+      toast.success("تم قطع الاتصال");
+      qc.invalidateQueries({ queryKey: ["mt-active"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
-        {!loading && info && (
-          <div className="grid grid-cols-2 gap-2">
-            <StatCell label="اسم الجهاز" value={info.identity ?? "—"} />
-            <StatCell label="الإصدار" value={info.version ?? "—"} />
-            <StatCell label="اللوحة" value={info.boardName ?? "—"} />
-            <StatCell label="مدة التشغيل" value={info.uptime ?? "—"} />
-            <StatCell label="الحمل على المعالج" value={info.cpuLoad ? `${info.cpuLoad}%` : "—"} />
-            <StatCell label="المستخدمون النشطون" value={info.activeUsers != null ? String(info.activeUsers) : "—"} />
-            <StatCell label="الذاكرة الحرة" value={bytesToMB(info.freeMemory)} />
-            <StatCell label="إجمالي الذاكرة" value={bytesToMB(info.totalMemory)} />
-          </div>
-        )}
+  if (q.isLoading) return <LoadingRow />;
+  if (q.error) return <ErrorBox error={q.error} onRetry={() => q.refetch()} />;
 
-        <DialogFooter className="gap-2 sm:justify-between">
-          <Button variant="outline" className="rounded-xl gap-1" onClick={tryFetch} disabled={loading}>
-            <RefreshCw className="h-4 w-4" />
-            تحديث
+  const list = q.data ?? [];
+  if (list.length === 0) return <EmptyRow label="لا يوجد مستخدمون نشطون حالياً" />;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">عدد النشطين: <strong>{list.length}</strong></div>
+        <Button size="sm" variant="outline" className="rounded-xl gap-1" onClick={() => q.refetch()}>
+          <RefreshCw className="h-3 w-3" /> تحديث
+        </Button>
+      </div>
+      <div className="grid gap-2">
+        {list.map((u) => (
+          <Card key={u[".id"]} className="p-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="min-w-0">
+                <div className="font-semibold text-sm truncate" dir="ltr">{u.user}</div>
+                <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3" dir="ltr">
+                  <span>IP: {u.address}</span>
+                  <span>MAC: {u["mac-address"]}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-[10px]">{u.uptime}</Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-xl text-destructive gap-1"
+                  onClick={() => kick.mutate(u[".id"])}
+                >
+                  <LogOut className="h-3 w-3" /> قطع
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UsersTab({ api }: { api: Api }) {
+  const qc = useQueryClient();
+  const [openAdd, setOpenAdd] = useState(false);
+  const [form, setForm] = useState({ name: "", password: "", profile: "default" });
+
+  const users = useQuery({
+    queryKey: ["mt-users"],
+    queryFn: async () => (await api.get("/ip/hotspot/user")) as Array<Record<string, string>>,
+    retry: false,
+  });
+
+  const profiles = useQuery({
+    queryKey: ["mt-profiles-list"],
+    queryFn: async () => (await api.get("/ip/hotspot/user/profile")) as Array<Record<string, string>>,
+    retry: false,
+  });
+
+  const add = useMutation({
+    mutationFn: async () => {
+      if (!form.name.trim()) throw new Error("اسم المستخدم مطلوب");
+      await api.post("/ip/hotspot/user/add", {
+        name: form.name.trim(),
+        password: form.password,
+        profile: form.profile || "default",
+      });
+    },
+    onSuccess: () => {
+      toast.success("تم إضافة المستخدم");
+      setOpenAdd(false);
+      setForm({ name: "", password: "", profile: "default" });
+      qc.invalidateQueries({ queryKey: ["mt-users"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const del = useMutation({
+    mutationFn: async (id: string) => api.del("/ip/hotspot/user", id),
+    onSuccess: () => {
+      toast.success("تم الحذف");
+      qc.invalidateQueries({ queryKey: ["mt-users"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (users.isLoading) return <LoadingRow />;
+  if (users.error) return <ErrorBox error={users.error} onRetry={() => users.refetch()} />;
+
+  const list = users.data ?? [];
+  const profList = profiles.data ?? [];
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-sm text-muted-foreground">إجمالي الكروت: <strong>{list.length}</strong></div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="rounded-xl gap-1" onClick={() => users.refetch()}>
+            <RefreshCw className="h-3 w-3" /> تحديث
           </Button>
-          <a href={webUrl} target="_blank" rel="noreferrer">
-            <Button className="rounded-xl gradient-primary-bg text-primary-foreground gap-1">
-              <ExternalLink className="h-4 w-4" />
-              فتح واجهة WebFig
-            </Button>
-          </a>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="rounded-xl gradient-primary-bg text-primary-foreground gap-1">
+                <Plus className="h-3 w-3" /> إضافة كرت
+              </Button>
+            </DialogTrigger>
+            <DialogContent dir="rtl" className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>إضافة كرت (Hotspot User)</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-3">
+                <FormRow label="اسم المستخدم">
+                  <Input dir="ltr" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                </FormRow>
+                <FormRow label="كلمة المرور">
+                  <Input dir="ltr" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                </FormRow>
+                <FormRow label="الباقة (Profile)">
+                  <Select value={form.profile} onValueChange={(v) => setForm({ ...form, profile: v })}>
+                    <SelectTrigger><SelectValue placeholder="default" /></SelectTrigger>
+                    <SelectContent>
+                      {profList.length === 0 && <SelectItem value="default">default</SelectItem>}
+                      {profList.map((p) => (
+                        <SelectItem key={p[".id"]} value={p.name}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormRow>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => add.mutate()} disabled={add.isPending} className="rounded-xl">
+                  {add.isPending && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+                  حفظ
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      {list.length === 0 ? <EmptyRow label="لا توجد كروت" /> : (
+        <div className="grid gap-2">
+          {list.map((u) => (
+            <Card key={u[".id"]} className="p-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm truncate" dir="ltr">{u.name}</div>
+                  <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3" dir="ltr">
+                    <span>Profile: {u.profile ?? "default"}</span>
+                    {u["limit-uptime"] && <span>Limit: {u["limit-uptime"]}</span>}
+                    {u.uptime && <span>Uptime: {u.uptime}</span>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {u.disabled === "true" && <Badge variant="destructive" className="text-[10px]">معطّل</Badge>}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="rounded-xl text-destructive">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent dir="rtl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>حذف الكرت</AlertDialogTitle>
+                        <AlertDialogDescription>سيتم حذف "{u.name}" من الميكروتيك.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => del.mutate(u[".id"])} className="bg-destructive text-destructive-foreground">
+                          حذف
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProfilesTab({ api }: { api: Api }) {
+  const qc = useQueryClient();
+  const [openAdd, setOpenAdd] = useState(false);
+  const [form, setForm] = useState({ name: "", rate_limit: "", session_timeout: "", shared_users: "1" });
+
+  const profiles = useQuery({
+    queryKey: ["mt-profiles"],
+    queryFn: async () => (await api.get("/ip/hotspot/user/profile")) as Array<Record<string, string>>,
+    retry: false,
+  });
+
+  const add = useMutation({
+    mutationFn: async () => {
+      if (!form.name.trim()) throw new Error("اسم الباقة مطلوب");
+      const body: Record<string, string> = { name: form.name.trim() };
+      if (form.rate_limit) body["rate-limit"] = form.rate_limit;
+      if (form.session_timeout) body["session-timeout"] = form.session_timeout;
+      if (form.shared_users) body["shared-users"] = form.shared_users;
+      await api.post("/ip/hotspot/user/profile/add", body);
+    },
+    onSuccess: () => {
+      toast.success("تم إضافة الباقة");
+      setOpenAdd(false);
+      setForm({ name: "", rate_limit: "", session_timeout: "", shared_users: "1" });
+      qc.invalidateQueries({ queryKey: ["mt-profiles"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const del = useMutation({
+    mutationFn: async (id: string) => api.del("/ip/hotspot/user/profile", id),
+    onSuccess: () => {
+      toast.success("تم الحذف");
+      qc.invalidateQueries({ queryKey: ["mt-profiles"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (profiles.isLoading) return <LoadingRow />;
+  if (profiles.error) return <ErrorBox error={profiles.error} onRetry={() => profiles.refetch()} />;
+
+  const list = profiles.data ?? [];
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-sm text-muted-foreground">إجمالي الباقات: <strong>{list.length}</strong></div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="rounded-xl gap-1" onClick={() => profiles.refetch()}>
+            <RefreshCw className="h-3 w-3" /> تحديث
+          </Button>
+          <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="rounded-xl gradient-primary-bg text-primary-foreground gap-1">
+                <Plus className="h-3 w-3" /> إضافة باقة
+              </Button>
+            </DialogTrigger>
+            <DialogContent dir="rtl" className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>إضافة باقة (User Profile)</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-3">
+                <FormRow label="اسم الباقة">
+                  <Input dir="ltr" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: 10M-30days" />
+                </FormRow>
+                <FormRow label="السرعة (Rate Limit)">
+                  <Input dir="ltr" value={form.rate_limit} onChange={(e) => setForm({ ...form, rate_limit: e.target.value })} placeholder="10M/10M" />
+                </FormRow>
+                <FormRow label="مدة الجلسة (Session Timeout)">
+                  <Input dir="ltr" value={form.session_timeout} onChange={(e) => setForm({ ...form, session_timeout: e.target.value })} placeholder="30d 00:00:00" />
+                </FormRow>
+                <FormRow label="مستخدمون متزامنون">
+                  <Input dir="ltr" type="number" value={form.shared_users} onChange={(e) => setForm({ ...form, shared_users: e.target.value })} />
+                </FormRow>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => add.mutate()} disabled={add.isPending} className="rounded-xl">
+                  {add.isPending && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+                  حفظ
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      {list.length === 0 ? <EmptyRow label="لا توجد باقات" /> : (
+        <div className="grid gap-2">
+          {list.map((p) => (
+            <Card key={p[".id"]} className="p-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="min-w-0">
+                  <div className="font-semibold text-sm truncate" dir="ltr">{p.name}</div>
+                  <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3" dir="ltr">
+                    {p["rate-limit"] && <span>Rate: {p["rate-limit"]}</span>}
+                    {p["session-timeout"] && <span>Timeout: {p["session-timeout"]}</span>}
+                    {p["shared-users"] && <span>Shared: {p["shared-users"]}</span>}
+                  </div>
+                </div>
+                {p.name !== "default" && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="rounded-xl text-destructive">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent dir="rtl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>حذف الباقة</AlertDialogTitle>
+                        <AlertDialogDescription>سيتم حذف "{p.name}" من الميكروتيك.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => del.mutate(p[".id"])} className="bg-destructive text-destructive-foreground">
+                          حذف
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -472,4 +866,17 @@ function StatCell({ label, value }: { label: string; value: string }) {
       <div className="text-sm font-semibold truncate">{value}</div>
     </div>
   );
+}
+
+function LoadingRow() {
+  return (
+    <div className="flex flex-col items-center py-6 gap-2 text-muted-foreground">
+      <Loader2 className="h-6 w-6 animate-spin" />
+      <span className="text-sm">جاري الاتصال…</span>
+    </div>
+  );
+}
+
+function EmptyRow({ label }: { label: string }) {
+  return <div className="text-center text-sm text-muted-foreground py-6">{label}</div>;
 }
