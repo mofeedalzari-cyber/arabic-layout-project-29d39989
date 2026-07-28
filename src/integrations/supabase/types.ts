@@ -314,6 +314,59 @@ export type Database = {
         }
         Relationships: []
       }
+      mikrotiks: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          host: string
+          id: string
+          name: string
+          network_id: string
+          notes: string | null
+          password: string
+          port: number
+          updated_at: string
+          use_https: boolean
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          host: string
+          id?: string
+          name: string
+          network_id: string
+          notes?: string | null
+          password?: string
+          port?: number
+          updated_at?: string
+          use_https?: boolean
+          username: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          host?: string
+          id?: string
+          name?: string
+          network_id?: string
+          notes?: string | null
+          password?: string
+          port?: number
+          updated_at?: string
+          use_https?: boolean
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mikrotiks_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "networks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       networks: {
         Row: {
           cover_url: string | null
