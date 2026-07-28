@@ -171,7 +171,9 @@ function CustomersPage() {
   const rows = useMemo(() => {
     const list = (customers ?? []).map((c) => {
       const st = statsByCustomer.get(c.id) ?? { count: 0, total: 0, last: null };
-      return { ...c, ...st };
+      const paid = paidByCustomer.get(c.id) ?? 0;
+      const balance = Math.max(st.total - paid, 0);
+      return { ...c, ...st, paid, balance };
     });
     const s = q.trim().toLowerCase();
     const filtered = s
@@ -181,14 +183,51 @@ function CustomersPage() {
             (c.whatsapp ?? "").toLowerCase().includes(s),
         )
       : list;
-    return filtered.sort((a, b) => b.total - a.total);
-  }, [customers, statsByCustomer, q]);
+    return filtered.sort((a, b) => b.balance - a.balance);
+  }, [customers, statsByCustomer, paidByCustomer, q]);
 
   const selectedSales = useMemo(
     () => (selected ? (sales ?? []).filter((s) => s.customer_id === selected.id) : []),
     [selected, sales],
   );
+  const selectedPayments = useMemo(
+    () => (selected ? (payments ?? []).filter((p) => p.customer_id === selected.id) : []),
+    [selected, payments],
+  );
   const selectedTotal = selectedSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+  const selectedPaid = selectedPayments.reduce((a, p) => a + Number(p.amount || 0), 0);
+  const selectedBalance = Math.max(selectedTotal - selectedPaid, 0);
+
+  async function handleCustomerPayment() {
+    if (!payFor || !user?.id) return;
+    const amount = Number(payAmount);
+    if (!amount || amount <= 0) { toast.error("أدخل مبلغاً صحيحاً"); return; }
+    setPayBusy(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("network_id").eq("id", user.id).maybeSingle();
+      const { error } = await supabase.from("customer_payments").insert({
+        customer_id: payFor.id,
+        agent_id: user.id,
+        network_id: prof?.network_id ?? null,
+        amount,
+        note: payNote.trim() || null,
+      });
+      if (error) { toast.error("تعذر التسديد: " + error.message); return; }
+      toast.success(`تم تسديد ${fmtMoney(amount)}`);
+      setPayFor(null); setPayAmount(""); setPayNote("");
+      qc.invalidateQueries({ queryKey: ["customer-payments"] });
+    } finally {
+      setPayBusy(false);
+    }
+  }
+
+  async function deleteCustomerPayment(id: string) {
+    const { error } = await supabase.from("customer_payments").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("تم حذف الدفعة");
+    qc.invalidateQueries({ queryKey: ["customer-payments"] });
+  }
+
 
   async function handleDelete(c: Customer) {
     setDeleteBusy(true);
