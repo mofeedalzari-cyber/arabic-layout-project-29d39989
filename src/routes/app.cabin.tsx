@@ -669,8 +669,8 @@ function SaleReceipt({ sale }: { sale: any }) {
     <div className="mt-4 space-y-3 pb-4">
       <div className="rounded-2xl border-2 border-dashed border-primary/40 p-5 bg-primary/5 space-y-2">
         <Row label="الشبكة" value={`${sale.network_name} — ${sale.package_name}`} />
-        <Row label="اسم المستخدم" value={sale.card_username} onCopy={() => copy(sale.card_username, "اسم المستخدم")} />
-        {sale.card_password && <Row label="كلمة المرور" value={sale.card_password} onCopy={() => copy(sale.card_password, "كلمة المرور")} />}
+        <Row label="اسم المستخدم" value={sale.card_username} onCopy={() => copy(sale.card_username, "اسم المستخدم")} hideable />
+        {sale.card_password && <Row label="كلمة المرور" value={sale.card_password} onCopy={() => copy(sale.card_password, "كلمة المرور")} hideable />}
         <Row label="السعر" value={fmtMoney(Number(sale.price))} />
         <Row label="رقم العملية" value={sale.transaction_no} onCopy={() => copy(sale.transaction_no, "رقم العملية")} />
         {savedName && <Row label="المشتري" value={savedName} />}
