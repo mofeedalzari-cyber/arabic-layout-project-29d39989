@@ -121,6 +121,28 @@ function CustomersPage() {
     },
   });
 
+  const { data: payments } = useQuery({
+    queryKey: ["customer-payments", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customer_payments")
+        .select("id, customer_id, amount, note, created_at")
+        .eq("agent_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as { id: string; customer_id: string; amount: number; note: string | null; created_at: string }[];
+    },
+  });
+
+  const paidByCustomer = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of payments ?? []) {
+      m.set(p.customer_id, (m.get(p.customer_id) ?? 0) + Number(p.amount || 0));
+    }
+    return m;
+  }, [payments]);
+
   const statsByCustomer = useMemo(() => {
     const m = new Map<string, { count: number; total: number; last: string | null }>();
     for (const s of sales ?? []) {
