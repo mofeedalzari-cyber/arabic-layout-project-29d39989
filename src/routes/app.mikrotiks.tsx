@@ -286,9 +286,9 @@ function MikrotikCard({ item, onOpen, onEdit, onDelete }: {
         <InfoPill label="HTTPS" value={item.use_https ? "مفعّل" : "معطّل"} />
       </div>
 
-      <div className="text-xs">
-        <span className="text-muted-foreground ml-1">كلمة المرور:</span>
-        <RevealText value={item.password || "—"} />
+      <div className="text-xs flex items-center gap-1">
+        <span className="text-muted-foreground">كلمة المرور:</span>
+        <RevealText username={item.password || "—"} />
       </div>
 
       <div className="flex flex-wrap gap-2 mt-auto">
