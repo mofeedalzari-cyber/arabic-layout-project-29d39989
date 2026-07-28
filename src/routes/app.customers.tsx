@@ -413,21 +413,33 @@ function CustomersPage() {
               <div className="text-left">
                 <div className="text-primary font-bold text-sm">{fmtMoney(c.total)}</div>
                 <div className="text-[10px] text-muted-foreground">{c.count} عملية</div>
+                <div className={`text-[11px] font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}>
+                  الرصيد: {fmtMoney(c.balance)}
+                </div>
               </div>
             </div>
             {c.last && (
               <div className="text-[10px] text-muted-foreground mt-2">آخر عملية: {fmtArabicDateTime(c.last)}</div>
             )}
-            <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-2 mt-3 flex-wrap" onClick={(e) => e.stopPropagation()}>
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1"
+                className="flex-1 min-w-[110px]"
                 disabled={sendingId === c.id}
                 onClick={() => sendStatementWhatsApp(c as any)}
               >
                 <FileText className="h-4 w-4 ml-1" />
                 {sendingId === c.id ? "جاري..." : "كشف واتساب"}
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 min-w-[100px] bg-success hover:bg-success/90 text-white"
+                disabled={c.balance <= 0}
+                onClick={() => { setPayFor(c as any); setPayAmount(String(c.balance)); setPayNote(""); }}
+              >
+                <Banknote className="h-4 w-4 ml-1" />
+                تسديد
               </Button>
               <Button
                 size="sm"
