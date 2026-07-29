@@ -141,6 +141,20 @@ function CustomersPage() {
     },
   });
 
+  const { data: packages } = useQuery({
+    queryKey: ["customers-page-packages", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("packages")
+        .select("id, name, price, is_active")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as { id: string; name: string; price: number; is_active: boolean }[];
+    },
+  });
+
   const paidByCustomer = useMemo(() => {
     const m = new Map<string, number>();
     for (const p of payments ?? []) {
