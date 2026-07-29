@@ -174,6 +174,7 @@ function PaymentsPage() {
         note, dateStr,
         adminName: profile?.full_name || profile?.username || "المدير",
       });
+      setLastSettled({ applied: r.applied, remaining: r.remaining_debt, agentId });
       qc.invalidateQueries({ queryKey: ["pay-debt"] });
       qc.invalidateQueries({ queryKey: ["card-requests"] });
       refetchDebt();
