@@ -12,10 +12,17 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
-import { displayPhone, fmtMoney, fmtArabicDateTimePdf } from "@/lib/format";
-import { HandCoins, Receipt as ReceiptIcon, Share2 } from "lucide-react";
+import { displayPhone, fmtMoney, fmtArabicDateTimePdf, fmtArabicDateTime } from "@/lib/format";
+import { HandCoins, Receipt as ReceiptIcon, Share2, Pencil, Trash2, History } from "lucide-react";
 
 export const Route = createFileRoute("/app/payments")({ component: PaymentsPage });
 
