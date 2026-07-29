@@ -382,7 +382,7 @@ function PaymentsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deletePayment.mutate()}
+              onClick={() => deleteRow && deletePayment.mutate(deleteRow.id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               حذف
