@@ -59,6 +59,8 @@ function CustomersPage() {
   const [chargeFor, setChargeFor] = useState<Customer | null>(null);
   const [chargeAmount, setChargeAmount] = useState("");
   const [chargeNote, setChargeNote] = useState("");
+  const [chargePackageId, setChargePackageId] = useState<string>("");
+  const [chargeQty, setChargeQty] = useState<string>("1");
   const [chargeBusy, setChargeBusy] = useState(false);
 
   async function handleAddCustomer() {
