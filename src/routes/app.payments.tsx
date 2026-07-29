@@ -34,6 +34,7 @@ function PaymentsPage() {
   const [agentId, setAgentId] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
   const [note, setNote] = useState<string>("");
+  const [lastSettled, setLastSettled] = useState<{ applied: number; remaining: number; agentId: string } | null>(null);
 
   const { data: network } = useQuery({
     queryKey: ["pay-network", profile?.id],
