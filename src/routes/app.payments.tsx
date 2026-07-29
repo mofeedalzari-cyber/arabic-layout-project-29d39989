@@ -278,6 +278,118 @@ function PaymentsPage() {
           )}
         </Card>
       </div>
+
+      {agentId && (
+        <Card className="p-4 card-elegant border-0 mt-4">
+          <div className="flex items-center gap-2 font-semibold mb-3">
+            <History className="h-4 w-4 text-primary" /> سجل عمليات التسديد
+          </div>
+          {!history || history.length === 0 ? (
+            <div className="text-sm text-muted-foreground">لا توجد عمليات تسديد لهذا المندوب.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-xs text-muted-foreground border-b">
+                    <th className="p-2 text-right">#</th>
+                    <th className="p-2 text-right">التاريخ</th>
+                    <th className="p-2 text-right">الباقة</th>
+                    <th className="p-2 text-right">المبلغ</th>
+                    <th className="p-2 text-right">الملاحظة</th>
+                    <th className="p-2 text-right">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((p: any, i: number) => (
+                    <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+                      <td className="p-2">{i + 1}</td>
+                      <td className="p-2 whitespace-nowrap">{fmtArabicDateTime(p.created_at)}</td>
+                      <td className="p-2">{p.package_name || "—"}</td>
+                      <td className="p-2 font-semibold text-success">{fmtMoney(p.amount)}</td>
+                      <td className="p-2 text-muted-foreground">{p.note || "—"}</td>
+                      <td className="p-2">
+                        <div className="flex gap-1">
+                          <Button
+                            size="icon" variant="ghost" className="h-8 w-8"
+                            onClick={() => {
+                              setEditRow(p);
+                              setEditAmount(String(p.amount));
+                              setEditNote(p.note ?? "");
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon" variant="ghost" className="h-8 w-8 text-destructive"
+                            onClick={() => setDeleteRow(p)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
+
+      <Dialog open={!!editRow} onOpenChange={(o) => !o && setEditRow(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>تعديل عملية التسديد</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs mb-1.5 block">المبلغ {currency && `(${currency})`}</Label>
+              <Input
+                type="number" inputMode="decimal" min="0" step="0.01"
+                className="rounded-xl"
+                value={editAmount} onChange={(e) => setEditAmount(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="text-xs mb-1.5 block">الملاحظة</Label>
+              <Textarea
+                className="rounded-xl" rows={2}
+                value={editNote} onChange={(e) => setEditNote(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditRow(null)}>إلغاء</Button>
+            <Button
+              onClick={() => editPayment.mutate()}
+              disabled={editPayment.isPending || Number(editAmount) <= 0}
+              className="gradient-primary-bg text-white"
+            >
+              {editPayment.isPending ? "جارٍ الحفظ..." : "حفظ التعديل"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteRow} onOpenChange={(o) => !o && setDeleteRow(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف عملية التسديد؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف عملية التسديد بمبلغ {deleteRow ? fmtMoney(deleteRow.amount) : ""} وإرجاع المبلغ إلى دين المندوب. لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletePayment.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              حذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
