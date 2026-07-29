@@ -68,7 +68,19 @@ function AgentAccountsPage() {
     },
   });
 
-  const netMap = useMemo(() => new Map(networks?.map((n) => [n.id, n]) ?? []), [networks]);
+  const { data: paidRequests } = useQuery({
+    queryKey: ["aa-paid-requests", agentId],
+    enabled: !!agentId,
+    queryFn: async () => {
+      const { data } = await supabase.from("card_requests")
+        .select("network_id, total_value, paid_amount, status")
+        .eq("agent_id", agentId)
+        .eq("status", "APPROVED");
+      return data ?? [];
+    },
+  });
+
+  const [showPaid, setShowPaid] = useState(false);
   const pkgMap = useMemo(() => new Map(packages?.map((p) => [p.id, p]) ?? []), [packages]);
 
   const filteredCards = useMemo(
