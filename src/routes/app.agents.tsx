@@ -410,15 +410,18 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
         return { ...p, soldCount, soldValue };
       });
 
-      const debtByNet = new Map<string, { network_id: string; name: string; amount: number }>();
+      const debtByNet = new Map<string, { network_id: string; name: string; amount: number; paid: number }>();
       let totalDebt = 0;
+      let totalPaid = 0;
       for (const r of requests) {
-        const remaining = Math.max(0, Number(r.total_value ?? 0) - Number(r.paid_amount ?? 0));
-        if (remaining <= 0) continue;
-        totalDebt += remaining;
-        const cur = debtByNet.get(r.network_id) ?? { network_id: r.network_id, name: r.network_name ?? "—", amount: 0 };
+        const paid = Number(r.paid_amount ?? 0);
+        const remaining = Math.max(0, Number(r.total_value ?? 0) - paid);
+        totalPaid += paid;
+        const cur = debtByNet.get(r.network_id) ?? { network_id: r.network_id, name: r.network_name ?? "—", amount: 0, paid: 0 };
         cur.amount += remaining;
+        cur.paid += paid;
         debtByNet.set(r.network_id, cur);
+        totalDebt += remaining;
       }
 
       return {
@@ -431,7 +434,7 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
         byPkg,
         byCurrency: [...byCurrency.entries()].map(([currency, v]) => ({ currency, ...v })),
         byNetwork: [...byNetworkMap.values()],
-        debt: { total: totalDebt, byNet: [...debtByNet.values()].sort((a, b) => b.amount - a.amount) },
+        debt: { total: totalDebt, paid: totalPaid, byNet: [...debtByNet.values()].sort((a, b) => b.amount - a.amount) },
       };
     },
   });
@@ -514,22 +517,29 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
               </Card>
 
               <Card className="p-4 border-0 card-elegant">
-                <SectionTitle icon={Receipt} title="الديون" />
-                <div className="mt-3">
+                <SectionTitle icon={Receipt} title="الديون والمسدد" />
+                <div className="mt-3 flex flex-wrap gap-2">
                   <div className="inline-flex items-center gap-2 rounded-full bg-success/10 px-4 py-2">
                     <span className="text-lg font-extrabold text-success">{fmtMoney(debt?.amount ?? 0)}</span>
                     <span className="text-xs text-muted-foreground">إجمالي الديون</span>
                   </div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2">
+                    <span className="text-lg font-extrabold text-primary">{fmtMoney(debt?.paid ?? 0)}</span>
+                    <span className="text-xs text-muted-foreground">المسدد</span>
+                  </div>
                 </div>
-                {(debt?.amount ?? 0) > 0 && (
+                {((debt?.amount ?? 0) > 0 || (debt?.paid ?? 0) > 0) && (
                   <>
-                    <div className="text-xs text-muted-foreground mt-4 mb-2">تفصيل الديون حسب الشبكة:</div>
+                    <div className="text-xs text-muted-foreground mt-4 mb-2">تفصيل حسب الشبكة:</div>
                     <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-3 py-2">
                       <div className="flex items-center gap-2 text-sm">
                         <Wifi className="h-4 w-4 text-primary" />
                         <span className="font-semibold">{n.name}</span>
                       </div>
-                      <span className="rounded-full bg-success/10 text-success font-bold px-3 py-1 text-sm">{fmtMoney(debt!.amount)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-primary/10 text-primary font-bold px-3 py-1 text-xs">مسدد: {fmtMoney(debt?.paid ?? 0)}</span>
+                        <span className="rounded-full bg-success/10 text-success font-bold px-3 py-1 text-xs">دين: {fmtMoney(debt?.amount ?? 0)}</span>
+                      </div>
                     </div>
                   </>
                 )}
