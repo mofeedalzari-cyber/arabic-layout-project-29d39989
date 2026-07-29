@@ -984,6 +984,16 @@ function CustomersPage() {
                 />
               </div>
               <div>
+                <Label className="text-xs mb-1.5 block">رقم الكرت (اختياري)</Label>
+                <Input
+                  value={chargeCard}
+                  onChange={(e) => setChargeCard(e.target.value)}
+                  placeholder="أدخل رقم الكرت يدوياً"
+                  className="rounded-xl h-11 text-center font-bold ltr-input"
+                  dir="ltr"
+                />
+              </div>
+              <div>
                 <Label className="text-xs mb-1.5 block">السبب / ملاحظة (اختياري)</Label>
                 <Input value={chargeNote} onChange={(e) => setChargeNote(e.target.value)} placeholder="مثال: خدمة إضافية" className="rounded-xl" />
               </div>
