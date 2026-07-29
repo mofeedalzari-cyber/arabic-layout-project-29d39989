@@ -61,6 +61,7 @@ function CustomersPage() {
   const [chargeNote, setChargeNote] = useState("");
   const [chargePackageId, setChargePackageId] = useState<string>("");
   const [chargeQty, setChargeQty] = useState<string>("1");
+  const [chargeCard, setChargeCard] = useState<string>("");
   const [chargeBusy, setChargeBusy] = useState(false);
 
   async function handleAddCustomer() {
@@ -272,9 +273,11 @@ function CustomersPage() {
       const pkg = packages?.find((p) => p.id === chargePackageId);
       const qty = Math.max(1, Number(chargeQty) || 1);
       const noteBase = chargeNote.trim();
+      const cardNo = chargeCard.trim();
       const parts: string[] = [];
       if (pkg) parts.push(`بيع خارجي: ${pkg.name}${qty > 1 ? ` × ${qty}` : ""}`);
       else parts.push("مبلغ مضاف");
+      if (cardNo) parts.push(`رقم الكرت: ${cardNo}`);
       if (noteBase) parts.push(noteBase);
       const note = parts.join(" — ");
       const { error } = await supabase.from("customer_payments").insert({
@@ -286,7 +289,7 @@ function CustomersPage() {
       });
       if (error) { toast.error("تعذر إضافة المبلغ: " + error.message); return; }
       toast.success(`تم إضافة ${fmtMoney(amount)}`);
-      setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1");
+      setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1"); setChargeCard("");
       qc.invalidateQueries({ queryKey: ["customer-payments"] });
     } finally {
       setChargeBusy(false);
@@ -921,7 +924,7 @@ function CustomersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!chargeFor} onOpenChange={(o) => { if (!chargeBusy && !o) { setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1"); } }}>
+      <Dialog open={!!chargeFor} onOpenChange={(o) => { if (!chargeBusy && !o) { setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1"); setChargeCard(""); } }}>
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
             <DialogTitle>إضافة مبلغ على الزبون</DialogTitle>
@@ -978,6 +981,16 @@ function CustomersPage() {
                   onChange={(e) => setChargeAmount(e.target.value)}
                   className="rounded-xl h-11 text-center font-bold"
                   autoFocus
+                />
+              </div>
+              <div>
+                <Label className="text-xs mb-1.5 block">رقم الكرت (اختياري)</Label>
+                <Input
+                  value={chargeCard}
+                  onChange={(e) => setChargeCard(e.target.value)}
+                  placeholder="أدخل رقم الكرت يدوياً"
+                  className="rounded-xl h-11 text-center font-bold ltr-input"
+                  dir="ltr"
                 />
               </div>
               <div>
