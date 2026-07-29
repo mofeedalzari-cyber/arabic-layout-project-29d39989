@@ -329,6 +329,7 @@ function AdminBreakdowns() {
                   { label: "عدد المناديب", value: String(summary.agentsCount) },
                   { label: "إجمالي قيمة المبيعات", value: fmtMoney(summary.salesValue) },
                   { label: "إجمالي ديون المناديب", value: fmtMoney(summary.debts) },
+                  { label: "المسدد", value: fmtMoney(summary.settled) },
                   { label: "الرصيد", value: fmtMoney(summary.collected) },
                 ];
                 const stamp = new Date().toISOString().slice(0, 10);
