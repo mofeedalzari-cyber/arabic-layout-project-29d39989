@@ -116,17 +116,18 @@ function CustomersPage() {
     queryFn: async (): Promise<Sale[]> => {
       const { data, error } = await supabase
         .from("sales")
-        .select("id, transaction_no, package_name, network_name, price, sold_at, customer_id, buyer_name, cards ( username, password )")
+        .select("id, transaction_no, package_name, network_name, price, sold_at, customer_id, buyer_name, card_number, is_external, cards ( username, password )")
         .eq("agent_id", user!.id)
         .order("sold_at", { ascending: false });
       if (error) throw error;
       return (data ?? []).map((s: any) => ({
         ...s,
-        card_username: s.cards?.username ?? null,
+        card_username: s.cards?.username ?? s.card_number ?? null,
         card_password: s.cards?.password ?? null,
       })) as Sale[];
     },
   });
+
 
   const { data: payments } = useQuery({
     queryKey: ["customer-payments", user?.id],
