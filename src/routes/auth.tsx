@@ -6,6 +6,7 @@ import { useAuth, usernameToEmail } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Eye, EyeOff, ChevronLeft, User as UserIcon } from "lucide-react";
 import logo from "@/assets/wifi-store-logo.png";
@@ -42,6 +43,22 @@ function AuthPage() {
   // login
   const [loginPhone, setLoginPhone] = useState("");
   const [loginP, setLoginP] = useState("");
+  // forgot password dialog
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotPhone, setForgotPhone] = useState("");
+  const [forgotNote, setForgotNote] = useState("");
+  const [forgotBusy, setForgotBusy] = useState(false);
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    const ph = phoneSchema.safeParse(forgotPhone);
+    if (!ph.success) return toast.error(ph.error.issues[0].message);
+    setForgotBusy(true);
+    const { error } = await (supabase.rpc as any)("submit_password_reset_request", { _phone: ph.data, _note: forgotNote.trim() || null });
+    setForgotBusy(false);
+    if (error) return toast.error(error.message ?? "تعذر إرسال الطلب");
+    toast.success("تم إرسال طلب استعادة كلمة المرور. سيتواصل معك مدير التطبيق قريبًا.");
+    setForgotOpen(false); setForgotPhone(""); setForgotNote("");
+  }
   // register
   const [regName, setRegName] = useState("");
   const [regPhone, setRegPhone] = useState("");
@@ -124,7 +141,7 @@ function AuthPage() {
               </div>
 
               <div className="text-left -mt-1">
-                <button type="button" className="text-teal-700 text-sm font-medium hover:underline">هل نسيت كلمة المرور؟</button>
+                <button type="button" onClick={() => { setForgotPhone(loginPhone); setForgotOpen(true); }} className="text-teal-700 text-sm font-medium hover:underline">هل نسيت كلمة المرور؟</button>
               </div>
 
               <Button
@@ -252,6 +269,40 @@ function AuthPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent dir="rtl" className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>استعادة كلمة المرور</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleForgot} className="space-y-3">
+            <p className="text-sm text-gray-600">
+              أدخل رقم جوالك المسجّل وسيتواصل معك مدير التطبيق لإعادة تعيين كلمة المرور.
+            </p>
+            <SoftInput dir="rtl" value={forgotPhone} onChange={(e) => setForgotPhone(e.target.value)} placeholder="رقم الجوال" inputMode="tel" />
+            <textarea
+              dir="rtl"
+              value={forgotNote}
+              onChange={(e) => setForgotNote(e.target.value)}
+              placeholder="ملاحظة (اختياري): اسمك أو اسم شبكتك"
+              rows={3}
+              className="w-full rounded-2xl bg-gray-100 border-0 text-right text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 px-4 py-3"
+            />
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button type="button" variant="outline" onClick={() => setForgotOpen(false)}>إلغاء</Button>
+              <Button type="submit" disabled={forgotBusy} className="bg-[#22a06b] hover:bg-[#1c8a5b] text-white">
+                {forgotBusy ? "…" : "إرسال الطلب"}
+              </Button>
+            </DialogFooter>
+          </form>
+          <p className="text-xs text-gray-500 text-center">
+            أو تواصل مباشرة عبر واتساب:{" "}
+            <a href="https://wa.me/967778492884" target="_blank" rel="noreferrer" className="text-teal-700 font-semibold">
+              778492884
+            </a>
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

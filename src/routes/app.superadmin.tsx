@@ -136,11 +136,12 @@ function SuperAdminPage() {
 
 
       <Tabs defaultValue="networks" className="mt-4" dir="rtl">
-        <TabsList dir="rtl" className="grid grid-cols-4 w-full">
+        <TabsList dir="rtl" className="grid grid-cols-5 w-full">
           <TabsTrigger value="networks">الشبكات</TabsTrigger>
           <TabsTrigger value="agents">المناديب</TabsTrigger>
           <TabsTrigger value="packages">الباقات</TabsTrigger>
           <TabsTrigger value="cards">الكروت</TabsTrigger>
+          <TabsTrigger value="resets">استعادة كلمة المرور</TabsTrigger>
         </TabsList>
 
         <TabsContent value="networks" className="mt-3 space-y-3">
@@ -234,7 +235,7 @@ function SuperAdminPage() {
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الاسم</Th><Th>المستخدم</Th><Th>الهاتف</Th><Th>الشبكة</Th><Th>الدور</Th>
-                    <Th>مبيعات</Th><Th>قيمة</Th><Th>الحالة</Th><Th>التسجيل</Th>
+                    <Th>مبيعات</Th><Th>قيمة</Th><Th>الحالة</Th><Th>التسجيل</Th><Th>كلمة المرور</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -249,9 +250,10 @@ function SuperAdminPage() {
                       <Td>{fmtMoney(Number(a.sold_value ?? 0))}</Td>
                       <Td>{a.is_active ? <Badge>مفعل</Badge> : <Badge variant="secondary">موقوف</Badge>}</Td>
                       <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(a.created_at)}</Td>
+                      <Td><ResetPasswordButton userId={a.id} label={a.full_name ?? cleanPhoneLike(a.username) ?? ""} /></Td>
                     </tr>
                   ))}
-                  {agents.data?.length === 0 && <tr><Td colSpan={9} className="text-center text-muted-foreground py-8">لا يوجد مناديب</Td></tr>}
+                  {agents.data?.length === 0 && <tr><Td colSpan={10} className="text-center text-muted-foreground py-8">لا يوجد مناديب</Td></tr>}
                 </tbody>
               </table>
             </div>
@@ -368,6 +370,10 @@ function SuperAdminPage() {
             </div>
           </Card>
         </TabsContent>
+
+        <TabsContent value="resets" className="mt-3 space-y-3">
+          <ResetRequestsPanel />
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -461,3 +467,123 @@ function MyNetworkPanel({ myNetwork, onCreated }: { myNetwork: any | null; onCre
   );
 }
 
+
+function ResetPasswordButton({ userId, label }: { userId: string; label: string }) {
+  const [open, setOpen] = useState(false);
+  const [pwd, setPwd] = useState("");
+  const [pwd2, setPwd2] = useState("");
+  const [show, setShow] = useState(false);
+  const m = useMutation({
+    mutationFn: async () => {
+      if (pwd.length < 6) throw new Error("كلمة المرور 6 أحرف على الأقل");
+      if (pwd !== pwd2) throw new Error("كلمة المرور غير متطابقة");
+      const { error } = await (supabase.rpc as any)("superadmin_reset_password", { _target_user_id: userId, _new_password: pwd });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تعديل كلمة المرور");
+      setOpen(false); setPwd(""); setPwd2("");
+    },
+    onError: (e: any) => toast.error(e.message ?? "فشل التعديل"),
+  });
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setPwd(""); setPwd2(""); } }}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">تعديل</Button>
+      </DialogTrigger>
+      <DialogContent dir="rtl" className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>تعديل كلمة المرور {label ? `— ${label}` : ""}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>كلمة المرور الجديدة</Label>
+            <Input type={show ? "text" : "password"} value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="6 أحرف على الأقل" />
+          </div>
+          <div>
+            <Label>تأكيد كلمة المرور</Label>
+            <Input type={show ? "text" : "password"} value={pwd2} onChange={(e) => setPwd2(e.target.value)} />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
+            إظهار كلمة المرور
+          </label>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
+          <Button disabled={m.isPending} onClick={() => m.mutate()}>حفظ</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ResetRequestsPanel() {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["sa-reset-requests"],
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)("superadmin_reset_requests");
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+  const resolve = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.rpc as any)("superadmin_resolve_reset_request", { _id: id, _status: "RESOLVED" });
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("تم إغلاق الطلب"); qc.invalidateQueries({ queryKey: ["sa-reset-requests"] }); },
+    onError: (e: any) => toast.error(e.message ?? "فشل"),
+  });
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="overflow-x-auto">
+        <table dir="rtl" className="w-full text-sm border-collapse border">
+          <thead className="bg-muted/50">
+            <tr>
+              <Th>رقم الجوال</Th><Th>المستخدم المطابق</Th><Th>الاسم</Th><Th>الشبكة</Th>
+              <Th>ملاحظة</Th><Th>الحالة</Th><Th>التاريخ</Th><Th>إجراءات</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {(q.data ?? []).map((r: any) => (
+              <tr key={r.id} className="border-t">
+                <Td dir="ltr" className="font-mono">{r.phone}</Td>
+                <Td>{cleanPhoneLike(r.matched_username) || "—"}</Td>
+                <Td>{r.matched_full_name ?? "—"}</Td>
+                <Td>{r.matched_network_name ?? "—"}</Td>
+                <Td className="max-w-[220px]">{r.note ?? "—"}</Td>
+                <Td>{r.status === "PENDING" ? <Badge>قيد الانتظار</Badge> : <Badge variant="secondary">تم</Badge>}</Td>
+                <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(r.created_at)}</Td>
+                <Td>
+                  <div className="flex gap-1 flex-wrap">
+                    {r.matched_user_id && (
+                      <ResetPasswordButton userId={r.matched_user_id} label={r.matched_full_name ?? r.phone} />
+                    )}
+                    {r.status === "PENDING" && (
+                      <Button size="sm" variant="ghost" disabled={resolve.isPending} onClick={() => resolve.mutate(r.id)}>
+                        إغلاق
+                      </Button>
+                    )}
+                    {r.phone && (
+                      <a
+                        href={`https://wa.me/${r.phone.replace(/\D/g, "")}`}
+                        target="_blank" rel="noreferrer"
+                        className="inline-flex items-center h-8 px-2 rounded-md text-xs bg-[#25D366] text-white"
+                      >
+                        واتساب
+                      </a>
+                    )}
+                  </div>
+                </Td>
+              </tr>
+            ))}
+            {q.data?.length === 0 && <tr><Td colSpan={8} className="text-center text-muted-foreground py-8">لا توجد طلبات</Td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
