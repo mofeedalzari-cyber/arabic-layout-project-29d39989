@@ -453,6 +453,10 @@ type PrintArgs = {
   byPackage: { key: string; label: string; sub?: string; currency?: string; price?: number; withdrawn: number; sold: number; value: number }[];
   sales: { id: string; transaction_no?: string | null; package_name: string; network_name: string; network_id: string; price: number | string; sold_at: string }[];
   netMap: Map<string, { currency?: string | null }>;
+  paidRows: { key: string; label: string; total: number; paid: number; remaining: number }[];
+  totalDebt: number;
+  totalPaid: number;
+  totalRemaining: number;
 };
 
 
@@ -465,10 +469,20 @@ async function printAgentReport(a: PrintArgs) {
     { label: "إجمالي المسحوب", value: a.withdrawn },
     { label: "مباع / مستخدم", value: a.sold },
     { label: "قيمة المبيعات", value: fmtMoney(a.salesValue) },
+    { label: "إجمالي المستحق", value: fmtMoney(a.totalDebt) },
+    { label: "المسدد", value: fmtMoney(a.totalPaid) },
+    { label: "الدين المتبقي", value: fmtMoney(a.totalRemaining) },
     { label: "فئات / شبكات", value: `${a.distinctPackages} / ${a.networksCount}` },
   ];
 
   const sections = [
+    {
+      title: "المبلغ المسدد حسب الشبكة",
+      cols: ["الشبكة", "إجمالي المستحق", "المسدد", "المتبقي"],
+      rows: a.paidRows.length
+        ? a.paidRows.map((r) => [r.label, fmtMoney(r.total), fmtMoney(r.paid), fmtMoney(r.remaining)])
+        : [["—", fmtMoney(0), fmtMoney(0), fmtMoney(0)]],
+    },
     {
       title: "تفاصيل حسب الشبكة",
       cols: ["الشبكة", "مسحوب", "مباع", "قيمة المبيعات"],
