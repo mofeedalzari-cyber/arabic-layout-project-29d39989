@@ -80,13 +80,13 @@ function ManageCardsPage() {
     queryKey: ["net-agents", networkId],
     queryFn: async () => {
       if (!networkId) return [];
-      const { data, error } = await supabase.rpc("admin_list_cards", { _network_id: networkId });
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, username, phone")
+        .eq("network_id", networkId)
+        .order("full_name");
       if (error) throw error;
-      const rows = (data ?? []) as CardRow[];
-      const ids = Array.from(new Set(rows.flatMap((r) => [r.assigned_to, r.sold_to]).filter(Boolean) as string[]));
-      if (!ids.length) return [];
-      const { data: profs } = await supabase.from("profiles").select("id, full_name, username, phone").in("id", ids);
-      return (profs ?? []).map((p: any) => ({
+      return (data ?? []).map((p: any) => ({
         id: p.id as string,
         name: (p.full_name as string | null) || displayPhone(p.phone as string | null, p.username as string | null) || (p.id as string).slice(0, 8),
       }));
