@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useMemo, useState } from "react";
-import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard, UserPlus, User as UserIcon, Banknote, Wallet } from "lucide-react";
+import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard, UserPlus, User as UserIcon, Banknote, Wallet, Plus } from "lucide-react";
 import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
 import { openWhatsApp } from "@/lib/wa-open";
 import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
@@ -56,6 +56,10 @@ function CustomersPage() {
   const [payAmount, setPayAmount] = useState("");
   const [payNote, setPayNote] = useState("");
   const [payBusy, setPayBusy] = useState(false);
+  const [chargeFor, setChargeFor] = useState<Customer | null>(null);
+  const [chargeAmount, setChargeAmount] = useState("");
+  const [chargeNote, setChargeNote] = useState("");
+  const [chargeBusy, setChargeBusy] = useState(false);
 
   async function handleAddCustomer() {
     const name = newName.trim();
@@ -138,7 +142,17 @@ function CustomersPage() {
   const paidByCustomer = useMemo(() => {
     const m = new Map<string, number>();
     for (const p of payments ?? []) {
-      m.set(p.customer_id, (m.get(p.customer_id) ?? 0) + Number(p.amount || 0));
+      const amt = Number(p.amount || 0);
+      if (amt > 0) m.set(p.customer_id, (m.get(p.customer_id) ?? 0) + amt);
+    }
+    return m;
+  }, [payments]);
+
+  const chargesByCustomer = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of payments ?? []) {
+      const amt = Number(p.amount || 0);
+      if (amt < 0) m.set(p.customer_id, (m.get(p.customer_id) ?? 0) + Math.abs(amt));
     }
     return m;
   }, [payments]);
@@ -172,8 +186,10 @@ function CustomersPage() {
     const list = (customers ?? []).map((c) => {
       const st = statsByCustomer.get(c.id) ?? { count: 0, total: 0, last: null };
       const paid = paidByCustomer.get(c.id) ?? 0;
-      const balance = Math.max(st.total - paid, 0);
-      return { ...c, ...st, paid, balance };
+      const charges = chargesByCustomer.get(c.id) ?? 0;
+      const grandTotal = st.total + charges;
+      const balance = Math.max(grandTotal - paid, 0);
+      return { ...c, ...st, paid, charges, grandTotal, balance };
     });
     const s = q.trim().toLowerCase();
     const filtered = s
@@ -184,7 +200,7 @@ function CustomersPage() {
         )
       : list;
     return filtered.sort((a, b) => b.balance - a.balance);
-  }, [customers, statsByCustomer, paidByCustomer, q]);
+  }, [customers, statsByCustomer, paidByCustomer, chargesByCustomer, q]);
 
   const selectedSales = useMemo(
     () => (selected ? (sales ?? []).filter((s) => s.customer_id === selected.id) : []),
@@ -194,8 +210,10 @@ function CustomersPage() {
     () => (selected ? (payments ?? []).filter((p) => p.customer_id === selected.id) : []),
     [selected, payments],
   );
-  const selectedTotal = selectedSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
-  const selectedPaid = selectedPayments.reduce((a, p) => a + Number(p.amount || 0), 0);
+  const selectedSalesTotal = selectedSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+  const selectedCharges = selectedPayments.filter((p) => Number(p.amount) < 0).reduce((a, p) => a + Math.abs(Number(p.amount) || 0), 0);
+  const selectedTotal = selectedSalesTotal + selectedCharges;
+  const selectedPaid = selectedPayments.filter((p) => Number(p.amount) > 0).reduce((a, p) => a + Number(p.amount || 0), 0);
   const selectedBalance = Math.max(selectedTotal - selectedPaid, 0);
 
   async function handleCustomerPayment() {
@@ -224,8 +242,33 @@ function CustomersPage() {
   async function deleteCustomerPayment(id: string) {
     const { error } = await supabase.from("customer_payments").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success("تم حذف الدفعة");
+    toast.success("تم الحذف");
     qc.invalidateQueries({ queryKey: ["customer-payments"] });
+  }
+
+  async function handleAddCharge() {
+    if (!chargeFor || !user?.id) return;
+    const amount = Number(chargeAmount);
+    if (!amount || amount <= 0) { toast.error("أدخل مبلغاً صحيحاً"); return; }
+    setChargeBusy(true);
+    try {
+      const { data: prof } = await supabase.from("profiles").select("network_id").eq("id", user.id).maybeSingle();
+      const noteBase = chargeNote.trim();
+      const note = noteBase ? `مبلغ مضاف: ${noteBase}` : "مبلغ مضاف";
+      const { error } = await supabase.from("customer_payments").insert({
+        customer_id: chargeFor.id,
+        agent_id: user.id,
+        network_id: prof?.network_id ?? null,
+        amount: -Math.abs(amount),
+        note,
+      });
+      if (error) { toast.error("تعذر إضافة المبلغ: " + error.message); return; }
+      toast.success(`تم إضافة ${fmtMoney(amount)}`);
+      setChargeFor(null); setChargeAmount(""); setChargeNote("");
+      qc.invalidateQueries({ queryKey: ["customer-payments"] });
+    } finally {
+      setChargeBusy(false);
+    }
   }
 
 
@@ -443,6 +486,15 @@ function CustomersPage() {
               </Button>
               <Button
                 size="sm"
+                variant="outline"
+                className="flex-1 min-w-[100px] border-warning/40 text-warning hover:bg-warning/10"
+                onClick={() => { setChargeFor(c as any); setChargeAmount(""); setChargeNote(""); }}
+              >
+                <Plus className="h-4 w-4 ml-1" />
+                إضافة مبلغ
+              </Button>
+              <Button
+                size="sm"
                 variant="destructive"
                 onClick={() => setConfirmDelete(c as any)}
               >
@@ -489,6 +541,15 @@ function CustomersPage() {
                     >
                       <Banknote className="h-4 w-4 ml-1" />
                       تسديد
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-warning/40 text-warning hover:bg-warning/10"
+                      onClick={() => { setChargeFor(c as any); setChargeAmount(""); setChargeNote(""); }}
+                    >
+                      <Plus className="h-4 w-4 ml-1" />
+                      إضافة مبلغ
                     </Button>
                     {c.whatsapp && (
                       <Button
@@ -584,6 +645,15 @@ function CustomersPage() {
                   <Button
                     size="sm"
                     variant="outline"
+                    className="flex-1 min-w-[110px] border-warning/40 text-warning hover:bg-warning/10"
+                    onClick={() => { setChargeFor(selected); setChargeAmount(""); setChargeNote(""); }}
+                  >
+                    <Plus className="h-4 w-4 ml-1" />
+                    إضافة مبلغ
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
                     className="flex-1 min-w-[110px]"
                     disabled={sendingId === selected.id}
                     onClick={() => sendStatementWhatsApp(selected)}
@@ -600,23 +670,33 @@ function CustomersPage() {
 
               {selectedPayments.length > 0 && (
                 <div>
-                  <div className="text-sm font-semibold mb-2">سجل التسديدات</div>
+                  <div className="text-sm font-semibold mb-2">سجل التسديدات والمبالغ المضافة</div>
                   <Card className="border-0 card-elegant p-2 space-y-1.5">
-                    {selectedPayments.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 p-2 text-sm">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Wallet className="h-4 w-4 text-success shrink-0" />
-                          <div className="min-w-0">
-                            <div className="font-bold text-success">{fmtMoney(Number(p.amount))}</div>
-                            <div className="text-[10px] text-muted-foreground">{fmtArabicDateTime(p.created_at)}</div>
-                            {p.note && <div className="text-[11px] text-muted-foreground truncate">{p.note}</div>}
+                    {selectedPayments.map((p) => {
+                      const amt = Number(p.amount);
+                      const isCharge = amt < 0;
+                      return (
+                        <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 p-2 text-sm">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {isCharge ? (
+                              <Plus className="h-4 w-4 text-warning shrink-0" />
+                            ) : (
+                              <Wallet className="h-4 w-4 text-success shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <div className={`font-bold ${isCharge ? "text-warning" : "text-success"}`}>
+                                {isCharge ? "+ " : ""}{fmtMoney(Math.abs(amt))}
+                              </div>
+                              <div className="text-[10px] text-muted-foreground">{fmtArabicDateTime(p.created_at)}</div>
+                              {p.note && <div className="text-[11px] text-muted-foreground truncate">{p.note}</div>}
+                            </div>
                           </div>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => { if (confirm("حذف هذا القيد؟")) deleteCustomerPayment(p.id); }}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => { if (confirm("حذف هذه الدفعة؟")) deleteCustomerPayment(p.id); }}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </Card>
                 </div>
               )}
@@ -814,6 +894,44 @@ function CustomersPage() {
             <Button variant="outline" onClick={() => setPayFor(null)} disabled={payBusy}>إلغاء</Button>
             <Button onClick={handleCustomerPayment} disabled={payBusy} className="bg-success hover:bg-success/90 text-white">
               {payBusy ? "جاري..." : "تأكيد التسديد"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!chargeFor} onOpenChange={(o) => { if (!chargeBusy && !o) { setChargeFor(null); setChargeAmount(""); setChargeNote(""); } }}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>إضافة مبلغ على الزبون</DialogTitle>
+          </DialogHeader>
+          {chargeFor && (
+            <div className="space-y-3">
+              <div className="text-sm text-muted-foreground">
+                الزبون: <b className="text-foreground">{chargeFor.name}</b>
+              </div>
+              <div className="text-[11px] text-muted-foreground bg-muted/50 rounded-lg p-2">
+                يُضاف هذا المبلغ إلى رصيد الزبون بدون تسجيل عملية بيع كرت.
+              </div>
+              <div>
+                <Label className="text-xs mb-1.5 block">المبلغ</Label>
+                <Input
+                  type="number" min={0} step="0.01"
+                  value={chargeAmount}
+                  onChange={(e) => setChargeAmount(e.target.value)}
+                  className="rounded-xl h-11 text-center font-bold"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <Label className="text-xs mb-1.5 block">السبب / ملاحظة (اختياري)</Label>
+                <Input value={chargeNote} onChange={(e) => setChargeNote(e.target.value)} placeholder="مثال: خدمة إضافية" className="rounded-xl" />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChargeFor(null)} disabled={chargeBusy}>إلغاء</Button>
+            <Button onClick={handleAddCharge} disabled={chargeBusy} className="bg-warning hover:bg-warning/90 text-white">
+              {chargeBusy ? "جاري..." : "إضافة المبلغ"}
             </Button>
           </DialogFooter>
         </DialogContent>
