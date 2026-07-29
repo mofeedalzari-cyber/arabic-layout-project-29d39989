@@ -716,32 +716,56 @@ function CustomersPage() {
               {selectedPayments.length > 0 && (
                 <div>
                   <div className="text-sm font-semibold mb-2">سجل التسديدات والمبالغ المضافة</div>
-                  <Card className="border-0 card-elegant p-2 space-y-1.5">
-                    {selectedPayments.map((p) => {
-                      const amt = Number(p.amount);
-                      const isCharge = amt < 0;
-                      return (
-                        <div key={p.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 p-2 text-sm">
-                          <div className="flex items-center gap-2 min-w-0">
-                            {isCharge ? (
-                              <Plus className="h-4 w-4 text-warning shrink-0" />
-                            ) : (
-                              <Wallet className="h-4 w-4 text-success shrink-0" />
-                            )}
-                            <div className="min-w-0">
-                              <div className={`font-bold ${isCharge ? "text-warning" : "text-success"}`}>
-                                {isCharge ? "+ " : ""}{fmtMoney(Math.abs(amt))}
-                              </div>
-                              <div className="text-[10px] text-muted-foreground">{fmtArabicDateTime(p.created_at)}</div>
-                              {p.note && <div className="text-[11px] text-muted-foreground truncate">{p.note}</div>}
-                            </div>
-                          </div>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => { if (confirm("حذف هذا القيد؟")) deleteCustomerPayment(p.id); }}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      );
-                    })}
+                  <Card className="border-0 card-elegant overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="text-right whitespace-nowrap">#</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">النوع</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">التاريخ</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">الملاحظة</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">المبلغ</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">إجراءات</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {selectedPayments.map((p, idx) => {
+                            const amt = Number(p.amount);
+                            const isCharge = amt < 0;
+                            return (
+                              <TableRow key={p.id}>
+                                <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
+                                <TableCell>
+                                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${isCharge ? "bg-warning/15 text-warning" : "bg-success/15 text-success"}`}>
+                                    {isCharge ? <Plus className="h-3 w-3" /> : <Wallet className="h-3 w-3" />}
+                                    {isCharge ? "مبلغ مضاف" : "تسديد"}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-[11px] whitespace-nowrap">{fmtArabicDateTime(p.created_at)}</TableCell>
+                                <TableCell className="text-[11px] text-muted-foreground max-w-[220px] truncate" title={p.note ?? ""}>{p.note || "—"}</TableCell>
+                                <TableCell className={`font-bold whitespace-nowrap ${isCharge ? "text-warning" : "text-success"}`}>
+                                  {isCharge ? "+ " : ""}{fmtMoney(Math.abs(amt))}
+                                </TableCell>
+                                <TableCell>
+                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => { if (confirm("حذف هذا القيد؟")) deleteCustomerPayment(p.id); }} title="حذف">
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                          <TableRow className="bg-primary/5 font-bold">
+                            <TableCell colSpan={4} className="text-right">الإجمالي</TableCell>
+                            <TableCell className="whitespace-nowrap">
+                              <div className="text-success text-[11px]">مسدد: {fmtMoney(selectedPaid)}</div>
+                              <div className="text-warning text-[11px]">مضاف: {fmtMoney(selectedCharges)}</div>
+                            </TableCell>
+                            <TableCell />
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
                   </Card>
                 </div>
               )}
