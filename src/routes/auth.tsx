@@ -6,6 +6,7 @@ import { useAuth, usernameToEmail } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Eye, EyeOff, ChevronLeft, User as UserIcon } from "lucide-react";
 import logo from "@/assets/wifi-store-logo.png";
