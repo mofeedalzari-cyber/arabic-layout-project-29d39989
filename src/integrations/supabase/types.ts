@@ -689,6 +689,13 @@ export type Database = {
         Args: { _package_id: string }
         Returns: undefined
       }
+      admin_delete_request_payment: {
+        Args: { _payment_id: string }
+        Returns: {
+          paid_amount: number
+          remaining: number
+        }[]
+      }
       admin_list_cards: {
         Args: {
           _agent_id?: string
@@ -724,6 +731,13 @@ export type Database = {
       }
       admin_stats: { Args: never; Returns: Json }
       admin_unassign_cards: { Args: { _ids: string[] }; Returns: number }
+      admin_update_request_payment: {
+        Args: { _amount: number; _note: string; _payment_id: string }
+        Returns: {
+          paid_amount: number
+          remaining: number
+        }[]
+      }
       admin_wipe_database: { Args: never; Returns: Json }
       agent_cabin: {
         Args: never
