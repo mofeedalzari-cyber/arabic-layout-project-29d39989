@@ -12,10 +12,17 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
-import { displayPhone, fmtMoney, fmtArabicDateTimePdf } from "@/lib/format";
-import { HandCoins, Receipt as ReceiptIcon, Share2 } from "lucide-react";
+import { displayPhone, fmtMoney, fmtArabicDateTimePdf, fmtArabicDateTime } from "@/lib/format";
+import { HandCoins, Receipt as ReceiptIcon, Share2, Pencil, Trash2, History } from "lucide-react";
 
 export const Route = createFileRoute("/app/payments")({ component: PaymentsPage });
 
@@ -63,6 +70,78 @@ function PaymentsPage() {
       const paid = rows.reduce((s, r: any) => s + Number(r.paid_amount || 0), 0);
       return { total, paid, remaining: Math.max(total - paid, 0) };
     },
+  });
+
+  const { data: history, refetch: refetchHistory } = useQuery({
+    queryKey: ["pay-history", agentId, network?.id],
+    enabled: !!agentId && !!network?.id,
+    queryFn: async () => {
+      const { data: reqs } = await supabase
+        .from("card_requests")
+        .select("id, package_name")
+        .eq("agent_id", agentId)
+        .eq("network_id", network!.id);
+      const ids = (reqs ?? []).map((r: any) => r.id);
+      if (ids.length === 0) return [];
+      const nameMap = new Map((reqs ?? []).map((r: any) => [r.id, r.package_name]));
+      const { data } = await supabase
+        .from("request_payments")
+        .select("id, request_id, amount, note, created_at, recorded_by_username")
+        .in("request_id", ids)
+        .order("created_at", { ascending: false });
+      return (data ?? []).map((p: any) => ({ ...p, package_name: nameMap.get(p.request_id) ?? "" }));
+    },
+  });
+
+  const [editRow, setEditRow] = useState<any | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [deleteRow, setDeleteRow] = useState<any | null>(null);
+
+  const invalidateAll = () => {
+    qc.invalidateQueries({ queryKey: ["pay-debt"] });
+    qc.invalidateQueries({ queryKey: ["pay-history"] });
+    qc.invalidateQueries({ queryKey: ["card-requests"] });
+    refetchDebt();
+    refetchHistory();
+  };
+
+  const editPayment = useMutation({
+    mutationFn: async () => {
+      const amt = Number(editAmount);
+      if (!amt || amt <= 0) throw new Error("INVALID_AMOUNT");
+      const { error } = await supabase.rpc("admin_update_request_payment" as any, {
+        _payment_id: editRow.id, _amount: amt, _note: editNote || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تعديل عملية التسديد");
+      setEditRow(null);
+      invalidateAll();
+    },
+    onError: (e: Error) => {
+      const m = e.message.includes("INVALID_AMOUNT") ? "أدخل مبلغاً صحيحاً"
+        : e.message.includes("EXCEEDS_TOTAL") ? "المبلغ يتجاوز إجمالي المستحق"
+        : e.message.includes("FORBIDDEN") ? "غير مسموح"
+        : e.message.includes("NOT_FOUND") ? "العملية غير موجودة" : e.message;
+      toast.error(m);
+    },
+  });
+
+  const deletePayment = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("admin_delete_request_payment" as any, {
+        _payment_id: deleteRow.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف عملية التسديد");
+      setDeleteRow(null);
+      invalidateAll();
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const agent = useMemo(() => agents?.find((a) => a.id === agentId), [agents, agentId]);
@@ -199,6 +278,118 @@ function PaymentsPage() {
           )}
         </Card>
       </div>
+
+      {agentId && (
+        <Card className="p-4 card-elegant border-0 mt-4">
+          <div className="flex items-center gap-2 font-semibold mb-3">
+            <History className="h-4 w-4 text-primary" /> سجل عمليات التسديد
+          </div>
+          {!history || history.length === 0 ? (
+            <div className="text-sm text-muted-foreground">لا توجد عمليات تسديد لهذا المندوب.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-xs text-muted-foreground border-b">
+                    <th className="p-2 text-right">#</th>
+                    <th className="p-2 text-right">التاريخ</th>
+                    <th className="p-2 text-right">الباقة</th>
+                    <th className="p-2 text-right">المبلغ</th>
+                    <th className="p-2 text-right">الملاحظة</th>
+                    <th className="p-2 text-right">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((p: any, i: number) => (
+                    <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+                      <td className="p-2">{i + 1}</td>
+                      <td className="p-2 whitespace-nowrap">{fmtArabicDateTime(p.created_at)}</td>
+                      <td className="p-2">{p.package_name || "—"}</td>
+                      <td className="p-2 font-semibold text-success">{fmtMoney(p.amount)}</td>
+                      <td className="p-2 text-muted-foreground">{p.note || "—"}</td>
+                      <td className="p-2">
+                        <div className="flex gap-1">
+                          <Button
+                            size="icon" variant="ghost" className="h-8 w-8"
+                            onClick={() => {
+                              setEditRow(p);
+                              setEditAmount(String(p.amount));
+                              setEditNote(p.note ?? "");
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon" variant="ghost" className="h-8 w-8 text-destructive"
+                            onClick={() => setDeleteRow(p)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
+
+      <Dialog open={!!editRow} onOpenChange={(o) => !o && setEditRow(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>تعديل عملية التسديد</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs mb-1.5 block">المبلغ {currency && `(${currency})`}</Label>
+              <Input
+                type="number" inputMode="decimal" min="0" step="0.01"
+                className="rounded-xl"
+                value={editAmount} onChange={(e) => setEditAmount(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="text-xs mb-1.5 block">الملاحظة</Label>
+              <Textarea
+                className="rounded-xl" rows={2}
+                value={editNote} onChange={(e) => setEditNote(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditRow(null)}>إلغاء</Button>
+            <Button
+              onClick={() => editPayment.mutate()}
+              disabled={editPayment.isPending || Number(editAmount) <= 0}
+              className="gradient-primary-bg text-white"
+            >
+              {editPayment.isPending ? "جارٍ الحفظ..." : "حفظ التعديل"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteRow} onOpenChange={(o) => !o && setDeleteRow(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف عملية التسديد؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف عملية التسديد بمبلغ {deleteRow ? fmtMoney(deleteRow.amount) : ""} وإرجاع المبلغ إلى دين المندوب. لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletePayment.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              حذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
