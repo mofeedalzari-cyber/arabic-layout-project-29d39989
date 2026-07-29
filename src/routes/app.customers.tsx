@@ -921,7 +921,7 @@ function CustomersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!chargeFor} onOpenChange={(o) => { if (!chargeBusy && !o) { setChargeFor(null); setChargeAmount(""); setChargeNote(""); } }}>
+      <Dialog open={!!chargeFor} onOpenChange={(o) => { if (!chargeBusy && !o) { setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1"); } }}>
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
             <DialogTitle>إضافة مبلغ على الزبون</DialogTitle>
@@ -932,8 +932,44 @@ function CustomersPage() {
                 الزبون: <b className="text-foreground">{chargeFor.name}</b>
               </div>
               <div className="text-[11px] text-muted-foreground bg-muted/50 rounded-lg p-2">
-                يُضاف هذا المبلغ إلى رصيد الزبون بدون تسجيل عملية بيع كرت.
+                يُضاف هذا المبلغ إلى رصيد الزبون بدون تسجيل عملية بيع كرت. يمكنك اختيار الباقة إذا كان الكرت مُباعاً خارج التطبيق.
               </div>
+              <div>
+                <Label className="text-xs mb-1.5 block">الباقة (اختياري — بيع خارجي)</Label>
+                <select
+                  value={chargePackageId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setChargePackageId(id);
+                    const pkg = packages?.find((p) => p.id === id);
+                    const qty = Math.max(1, Number(chargeQty) || 1);
+                    if (pkg) setChargeAmount(String(Number(pkg.price) * qty));
+                  }}
+                  className="w-full h-11 rounded-xl border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">— بدون باقة —</option>
+                  {(packages ?? []).map((p) => (
+                    <option key={p.id} value={p.id}>{p.name} — {fmtMoney(p.price)}</option>
+                  ))}
+                </select>
+              </div>
+              {chargePackageId && (
+                <div>
+                  <Label className="text-xs mb-1.5 block">الكمية</Label>
+                  <Input
+                    type="number" min={1} step="1"
+                    value={chargeQty}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setChargeQty(v);
+                      const pkg = packages?.find((p) => p.id === chargePackageId);
+                      const qty = Math.max(1, Number(v) || 1);
+                      if (pkg) setChargeAmount(String(Number(pkg.price) * qty));
+                    }}
+                    className="rounded-xl h-11 text-center font-bold"
+                  />
+                </div>
+              )}
               <div>
                 <Label className="text-xs mb-1.5 block">المبلغ</Label>
                 <Input
