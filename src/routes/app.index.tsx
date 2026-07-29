@@ -96,6 +96,13 @@ function AdminBreakdowns() {
       return (data ?? []).reduce((s, r: any) => s + Number(r.paid_amount || 0), 0);
     },
   });
+  const { data: paymentsSettled } = useQuery({
+    queryKey: ["dash-payments-settled"],
+    queryFn: async () => {
+      const { data } = await supabase.from("request_payments").select("amount");
+      return (data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
+    },
+  });
   const { data: agents } = useQuery({
     queryKey: ["dash-agents"],
     queryFn: async () => {
