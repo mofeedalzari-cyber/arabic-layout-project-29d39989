@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/select";
 import { useMemo, useState } from "react";
 import { displayPhone, fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf } from "@/lib/format";
-import { Wifi, Package as PackageIcon, ShoppingCart, DollarSign, Layers, Clock, Printer } from "lucide-react";
+import { Wifi, Package as PackageIcon, ShoppingCart, DollarSign, Layers, Clock, Printer, HandCoins } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/agent-accounts")({ component: AgentAccountsPage });
 
