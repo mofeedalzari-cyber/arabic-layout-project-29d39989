@@ -370,6 +370,10 @@ function SuperAdminPage() {
             </div>
           </Card>
         </TabsContent>
+
+        <TabsContent value="resets" className="mt-3 space-y-3">
+          <ResetRequestsPanel />
+        </TabsContent>
       </Tabs>
     </div>
   );
