@@ -477,6 +477,36 @@ export type Database = {
           },
         ]
       }
+      password_reset_requests: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          phone: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          phone: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          phone?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -876,6 +906,10 @@ export type Database = {
           remaining_debt: number
         }[]
       }
+      submit_password_reset_request: {
+        Args: { _note?: string; _phone: string }
+        Returns: undefined
+      }
       superadmin_agents: {
         Args: never
         Returns: {
@@ -972,6 +1006,29 @@ export type Database = {
           price: number
           sold: number
         }[]
+      }
+      superadmin_reset_password: {
+        Args: { _new_password: string; _target_user_id: string }
+        Returns: undefined
+      }
+      superadmin_reset_requests: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          matched_full_name: string
+          matched_network_name: string
+          matched_user_id: string
+          matched_username: string
+          note: string
+          phone: string
+          resolved_at: string
+          status: string
+        }[]
+      }
+      superadmin_resolve_reset_request: {
+        Args: { _id: string; _status?: string }
+        Returns: undefined
       }
       superadmin_set_network_active: {
         Args: { _active: boolean; _network_id: string }
