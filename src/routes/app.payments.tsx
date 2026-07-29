@@ -266,11 +266,16 @@ function PaymentsPage() {
               {agentPhone && agentPhone !== "—" && (
                 <Button
                   variant="outline" className="w-full rounded-xl mt-1"
-                  onClick={() => openWhatsApp(agentPhone, buildWhatsAppText({
-                    agentName, networkName: network?.name ?? "—",
-                    amount: Number(amount) || 0, remaining: Math.max(remaining - (Number(amount) || 0), 0),
-                    currency, adminName: profile?.full_name || profile?.username || "المدير",
-                  }))}
+                  onClick={() => {
+                    const useLast = lastSettled && lastSettled.agentId === agentId && !Number(amount);
+                    const waAmount = useLast ? lastSettled!.applied : (Number(amount) || 0);
+                    const waRemaining = useLast ? lastSettled!.remaining : Math.max(remaining - (Number(amount) || 0), 0);
+                    openWhatsApp(agentPhone, buildWhatsAppText({
+                      agentName, networkName: network?.name ?? "—",
+                      amount: waAmount, remaining: waRemaining,
+                      currency, adminName: profile?.full_name || profile?.username || "المدير",
+                    }));
+                  }}
                 >
                   <Share2 className="h-4 w-4 ml-1" />
                   إرسال رسالة تأكيد عبر واتساب
