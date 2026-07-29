@@ -410,15 +410,18 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
         return { ...p, soldCount, soldValue };
       });
 
-      const debtByNet = new Map<string, { network_id: string; name: string; amount: number }>();
+      const debtByNet = new Map<string, { network_id: string; name: string; amount: number; paid: number }>();
       let totalDebt = 0;
+      let totalPaid = 0;
       for (const r of requests) {
-        const remaining = Math.max(0, Number(r.total_value ?? 0) - Number(r.paid_amount ?? 0));
-        if (remaining <= 0) continue;
-        totalDebt += remaining;
-        const cur = debtByNet.get(r.network_id) ?? { network_id: r.network_id, name: r.network_name ?? "—", amount: 0 };
+        const paid = Number(r.paid_amount ?? 0);
+        const remaining = Math.max(0, Number(r.total_value ?? 0) - paid);
+        totalPaid += paid;
+        const cur = debtByNet.get(r.network_id) ?? { network_id: r.network_id, name: r.network_name ?? "—", amount: 0, paid: 0 };
         cur.amount += remaining;
+        cur.paid += paid;
         debtByNet.set(r.network_id, cur);
+        totalDebt += remaining;
       }
 
       return {
@@ -431,7 +434,7 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
         byPkg,
         byCurrency: [...byCurrency.entries()].map(([currency, v]) => ({ currency, ...v })),
         byNetwork: [...byNetworkMap.values()],
-        debt: { total: totalDebt, byNet: [...debtByNet.values()].sort((a, b) => b.amount - a.amount) },
+        debt: { total: totalDebt, paid: totalPaid, byNet: [...debtByNet.values()].sort((a, b) => b.amount - a.amount) },
       };
     },
   });
