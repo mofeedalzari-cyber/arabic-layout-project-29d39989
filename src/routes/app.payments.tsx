@@ -130,9 +130,9 @@ function PaymentsPage() {
   });
 
   const deletePayment = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (paymentId: string) => {
       const { error } = await supabase.rpc("admin_delete_request_payment" as any, {
-        _payment_id: deleteRow.id,
+        _payment_id: paymentId,
       });
       if (error) throw error;
     },
@@ -382,7 +382,7 @@ function PaymentsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deletePayment.mutate()}
+              onClick={() => deleteRow && deletePayment.mutate(deleteRow.id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               حذف
