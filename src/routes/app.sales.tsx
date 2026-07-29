@@ -89,17 +89,18 @@ function SalesPage() {
     queryKey: ["sales"],
     queryFn: async () => {
       const { data, error } = await supabase.from("sales")
-        .select("id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, customers ( name ), cards ( username, password )")
+        .select("id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_number, is_external, customers ( name ), cards ( username, password )")
         .order("sold_at", { ascending: false }).limit(500);
       if (error) throw error;
       return (data ?? []).map((s: any) => ({
         ...s,
         customer_name: s.customers?.name ?? null,
-        card_username: s.cards?.username ?? null,
+        card_username: s.cards?.username ?? s.card_number ?? null,
         card_password: s.cards?.password ?? null,
       })) as SaleRow[];
     },
   });
+
 
   const customerOptions = useMemo(() => {
     const map = new Map<string, string>();
