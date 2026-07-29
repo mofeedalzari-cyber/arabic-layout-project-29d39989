@@ -17,7 +17,7 @@ export const backupMyAgentData = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
 
-    const [customers, sales, requests, cards] = await Promise.all([
+    const [customers, sales, requests, cards, custPayments] = await Promise.all([
       supabase.from("customers").select("*").eq("agent_id", userId),
       supabase.from("sales").select("*").eq("agent_id", userId),
       supabase.from("card_requests").select("*").eq("agent_id", userId),
@@ -25,9 +25,10 @@ export const backupMyAgentData = createServerFn({ method: "POST" })
         .from("cards")
         .select("*")
         .or(`assigned_to.eq.${userId},sold_to.eq.${userId}`),
+      supabase.from("customer_payments").select("*").eq("agent_id", userId),
     ]);
 
-    const errs = [customers.error, sales.error, requests.error, cards.error].filter(Boolean);
+    const errs = [customers.error, sales.error, requests.error, cards.error, custPayments.error].filter(Boolean);
     if (errs.length) throw new Error(errs.map((e) => e!.message).join(" | "));
 
     // request_payments recorded by the agent
@@ -51,8 +52,10 @@ export const backupMyAgentData = createServerFn({ method: "POST" })
       card_requests: requests.data ?? [],
       cards: cards.data ?? [],
       request_payments: payments,
+      customer_payments: custPayments.data ?? [],
     };
   });
+
 
 /**
  * Restore the agent's own data from a backup file.
