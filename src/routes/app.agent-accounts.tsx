@@ -326,6 +326,32 @@ function AgentAccountsPage() {
           </Card>
         </div>
       )}
+
+      <Dialog open={showPaid} onOpenChange={setShowPaid}>
+        <DialogContent className="max-w-2xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HandCoins className="h-5 w-5 text-primary" />
+              المبلغ المسدد — تفاصيل حسب الشبكة
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <Stat icon={DollarSign} label="إجمالي المستحق" value={fmtMoney(totalDebt)} />
+            <Stat icon={HandCoins} label="المسدد" value={fmtMoney(totalPaid)} />
+            <Stat icon={Layers} label="المتبقي" value={fmtMoney(totalRemaining)} />
+          </div>
+          <StyledTable
+            cols={["الشبكة", "إجمالي المستحق", "المسدد", "المتبقي"]}
+            rows={filteredPaidRows.map((r) => [
+              { text: r.label },
+              { text: fmtMoney(r.total), tone: "muted", align: "center" },
+              { text: fmtMoney(r.paid), tone: "success", align: "center" },
+              { text: fmtMoney(r.remaining), tone: "warning", align: "center" },
+            ])}
+            empty="لا توجد مبالغ مسددة."
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
