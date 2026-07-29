@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/select";
 import { useMemo, useState } from "react";
 import { displayPhone, fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf } from "@/lib/format";
-import { Wifi, Package as PackageIcon, ShoppingCart, DollarSign, Layers, Clock, Printer } from "lucide-react";
+import { Wifi, Package as PackageIcon, ShoppingCart, DollarSign, Layers, Clock, Printer, HandCoins } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/agent-accounts")({ component: AgentAccountsPage });
 
@@ -67,8 +68,49 @@ function AgentAccountsPage() {
     },
   });
 
+  const { data: paidRequests } = useQuery({
+    queryKey: ["aa-paid-requests", agentId],
+    enabled: !!agentId,
+    queryFn: async () => {
+      const { data } = await supabase.from("card_requests")
+        .select("network_id, total_value, paid_amount, status")
+        .eq("agent_id", agentId)
+        .eq("status", "APPROVED");
+      return data ?? [];
+    },
+  });
+
+  const [showPaid, setShowPaid] = useState(false);
   const netMap = useMemo(() => new Map(networks?.map((n) => [n.id, n]) ?? []), [networks]);
   const pkgMap = useMemo(() => new Map(packages?.map((p) => [p.id, p]) ?? []), [packages]);
+
+  const paidByNetwork = useMemo(() => {
+    const m = new Map<string, { total: number; paid: number }>();
+    for (const r of paidRequests ?? []) {
+      const cur = m.get(r.network_id) ?? { total: 0, paid: 0 };
+      cur.total += Number((r as any).total_value || 0);
+      cur.paid += Number((r as any).paid_amount || 0);
+      m.set(r.network_id, cur);
+    }
+    return m;
+  }, [paidRequests]);
+
+  const filteredPaidRows = useMemo(() => {
+    const entries = Array.from(paidByNetwork.entries()).filter(
+      ([nid]) => networkId === "all" || nid === networkId
+    );
+    return entries.map(([nid, v]) => ({
+      key: nid,
+      label: netMap.get(nid)?.name ?? "—",
+      total: v.total,
+      paid: v.paid,
+      remaining: Math.max(v.total - v.paid, 0),
+    }));
+  }, [paidByNetwork, netMap, networkId]);
+
+  const totalPaid = filteredPaidRows.reduce((s, r) => s + r.paid, 0);
+  const totalDebt = filteredPaidRows.reduce((s, r) => s + r.total, 0);
+  const totalRemaining = Math.max(totalDebt - totalPaid, 0);
 
   const filteredCards = useMemo(
     () => (cards ?? []).filter((c) => networkId === "all" || c.network_id === networkId),
@@ -184,18 +226,29 @@ function AgentAccountsPage() {
                 <div className="text-sm text-muted-foreground mb-1">بيانات المندوب</div>
                 <div className="text-lg font-bold [overflow-wrap:anywhere]">{agentLabel}</div>
               </div>
-              <Button
-                onClick={() => printAgentReport({
-                  agentLabel, networkFilter: networkId === "all" ? "كل الشبكات" : (netMap.get(networkId)?.name ?? ""),
-                  withdrawn, sold, salesValue, distinctPackages: distinctPackages.size, networksCount,
-                  byNetwork, byPackage, sales: filteredSales, netMap,
-                })}
-                className="shrink-0 rounded-xl gradient-primary-bg text-white"
-                size="sm"
-              >
-                <Printer className="h-4 w-4 ml-1" />
-                طباعة PDF
-              </Button>
+              <div className="flex flex-col gap-2 shrink-0">
+                <Button
+                  onClick={() => setShowPaid(true)}
+                  variant="outline"
+                  className="rounded-xl"
+                  size="sm"
+                >
+                  <HandCoins className="h-4 w-4 ml-1" />
+                  المبلغ المسدد
+                </Button>
+                <Button
+                  onClick={() => printAgentReport({
+                    agentLabel, networkFilter: networkId === "all" ? "كل الشبكات" : (netMap.get(networkId)?.name ?? ""),
+                    withdrawn, sold, salesValue, distinctPackages: distinctPackages.size, networksCount,
+                    byNetwork, byPackage, sales: filteredSales, netMap,
+                  })}
+                  className="rounded-xl gradient-primary-bg text-white"
+                  size="sm"
+                >
+                  <Printer className="h-4 w-4 ml-1" />
+                  طباعة PDF
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <Stat icon={PackageIcon} label="مسحوب" value={String(withdrawn)} />
@@ -273,6 +326,32 @@ function AgentAccountsPage() {
           </Card>
         </div>
       )}
+
+      <Dialog open={showPaid} onOpenChange={setShowPaid}>
+        <DialogContent className="max-w-2xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HandCoins className="h-5 w-5 text-primary" />
+              المبلغ المسدد — تفاصيل حسب الشبكة
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <Stat icon={DollarSign} label="إجمالي المستحق" value={fmtMoney(totalDebt)} />
+            <Stat icon={HandCoins} label="المسدد" value={fmtMoney(totalPaid)} />
+            <Stat icon={Layers} label="المتبقي" value={fmtMoney(totalRemaining)} />
+          </div>
+          <StyledTable
+            cols={["الشبكة", "إجمالي المستحق", "المسدد", "المتبقي"]}
+            rows={filteredPaidRows.map((r) => [
+              { text: r.label },
+              { text: fmtMoney(r.total), tone: "muted", align: "center" },
+              { text: fmtMoney(r.paid), tone: "success", align: "center" },
+              { text: fmtMoney(r.remaining), tone: "warning", align: "center" },
+            ])}
+            empty="لا توجد مبالغ مسددة."
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
