@@ -96,6 +96,13 @@ function AdminBreakdowns() {
       return (data ?? []).reduce((s, r: any) => s + Number(r.paid_amount || 0), 0);
     },
   });
+  const { data: paymentsSettled } = useQuery({
+    queryKey: ["dash-payments-settled"],
+    queryFn: async () => {
+      const { data } = await supabase.from("request_payments").select("amount");
+      return (data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
+    },
+  });
   const { data: agents } = useQuery({
     queryKey: ["dash-agents"],
     queryFn: async () => {
@@ -143,8 +150,8 @@ function AdminBreakdowns() {
       const p = pkgMap.get(c.package_id);
       return s + (p ? Number(p.price) : 0);
     }, 0);
-    return { total, sold, remaining, salesValue, debts, collected: paymentsCollected ?? 0, agentsCount: agents?.length ?? 0 };
-  }, [cards, sales, pkgMap, agents, paymentsCollected]);
+    return { total, sold, remaining, salesValue, debts, collected: paymentsCollected ?? 0, settled: paymentsSettled ?? 0, agentsCount: agents?.length ?? 0 };
+  }, [cards, sales, pkgMap, agents, paymentsCollected, paymentsSettled]);
 
   const agentStats = useMemo(() => {
     type Row = { agentId: string; agent: string; phone: string; pkg: string; price: number; currency?: string; holding: number };
@@ -178,6 +185,7 @@ function AdminBreakdowns() {
       { label: "عدد المناديب", value: summary.agentsCount },
       { label: "إجمالي قيمة المبيعات", value: fmtMoney(summary.salesValue) },
       { label: "إجمالي ديون المناديب", value: fmtMoney(summary.debts) },
+      { label: "المسدد", value: fmtMoney(summary.settled) },
       { label: "الرصيد", value: fmtMoney(summary.collected) },
     ];
     const sections: TableSection[] = [
@@ -244,6 +252,7 @@ function AdminBreakdowns() {
           <SummaryItem label="عدد المناديب" value={String(summary.agentsCount)} />
           <SummaryItem label="إجمالي قيمة المبيعات" value={fmtMoney(summary.salesValue)} tone="primary" />
           <SummaryItem label="إجمالي ديون المناديب" value={fmtMoney(summary.debts)} tone="danger" />
+          <SummaryItem label="المسدد" value={fmtMoney(summary.settled)} tone="primary" />
           <SummaryItem
             label="الرصيد"
             value={fmtMoney(summary.collected)}
@@ -320,6 +329,7 @@ function AdminBreakdowns() {
                   { label: "عدد المناديب", value: String(summary.agentsCount) },
                   { label: "إجمالي قيمة المبيعات", value: fmtMoney(summary.salesValue) },
                   { label: "إجمالي ديون المناديب", value: fmtMoney(summary.debts) },
+                  { label: "المسدد", value: fmtMoney(summary.settled) },
                   { label: "الرصيد", value: fmtMoney(summary.collected) },
                 ];
                 const stamp = new Date().toISOString().slice(0, 10);
