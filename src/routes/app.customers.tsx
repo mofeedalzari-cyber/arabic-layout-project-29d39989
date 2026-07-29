@@ -273,9 +273,11 @@ function CustomersPage() {
       const pkg = packages?.find((p) => p.id === chargePackageId);
       const qty = Math.max(1, Number(chargeQty) || 1);
       const noteBase = chargeNote.trim();
+      const cardNo = chargeCard.trim();
       const parts: string[] = [];
       if (pkg) parts.push(`بيع خارجي: ${pkg.name}${qty > 1 ? ` × ${qty}` : ""}`);
       else parts.push("مبلغ مضاف");
+      if (cardNo) parts.push(`رقم الكرت: ${cardNo}`);
       if (noteBase) parts.push(noteBase);
       const note = parts.join(" — ");
       const { error } = await supabase.from("customer_payments").insert({
@@ -287,7 +289,7 @@ function CustomersPage() {
       });
       if (error) { toast.error("تعذر إضافة المبلغ: " + error.message); return; }
       toast.success(`تم إضافة ${fmtMoney(amount)}`);
-      setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1");
+      setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1"); setChargeCard("");
       qc.invalidateQueries({ queryKey: ["customer-payments"] });
     } finally {
       setChargeBusy(false);
