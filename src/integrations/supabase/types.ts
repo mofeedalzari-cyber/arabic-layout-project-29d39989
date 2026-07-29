@@ -561,9 +561,11 @@ export type Database = {
           agent_id: string | null
           agent_username: string
           buyer_name: string | null
-          card_id: string
+          card_id: string | null
+          card_number: string | null
           customer_id: string | null
           id: string
+          is_external: boolean
           network_id: string
           network_name: string
           package_id: string
@@ -576,9 +578,11 @@ export type Database = {
           agent_id?: string | null
           agent_username: string
           buyer_name?: string | null
-          card_id: string
+          card_id?: string | null
+          card_number?: string | null
           customer_id?: string | null
           id?: string
+          is_external?: boolean
           network_id: string
           network_name: string
           package_id: string
@@ -591,9 +595,11 @@ export type Database = {
           agent_id?: string | null
           agent_username?: string
           buyer_name?: string | null
-          card_id?: string
+          card_id?: string | null
+          card_number?: string | null
           customer_id?: string | null
           id?: string
+          is_external?: boolean
           network_id?: string
           network_name?: string
           package_id?: string
@@ -791,6 +797,17 @@ export type Database = {
           package_id: string
           sold: number
         }[]
+      }
+      record_external_sale: {
+        Args: {
+          _buyer_name: string
+          _card_number: string
+          _customer_id: string
+          _package_id: string
+          _quantity: number
+          _unit_price: number
+        }
+        Returns: number
       }
       record_request_payment: {
         Args: { _amount: number; _note?: string; _request_id: string }
