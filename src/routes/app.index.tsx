@@ -252,6 +252,7 @@ function AdminBreakdowns() {
           <SummaryItem label="عدد المناديب" value={String(summary.agentsCount)} />
           <SummaryItem label="إجمالي قيمة المبيعات" value={fmtMoney(summary.salesValue)} tone="primary" />
           <SummaryItem label="إجمالي ديون المناديب" value={fmtMoney(summary.debts)} tone="danger" />
+          <SummaryItem label="المسدد" value={fmtMoney(summary.settled)} tone="primary" />
           <SummaryItem
             label="الرصيد"
             value={fmtMoney(summary.collected)}
