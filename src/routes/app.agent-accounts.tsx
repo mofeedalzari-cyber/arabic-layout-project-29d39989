@@ -241,6 +241,7 @@ function AgentAccountsPage() {
                     agentLabel, networkFilter: networkId === "all" ? "كل الشبكات" : (netMap.get(networkId)?.name ?? ""),
                     withdrawn, sold, salesValue, distinctPackages: distinctPackages.size, networksCount,
                     byNetwork, byPackage, sales: filteredSales, netMap,
+                    paidRows: filteredPaidRows, totalDebt, totalPaid, totalRemaining,
                   })}
                   className="rounded-xl gradient-primary-bg text-white"
                   size="sm"
