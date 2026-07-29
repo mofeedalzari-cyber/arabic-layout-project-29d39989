@@ -82,7 +82,39 @@ function SettingsPage() {
 }
 
 
+function WhatsAppAppCard() {
+  const [pref, setPref] = useState<WaApp>("auto");
+  useEffect(() => { setPref(getWaApp()); }, []);
+  const opts: WaApp[] = ["auto", "business", "personal"];
+  return (
+    <Card className="card-elegant border-0 p-5 max-w-md mt-6 space-y-3">
+      <div className="flex items-center gap-2 font-semibold">
+        <MessageCircle className="h-4 w-4 text-primary" /> تطبيق واتساب المُستخدم للإرسال
+      </div>
+      <p className="text-xs text-muted-foreground">
+        اختر التطبيق الذي يفتح عند إرسال الكروت والكشوفات وسندات السداد.
+      </p>
+      <div className="grid gap-2">
+        {opts.map((o) => (
+          <button
+            key={o}
+            type="button"
+            onClick={() => { setWaApp(o); setPref(o); toast.success(`تم اختيار: ${WA_APP_LABELS[o]}`); }}
+            className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition ${
+              pref === o ? "border-primary bg-primary/10 font-semibold" : "border-border hover:bg-muted/50"
+            }`}
+          >
+            <span>{WA_APP_LABELS[o]}</span>
+            {pref === o && <Check className="h-4 w-4 text-primary" />}
+          </button>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 import { backupMyAgentData, restoreMyAgentData } from "@/lib/agent-backup.functions";
+
 
 function AgentBackupCard() {
   const qc = useQueryClient();
