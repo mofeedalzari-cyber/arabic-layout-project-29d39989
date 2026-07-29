@@ -170,6 +170,12 @@ function SuperAdminPage() {
                       <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(n.created_at)}</Td>
                       <Td>
                         <div className="flex gap-1 flex-wrap">
+                          {n.owner_id ? (
+                            <ResetPasswordButton
+                              userId={n.owner_id}
+                              label={`مدير ${n.name}`}
+                            />
+                          ) : null}
                           <Button
                             size="sm"
                             variant={n.is_active ? "destructive" : "default"}
