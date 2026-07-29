@@ -269,6 +269,40 @@ function AuthPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent dir="rtl" className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>استعادة كلمة المرور</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleForgot} className="space-y-3">
+            <p className="text-sm text-gray-600">
+              أدخل رقم جوالك المسجّل وسيتواصل معك مدير التطبيق لإعادة تعيين كلمة المرور.
+            </p>
+            <SoftInput dir="rtl" value={forgotPhone} onChange={(e) => setForgotPhone(e.target.value)} placeholder="رقم الجوال" inputMode="tel" />
+            <textarea
+              dir="rtl"
+              value={forgotNote}
+              onChange={(e) => setForgotNote(e.target.value)}
+              placeholder="ملاحظة (اختياري): اسمك أو اسم شبكتك"
+              rows={3}
+              className="w-full rounded-2xl bg-gray-100 border-0 text-right text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 px-4 py-3"
+            />
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button type="button" variant="outline" onClick={() => setForgotOpen(false)}>إلغاء</Button>
+              <Button type="submit" disabled={forgotBusy} className="bg-[#22a06b] hover:bg-[#1c8a5b] text-white">
+                {forgotBusy ? "…" : "إرسال الطلب"}
+              </Button>
+            </DialogFooter>
+          </form>
+          <p className="text-xs text-gray-500 text-center">
+            أو تواصل مباشرة عبر واتساب:{" "}
+            <a href="https://wa.me/967778492884" target="_blank" rel="noreferrer" className="text-teal-700 font-semibold">
+              778492884
+            </a>
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
