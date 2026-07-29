@@ -43,6 +43,22 @@ function AuthPage() {
   // login
   const [loginPhone, setLoginPhone] = useState("");
   const [loginP, setLoginP] = useState("");
+  // forgot password dialog
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotPhone, setForgotPhone] = useState("");
+  const [forgotNote, setForgotNote] = useState("");
+  const [forgotBusy, setForgotBusy] = useState(false);
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    const ph = phoneSchema.safeParse(forgotPhone);
+    if (!ph.success) return toast.error(ph.error.issues[0].message);
+    setForgotBusy(true);
+    const { error } = await (supabase.rpc as any)("submit_password_reset_request", { _phone: ph.data, _note: forgotNote.trim() || null });
+    setForgotBusy(false);
+    if (error) return toast.error(error.message ?? "تعذر إرسال الطلب");
+    toast.success("تم إرسال طلب استعادة كلمة المرور. سيتواصل معك مدير التطبيق قريبًا.");
+    setForgotOpen(false); setForgotPhone(""); setForgotNote("");
+  }
   // register
   const [regName, setRegName] = useState("");
   const [regPhone, setRegPhone] = useState("");
