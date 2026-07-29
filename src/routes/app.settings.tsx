@@ -72,6 +72,8 @@ function SettingsPage() {
         </Button>
       </Card>
 
+      <WhatsAppAppCard />
+
       {role === "admin" && <BackupCard />}
       {role === "agent" && <AgentBackupCard />}
       {role === "admin" && <DangerZone adminId={profile?.id} />}
