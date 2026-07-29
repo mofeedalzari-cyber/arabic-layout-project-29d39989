@@ -118,9 +118,11 @@ function AgentBackupCard() {
     onSuccess: (res: any) => {
       const c = res?.customers_restored ?? 0;
       const r = res?.requests_restored ?? 0;
-      toast.success(`تم استعادة ${c} زبون و${r} طلب`);
+      const p = res?.customer_payments_restored ?? 0;
+      toast.success(`تم استعادة ${c} زبون و${r} طلب و${p} تسديد`);
       const notes: string[] = Array.isArray(res?.notes) ? res.notes : [];
       notes.forEach((n) => toast.message(n));
+
       setPendingPayload(null);
       setPendingName("");
       qc.invalidateQueries();
