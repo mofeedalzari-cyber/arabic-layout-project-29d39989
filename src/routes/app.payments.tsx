@@ -426,11 +426,6 @@ function buildWhatsAppText(p: {
   ].join("\n");
 }
 
-function openWhatsApp(phone: string, text: string) {
-  const digits = String(phone).replace(/\D/g, "");
-  const url = `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
-  window.open(url, "_blank", "noopener,noreferrer");
-}
 
 async function printReceiptPDF(a: {
   agentName: string; agentPhone: string; networkName: string; currency: string;
