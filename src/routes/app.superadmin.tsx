@@ -136,11 +136,12 @@ function SuperAdminPage() {
 
 
       <Tabs defaultValue="networks" className="mt-4" dir="rtl">
-        <TabsList dir="rtl" className="grid grid-cols-4 w-full">
+        <TabsList dir="rtl" className="grid grid-cols-5 w-full">
           <TabsTrigger value="networks">الشبكات</TabsTrigger>
           <TabsTrigger value="agents">المناديب</TabsTrigger>
           <TabsTrigger value="packages">الباقات</TabsTrigger>
           <TabsTrigger value="cards">الكروت</TabsTrigger>
+          <TabsTrigger value="resets">استعادة كلمة المرور</TabsTrigger>
         </TabsList>
 
         <TabsContent value="networks" className="mt-3 space-y-3">
