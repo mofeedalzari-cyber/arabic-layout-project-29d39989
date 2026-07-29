@@ -226,18 +226,29 @@ function AgentAccountsPage() {
                 <div className="text-sm text-muted-foreground mb-1">بيانات المندوب</div>
                 <div className="text-lg font-bold [overflow-wrap:anywhere]">{agentLabel}</div>
               </div>
-              <Button
-                onClick={() => printAgentReport({
-                  agentLabel, networkFilter: networkId === "all" ? "كل الشبكات" : (netMap.get(networkId)?.name ?? ""),
-                  withdrawn, sold, salesValue, distinctPackages: distinctPackages.size, networksCount,
-                  byNetwork, byPackage, sales: filteredSales, netMap,
-                })}
-                className="shrink-0 rounded-xl gradient-primary-bg text-white"
-                size="sm"
-              >
-                <Printer className="h-4 w-4 ml-1" />
-                طباعة PDF
-              </Button>
+              <div className="flex flex-col gap-2 shrink-0">
+                <Button
+                  onClick={() => setShowPaid(true)}
+                  variant="outline"
+                  className="rounded-xl"
+                  size="sm"
+                >
+                  <HandCoins className="h-4 w-4 ml-1" />
+                  المبلغ المسدد
+                </Button>
+                <Button
+                  onClick={() => printAgentReport({
+                    agentLabel, networkFilter: networkId === "all" ? "كل الشبكات" : (netMap.get(networkId)?.name ?? ""),
+                    withdrawn, sold, salesValue, distinctPackages: distinctPackages.size, networksCount,
+                    byNetwork, byPackage, sales: filteredSales, netMap,
+                  })}
+                  className="rounded-xl gradient-primary-bg text-white"
+                  size="sm"
+                >
+                  <Printer className="h-4 w-4 ml-1" />
+                  طباعة PDF
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <Stat icon={PackageIcon} label="مسحوب" value={String(withdrawn)} />
