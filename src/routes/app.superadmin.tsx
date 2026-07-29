@@ -234,7 +234,7 @@ function SuperAdminPage() {
                 <thead className="bg-muted/50">
                   <tr>
                     <Th>الاسم</Th><Th>المستخدم</Th><Th>الهاتف</Th><Th>الشبكة</Th><Th>الدور</Th>
-                    <Th>مبيعات</Th><Th>قيمة</Th><Th>الحالة</Th><Th>التسجيل</Th>
+                    <Th>مبيعات</Th><Th>قيمة</Th><Th>الحالة</Th><Th>التسجيل</Th><Th>كلمة المرور</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -249,9 +249,10 @@ function SuperAdminPage() {
                       <Td>{fmtMoney(Number(a.sold_value ?? 0))}</Td>
                       <Td>{a.is_active ? <Badge>مفعل</Badge> : <Badge variant="secondary">موقوف</Badge>}</Td>
                       <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(a.created_at)}</Td>
+                      <Td><ResetPasswordButton userId={a.id} label={a.full_name ?? cleanPhoneLike(a.username) ?? ""} /></Td>
                     </tr>
                   ))}
-                  {agents.data?.length === 0 && <tr><Td colSpan={9} className="text-center text-muted-foreground py-8">لا يوجد مناديب</Td></tr>}
+                  {agents.data?.length === 0 && <tr><Td colSpan={10} className="text-center text-muted-foreground py-8">لا يوجد مناديب</Td></tr>}
                 </tbody>
               </table>
             </div>
