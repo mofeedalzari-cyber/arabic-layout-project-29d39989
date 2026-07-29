@@ -141,7 +141,7 @@ function AuthPage() {
               </div>
 
               <div className="text-left -mt-1">
-                <button type="button" className="text-teal-700 text-sm font-medium hover:underline">هل نسيت كلمة المرور؟</button>
+                <button type="button" onClick={() => { setForgotPhone(loginPhone); setForgotOpen(true); }} className="text-teal-700 text-sm font-medium hover:underline">هل نسيت كلمة المرور؟</button>
               </div>
 
               <Button
