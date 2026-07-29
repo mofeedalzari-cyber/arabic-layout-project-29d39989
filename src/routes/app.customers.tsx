@@ -116,17 +116,18 @@ function CustomersPage() {
     queryFn: async (): Promise<Sale[]> => {
       const { data, error } = await supabase
         .from("sales")
-        .select("id, transaction_no, package_name, network_name, price, sold_at, customer_id, buyer_name, cards ( username, password )")
+        .select("id, transaction_no, package_name, network_name, price, sold_at, customer_id, buyer_name, card_number, is_external, cards ( username, password )")
         .eq("agent_id", user!.id)
         .order("sold_at", { ascending: false });
       if (error) throw error;
       return (data ?? []).map((s: any) => ({
         ...s,
-        card_username: s.cards?.username ?? null,
+        card_username: s.cards?.username ?? s.card_number ?? null,
         card_password: s.cards?.password ?? null,
       })) as Sale[];
     },
   });
+
 
   const { data: payments } = useQuery({
     queryKey: ["customer-payments", user?.id],
@@ -269,32 +270,51 @@ function CustomersPage() {
     if (!amount || amount <= 0) { toast.error("أدخل مبلغاً صحيحاً"); return; }
     setChargeBusy(true);
     try {
-      const { data: prof } = await supabase.from("profiles").select("network_id").eq("id", user.id).maybeSingle();
       const pkg = packages?.find((p) => p.id === chargePackageId);
       const qty = Math.max(1, Number(chargeQty) || 1);
-      const noteBase = chargeNote.trim();
       const cardNo = chargeCard.trim();
-      const parts: string[] = [];
-      if (pkg) parts.push(`بيع خارجي: ${pkg.name}${qty > 1 ? ` × ${qty}` : ""}`);
-      else parts.push("مبلغ مضاف");
-      if (cardNo) parts.push(`رقم الكرت: ${cardNo}`);
-      if (noteBase) parts.push(noteBase);
-      const note = parts.join(" — ");
-      const { error } = await supabase.from("customer_payments").insert({
-        customer_id: chargeFor.id,
-        agent_id: user.id,
-        network_id: prof?.network_id ?? null,
-        amount: -Math.abs(amount),
-        note,
-      });
-      if (error) { toast.error("تعذر إضافة المبلغ: " + error.message); return; }
-      toast.success(`تم إضافة ${fmtMoney(amount)}`);
+      const noteBase = chargeNote.trim();
+
+      if (pkg) {
+        // بيع خارجي: سجّله كعملية بيع حقيقية ليظهر في سجل المبيعات
+        const unitPrice = qty > 0 ? amount / qty : amount;
+        const { error } = await (supabase.rpc as any)("record_external_sale", {
+          _customer_id: chargeFor.id,
+          _package_id: pkg.id,
+          _quantity: qty,
+          _card_number: cardNo || null,
+          _unit_price: unitPrice,
+          _buyer_name: chargeFor.name,
+        });
+        if (error) { toast.error("تعذر تسجيل البيع: " + error.message); return; }
+        toast.success(`تم تسجيل ${qty} عملية بيع خارجي`);
+      } else {
+        // مبلغ مضاف يدوي (بدون باقة) — يُسجَّل كقيد ديْن على الزبون فقط
+        const { data: prof } = await supabase.from("profiles").select("network_id").eq("id", user.id).maybeSingle();
+        const parts: string[] = ["مبلغ مضاف"];
+        if (cardNo) parts.push(`رقم الكرت: ${cardNo}`);
+        if (noteBase) parts.push(noteBase);
+        const { error } = await supabase.from("customer_payments").insert({
+          customer_id: chargeFor.id,
+          agent_id: user.id,
+          network_id: prof?.network_id ?? null,
+          amount: -Math.abs(amount),
+          note: parts.join(" — "),
+        });
+        if (error) { toast.error("تعذر إضافة المبلغ: " + error.message); return; }
+        toast.success(`تم إضافة ${fmtMoney(amount)}`);
+      }
+
       setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1"); setChargeCard("");
       qc.invalidateQueries({ queryKey: ["customer-payments"] });
+      qc.invalidateQueries({ queryKey: ["customer-sales"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
     } finally {
       setChargeBusy(false);
     }
   }
+
 
 
   async function handleDelete(c: Customer) {
