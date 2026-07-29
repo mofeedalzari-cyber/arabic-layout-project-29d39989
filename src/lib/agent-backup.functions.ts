@@ -85,18 +85,26 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
     let customersSkipped = 0;
     let requestsRestored = 0;
     let requestsSkipped = 0;
+    let paymentsRestored = 0;
+    let paymentsSkipped = 0;
     const notes: string[] = [];
 
+    // Build a map from old customer id -> whatsapp for later payment remap
+    const backupCustomers = Array.isArray(payload.customers) ? payload.customers : [];
+    const oldCustomerIdToWhatsapp = new Map<string, string>();
+    for (const c of backupCustomers) {
+      if (c?.id && c?.whatsapp) oldCustomerIdToWhatsapp.set(String(c.id), String(c.whatsapp).trim());
+    }
+
     // 1) Customers — insert new only (dedupe by whatsapp per agent)
-    const customers = Array.isArray(payload.customers) ? payload.customers : [];
-    if (customers.length) {
+    if (backupCustomers.length) {
       const { data: existing } = await supabase
         .from("customers")
         .select("id, whatsapp")
         .eq("agent_id", userId);
       const existingSet = new Set((existing ?? []).map((c: any) => String(c.whatsapp || "").trim()));
 
-      const toInsert = customers
+      const toInsert = backupCustomers
         .filter((c: any) => c?.whatsapp && !existingSet.has(String(c.whatsapp).trim()))
         .map((c: any) => ({
           agent_id: userId,
@@ -105,7 +113,7 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
           whatsapp: String(c.whatsapp).trim(),
         }));
 
-      customersSkipped = customers.length - toInsert.length;
+      customersSkipped = backupCustomers.length - toInsert.length;
       if (toInsert.length) {
         const { error, count } = await supabase
           .from("customers")
@@ -162,6 +170,46 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
       notes.push("لا يمكن استعادة الطلبات: حسابك غير مرتبط بشبكة.");
     }
 
+    // 3) Customer payments — remap old customer_id -> current customer_id by whatsapp
+    const custPayments = Array.isArray(payload.customer_payments) ? payload.customer_payments : [];
+    if (custPayments.length) {
+      const { data: myCustomers } = await supabase
+        .from("customers")
+        .select("id, whatsapp")
+        .eq("agent_id", userId);
+      const waToId = new Map<string, string>();
+      for (const c of (myCustomers ?? [])) {
+        if (c?.whatsapp) waToId.set(String(c.whatsapp).trim(), c.id);
+      }
+
+      const toInsertPay = custPayments
+        .map((p: any) => {
+          const wa = oldCustomerIdToWhatsapp.get(String(p.customer_id));
+          const newCustId = wa ? waToId.get(wa) : null;
+          if (!newCustId) return null;
+          const amt = Number(p.amount);
+          if (!Number.isFinite(amt)) return null;
+          return {
+            customer_id: newCustId,
+            agent_id: userId,
+            network_id: networkId,
+            amount: amt,
+            note: p.note ?? null,
+            created_at: p.created_at ?? undefined,
+          };
+        })
+        .filter(Boolean) as any[];
+
+      paymentsSkipped = custPayments.length - toInsertPay.length;
+      if (toInsertPay.length) {
+        const { error, count } = await supabase
+          .from("customer_payments")
+          .insert(toInsertPay, { count: "exact" });
+        if (error) throw new Error(`فشل استعادة تسديدات الزبائن: ${error.message}`);
+        paymentsRestored = count ?? toInsertPay.length;
+      }
+    }
+
     const salesCount = Array.isArray(payload.sales) ? payload.sales.length : 0;
     const cardsCount = Array.isArray(payload.cards) ? payload.cards.length : 0;
     if (salesCount || cardsCount) {
@@ -175,7 +223,10 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
       customers_skipped: customersSkipped,
       requests_restored: requestsRestored,
       requests_skipped: requestsSkipped,
+      customer_payments_restored: paymentsRestored,
+      customer_payments_skipped: paymentsSkipped,
       notes,
     };
   });
+
 
