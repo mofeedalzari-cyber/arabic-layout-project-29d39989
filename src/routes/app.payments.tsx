@@ -72,6 +72,78 @@ function PaymentsPage() {
     },
   });
 
+  const { data: history, refetch: refetchHistory } = useQuery({
+    queryKey: ["pay-history", agentId, network?.id],
+    enabled: !!agentId && !!network?.id,
+    queryFn: async () => {
+      const { data: reqs } = await supabase
+        .from("card_requests")
+        .select("id, package_name")
+        .eq("agent_id", agentId)
+        .eq("network_id", network!.id);
+      const ids = (reqs ?? []).map((r: any) => r.id);
+      if (ids.length === 0) return [];
+      const nameMap = new Map((reqs ?? []).map((r: any) => [r.id, r.package_name]));
+      const { data } = await supabase
+        .from("request_payments")
+        .select("id, request_id, amount, note, created_at, recorded_by_username")
+        .in("request_id", ids)
+        .order("created_at", { ascending: false });
+      return (data ?? []).map((p: any) => ({ ...p, package_name: nameMap.get(p.request_id) ?? "" }));
+    },
+  });
+
+  const [editRow, setEditRow] = useState<any | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [deleteRow, setDeleteRow] = useState<any | null>(null);
+
+  const invalidateAll = () => {
+    qc.invalidateQueries({ queryKey: ["pay-debt"] });
+    qc.invalidateQueries({ queryKey: ["pay-history"] });
+    qc.invalidateQueries({ queryKey: ["card-requests"] });
+    refetchDebt();
+    refetchHistory();
+  };
+
+  const editPayment = useMutation({
+    mutationFn: async () => {
+      const amt = Number(editAmount);
+      if (!amt || amt <= 0) throw new Error("INVALID_AMOUNT");
+      const { error } = await supabase.rpc("admin_update_request_payment" as any, {
+        _payment_id: editRow.id, _amount: amt, _note: editNote || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تعديل عملية التسديد");
+      setEditRow(null);
+      invalidateAll();
+    },
+    onError: (e: Error) => {
+      const m = e.message.includes("INVALID_AMOUNT") ? "أدخل مبلغاً صحيحاً"
+        : e.message.includes("EXCEEDS_TOTAL") ? "المبلغ يتجاوز إجمالي المستحق"
+        : e.message.includes("FORBIDDEN") ? "غير مسموح"
+        : e.message.includes("NOT_FOUND") ? "العملية غير موجودة" : e.message;
+      toast.error(m);
+    },
+  });
+
+  const deletePayment = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("admin_delete_request_payment" as any, {
+        _payment_id: deleteRow.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف عملية التسديد");
+      setDeleteRow(null);
+      invalidateAll();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const agent = useMemo(() => agents?.find((a) => a.id === agentId), [agents, agentId]);
   const agentName = agent ? (agent.full_name || displayPhone((agent as any).phone, agent.username)) : "";
   const agentPhone = agent ? displayPhone((agent as any).phone, agent.username) : "";
