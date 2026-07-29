@@ -81,7 +81,36 @@ function AgentAccountsPage() {
   });
 
   const [showPaid, setShowPaid] = useState(false);
+  const netMap = useMemo(() => new Map(networks?.map((n) => [n.id, n]) ?? []), [networks]);
   const pkgMap = useMemo(() => new Map(packages?.map((p) => [p.id, p]) ?? []), [packages]);
+
+  const paidByNetwork = useMemo(() => {
+    const m = new Map<string, { total: number; paid: number }>();
+    for (const r of paidRequests ?? []) {
+      const cur = m.get(r.network_id) ?? { total: 0, paid: 0 };
+      cur.total += Number((r as any).total_value || 0);
+      cur.paid += Number((r as any).paid_amount || 0);
+      m.set(r.network_id, cur);
+    }
+    return m;
+  }, [paidRequests]);
+
+  const filteredPaidRows = useMemo(() => {
+    const entries = Array.from(paidByNetwork.entries()).filter(
+      ([nid]) => networkId === "all" || nid === networkId
+    );
+    return entries.map(([nid, v]) => ({
+      key: nid,
+      label: netMap.get(nid)?.name ?? "—",
+      total: v.total,
+      paid: v.paid,
+      remaining: Math.max(v.total - v.paid, 0),
+    }));
+  }, [paidByNetwork, netMap, networkId]);
+
+  const totalPaid = filteredPaidRows.reduce((s, r) => s + r.paid, 0);
+  const totalDebt = filteredPaidRows.reduce((s, r) => s + r.total, 0);
+  const totalRemaining = Math.max(totalDebt - totalPaid, 0);
 
   const filteredCards = useMemo(
     () => (cards ?? []).filter((c) => networkId === "all" || c.network_id === networkId),
