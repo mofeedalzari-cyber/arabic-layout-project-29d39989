@@ -130,9 +130,9 @@ function PaymentsPage() {
   });
 
   const deletePayment = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (paymentId: string) => {
       const { error } = await supabase.rpc("admin_delete_request_payment" as any, {
-        _payment_id: deleteRow.id,
+        _payment_id: paymentId,
       });
       if (error) throw error;
     },
