@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { displayPhone, fmtMoney, fmtArabicDateTimePdf, fmtArabicDateTime } from "@/lib/format";
 import { HandCoins, Receipt as ReceiptIcon, Share2, Pencil, Trash2, History } from "lucide-react";
+import { openWhatsApp } from "@/lib/wa-open";
 
 export const Route = createFileRoute("/app/payments")({ component: PaymentsPage });
 
@@ -426,11 +427,6 @@ function buildWhatsAppText(p: {
   ].join("\n");
 }
 
-function openWhatsApp(phone: string, text: string) {
-  const digits = String(phone).replace(/\D/g, "");
-  const url = `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
-  window.open(url, "_blank", "noopener,noreferrer");
-}
 
 async function printReceiptPDF(a: {
   agentName: string; agentPhone: string; networkName: string; currency: string;
