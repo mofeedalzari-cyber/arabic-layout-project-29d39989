@@ -924,7 +924,7 @@ function CustomersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!chargeFor} onOpenChange={(o) => { if (!chargeBusy && !o) { setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1"); } }}>
+      <Dialog open={!!chargeFor} onOpenChange={(o) => { if (!chargeBusy && !o) { setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1"); setChargeCard(""); } }}>
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
             <DialogTitle>إضافة مبلغ على الزبون</DialogTitle>
