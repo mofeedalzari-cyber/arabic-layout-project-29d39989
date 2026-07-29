@@ -250,14 +250,16 @@ function AgentAccountsPage() {
                 </Button>
               </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
               <Stat icon={PackageIcon} label="مسحوب" value={String(withdrawn)} />
               <Stat icon={ShoppingCart} label="مباع / مستخدم" value={String(sold)} />
               <Stat icon={DollarSign} label="قيمة المبيعات" value={fmtMoney(salesValue)} />
+              <Stat icon={HandCoins} label="المسدد" value={fmtMoney(totalPaid)} />
+              <Stat icon={DollarSign} label="الدين المتبقي" value={fmtMoney(totalRemaining)} />
               <Stat icon={Layers} label="فئات مختلفة" value={String(distinctPackages.size)} />
             </div>
             <div className="text-[11px] text-muted-foreground mt-3">
-              شبكات: {networksCount} • فئات: {distinctPackages.size}
+              شبكات: {networksCount} • فئات: {distinctPackages.size} • إجمالي المستحق: {fmtMoney(totalDebt)}
             </div>
           </Card>
 
