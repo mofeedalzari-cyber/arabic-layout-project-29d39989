@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { displayPhone, fmtMoney, fmtArabicDateTimePdf, fmtArabicDateTime } from "@/lib/format";
 import { HandCoins, Receipt as ReceiptIcon, Share2, Pencil, Trash2, History } from "lucide-react";
+import { openWhatsApp } from "@/lib/wa-open";
 
 export const Route = createFileRoute("/app/payments")({ component: PaymentsPage });
 
