@@ -64,7 +64,43 @@ export const adminUpdateAgent = createServerFn({ method: "POST" })
     const newUsername = digits ? `u${digits}`.slice(0, 30) : null;
     const newEmail = newUsername ? `${newUsername}@wificards.local` : null;
 
-    // Profile update via RLS (admin policy allows updating agents in own network)
+    // 1) Auth update FIRST (password + login email) so we never leave the profile
+    //    out of sync with the login identity. Uses service role.
+    //    NOTE: never set auth.phone here; the SMS provider is disabled and it fails.
+    const authAttrs: Record<string, unknown> = {};
+    if (password && password.length > 0) authAttrs.password = password;
+    if (newEmail && newUsername && newUsername !== prof.username) {
+      authAttrs.email = newEmail;
+      authAttrs.email_confirm = true;
+    }
+
+    if (Object.keys(authAttrs).length > 0) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      // Make sure the derived login is not taken by another account
+      if (authAttrs.email) {
+        const { data: taken } = await (supabaseAdmin.from("profiles") as any)
+          .select("id")
+          .eq("username", newUsername)
+          .neq("id", agentId)
+          .maybeSingle();
+        if (taken) throw new Error("رقم الجوال مستخدم من قبل حساب آخر");
+      }
+
+      const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(
+        agentId,
+        authAttrs as any,
+      );
+      if (authErr) {
+        const m = String(authErr.message || "");
+        if (/already|registered|exists|duplicate/i.test(m)) {
+          throw new Error("رقم الجوال مستخدم من قبل حساب آخر");
+        }
+        throw new Error(`تعذّر تحديث بيانات الحساب: ${m}`);
+      }
+    }
+
+    // 2) Profile update (admin policy allows updating agents in own network)
     const profileUpdate: Record<string, unknown> = {};
     if (data.full_name !== undefined) profileUpdate.full_name = full_name || null;
     if (data.phone !== undefined) profileUpdate.phone = phone || null;
@@ -74,29 +110,7 @@ export const adminUpdateAgent = createServerFn({ method: "POST" })
       const { error: upErr } = await (supabase.from("profiles") as any)
         .update(profileUpdate)
         .eq("id", agentId);
-      if (upErr) throw new Error(upErr.message);
-    }
-
-    // Auth update (password + login email) — requires service role.
-    // NOTE: never set auth.phone here; the SMS provider is disabled and it fails.
-    const authAttrs: Record<string, unknown> = {};
-    if (password && password.length > 0) authAttrs.password = password;
-    if (newEmail) {
-      authAttrs.email = newEmail;
-      authAttrs.email_confirm = true;
-    }
-
-    if (Object.keys(authAttrs).length > 0) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(
-        agentId,
-        authAttrs as any,
-      );
-      if (authErr) {
-        const m = String(authErr.message || "");
-        if (/already|registered|exists/i.test(m)) throw new Error("رقم الجوال مستخدم من قبل حساب آخر");
-        throw new Error(`تعذّر تحديث بيانات الحساب: ${m}`);
-      }
+      if (upErr) throw new Error(`تعذّر حفظ بيانات الملف الشخصي: ${upErr.message}`);
     }
 
 
