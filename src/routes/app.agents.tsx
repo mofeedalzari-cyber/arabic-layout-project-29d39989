@@ -439,7 +439,24 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
     },
   });
 
-  const perNetwork = useMemo(() => data?.byNetwork ?? [], [data]);
+  // Networks come from the agent's cards; but a debt can exist in a network where the
+  // agent no longer holds any card (all sold / cards deleted / returned). Merge those in
+  // so the debt is always visible.
+  const perNetwork = useMemo(() => {
+    const list = [...(data?.byNetwork ?? [])];
+    const known = new Set(list.map((n) => n.network_id));
+    for (const d of data?.debt.byNet ?? []) {
+      if (known.has(d.network_id)) continue;
+      if ((d.amount ?? 0) <= 0 && (d.paid ?? 0) <= 0) continue;
+      list.push({
+        network_id: d.network_id,
+        name: d.name,
+        currency: "",
+        available: 0, sold: 0, availableValue: 0, soldValue: 0,
+      });
+    }
+    return list;
+  }, [data]);
 
   if (isLoading || !data) return <div className="py-16 text-center text-muted-foreground text-sm">جارٍ التحميل...</div>;
   const t = data.totals;
@@ -486,6 +503,10 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
           <TopStat label="إجمالي القيمة" value={fmtMoney(t.totalValue)} tone="primary" />
           <TopStat label="قيمة المباع" value={fmtMoney(t.soldValue)} />
           <TopStat label="قيمة المتاح" value={fmtMoney(t.availableValue)} />
+        </div>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          <TopStat label="إجمالي الديون" value={fmtMoney(data.debt.total)} tone="primary" />
+          <TopStat label="إجمالي المسدد" value={fmtMoney(data.debt.paid)} />
         </div>
       </div>
 
