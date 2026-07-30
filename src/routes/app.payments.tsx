@@ -28,8 +28,14 @@ import { openWhatsApp } from "@/lib/wa-open";
 export const Route = createFileRoute("/app/payments")({ component: PaymentsPage });
 
 function PaymentsPage() {
-  const { role, profile } = useAuth();
-  if (role && role !== "admin") return <Navigate to="/app" />;
+  const { role, loading } = useAuth();
+  if (loading) return null;
+  if (role !== "admin") return <Navigate to="/app" />;
+  return <PaymentsPageInner />;
+}
+
+function PaymentsPageInner() {
+  const { profile } = useAuth();
 
   const qc = useQueryClient();
   const [agentId, setAgentId] = useState<string>("");

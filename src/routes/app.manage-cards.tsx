@@ -51,8 +51,13 @@ function mask(v: string | null | undefined) {
 }
 
 function ManageCardsPage() {
-  const { role } = useAuth();
-  if (role && role !== "admin") return <Navigate to="/app" />;
+  const { role, loading } = useAuth();
+  if (loading) return null;
+  if (role !== "admin") return <Navigate to="/app" />;
+  return <ManageCardsPageInner />;
+}
+
+function ManageCardsPageInner() {
 
   const qc = useQueryClient();
   const [networkId, setNetworkId] = useState<string>("");

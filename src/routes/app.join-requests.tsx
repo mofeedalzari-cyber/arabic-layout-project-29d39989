@@ -20,8 +20,13 @@ import { displayPhone, fmtArabicDateTime } from "@/lib/format";
 export const Route = createFileRoute("/app/join-requests")({ component: JoinRequestsPage });
 
 function JoinRequestsPage() {
-  const { role } = useAuth();
-  if (role && role !== "admin") return <Navigate to="/app" />;
+  const { role, loading } = useAuth();
+  if (loading) return null;
+  if (role !== "admin") return <Navigate to="/app" />;
+  return <JoinRequestsPageInner />;
+}
+
+function JoinRequestsPageInner() {
   const [tab, setTab] = useState<"PENDING" | "APPROVED" | "REJECTED">("PENDING");
 
   return (

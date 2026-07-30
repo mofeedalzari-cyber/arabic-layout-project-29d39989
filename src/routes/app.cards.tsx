@@ -18,8 +18,13 @@ import { Navigate } from "@tanstack/react-router";
 export const Route = createFileRoute("/app/cards")({ component: CardsPage });
 
 function CardsPage() {
-  const { role } = useAuth();
-  if (role && role !== "admin") return <Navigate to="/app" />;
+  const { role, loading } = useAuth();
+  if (loading) return null;
+  if (role !== "admin") return <Navigate to="/app" />;
+  return <CardsPageInner />;
+}
+
+function CardsPageInner() {
 
   const { data: networks } = useQuery({
     queryKey: ["networks-all"],

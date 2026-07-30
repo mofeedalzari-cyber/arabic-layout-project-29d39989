@@ -16,8 +16,13 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/app/logs")({ component: LogsPage });
 
 function LogsPage() {
-  const { role } = useAuth();
-  if (role && role !== "admin") return <Navigate to="/app" />;
+  const { role, loading } = useAuth();
+  if (loading) return null;
+  if (role !== "admin") return <Navigate to="/app" />;
+  return <LogsPageInner />;
+}
+
+function LogsPageInner() {
   const { display: displayName } = useUserNames();
   const qc = useQueryClient();
   const [selected, setSelected] = useState<Set<string>>(new Set());

@@ -29,8 +29,13 @@ import {
 export const Route = createFileRoute("/app/agents")({ component: AgentsPage });
 
 function AgentsPage() {
-  const { role } = useAuth();
-  if (role && role !== "admin") return <Navigate to="/app" />;
+  const { role, loading } = useAuth();
+  if (loading) return null;
+  if (role !== "admin") return <Navigate to="/app" />;
+  return <AgentsPageInner />;
+}
+
+function AgentsPageInner() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [statsFor, setStatsFor] = useState<{ id: string; name: string; username: string } | null>(null);

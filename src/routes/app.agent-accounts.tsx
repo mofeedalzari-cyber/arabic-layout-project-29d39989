@@ -18,8 +18,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export const Route = createFileRoute("/app/agent-accounts")({ component: AgentAccountsPage });
 
 function AgentAccountsPage() {
-  const { role } = useAuth();
-  if (role && role !== "admin") return <Navigate to="/app" />;
+  const { role, loading } = useAuth();
+  if (loading) return null;
+  if (role !== "admin") return <Navigate to="/app" />;
+  return <AgentAccountsPageInner />;
+}
+
+function AgentAccountsPageInner() {
 
   const [networkId, setNetworkId] = useState<string>("all");
   const [agentId, setAgentId] = useState<string>("");
