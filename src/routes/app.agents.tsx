@@ -504,6 +504,10 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
           <TopStat label="قيمة المباع" value={fmtMoney(t.soldValue)} />
           <TopStat label="قيمة المتاح" value={fmtMoney(t.availableValue)} />
         </div>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          <TopStat label="إجمالي الديون" value={fmtMoney(data.debt.total)} tone="primary" />
+          <TopStat label="إجمالي المسدد" value={fmtMoney(data.debt.paid)} />
+        </div>
       </div>
 
 
