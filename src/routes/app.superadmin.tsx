@@ -8,30 +8,62 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { fmtMoney, displayPhone, fmtArabicDateTime, cleanPhoneLike } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search, Power, PowerOff, Plus, Trash2 } from "lucide-react";
+import {
+  ShieldCheck,
+  Wifi,
+  Users,
+  Package as PkgIcon,
+  CreditCard,
+  Search,
+  Power,
+  PowerOff,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
 
 function SuperAdminPage() {
-  const { loading, profile, isSuperadmin } = useAuth();
-  const qc = useQueryClient();
+  const { loading, isSuperadmin } = useAuth();
   if (loading) return null;
   if (!isSuperadmin) return <Navigate to="/app" />;
+  return <SuperAdminPageInner />;
+}
 
-
-
-
+function SuperAdminPageInner() {
+  const { profile } = useAuth();
+  const qc = useQueryClient();
 
   const toggleNet = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
-      const { error } = await supabase.rpc("superadmin_set_network_active", { _network_id: id, _active: active });
+      const { error } = await supabase.rpc("superadmin_set_network_active", {
+        _network_id: id,
+        _active: active,
+      });
       if (error) throw error;
     },
     onSuccess: (_d, v) => {
@@ -44,7 +76,9 @@ function SuperAdminPage() {
 
   const deleteNet = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.rpc as any)("superadmin_delete_network", { _network_id: id });
+      const { error } = await (supabase.rpc as any)("superadmin_delete_network", {
+        _network_id: id,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -94,7 +128,11 @@ function SuperAdminPage() {
     },
   });
 
-  const [cardsFilter, setCardsFilter] = useState<{ network_id?: string; status?: string; search?: string }>({});
+  const [cardsFilter, setCardsFilter] = useState<{
+    network_id?: string;
+    status?: string;
+    search?: string;
+  }>({});
   const [agentsNetFilter, setAgentsNetFilter] = useState<string>("");
   const [packagesNetFilter, setPackagesNetFilter] = useState<string>("");
   const cards = useQuery({
@@ -116,24 +154,46 @@ function SuperAdminPage() {
 
   return (
     <div dir="rtl" className="space-y-4">
-      <PageHeader title="مدير التطبيق العام" description="عرض شامل لكل الشبكات والمناديب والباقات والكروت." />
-      <div className="mb-4 flex justify-start"><RefreshButton /></div>
-
+      <PageHeader
+        title="مدير التطبيق العام"
+        description="عرض شامل لكل الشبكات والمناديب والباقات والكروت."
+      />
+      <div className="mb-4 flex justify-start">
+        <RefreshButton />
+      </div>
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="الشبكات" value={s.networks ?? 0} sub={`نشطة: ${s.active_networks ?? 0}`} icon={<Wifi className="h-5 w-5" />} />
-        <StatCard label="المناديب" value={s.agents ?? 0} sub={`مدراء الشبكات: ${s.admins ?? 0}`} icon={<Users className="h-5 w-5" />} />
-        <StatCard label="الباقات" value={s.packages ?? 0} sub={`كروت: ${s.total_cards ?? 0}`} icon={<PkgIcon className="h-5 w-5" />} />
-        <StatCard label="المبيعات" value={fmtMoney(Number(s.sold_value ?? 0))} sub={`مباع: ${s.sold ?? 0}`} icon={<ShieldCheck className="h-5 w-5" />} />
+        <StatCard
+          label="الشبكات"
+          value={s.networks ?? 0}
+          sub={`نشطة: ${s.active_networks ?? 0}`}
+          icon={<Wifi className="h-5 w-5" />}
+        />
+        <StatCard
+          label="المناديب"
+          value={s.agents ?? 0}
+          sub={`مدراء الشبكات: ${s.admins ?? 0}`}
+          icon={<Users className="h-5 w-5" />}
+        />
+        <StatCard
+          label="الباقات"
+          value={s.packages ?? 0}
+          sub={`كروت: ${s.total_cards ?? 0}`}
+          icon={<PkgIcon className="h-5 w-5" />}
+        />
+        <StatCard
+          label="المبيعات"
+          value={fmtMoney(Number(s.sold_value ?? 0))}
+          sub={`مباع: ${s.sold ?? 0}`}
+          icon={<ShieldCheck className="h-5 w-5" />}
+        />
       </div>
       <div className="grid grid-cols-3 gap-3">
         <MiniStat label="متاح" value={s.available ?? 0} />
         <MiniStat label="مسحوب" value={s.assigned ?? 0} />
         <MiniStat label="قيمة المتاح" value={fmtMoney(Number(s.available_value ?? 0))} />
       </div>
-
-
 
       <Tabs defaultValue="networks" className="mt-4" dir="rtl">
         <TabsList dir="rtl" className="grid grid-cols-5 w-full">
@@ -145,14 +205,22 @@ function SuperAdminPage() {
         </TabsList>
 
         <TabsContent value="networks" className="mt-3 space-y-3">
-
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
-                    <Th>الشبكة</Th><Th>المالك</Th><Th>الهاتف</Th><Th>مناديب</Th><Th>باقات</Th>
-                    <Th>كروت</Th><Th>مباع</Th><Th>قيمة المبيعات</Th><Th>الحالة</Th><Th>الإنشاء</Th><Th>إجراءات</Th>
+                    <Th>الشبكة</Th>
+                    <Th>المالك</Th>
+                    <Th>الهاتف</Th>
+                    <Th>مناديب</Th>
+                    <Th>باقات</Th>
+                    <Th>كروت</Th>
+                    <Th>مباع</Th>
+                    <Th>قيمة المبيعات</Th>
+                    <Th>الحالة</Th>
+                    <Th>الإنشاء</Th>
+                    <Th>إجراءات</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -166,15 +234,20 @@ function SuperAdminPage() {
                       <Td>{n.cards_count}</Td>
                       <Td>{n.sold_count}</Td>
                       <Td>{fmtMoney(Number(n.sold_value ?? 0))}</Td>
-                      <Td>{n.is_active ? <Badge>نشطة</Badge> : <Badge variant="secondary">موقوفة</Badge>}</Td>
-                      <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(n.created_at)}</Td>
+                      <Td>
+                        {n.is_active ? (
+                          <Badge>نشطة</Badge>
+                        ) : (
+                          <Badge variant="secondary">موقوفة</Badge>
+                        )}
+                      </Td>
+                      <Td className="whitespace-nowrap text-xs">
+                        {fmtArabicDateTime(n.created_at)}
+                      </Td>
                       <Td>
                         <div className="flex gap-1 flex-wrap">
                           {n.owner_id ? (
-                            <ResetPasswordButton
-                              userId={n.owner_id}
-                              label={`مدير ${n.name}`}
-                            />
+                            <ResetPasswordButton userId={n.owner_id} label={`مدير ${n.name}`} />
                           ) : null}
                           <Button
                             size="sm"
@@ -184,22 +257,39 @@ function SuperAdminPage() {
                               const msg = n.is_active
                                 ? `إيقاف شبكة "${n.name}"؟ لن يتمكن مستخدموها من الدخول.`
                                 : `إعادة تفعيل شبكة "${n.name}"؟`;
-                              if (window.confirm(msg)) toggleNet.mutate({ id: n.id, active: !n.is_active });
+                              if (window.confirm(msg))
+                                toggleNet.mutate({ id: n.id, active: !n.is_active });
                             }}
                           >
-                            {n.is_active ? <><PowerOff className="h-4 w-4 ml-1" />إيقاف</> : <><Power className="h-4 w-4 ml-1" />تفعيل</>}
+                            {n.is_active ? (
+                              <>
+                                <PowerOff className="h-4 w-4 ml-1" />
+                                إيقاف
+                              </>
+                            ) : (
+                              <>
+                                <Power className="h-4 w-4 ml-1" />
+                                تفعيل
+                              </>
+                            )}
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="destructive" disabled={deleteNet.isPending}>
-                                <Trash2 className="h-4 w-4 ml-1" />حذف
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={deleteNet.isPending}
+                              >
+                                <Trash2 className="h-4 w-4 ml-1" />
+                                حذف
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent dir="rtl">
                               <AlertDialogHeader>
                                 <AlertDialogTitle>حذف نهائي لشبكة "{n.name}"؟</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  سيتم حذف جميع المناديب والباقات والكروت والطلبات والمبيعات المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
+                                  سيتم حذف جميع المناديب والباقات والكروت والطلبات والمبيعات
+                                  المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -217,7 +307,13 @@ function SuperAdminPage() {
                       </Td>
                     </tr>
                   ))}
-                  {networks.data?.length === 0 && <tr><Td colSpan={11} className="text-center text-muted-foreground py-8">لا توجد شبكات</Td></tr>}
+                  {networks.data?.length === 0 && (
+                    <tr>
+                      <Td colSpan={11} className="text-center text-muted-foreground py-8">
+                        لا توجد شبكات
+                      </Td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -232,7 +328,11 @@ function SuperAdminPage() {
               onChange={(e) => setAgentsNetFilter(e.target.value)}
             >
               <option value="">كل الشبكات</option>
-              {(networks.data ?? []).map((n: any) => <option key={n.id} value={n.id}>{n.name}</option>)}
+              {(networks.data ?? []).map((n: any) => (
+                <option key={n.id} value={n.id}>
+                  {n.name}
+                </option>
+              ))}
             </select>
           </div>
           <Card className="overflow-hidden">
@@ -240,26 +340,55 @@ function SuperAdminPage() {
               <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
-                    <Th>الاسم</Th><Th>المستخدم</Th><Th>الهاتف</Th><Th>الشبكة</Th><Th>الدور</Th>
-                    <Th>مبيعات</Th><Th>قيمة</Th><Th>الحالة</Th><Th>التسجيل</Th><Th>كلمة المرور</Th>
+                    <Th>الاسم</Th>
+                    <Th>المستخدم</Th>
+                    <Th>الهاتف</Th>
+                    <Th>الشبكة</Th>
+                    <Th>الدور</Th>
+                    <Th>مبيعات</Th>
+                    <Th>قيمة</Th>
+                    <Th>الحالة</Th>
+                    <Th>التسجيل</Th>
+                    <Th>كلمة المرور</Th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(agents.data ?? []).filter((a: any) => !agentsNetFilter || a.network_id === agentsNetFilter).map((a: any) => (
-                    <tr key={a.id} className="border-t">
-                      <Td>{a.full_name ?? "—"}</Td>
-                      <Td>{cleanPhoneLike(a.username)}</Td>
-                      <Td dir="ltr">{displayPhone(a.phone, a.username)}</Td>
-                      <Td>{a.network_name ?? "—"}</Td>
-                      <Td>{a.role === "admin" ? "مدير" : "مندوب"}</Td>
-                      <Td>{a.sold_count}</Td>
-                      <Td>{fmtMoney(Number(a.sold_value ?? 0))}</Td>
-                      <Td>{a.is_active ? <Badge>مفعل</Badge> : <Badge variant="secondary">موقوف</Badge>}</Td>
-                      <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(a.created_at)}</Td>
-                      <Td><ResetPasswordButton userId={a.id} label={a.full_name ?? cleanPhoneLike(a.username) ?? ""} /></Td>
+                  {(agents.data ?? [])
+                    .filter((a: any) => !agentsNetFilter || a.network_id === agentsNetFilter)
+                    .map((a: any) => (
+                      <tr key={a.id} className="border-t">
+                        <Td>{a.full_name ?? "—"}</Td>
+                        <Td>{cleanPhoneLike(a.username)}</Td>
+                        <Td dir="ltr">{displayPhone(a.phone, a.username)}</Td>
+                        <Td>{a.network_name ?? "—"}</Td>
+                        <Td>{a.role === "admin" ? "مدير" : "مندوب"}</Td>
+                        <Td>{a.sold_count}</Td>
+                        <Td>{fmtMoney(Number(a.sold_value ?? 0))}</Td>
+                        <Td>
+                          {a.is_active ? (
+                            <Badge>مفعل</Badge>
+                          ) : (
+                            <Badge variant="secondary">موقوف</Badge>
+                          )}
+                        </Td>
+                        <Td className="whitespace-nowrap text-xs">
+                          {fmtArabicDateTime(a.created_at)}
+                        </Td>
+                        <Td>
+                          <ResetPasswordButton
+                            userId={a.id}
+                            label={a.full_name ?? cleanPhoneLike(a.username) ?? ""}
+                          />
+                        </Td>
+                      </tr>
+                    ))}
+                  {agents.data?.length === 0 && (
+                    <tr>
+                      <Td colSpan={10} className="text-center text-muted-foreground py-8">
+                        لا يوجد مناديب
+                      </Td>
                     </tr>
-                  ))}
-                  {agents.data?.length === 0 && <tr><Td colSpan={10} className="text-center text-muted-foreground py-8">لا يوجد مناديب</Td></tr>}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -274,33 +403,55 @@ function SuperAdminPage() {
               onChange={(e) => setPackagesNetFilter(e.target.value)}
             >
               <option value="">كل الشبكات</option>
-              {(networks.data ?? []).map((n: any) => <option key={n.id} value={n.id}>{n.name}</option>)}
+              {(networks.data ?? []).map((n: any) => (
+                <option key={n.id} value={n.id}>
+                  {n.name}
+                </option>
+              ))}
             </select>
           </div>
-
 
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
-                    <Th>الباقة</Th><Th>الشبكة</Th><Th>السعر</Th>
-                    <Th>متاح</Th><Th>مسحوب</Th><Th>مباع</Th><Th>الحالة</Th>
+                    <Th>الباقة</Th>
+                    <Th>الشبكة</Th>
+                    <Th>السعر</Th>
+                    <Th>متاح</Th>
+                    <Th>مسحوب</Th>
+                    <Th>مباع</Th>
+                    <Th>الحالة</Th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(packages.data ?? []).filter((p: any) => !packagesNetFilter || p.network_id === packagesNetFilter).map((p: any) => (
-                    <tr key={p.id} className="border-t">
-                      <Td className="font-semibold">{p.name}</Td>
-                      <Td>{p.network_name}</Td>
-                      <Td>{fmtMoney(Number(p.price))}</Td>
-                      <Td>{p.available}</Td>
-                      <Td>{p.assigned}</Td>
-                      <Td>{p.sold}</Td>
-                      <Td>{p.is_active ? <Badge>نشطة</Badge> : <Badge variant="secondary">موقوفة</Badge>}</Td>
+                  {(packages.data ?? [])
+                    .filter((p: any) => !packagesNetFilter || p.network_id === packagesNetFilter)
+                    .map((p: any) => (
+                      <tr key={p.id} className="border-t">
+                        <Td className="font-semibold">{p.name}</Td>
+                        <Td>{p.network_name}</Td>
+                        <Td>{fmtMoney(Number(p.price))}</Td>
+                        <Td>{p.available}</Td>
+                        <Td>{p.assigned}</Td>
+                        <Td>{p.sold}</Td>
+                        <Td>
+                          {p.is_active ? (
+                            <Badge>نشطة</Badge>
+                          ) : (
+                            <Badge variant="secondary">موقوفة</Badge>
+                          )}
+                        </Td>
+                      </tr>
+                    ))}
+                  {packages.data?.length === 0 && (
+                    <tr>
+                      <Td colSpan={7} className="text-center text-muted-foreground py-8">
+                        لا توجد باقات
+                      </Td>
                     </tr>
-                  ))}
-                  {packages.data?.length === 0 && <tr><Td colSpan={7} className="text-center text-muted-foreground py-8">لا توجد باقات</Td></tr>}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -321,15 +472,23 @@ function SuperAdminPage() {
             <select
               className="h-10 rounded-md border bg-background px-3 text-sm"
               value={cardsFilter.network_id ?? ""}
-              onChange={(e) => setCardsFilter((f) => ({ ...f, network_id: e.target.value || undefined }))}
+              onChange={(e) =>
+                setCardsFilter((f) => ({ ...f, network_id: e.target.value || undefined }))
+              }
             >
               <option value="">كل الشبكات</option>
-              {(networks.data ?? []).map((n: any) => <option key={n.id} value={n.id}>{n.name}</option>)}
+              {(networks.data ?? []).map((n: any) => (
+                <option key={n.id} value={n.id}>
+                  {n.name}
+                </option>
+              ))}
             </select>
             <select
               className="h-10 rounded-md border bg-background px-3 text-sm"
               value={cardsFilter.status ?? ""}
-              onChange={(e) => setCardsFilter((f) => ({ ...f, status: e.target.value || undefined }))}
+              onChange={(e) =>
+                setCardsFilter((f) => ({ ...f, status: e.target.value || undefined }))
+              }
             >
               <option value="">كل الحالات</option>
               <option value="AVAILABLE">متاح</option>
@@ -343,34 +502,70 @@ function SuperAdminPage() {
               <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
                   <tr>
-                    <Th>الرقم</Th><Th>كلمة السر</Th><Th>الحالة</Th><Th>الباقة</Th><Th>الشبكة</Th>
-                    <Th>المندوب</Th><Th>الإنشاء</Th><Th>البيع</Th>
+                    <Th>الرقم</Th>
+                    <Th>كلمة السر</Th>
+                    <Th>الحالة</Th>
+                    <Th>الباقة</Th>
+                    <Th>الشبكة</Th>
+                    <Th>المندوب</Th>
+                    <Th>الإنشاء</Th>
+                    <Th>البيع</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {(cards.data ?? []).map((c: any) => (
-                    <tr key={c.id} className={
-                      "border-t " + (
-                        c.status === "AVAILABLE" ? "bg-success/10" :
-                        c.status === "ASSIGNED" ? "bg-blue-500/10" :
-                        c.status === "SOLD" ? "bg-destructive/10" : ""
-                      )
-                    }>
-                      <Td dir="ltr" className="font-mono">{c.username}</Td>
-                      <Td dir="ltr" className="font-mono">{c.password ?? "—"}</Td>
+                    <tr
+                      key={c.id}
+                      className={
+                        "border-t " +
+                        (c.status === "AVAILABLE"
+                          ? "bg-success/10"
+                          : c.status === "ASSIGNED"
+                            ? "bg-blue-500/10"
+                            : c.status === "SOLD"
+                              ? "bg-destructive/10"
+                              : "")
+                      }
+                    >
+                      <Td dir="ltr" className="font-mono">
+                        {c.username}
+                      </Td>
+                      <Td dir="ltr" className="font-mono">
+                        {c.password ?? "—"}
+                      </Td>
                       <Td>
-                        {c.status === "SOLD" ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-destructive/15 text-destructive border border-destructive/30">مباع</span> :
-                         c.status === "ASSIGNED" ? <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">مسحوب</span> :
-                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30">متاح</span>}
+                        {c.status === "SOLD" ? (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-destructive/15 text-destructive border border-destructive/30">
+                            مباع
+                          </span>
+                        ) : c.status === "ASSIGNED" ? (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                            مسحوب
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30">
+                            متاح
+                          </span>
+                        )}
                       </Td>
                       <Td>{c.package_name}</Td>
                       <Td>{c.network_name}</Td>
                       <Td>{cleanPhoneLike(c.sold_username ?? c.assigned_username) || "—"}</Td>
-                      <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(c.created_at)}</Td>
-                      <Td className="whitespace-nowrap text-xs">{c.sold_at ? fmtArabicDateTime(c.sold_at) : "—"}</Td>
+                      <Td className="whitespace-nowrap text-xs">
+                        {fmtArabicDateTime(c.created_at)}
+                      </Td>
+                      <Td className="whitespace-nowrap text-xs">
+                        {c.sold_at ? fmtArabicDateTime(c.sold_at) : "—"}
+                      </Td>
                     </tr>
                   ))}
-                  {cards.data?.length === 0 && <tr><Td colSpan={8} className="text-center text-muted-foreground py-8">لا توجد كروت</Td></tr>}
+                  {cards.data?.length === 0 && (
+                    <tr>
+                      <Td colSpan={8} className="text-center text-muted-foreground py-8">
+                        لا توجد كروت
+                      </Td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -385,7 +580,17 @@ function SuperAdminPage() {
   );
 }
 
-function StatCard({ label, value, sub, icon }: { label: string; value: number | string; sub?: string; icon: React.ReactNode }) {
+function StatCard({
+  label,
+  value,
+  sub,
+  icon,
+}: {
+  label: string;
+  value: number | string;
+  sub?: string;
+  icon: React.ReactNode;
+}) {
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between mb-2">
@@ -410,12 +615,31 @@ function MiniStat({ label, value }: { label: string; value: number | string }) {
 function Th({ children }: { children: React.ReactNode }) {
   return <th className="px-3 py-2 text-right text-xs font-semibold border">{children}</th>;
 }
-function Td({ children, className, colSpan, dir }: { children: React.ReactNode; className?: string; colSpan?: number; dir?: "ltr" | "rtl" }) {
-  return <td colSpan={colSpan} dir={dir} className={`px-3 py-2 border ${className ?? ""}`}>{children}</td>;
+function Td({
+  children,
+  className,
+  colSpan,
+  dir,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  colSpan?: number;
+  dir?: "ltr" | "rtl";
+}) {
+  return (
+    <td colSpan={colSpan} dir={dir} className={`px-3 py-2 border ${className ?? ""}`}>
+      {children}
+    </td>
+  );
 }
 
-
-function MyNetworkPanel({ myNetwork, onCreated }: { myNetwork: any | null; onCreated: () => void }) {
+function MyNetworkPanel({
+  myNetwork,
+  onCreated,
+}: {
+  myNetwork: any | null;
+  onCreated: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const m = useMutation({
@@ -425,7 +649,8 @@ function MyNetworkPanel({ myNetwork, onCreated }: { myNetwork: any | null; onCre
     },
     onSuccess: () => {
       toast.success("تم إنشاء شبكتك بنجاح");
-      setOpen(false); setName("");
+      setOpen(false);
+      setName("");
       onCreated();
     },
     onError: (e: any) => toast.error(e.message ?? "فشل الإنشاء"),
@@ -452,27 +677,39 @@ function MyNetworkPanel({ myNetwork, onCreated }: { myNetwork: any | null; onCre
     <Card className="p-4 flex items-center justify-between gap-3 border-dashed">
       <div>
         <div className="font-semibold">أنشئ شبكتك الخاصة كمدير تطبيق</div>
-        <div className="text-xs text-muted-foreground mt-1">ستستطيع إضافة باقات ومناديب وقبول طلبات الانضمام مثل أي مدير شبكة.</div>
+        <div className="text-xs text-muted-foreground mt-1">
+          ستستطيع إضافة باقات ومناديب وقبول طلبات الانضمام مثل أي مدير شبكة.
+        </div>
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button><Plus className="h-4 w-4 ml-1" />إنشاء شبكتي</Button>
+          <Button>
+            <Plus className="h-4 w-4 ml-1" />
+            إنشاء شبكتي
+          </Button>
         </DialogTrigger>
         <DialogContent dir="rtl">
-          <DialogHeader><DialogTitle>إنشاء شبكة خاصة</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>إنشاء شبكة خاصة</DialogTitle>
+          </DialogHeader>
           <div className="space-y-2">
             <Label>اسم الشبكة</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: شبكة مدير التطبيق" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="مثال: شبكة مدير التطبيق"
+            />
           </div>
           <DialogFooter>
-            <Button disabled={m.isPending || !name.trim()} onClick={() => m.mutate()}>حفظ</Button>
+            <Button disabled={m.isPending || !name.trim()} onClick={() => m.mutate()}>
+              حفظ
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>
   );
 }
-
 
 function ResetPasswordButton({ userId, label }: { userId: string; label: string }) {
   const [open, setOpen] = useState(false);
@@ -483,19 +720,35 @@ function ResetPasswordButton({ userId, label }: { userId: string; label: string 
     mutationFn: async () => {
       if (pwd.length < 6) throw new Error("كلمة المرور 6 أحرف على الأقل");
       if (pwd !== pwd2) throw new Error("كلمة المرور غير متطابقة");
-      const { error } = await (supabase.rpc as any)("superadmin_reset_password", { _target_user_id: userId, _new_password: pwd });
+      const { error } = await (supabase.rpc as any)("superadmin_reset_password", {
+        _target_user_id: userId,
+        _new_password: pwd,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("تم تعديل كلمة المرور");
-      setOpen(false); setPwd(""); setPwd2("");
+      setOpen(false);
+      setPwd("");
+      setPwd2("");
     },
     onError: (e: any) => toast.error(e.message ?? "فشل التعديل"),
   });
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setPwd(""); setPwd2(""); } }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) {
+          setPwd("");
+          setPwd2("");
+        }
+      }}
+    >
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">تعديل</Button>
+        <Button size="sm" variant="outline">
+          تعديل
+        </Button>
       </DialogTrigger>
       <DialogContent dir="rtl" className="sm:max-w-md">
         <DialogHeader>
@@ -504,11 +757,20 @@ function ResetPasswordButton({ userId, label }: { userId: string; label: string 
         <div className="space-y-3">
           <div>
             <Label>كلمة المرور الجديدة</Label>
-            <Input type={show ? "text" : "password"} value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="6 أحرف على الأقل" />
+            <Input
+              type={show ? "text" : "password"}
+              value={pwd}
+              onChange={(e) => setPwd(e.target.value)}
+              placeholder="6 أحرف على الأقل"
+            />
           </div>
           <div>
             <Label>تأكيد كلمة المرور</Label>
-            <Input type={show ? "text" : "password"} value={pwd2} onChange={(e) => setPwd2(e.target.value)} />
+            <Input
+              type={show ? "text" : "password"}
+              value={pwd2}
+              onChange={(e) => setPwd2(e.target.value)}
+            />
           </div>
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
@@ -516,8 +778,12 @@ function ResetPasswordButton({ userId, label }: { userId: string; label: string 
           </label>
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
-          <Button disabled={m.isPending} onClick={() => m.mutate()}>حفظ</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            إلغاء
+          </Button>
+          <Button disabled={m.isPending} onClick={() => m.mutate()}>
+            حفظ
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -536,10 +802,16 @@ function ResetRequestsPanel() {
   });
   const resolve = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.rpc as any)("superadmin_resolve_reset_request", { _id: id, _status: "RESOLVED" });
+      const { error } = await (supabase.rpc as any)("superadmin_resolve_reset_request", {
+        _id: id,
+        _status: "RESOLVED",
+      });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("تم إغلاق الطلب"); qc.invalidateQueries({ queryKey: ["sa-reset-requests"] }); },
+    onSuccess: () => {
+      toast.success("تم إغلاق الطلب");
+      qc.invalidateQueries({ queryKey: ["sa-reset-requests"] });
+    },
     onError: (e: any) => toast.error(e.message ?? "فشل"),
   });
 
@@ -549,34 +821,57 @@ function ResetRequestsPanel() {
         <table dir="rtl" className="w-full text-sm border-collapse border">
           <thead className="bg-muted/50">
             <tr>
-              <Th>رقم الجوال</Th><Th>المستخدم المطابق</Th><Th>الاسم</Th><Th>الشبكة</Th>
-              <Th>ملاحظة</Th><Th>الحالة</Th><Th>التاريخ</Th><Th>إجراءات</Th>
+              <Th>رقم الجوال</Th>
+              <Th>المستخدم المطابق</Th>
+              <Th>الاسم</Th>
+              <Th>الشبكة</Th>
+              <Th>ملاحظة</Th>
+              <Th>الحالة</Th>
+              <Th>التاريخ</Th>
+              <Th>إجراءات</Th>
             </tr>
           </thead>
           <tbody>
             {(q.data ?? []).map((r: any) => (
               <tr key={r.id} className="border-t">
-                <Td dir="ltr" className="font-mono">{r.phone}</Td>
+                <Td dir="ltr" className="font-mono">
+                  {r.phone}
+                </Td>
                 <Td>{cleanPhoneLike(r.matched_username) || "—"}</Td>
                 <Td>{r.matched_full_name ?? "—"}</Td>
                 <Td>{r.matched_network_name ?? "—"}</Td>
                 <Td className="max-w-[220px]">{r.note ?? "—"}</Td>
-                <Td>{r.status === "PENDING" ? <Badge>قيد الانتظار</Badge> : <Badge variant="secondary">تم</Badge>}</Td>
+                <Td>
+                  {r.status === "PENDING" ? (
+                    <Badge>قيد الانتظار</Badge>
+                  ) : (
+                    <Badge variant="secondary">تم</Badge>
+                  )}
+                </Td>
                 <Td className="whitespace-nowrap text-xs">{fmtArabicDateTime(r.created_at)}</Td>
                 <Td>
                   <div className="flex gap-1 flex-wrap">
                     {r.matched_user_id && (
-                      <ResetPasswordButton userId={r.matched_user_id} label={r.matched_full_name ?? r.phone} />
+                      <ResetPasswordButton
+                        userId={r.matched_user_id}
+                        label={r.matched_full_name ?? r.phone}
+                      />
                     )}
                     {r.status === "PENDING" && (
-                      <Button size="sm" variant="ghost" disabled={resolve.isPending} onClick={() => resolve.mutate(r.id)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={resolve.isPending}
+                        onClick={() => resolve.mutate(r.id)}
+                      >
                         إغلاق
                       </Button>
                     )}
                     {r.phone && (
                       <a
                         href={`https://wa.me/${r.phone.replace(/\D/g, "")}`}
-                        target="_blank" rel="noreferrer"
+                        target="_blank"
+                        rel="noreferrer"
                         className="inline-flex items-center h-8 px-2 rounded-md text-xs bg-[#25D366] text-white"
                       >
                         واتساب
@@ -586,7 +881,13 @@ function ResetRequestsPanel() {
                 </Td>
               </tr>
             ))}
-            {q.data?.length === 0 && <tr><Td colSpan={8} className="text-center text-muted-foreground py-8">لا توجد طلبات</Td></tr>}
+            {q.data?.length === 0 && (
+              <tr>
+                <Td colSpan={8} className="text-center text-muted-foreground py-8">
+                  لا توجد طلبات
+                </Td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

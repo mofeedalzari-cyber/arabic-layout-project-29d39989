@@ -37,7 +37,6 @@ export const backupMyNetwork = createServerFn({ method: "POST" })
       network,
     };
 
-
     for (const t of tables) {
       if (t === "request_payments") {
         // request_payments has no network_id; fetch by request ids

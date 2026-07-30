@@ -1,12 +1,4 @@
-import {
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  LabelList,
-  PieChart,
-  Pie,
-  Sector,
-} from "recharts";
+import { Tooltip, ResponsiveContainer, Cell, LabelList, PieChart, Pie, Sector } from "recharts";
 import { useState } from "react";
 import { fmtMoney } from "@/lib/format";
 
@@ -29,11 +21,7 @@ const COLORS = {
 
 export function PackagesChart({ data }: { data: PkgRow[] }) {
   if (!data.length) {
-    return (
-      <div className="text-center text-sm text-muted-foreground py-10">
-        لا توجد بيانات.
-      </div>
-    );
+    return <div className="text-center text-sm text-muted-foreground py-10">لا توجد بيانات.</div>;
   }
 
   return (
@@ -57,8 +45,7 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
         "
       >
         {data.map((r, idx) => {
-          const total =
-            r.total || r.sold + r.withdrawn + r.remaining;
+          const total = r.total || r.sold + r.withdrawn + r.remaining;
 
           const slices = [
             { name: "المباع", value: r.sold, color: COLORS.sold },
@@ -83,12 +70,8 @@ export function PackagesChart({ data }: { data: PkgRow[] }) {
             >
               {/* عنوان البطاقة */}
               <div className="text-center mb-3">
-                <div className="text-sm font-bold truncate text-foreground">
-                  {r.pkg}
-                </div>
-                <div className="text-[11px] text-muted-foreground truncate">
-                  {r.network}
-                </div>
+                <div className="text-sm font-bold truncate text-foreground">{r.pkg}</div>
+                <div className="text-[11px] text-muted-foreground truncate">{r.network}</div>
               </div>
 
               {/* الرسم البياني الدائري - ارتفاع متجاوب */}
@@ -198,11 +181,7 @@ export function AgentsChart({
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   if (!total) {
-    return (
-      <div className="text-center text-sm text-muted-foreground py-10">
-        لا توجد بيانات.
-      </div>
-    );
+    return <div className="text-center text-sm text-muted-foreground py-10">لا توجد بيانات.</div>;
   }
 
   const renderActive = (props: any) => {
@@ -258,7 +237,12 @@ export function AgentsChart({
                   if (!n) return "";
                   return `${n} (${Math.round((n / total) * 100)}%)`;
                 }}
-                style={{ fontSize: "12px", fill: "#fff", fontWeight: 600, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
+                style={{
+                  fontSize: "12px",
+                  fill: "#fff",
+                  fontWeight: 600,
+                  textShadow: "0 1px 4px rgba(0,0,0,0.5)",
+                }}
               />
             </Pie>
             <Tooltip
@@ -278,15 +262,7 @@ export function AgentsChart({
 
 // --- المكونات المساعدة (لم تتغير توقيعاتها) ---
 
-function MiniStat({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color: string;
-}) {
+function MiniStat({ label, value, color }: { label: string; value: number; color: string }) {
   // إضافة أيقونة رمزية بسيطة
   const iconMap: Record<string, string> = {
     مباع: "🟢",

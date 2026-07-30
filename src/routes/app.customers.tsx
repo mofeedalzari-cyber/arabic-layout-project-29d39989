@@ -8,12 +8,50 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useMemo, useState } from "react";
-import { Search, Users, MessageCircle, Receipt, TrendingUp, ShoppingBag, Trash2, FileText, Pencil, CreditCard, UserPlus, User as UserIcon, Banknote, Wallet, Plus } from "lucide-react";
+import {
+  Search,
+  Users,
+  MessageCircle,
+  Receipt,
+  TrendingUp,
+  ShoppingBag,
+  Trash2,
+  FileText,
+  Pencil,
+  CreditCard,
+  UserPlus,
+  User as UserIcon,
+  Banknote,
+  Wallet,
+  Plus,
+} from "lucide-react";
 import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
 import { openWhatsApp } from "@/lib/wa-open";
 import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
@@ -35,7 +73,18 @@ function normalizeWa(v: string) {
 export const Route = createFileRoute("/app/customers")({ component: CustomersPage });
 
 type Customer = { id: string; name: string; whatsapp: string | null; created_at: string };
-type Sale = { id: string; transaction_no: string; package_name: string; network_name: string; price: number; sold_at: string; customer_id: string | null; buyer_name: string | null; card_username: string | null; card_password: string | null };
+type Sale = {
+  id: string;
+  transaction_no: string;
+  package_name: string;
+  network_name: string;
+  price: number;
+  sold_at: string;
+  customer_id: string | null;
+  buyer_name: string | null;
+  card_username: string | null;
+  card_password: string | null;
+};
 
 function CustomersPage() {
   const { user } = useAuth();
@@ -67,21 +116,36 @@ function CustomersPage() {
   async function handleAddCustomer() {
     const name = newName.trim();
     const whatsapp = normalizeWa(newWhats);
-    if (!name) { toast.error("أدخل اسم الزبون"); return; }
-    if (whatsapp.length < 10) { toast.error("رقم واتساب غير صحيح"); return; }
+    if (!name) {
+      toast.error("أدخل اسم الزبون");
+      return;
+    }
+    if (whatsapp.length < 10) {
+      toast.error("رقم واتساب غير صحيح");
+      return;
+    }
     if (!user?.id) return;
     setAddBusy(true);
     try {
-      const { data: prof } = await supabase.from("profiles").select("network_id").eq("id", user.id).maybeSingle();
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("network_id")
+        .eq("id", user.id)
+        .maybeSingle();
       const { error } = await supabase.from("customers").insert({
         agent_id: user.id,
         network_id: prof?.network_id ?? null,
         name,
         whatsapp,
       });
-      if (error) { toast.error("تعذر إضافة الزبون: " + error.message); return; }
+      if (error) {
+        toast.error("تعذر إضافة الزبون: " + error.message);
+        return;
+      }
       toast.success("تم إضافة الزبون");
-      setNewName(""); setNewWhats(""); setAddOpen(false);
+      setNewName("");
+      setNewWhats("");
+      setAddOpen(false);
       qc.invalidateQueries({ queryKey: ["customers-page"] });
     } finally {
       setAddBusy(false);
@@ -90,11 +154,13 @@ function CustomersPage() {
 
   async function pickFromContacts() {
     const r = await pickContact();
-    if (!r.ok) { if (r.error !== "cancelled") toast.error(r.message ?? "تعذّر جلب جهة الاتصال"); return; }
+    if (!r.ok) {
+      if (r.error !== "cancelled") toast.error(r.message ?? "تعذّر جلب جهة الاتصال");
+      return;
+    }
     if (r.contact?.name) setNewName(r.contact.name);
     if (r.contact?.phone) setNewWhats(localYemenDigits(r.contact.phone));
   }
-
 
   const { data: customers } = useQuery({
     queryKey: ["customers-page", user?.id],
@@ -116,7 +182,9 @@ function CustomersPage() {
     queryFn: async (): Promise<Sale[]> => {
       const { data, error } = await supabase
         .from("sales")
-        .select("id, transaction_no, package_name, network_name, price, sold_at, customer_id, buyer_name, card_number, is_external, cards ( username, password )")
+        .select(
+          "id, transaction_no, package_name, network_name, price, sold_at, customer_id, buyer_name, card_number, is_external, cards ( username, password )",
+        )
         .eq("agent_id", user!.id)
         .order("sold_at", { ascending: false });
       if (error) throw error;
@@ -128,7 +196,6 @@ function CustomersPage() {
     },
   });
 
-
   const { data: payments } = useQuery({
     queryKey: ["customer-payments", user?.id],
     enabled: !!user?.id,
@@ -139,7 +206,13 @@ function CustomersPage() {
         .eq("agent_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as { id: string; customer_id: string; amount: number; note: string | null; created_at: string }[];
+      return (data ?? []) as {
+        id: string;
+        customer_id: string;
+        amount: number;
+        note: string | null;
+        created_at: string;
+      }[];
     },
   });
 
@@ -212,9 +285,7 @@ function CustomersPage() {
     const s = q.trim().toLowerCase();
     const filtered = s
       ? list.filter(
-          (c) =>
-            c.name.toLowerCase().includes(s) ||
-            (c.whatsapp ?? "").toLowerCase().includes(s),
+          (c) => c.name.toLowerCase().includes(s) || (c.whatsapp ?? "").toLowerCase().includes(s),
         )
       : list;
     return filtered.sort((a, b) => b.balance - a.balance);
@@ -229,18 +300,29 @@ function CustomersPage() {
     [selected, payments],
   );
   const selectedSalesTotal = selectedSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
-  const selectedCharges = selectedPayments.filter((p) => Number(p.amount) < 0).reduce((a, p) => a + Math.abs(Number(p.amount) || 0), 0);
+  const selectedCharges = selectedPayments
+    .filter((p) => Number(p.amount) < 0)
+    .reduce((a, p) => a + Math.abs(Number(p.amount) || 0), 0);
   const selectedTotal = selectedSalesTotal + selectedCharges;
-  const selectedPaid = selectedPayments.filter((p) => Number(p.amount) > 0).reduce((a, p) => a + Number(p.amount || 0), 0);
+  const selectedPaid = selectedPayments
+    .filter((p) => Number(p.amount) > 0)
+    .reduce((a, p) => a + Number(p.amount || 0), 0);
   const selectedBalance = Math.max(selectedTotal - selectedPaid, 0);
 
   async function handleCustomerPayment() {
     if (!payFor || !user?.id) return;
     const amount = Number(payAmount);
-    if (!amount || amount <= 0) { toast.error("أدخل مبلغاً صحيحاً"); return; }
+    if (!amount || amount <= 0) {
+      toast.error("أدخل مبلغاً صحيحاً");
+      return;
+    }
     setPayBusy(true);
     try {
-      const { data: prof } = await supabase.from("profiles").select("network_id").eq("id", user.id).maybeSingle();
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("network_id")
+        .eq("id", user.id)
+        .maybeSingle();
       const { error } = await supabase.from("customer_payments").insert({
         customer_id: payFor.id,
         agent_id: user.id,
@@ -248,9 +330,14 @@ function CustomersPage() {
         amount,
         note: payNote.trim() || null,
       });
-      if (error) { toast.error("تعذر التسديد: " + error.message); return; }
+      if (error) {
+        toast.error("تعذر التسديد: " + error.message);
+        return;
+      }
       toast.success(`تم تسديد ${fmtMoney(amount)}`);
-      setPayFor(null); setPayAmount(""); setPayNote("");
+      setPayFor(null);
+      setPayAmount("");
+      setPayNote("");
       qc.invalidateQueries({ queryKey: ["customer-payments"] });
     } finally {
       setPayBusy(false);
@@ -259,7 +346,10 @@ function CustomersPage() {
 
   async function deleteCustomerPayment(id: string) {
     const { error } = await supabase.from("customer_payments").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("تم الحذف");
     qc.invalidateQueries({ queryKey: ["customer-payments"] });
   }
@@ -267,7 +357,10 @@ function CustomersPage() {
   async function handleAddCharge() {
     if (!chargeFor || !user?.id) return;
     const amount = Number(chargeAmount);
-    if (!amount || amount <= 0) { toast.error("أدخل مبلغاً صحيحاً"); return; }
+    if (!amount || amount <= 0) {
+      toast.error("أدخل مبلغاً صحيحاً");
+      return;
+    }
     setChargeBusy(true);
     try {
       const pkg = packages?.find((p) => p.id === chargePackageId);
@@ -286,11 +379,18 @@ function CustomersPage() {
           _unit_price: unitPrice,
           _buyer_name: chargeFor.name,
         });
-        if (error) { toast.error("تعذر تسجيل البيع: " + error.message); return; }
+        if (error) {
+          toast.error("تعذر تسجيل البيع: " + error.message);
+          return;
+        }
         toast.success(`تم تسجيل ${qty} عملية بيع خارجي`);
       } else {
         // مبلغ مضاف يدوي (بدون باقة) — يُسجَّل كقيد ديْن على الزبون فقط
-        const { data: prof } = await supabase.from("profiles").select("network_id").eq("id", user.id).maybeSingle();
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("network_id")
+          .eq("id", user.id)
+          .maybeSingle();
         const parts: string[] = ["مبلغ مضاف"];
         if (cardNo) parts.push(`رقم الكرت: ${cardNo}`);
         if (noteBase) parts.push(noteBase);
@@ -301,11 +401,19 @@ function CustomersPage() {
           amount: -Math.abs(amount),
           note: parts.join(" — "),
         });
-        if (error) { toast.error("تعذر إضافة المبلغ: " + error.message); return; }
+        if (error) {
+          toast.error("تعذر إضافة المبلغ: " + error.message);
+          return;
+        }
         toast.success(`تم إضافة ${fmtMoney(amount)}`);
       }
 
-      setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1"); setChargeCard("");
+      setChargeFor(null);
+      setChargeAmount("");
+      setChargeNote("");
+      setChargePackageId("");
+      setChargeQty("1");
+      setChargeCard("");
       qc.invalidateQueries({ queryKey: ["customer-payments"] });
       qc.invalidateQueries({ queryKey: ["customer-sales"] });
       qc.invalidateQueries({ queryKey: ["sales"] });
@@ -314,8 +422,6 @@ function CustomersPage() {
       setChargeBusy(false);
     }
   }
-
-
 
   async function handleDelete(c: Customer) {
     setDeleteBusy(true);
@@ -384,12 +490,21 @@ function CustomersPage() {
       if (!networkName) networkName = custSales[0]?.network_name || "";
 
       // Group sales by package_name + price → qty
-      const map = new Map<string, { packageName: string; networkName: string; qty: number; price: number }>();
+      const map = new Map<
+        string,
+        { packageName: string; networkName: string; qty: number; price: number }
+      >();
       for (const s of custSales) {
         const key = `${s.package_name}||${Number(s.price)}`;
         const cur = map.get(key);
         if (cur) cur.qty += 1;
-        else map.set(key, { packageName: s.package_name, networkName: s.network_name, qty: 1, price: Number(s.price) || 0 });
+        else
+          map.set(key, {
+            packageName: s.package_name,
+            networkName: s.network_name,
+            qty: 1,
+            price: Number(s.price) || 0,
+          });
       }
       const items = Array.from(map.values());
       const total = custSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
@@ -407,7 +522,6 @@ function CustomersPage() {
         `الرصيد عليكم ${fmtMoney(total)}.\n\n` +
         `مع خالص التقدير والاحترام،\n\n` +
         `فريق ${networkName || "الشبكة"}`;
-
 
       if (!c.whatsapp) {
         toast.error("لا يوجد رقم واتساب لهذا الزبون");
@@ -435,15 +549,12 @@ function CustomersPage() {
         whatsappPhone: c.whatsapp,
         filenameBase: `كشف_${c.name}`,
       });
-
     } catch (err) {
       toast.error("تعذر إنشاء الفاتورة: " + String((err as any)?.message || err).slice(0, 120));
     } finally {
       setSendingId(null);
     }
   }
-
-
 
   function openSaleEdit(s: Sale) {
     setSaleToEdit(s);
@@ -453,9 +564,15 @@ function CustomersPage() {
   async function saveSaleEdit() {
     if (!saleToEdit) return;
     setSaleBusy(true);
-    const { error } = await supabase.from("sales").update({ buyer_name: editBuyer.trim() || null }).eq("id", saleToEdit.id);
+    const { error } = await supabase
+      .from("sales")
+      .update({ buyer_name: editBuyer.trim() || null })
+      .eq("id", saleToEdit.id);
     setSaleBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("تم حفظ التعديلات");
     setSaleToEdit(null);
     qc.invalidateQueries({ queryKey: ["customer-sales"] });
@@ -465,22 +582,47 @@ function CustomersPage() {
   return (
     <>
       <PageHeader title="الزبائن" description="إدارة حسابات الزبائن وإحصائياتهم" />
-      <div className="mb-4 flex justify-start"><RefreshButton /></div>
-
+      <div className="mb-4 flex justify-start">
+        <RefreshButton />
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        <StatCard icon={<Users className="h-4 w-4" />} label="إجمالي الزبائن" value={String(totals.customers)} />
-        <StatCard icon={<TrendingUp className="h-4 w-4" />} label="زبائن نشِطون" value={String(totals.active)} />
-        <StatCard icon={<ShoppingBag className="h-4 w-4" />} label="عمليات البيع" value={String(totals.sales)} />
-        <StatCard icon={<Receipt className="h-4 w-4" />} label="إجمالي المبيعات" value={fmtMoney(totals.revenue)} />
+        <StatCard
+          icon={<Users className="h-4 w-4" />}
+          label="إجمالي الزبائن"
+          value={String(totals.customers)}
+        />
+        <StatCard
+          icon={<TrendingUp className="h-4 w-4" />}
+          label="زبائن نشِطون"
+          value={String(totals.active)}
+        />
+        <StatCard
+          icon={<ShoppingBag className="h-4 w-4" />}
+          label="عمليات البيع"
+          value={String(totals.sales)}
+        />
+        <StatCard
+          icon={<Receipt className="h-4 w-4" />}
+          label="إجمالي المبيعات"
+          value={fmtMoney(totals.revenue)}
+        />
       </div>
 
       <div className="flex gap-2 mb-4 items-center">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="بحث باسم أو رقم واتساب..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />
+          <Input
+            placeholder="بحث باسم أو رقم واتساب..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="pr-9 rounded-xl"
+          />
         </div>
-        <Button onClick={() => setAddOpen(true)} className="rounded-xl gradient-primary-bg text-white">
+        <Button
+          onClick={() => setAddOpen(true)}
+          className="rounded-xl gradient-primary-bg text-white"
+        >
           <UserPlus className="h-4 w-4 ml-1" />
           إضافة زبون
         </Button>
@@ -489,25 +631,35 @@ function CustomersPage() {
       {/* Mobile cards */}
       <div className="grid gap-2 lg:hidden">
         {rows.map((c) => (
-          <Card key={c.id} className="card-elegant border-0 p-3 slide-up" onClick={() => setSelected(c)}>
+          <Card
+            key={c.id}
+            className="card-elegant border-0 p-3 slide-up"
+            onClick={() => setSelected(c)}
+          >
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl gradient-primary-bg text-white flex items-center justify-center font-bold text-sm">
                 {c.name.slice(0, 2).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold truncate">{c.name}</div>
-                <div className="text-[11px] text-muted-foreground">{displayPhone(c.whatsapp, "")}</div>
+                <div className="text-[11px] text-muted-foreground">
+                  {displayPhone(c.whatsapp, "")}
+                </div>
               </div>
               <div className="text-left">
                 <div className="text-primary font-bold text-sm">{fmtMoney(c.total)}</div>
                 <div className="text-[10px] text-muted-foreground">{c.count} عملية</div>
-                <div className={`text-[11px] font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}>
+                <div
+                  className={`text-[11px] font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}
+                >
                   الرصيد: {fmtMoney(c.balance)}
                 </div>
               </div>
             </div>
             {c.last && (
-              <div className="text-[10px] text-muted-foreground mt-2">آخر عملية: {fmtArabicDateTime(c.last)}</div>
+              <div className="text-[10px] text-muted-foreground mt-2">
+                آخر عملية: {fmtArabicDateTime(c.last)}
+              </div>
             )}
             <div className="flex gap-2 mt-3 flex-wrap" onClick={(e) => e.stopPropagation()}>
               <Button
@@ -524,7 +676,11 @@ function CustomersPage() {
                 size="sm"
                 className="flex-1 min-w-[100px] bg-success hover:bg-success/90 text-white"
                 disabled={c.balance <= 0}
-                onClick={() => { setPayFor(c as any); setPayAmount(String(c.balance)); setPayNote(""); }}
+                onClick={() => {
+                  setPayFor(c as any);
+                  setPayAmount(String(c.balance));
+                  setPayNote("");
+                }}
               >
                 <Banknote className="h-4 w-4 ml-1" />
                 تسديد
@@ -533,22 +689,24 @@ function CustomersPage() {
                 size="sm"
                 variant="outline"
                 className="flex-1 min-w-[100px] border-warning/40 text-warning hover:bg-warning/10"
-                onClick={() => { setChargeFor(c as any); setChargeAmount(""); setChargeNote(""); }}
+                onClick={() => {
+                  setChargeFor(c as any);
+                  setChargeAmount("");
+                  setChargeNote("");
+                }}
               >
                 <Plus className="h-4 w-4 ml-1" />
                 إضافة مبلغ
               </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => setConfirmDelete(c as any)}
-              >
+              <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(c as any)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </Card>
         ))}
-        {rows.length === 0 && <div className="text-center py-16 text-muted-foreground">لا يوجد زبائن.</div>}
+        {rows.length === 0 && (
+          <div className="text-center py-16 text-muted-foreground">لا يوجد زبائن.</div>
+        )}
       </div>
 
       {/* Desktop table */}
@@ -574,15 +732,25 @@ function CustomersPage() {
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
                 <TableCell className="text-success font-bold">{fmtMoney(c.paid)}</TableCell>
-                <TableCell className={`font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}>{fmtMoney(c.balance)}</TableCell>
-                <TableCell className="text-xs">{c.last ? fmtArabicDateTime(c.last) : "—"}</TableCell>
+                <TableCell
+                  className={`font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}
+                >
+                  {fmtMoney(c.balance)}
+                </TableCell>
+                <TableCell className="text-xs">
+                  {c.last ? fmtArabicDateTime(c.last) : "—"}
+                </TableCell>
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-2 justify-end flex-wrap">
                     <Button
                       size="sm"
                       className="bg-success hover:bg-success/90 text-white"
                       disabled={c.balance <= 0}
-                      onClick={() => { setPayFor(c as any); setPayAmount(String(c.balance)); setPayNote(""); }}
+                      onClick={() => {
+                        setPayFor(c as any);
+                        setPayAmount(String(c.balance));
+                        setPayNote("");
+                      }}
                     >
                       <Banknote className="h-4 w-4 ml-1" />
                       تسديد
@@ -591,17 +759,17 @@ function CustomersPage() {
                       size="sm"
                       variant="outline"
                       className="border-warning/40 text-warning hover:bg-warning/10"
-                      onClick={() => { setChargeFor(c as any); setChargeAmount(""); setChargeNote(""); }}
+                      onClick={() => {
+                        setChargeFor(c as any);
+                        setChargeAmount("");
+                        setChargeNote("");
+                      }}
                     >
                       <Plus className="h-4 w-4 ml-1" />
                       إضافة مبلغ
                     </Button>
                     {c.whatsapp && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openWhatsApp(c.whatsapp!)}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => openWhatsApp(c.whatsapp!)}>
                         <MessageCircle className="h-4 w-4 ml-1" />
                         واتساب
                       </Button>
@@ -615,7 +783,11 @@ function CustomersPage() {
                       <FileText className="h-4 w-4 ml-1" />
                       {sendingId === c.id ? "جاري..." : "كشف واتساب"}
                     </Button>
-                    <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(c as any)}>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setConfirmDelete(c as any)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -647,13 +819,12 @@ function CustomersPage() {
                   </div>
                   <div className="flex-1">
                     <div className="font-bold">{selected.name}</div>
-                    <div className="text-xs text-muted-foreground font-mono">{displayPhone(selected.whatsapp, "")}</div>
+                    <div className="text-xs text-muted-foreground font-mono">
+                      {displayPhone(selected.whatsapp, "")}
+                    </div>
                   </div>
                   {selected.whatsapp && (
-                    <Button
-                      size="sm"
-                      onClick={() => openWhatsApp(selected.whatsapp!)}
-                    >
+                    <Button size="sm" onClick={() => openWhatsApp(selected.whatsapp!)}>
                       <MessageCircle className="h-4 w-4 ml-1" />
                       واتساب
                     </Button>
@@ -672,9 +843,15 @@ function CustomersPage() {
                     <div className="text-[11px] text-muted-foreground">المدفوع</div>
                     <div className="font-bold text-lg text-success">{fmtMoney(selectedPaid)}</div>
                   </div>
-                  <div className={`rounded-xl p-3 text-center ${selectedBalance > 0 ? "bg-warning/10" : "bg-success/10"}`}>
+                  <div
+                    className={`rounded-xl p-3 text-center ${selectedBalance > 0 ? "bg-warning/10" : "bg-success/10"}`}
+                  >
                     <div className="text-[11px] text-muted-foreground">الرصيد المتبقي</div>
-                    <div className={`font-bold text-lg ${selectedBalance > 0 ? "text-warning" : "text-success"}`}>{fmtMoney(selectedBalance)}</div>
+                    <div
+                      className={`font-bold text-lg ${selectedBalance > 0 ? "text-warning" : "text-success"}`}
+                    >
+                      {fmtMoney(selectedBalance)}
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3 flex-wrap">
@@ -682,7 +859,11 @@ function CustomersPage() {
                     size="sm"
                     className="flex-1 min-w-[110px] bg-success hover:bg-success/90 text-white"
                     disabled={selectedBalance <= 0}
-                    onClick={() => { setPayFor(selected); setPayAmount(String(selectedBalance)); setPayNote(""); }}
+                    onClick={() => {
+                      setPayFor(selected);
+                      setPayAmount(String(selectedBalance));
+                      setPayNote("");
+                    }}
                   >
                     <Banknote className="h-4 w-4 ml-1" />
                     تسديد الزبون
@@ -691,7 +872,11 @@ function CustomersPage() {
                     size="sm"
                     variant="outline"
                     className="flex-1 min-w-[110px] border-warning/40 text-warning hover:bg-warning/10"
-                    onClick={() => { setChargeFor(selected); setChargeAmount(""); setChargeNote(""); }}
+                    onClick={() => {
+                      setChargeFor(selected);
+                      setChargeAmount("");
+                      setChargeNote("");
+                    }}
                   >
                     <Plus className="h-4 w-4 ml-1" />
                     إضافة مبلغ
@@ -706,7 +891,11 @@ function CustomersPage() {
                     <FileText className="h-4 w-4 ml-1" />
                     {sendingId === selected.id ? "جاري..." : "كشف حساب واتساب"}
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(selected)}>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setConfirmDelete(selected)}
+                  >
                     <Trash2 className="h-4 w-4 ml-1" />
                     حذف
                   </Button>
@@ -737,18 +926,42 @@ function CustomersPage() {
                               <TableRow key={p.id}>
                                 <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
                                 <TableCell>
-                                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${isCharge ? "bg-warning/15 text-warning" : "bg-success/15 text-success"}`}>
-                                    {isCharge ? <Plus className="h-3 w-3" /> : <Wallet className="h-3 w-3" />}
+                                  <span
+                                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${isCharge ? "bg-warning/15 text-warning" : "bg-success/15 text-success"}`}
+                                  >
+                                    {isCharge ? (
+                                      <Plus className="h-3 w-3" />
+                                    ) : (
+                                      <Wallet className="h-3 w-3" />
+                                    )}
                                     {isCharge ? "مبلغ مضاف" : "تسديد"}
                                   </span>
                                 </TableCell>
-                                <TableCell className="text-[11px] whitespace-nowrap">{fmtArabicDateTime(p.created_at)}</TableCell>
-                                <TableCell className="text-[11px] text-muted-foreground max-w-[220px] truncate" title={p.note ?? ""}>{p.note || "—"}</TableCell>
-                                <TableCell className={`font-bold whitespace-nowrap ${isCharge ? "text-warning" : "text-success"}`}>
-                                  {isCharge ? "+ " : ""}{fmtMoney(Math.abs(amt))}
+                                <TableCell className="text-[11px] whitespace-nowrap">
+                                  {fmtArabicDateTime(p.created_at)}
+                                </TableCell>
+                                <TableCell
+                                  className="text-[11px] text-muted-foreground max-w-[220px] truncate"
+                                  title={p.note ?? ""}
+                                >
+                                  {p.note || "—"}
+                                </TableCell>
+                                <TableCell
+                                  className={`font-bold whitespace-nowrap ${isCharge ? "text-warning" : "text-success"}`}
+                                >
+                                  {isCharge ? "+ " : ""}
+                                  {fmtMoney(Math.abs(amt))}
                                 </TableCell>
                                 <TableCell>
-                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => { if (confirm("حذف هذا القيد؟")) deleteCustomerPayment(p.id); }} title="حذف">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-destructive"
+                                    onClick={() => {
+                                      if (confirm("حذف هذا القيد؟")) deleteCustomerPayment(p.id);
+                                    }}
+                                    title="حذف"
+                                  >
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                                 </TableCell>
@@ -756,10 +969,16 @@ function CustomersPage() {
                             );
                           })}
                           <TableRow className="bg-primary/5 font-bold">
-                            <TableCell colSpan={4} className="text-right">الإجمالي</TableCell>
+                            <TableCell colSpan={4} className="text-right">
+                              الإجمالي
+                            </TableCell>
                             <TableCell className="whitespace-nowrap">
-                              <div className="text-success text-[11px]">مسدد: {fmtMoney(selectedPaid)}</div>
-                              <div className="text-warning text-[11px]">مضاف: {fmtMoney(selectedCharges)}</div>
+                              <div className="text-success text-[11px]">
+                                مسدد: {fmtMoney(selectedPaid)}
+                              </div>
+                              <div className="text-warning text-[11px]">
+                                مضاف: {fmtMoney(selectedCharges)}
+                              </div>
                             </TableCell>
                             <TableCell />
                           </TableRow>
@@ -773,7 +992,9 @@ function CustomersPage() {
               <div>
                 <div className="text-sm font-semibold mb-2">سجل المبيعات</div>
                 {selectedSales.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-8 text-sm">لا توجد عمليات بيع لهذا الزبون.</div>
+                  <div className="text-center text-muted-foreground py-8 text-sm">
+                    لا توجد عمليات بيع لهذا الزبون.
+                  </div>
                 ) : (
                   <Card className="border-0 card-elegant overflow-hidden">
                     <div className="overflow-x-auto">
@@ -784,7 +1005,9 @@ function CustomersPage() {
                             <TableHead className="text-right whitespace-nowrap">الباقة</TableHead>
                             <TableHead className="text-right whitespace-nowrap">الكرت</TableHead>
                             <TableHead className="text-right whitespace-nowrap">التاريخ</TableHead>
-                            <TableHead className="text-right whitespace-nowrap">رقم العملية</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">
+                              رقم العملية
+                            </TableHead>
                             <TableHead className="text-right whitespace-nowrap">السعر</TableHead>
                             <TableHead className="text-right whitespace-nowrap">إجراءات</TableHead>
                           </TableRow>
@@ -795,34 +1018,57 @@ function CustomersPage() {
                               <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
                               <TableCell>
                                 <div className="font-semibold">{s.package_name}</div>
-                                <div className="text-[11px] text-muted-foreground">{s.network_name}</div>
+                                <div className="text-[11px] text-muted-foreground">
+                                  {s.network_name}
+                                </div>
                                 {s.buyer_name && (
-                                  <div className="text-[11px] text-muted-foreground">المشتري: {s.buyer_name}</div>
+                                  <div className="text-[11px] text-muted-foreground">
+                                    المشتري: {s.buyer_name}
+                                  </div>
                                 )}
                               </TableCell>
                               <TableCell>
                                 {s.card_username ? (
                                   <div className="flex items-center gap-1">
                                     <CreditCard className="h-3 w-3 text-primary" />
-                                    <RevealText username={s.card_username} password={s.card_password} />
+                                    <RevealText
+                                      username={s.card_username}
+                                      password={s.card_password}
+                                    />
                                   </div>
                                 ) : (
                                   <span className="text-muted-foreground">—</span>
                                 )}
                               </TableCell>
-                              <TableCell className="text-[11px] whitespace-nowrap">{fmtArabicDateTime(s.sold_at)}</TableCell>
-                              <TableCell className="text-[10px] font-mono text-muted-foreground whitespace-nowrap">{s.transaction_no}</TableCell>
-                              <TableCell className="text-primary font-bold whitespace-nowrap">{fmtMoney(Number(s.price))}</TableCell>
+                              <TableCell className="text-[11px] whitespace-nowrap">
+                                {fmtArabicDateTime(s.sold_at)}
+                              </TableCell>
+                              <TableCell className="text-[10px] font-mono text-muted-foreground whitespace-nowrap">
+                                {s.transaction_no}
+                              </TableCell>
+                              <TableCell className="text-primary font-bold whitespace-nowrap">
+                                {fmtMoney(Number(s.price))}
+                              </TableCell>
                               <TableCell>
-                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openSaleEdit(s)} title="تعديل">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => openSaleEdit(s)}
+                                  title="تعديل"
+                                >
                                   <Pencil className="h-3.5 w-3.5" />
                                 </Button>
                               </TableCell>
                             </TableRow>
                           ))}
                           <TableRow className="bg-primary/5 font-bold">
-                            <TableCell colSpan={5} className="text-right">الإجمالي</TableCell>
-                            <TableCell className="text-primary whitespace-nowrap">{fmtMoney(selectedTotal)}</TableCell>
+                            <TableCell colSpan={5} className="text-right">
+                              الإجمالي
+                            </TableCell>
+                            <TableCell className="text-primary whitespace-nowrap">
+                              {fmtMoney(selectedTotal)}
+                            </TableCell>
                             <TableCell />
                           </TableRow>
                         </TableBody>
@@ -831,7 +1077,6 @@ function CustomersPage() {
                   </Card>
                 )}
               </div>
-
             </div>
           )}
         </SheetContent>
@@ -842,12 +1087,16 @@ function CustomersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>حذف الزبون</AlertDialogTitle>
             <AlertDialogDescription>
-              هل أنت متأكد من حذف "{confirmDelete?.name}"؟ سيتم حذف سجل المبيعات المرتبطة به وإرجاع الكروت إلى حسابك. لا يمكن التراجع عن هذا الإجراء.
+              هل أنت متأكد من حذف "{confirmDelete?.name}"؟ سيتم حذف سجل المبيعات المرتبطة به وإرجاع
+              الكروت إلى حسابك. لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteBusy}>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={() => confirmDelete && handleDelete(confirmDelete)} disabled={deleteBusy}>
+            <AlertDialogAction
+              onClick={() => confirmDelete && handleDelete(confirmDelete)}
+              disabled={deleteBusy}
+            >
               {deleteBusy ? "جاري..." : "حذف"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -862,17 +1111,30 @@ function CustomersPage() {
           <div className="space-y-3">
             <div>
               <Label>اسم المشتري</Label>
-              <Input value={editBuyer} onChange={(e) => setEditBuyer(e.target.value)} placeholder="اختياري" />
+              <Input
+                value={editBuyer}
+                onChange={(e) => setEditBuyer(e.target.value)}
+                placeholder="اختياري"
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSaleToEdit(null)} disabled={saleBusy}>إلغاء</Button>
-            <Button onClick={saveSaleEdit} disabled={saleBusy}>{saleBusy ? "جاري..." : "حفظ"}</Button>
+            <Button variant="outline" onClick={() => setSaleToEdit(null)} disabled={saleBusy}>
+              إلغاء
+            </Button>
+            <Button onClick={saveSaleEdit} disabled={saleBusy}>
+              {saleBusy ? "جاري..." : "حفظ"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={addOpen} onOpenChange={(o) => { if (!addBusy) setAddOpen(o); }}>
+      <Dialog
+        open={addOpen}
+        onOpenChange={(o) => {
+          if (!addBusy) setAddOpen(o);
+        }}
+      >
         <DialogContent dir="rtl">
           <DialogHeader>
             <DialogTitle>إضافة زبون جديد</DialogTitle>
@@ -880,12 +1142,21 @@ function CustomersPage() {
           <div className="space-y-3">
             <div>
               <Label>اسم الزبون</Label>
-              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="مثال: مفيد الزري" />
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="مثال: مفيد الزري"
+              />
             </div>
             <div>
               <Label>رقم الواتساب</Label>
-              <div className="flex items-stretch rounded-md border border-input overflow-hidden" dir="ltr">
-                <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">+967</span>
+              <div
+                className="flex items-stretch rounded-md border border-input overflow-hidden"
+                dir="ltr"
+              >
+                <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">
+                  +967
+                </span>
                 <Input
                   value={localYemenDigits(newWhats)}
                   onChange={(e) => setNewWhats(localYemenDigits(e.target.value))}
@@ -895,80 +1166,143 @@ function CustomersPage() {
                 />
               </div>
             </div>
-            <Button variant="outline" className="w-full" onClick={pickFromContacts} disabled={addBusy}>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={pickFromContacts}
+              disabled={addBusy}
+            >
               <UserIcon className="h-4 w-4 ml-1" />
               اختيار من جهات الاتصال
             </Button>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={addBusy}>إلغاء</Button>
-            <Button onClick={handleAddCustomer} disabled={addBusy}>{addBusy ? "جاري..." : "إضافة"}</Button>
+            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={addBusy}>
+              إلغاء
+            </Button>
+            <Button onClick={handleAddCustomer} disabled={addBusy}>
+              {addBusy ? "جاري..." : "إضافة"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!payFor} onOpenChange={(o) => { if (!payBusy && !o) { setPayFor(null); setPayAmount(""); setPayNote(""); } }}>
+      <Dialog
+        open={!!payFor}
+        onOpenChange={(o) => {
+          if (!payBusy && !o) {
+            setPayFor(null);
+            setPayAmount("");
+            setPayNote("");
+          }
+        }}
+      >
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
             <DialogTitle>تسديد الزبون</DialogTitle>
           </DialogHeader>
-          {payFor && (() => {
-            const custStats = statsByCustomer.get(payFor.id) ?? { total: 0, count: 0, last: null };
-            const paid = paidByCustomer.get(payFor.id) ?? 0;
-            const remaining = Math.max(custStats.total - paid, 0);
-            return (
-              <div className="space-y-3">
-                <div className="text-sm">
-                  <div className="text-muted-foreground">الزبون: <b className="text-foreground">{payFor.name}</b></div>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-xl bg-primary/10 p-2">
-                    <div className="font-extrabold text-primary text-sm">{fmtMoney(custStats.total)}</div>
-                    <div className="text-[10px] text-muted-foreground">الإجمالي</div>
+          {payFor &&
+            (() => {
+              const custStats = statsByCustomer.get(payFor.id) ?? {
+                total: 0,
+                count: 0,
+                last: null,
+              };
+              const paid = paidByCustomer.get(payFor.id) ?? 0;
+              const remaining = Math.max(custStats.total - paid, 0);
+              return (
+                <div className="space-y-3">
+                  <div className="text-sm">
+                    <div className="text-muted-foreground">
+                      الزبون: <b className="text-foreground">{payFor.name}</b>
+                    </div>
                   </div>
-                  <div className="rounded-xl bg-success/10 p-2">
-                    <div className="font-extrabold text-success text-sm">{fmtMoney(paid)}</div>
-                    <div className="text-[10px] text-muted-foreground">المدفوع</div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-xl bg-primary/10 p-2">
+                      <div className="font-extrabold text-primary text-sm">
+                        {fmtMoney(custStats.total)}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">الإجمالي</div>
+                    </div>
+                    <div className="rounded-xl bg-success/10 p-2">
+                      <div className="font-extrabold text-success text-sm">{fmtMoney(paid)}</div>
+                      <div className="text-[10px] text-muted-foreground">المدفوع</div>
+                    </div>
+                    <div className="rounded-xl bg-warning/10 p-2">
+                      <div className="font-extrabold text-warning text-sm">
+                        {fmtMoney(remaining)}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">المتبقي</div>
+                    </div>
                   </div>
-                  <div className="rounded-xl bg-warning/10 p-2">
-                    <div className="font-extrabold text-warning text-sm">{fmtMoney(remaining)}</div>
-                    <div className="text-[10px] text-muted-foreground">المتبقي</div>
+                  <div>
+                    <Label className="text-xs mb-1.5 block">مبلغ التسديد</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={payAmount}
+                      onChange={(e) => setPayAmount(e.target.value)}
+                      className="rounded-xl h-11 text-center font-bold"
+                      autoFocus
+                    />
+                    <div className="flex gap-1.5 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setPayAmount(String(remaining))}
+                        className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70"
+                      >
+                        كامل المتبقي
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPayAmount(String(remaining / 2))}
+                        className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70"
+                      >
+                        نصف
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs mb-1.5 block">ملاحظة (اختياري)</Label>
+                    <Input
+                      value={payNote}
+                      onChange={(e) => setPayNote(e.target.value)}
+                      className="rounded-xl"
+                    />
                   </div>
                 </div>
-                <div>
-                  <Label className="text-xs mb-1.5 block">مبلغ التسديد</Label>
-                  <Input
-                    type="number" min={0} step="0.01"
-                    value={payAmount}
-                    onChange={(e) => setPayAmount(e.target.value)}
-                    className="rounded-xl h-11 text-center font-bold"
-                    autoFocus
-                  />
-                  <div className="flex gap-1.5 mt-2">
-                    <button type="button" onClick={() => setPayAmount(String(remaining))}
-                      className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70">كامل المتبقي</button>
-                    <button type="button" onClick={() => setPayAmount(String(remaining / 2))}
-                      className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70">نصف</button>
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs mb-1.5 block">ملاحظة (اختياري)</Label>
-                  <Input value={payNote} onChange={(e) => setPayNote(e.target.value)} className="rounded-xl" />
-                </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPayFor(null)} disabled={payBusy}>إلغاء</Button>
-            <Button onClick={handleCustomerPayment} disabled={payBusy} className="bg-success hover:bg-success/90 text-white">
+            <Button variant="outline" onClick={() => setPayFor(null)} disabled={payBusy}>
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleCustomerPayment}
+              disabled={payBusy}
+              className="bg-success hover:bg-success/90 text-white"
+            >
               {payBusy ? "جاري..." : "تأكيد التسديد"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!chargeFor} onOpenChange={(o) => { if (!chargeBusy && !o) { setChargeFor(null); setChargeAmount(""); setChargeNote(""); setChargePackageId(""); setChargeQty("1"); setChargeCard(""); } }}>
+      <Dialog
+        open={!!chargeFor}
+        onOpenChange={(o) => {
+          if (!chargeBusy && !o) {
+            setChargeFor(null);
+            setChargeAmount("");
+            setChargeNote("");
+            setChargePackageId("");
+            setChargeQty("1");
+            setChargeCard("");
+          }
+        }}
+      >
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
             <DialogTitle>إضافة مبلغ على الزبون</DialogTitle>
@@ -979,7 +1313,8 @@ function CustomersPage() {
                 الزبون: <b className="text-foreground">{chargeFor.name}</b>
               </div>
               <div className="text-[11px] text-muted-foreground bg-muted/50 rounded-lg p-2">
-                يُضاف هذا المبلغ إلى رصيد الزبون بدون تسجيل عملية بيع كرت. يمكنك اختيار الباقة إذا كان الكرت مُباعاً خارج التطبيق.
+                يُضاف هذا المبلغ إلى رصيد الزبون بدون تسجيل عملية بيع كرت. يمكنك اختيار الباقة إذا
+                كان الكرت مُباعاً خارج التطبيق.
               </div>
               <div>
                 <Label className="text-xs mb-1.5 block">الباقة (اختياري — بيع خارجي)</Label>
@@ -996,7 +1331,9 @@ function CustomersPage() {
                 >
                   <option value="">— بدون باقة —</option>
                   {(packages ?? []).map((p) => (
-                    <option key={p.id} value={p.id}>{p.name} — {fmtMoney(p.price)}</option>
+                    <option key={p.id} value={p.id}>
+                      {p.name} — {fmtMoney(p.price)}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1004,7 +1341,9 @@ function CustomersPage() {
                 <div>
                   <Label className="text-xs mb-1.5 block">الكمية</Label>
                   <Input
-                    type="number" min={1} step="1"
+                    type="number"
+                    min={1}
+                    step="1"
                     value={chargeQty}
                     onChange={(e) => {
                       const v = e.target.value;
@@ -1020,7 +1359,9 @@ function CustomersPage() {
               <div>
                 <Label className="text-xs mb-1.5 block">المبلغ</Label>
                 <Input
-                  type="number" min={0} step="0.01"
+                  type="number"
+                  min={0}
+                  step="0.01"
                   value={chargeAmount}
                   onChange={(e) => setChargeAmount(e.target.value)}
                   className="rounded-xl h-11 text-center font-bold"
@@ -1039,20 +1380,30 @@ function CustomersPage() {
               </div>
               <div>
                 <Label className="text-xs mb-1.5 block">السبب / ملاحظة (اختياري)</Label>
-                <Input value={chargeNote} onChange={(e) => setChargeNote(e.target.value)} placeholder="مثال: خدمة إضافية" className="rounded-xl" />
+                <Input
+                  value={chargeNote}
+                  onChange={(e) => setChargeNote(e.target.value)}
+                  placeholder="مثال: خدمة إضافية"
+                  className="rounded-xl"
+                />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setChargeFor(null)} disabled={chargeBusy}>إلغاء</Button>
-            <Button onClick={handleAddCharge} disabled={chargeBusy} className="bg-warning hover:bg-warning/90 text-white">
+            <Button variant="outline" onClick={() => setChargeFor(null)} disabled={chargeBusy}>
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleAddCharge}
+              disabled={chargeBusy}
+              className="bg-warning hover:bg-warning/90 text-white"
+            >
               {chargeBusy ? "جاري..." : "إضافة المبلغ"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
-
   );
 }
 

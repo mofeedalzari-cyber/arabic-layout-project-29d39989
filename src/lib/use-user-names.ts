@@ -10,9 +10,7 @@ export function useUserNames() {
   const { data } = useQuery({
     queryKey: ["user-display-names"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("username, full_name");
+      const { data, error } = await supabase.from("profiles").select("username, full_name");
       if (error) throw error;
       const m = new Map<string, string>();
       for (const p of data ?? []) {

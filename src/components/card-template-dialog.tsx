@@ -3,16 +3,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  type CardTemplate, DEFAULT_TEMPLATE, loadTemplate, saveTemplate, clearTemplate,
+  type CardTemplate,
+  DEFAULT_TEMPLATE,
+  loadTemplate,
+  saveTemplate,
+  clearTemplate,
 } from "@/lib/card-print";
 
 export function CardTemplateDialog({
-  open, onOpenChange, packageId, packageName, sampleCode = "123456789",
+  open,
+  onOpenChange,
+  packageId,
+  packageName,
+  sampleCode = "123456789",
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -90,8 +103,13 @@ export function CardTemplateDialog({
 
         <div className="space-y-4">
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => fileRef.current?.click()} className="rounded-xl">
-              <Upload className="h-4 w-4 ml-1" /> {tpl?.image ? "استبدال الصورة" : "رفع صورة القالب"}
+            <Button
+              variant="outline"
+              onClick={() => fileRef.current?.click()}
+              className="rounded-xl"
+            >
+              <Upload className="h-4 w-4 ml-1" />{" "}
+              {tpl?.image ? "استبدال الصورة" : "رفع صورة القالب"}
             </Button>
             {tpl?.image && (
               <Button variant="outline" onClick={onDelete} className="rounded-xl text-destructive">
@@ -112,12 +130,20 @@ export function CardTemplateDialog({
               <div
                 ref={previewRef}
                 className="relative w-full border-2 border-dashed border-border rounded-lg overflow-hidden select-none touch-none"
-                onPointerDown={(e) => { setDragging(true); (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); moveByPointer(e); }}
+                onPointerDown={(e) => {
+                  setDragging(true);
+                  (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+                  moveByPointer(e);
+                }}
                 onPointerMove={moveByPointer}
                 onPointerUp={() => setDragging(false)}
                 onPointerCancel={() => setDragging(false)}
               >
-                <img src={tpl.image} alt="template" className="w-full h-auto block pointer-events-none" />
+                <img
+                  src={tpl.image}
+                  alt="template"
+                  className="w-full h-auto block pointer-events-none"
+                />
                 <div
                   className="absolute border-2 border-primary/70 bg-primary/5 flex items-center justify-center pointer-events-none"
                   style={{
@@ -139,10 +165,35 @@ export function CardTemplateDialog({
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <NumField label="عرض المربع %" v={tpl.codeWidth} onChange={(n) => update("codeWidth", n)} min={5} max={100} />
-                <NumField label="ارتفاع المربع %" v={tpl.codeHeight} onChange={(n) => update("codeHeight", n)} min={3} max={100} />
-                <NumField label="حجم الخط px" v={tpl.fontSize} onChange={(n) => update("fontSize", n)} min={10} max={120} />
-                <NumField label="سماكة الخط" v={tpl.fontWeight} onChange={(n) => update("fontWeight", n)} min={100} max={900} step={100} />
+                <NumField
+                  label="عرض المربع %"
+                  v={tpl.codeWidth}
+                  onChange={(n) => update("codeWidth", n)}
+                  min={5}
+                  max={100}
+                />
+                <NumField
+                  label="ارتفاع المربع %"
+                  v={tpl.codeHeight}
+                  onChange={(n) => update("codeHeight", n)}
+                  min={3}
+                  max={100}
+                />
+                <NumField
+                  label="حجم الخط px"
+                  v={tpl.fontSize}
+                  onChange={(n) => update("fontSize", n)}
+                  min={10}
+                  max={120}
+                />
+                <NumField
+                  label="سماكة الخط"
+                  v={tpl.fontWeight}
+                  onChange={(n) => update("fontWeight", n)}
+                  min={100}
+                  max={900}
+                  step={100}
+                />
                 <div className="col-span-2 space-y-1.5">
                   <Label className="text-xs">لون النص</Label>
                   <div className="flex gap-2 items-center">
@@ -172,16 +223,32 @@ export function CardTemplateDialog({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">إلغاء</Button>
-          <Button onClick={onSave} className="rounded-xl gradient-primary-bg border-0">حفظ القالب</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
+            إلغاء
+          </Button>
+          <Button onClick={onSave} className="rounded-xl gradient-primary-bg border-0">
+            حفظ القالب
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-function NumField({ label, v, onChange, min, max, step = 1 }: {
-  label: string; v: number; onChange: (n: number) => void; min: number; max: number; step?: number;
+function NumField({
+  label,
+  v,
+  onChange,
+  min,
+  max,
+  step = 1,
+}: {
+  label: string;
+  v: number;
+  onChange: (n: number) => void;
+  min: number;
+  max: number;
+  step?: number;
 }) {
   return (
     <div className="space-y-1.5">

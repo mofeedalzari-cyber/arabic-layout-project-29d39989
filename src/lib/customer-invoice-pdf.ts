@@ -51,19 +51,52 @@ const FONTS = {
 };
 
 // ---------- Arabic number-to-words ----------
-const ONES = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة",
-  "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
+const ONES = [
+  "",
+  "واحد",
+  "اثنان",
+  "ثلاثة",
+  "أربعة",
+  "خمسة",
+  "ستة",
+  "سبعة",
+  "ثمانية",
+  "تسعة",
+  "عشرة",
+  "أحد عشر",
+  "اثنا عشر",
+  "ثلاثة عشر",
+  "أربعة عشر",
+  "خمسة عشر",
+  "ستة عشر",
+  "سبعة عشر",
+  "ثمانية عشر",
+  "تسعة عشر",
+];
 const TENS = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
-const HUNDREDS = ["", "مائة", "مئتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+const HUNDREDS = [
+  "",
+  "مائة",
+  "مئتان",
+  "ثلاثمائة",
+  "أربعمائة",
+  "خمسمائة",
+  "ستمائة",
+  "سبعمائة",
+  "ثمانمائة",
+  "تسعمائة",
+];
 
 function under1000(n: number): string {
   const parts: string[] = [];
   const h = Math.floor(n / 100);
   const rem = n % 100;
   if (h) parts.push(HUNDREDS[h]);
-  if (rem < 20) { if (rem) parts.push(ONES[rem]); }
-  else {
-    const o = rem % 10, t = Math.floor(rem / 10);
+  if (rem < 20) {
+    if (rem) parts.push(ONES[rem]);
+  } else {
+    const o = rem % 10,
+      t = Math.floor(rem / 10);
     if (o) parts.push(`${ONES[o]} و${TENS[t]}`);
     else parts.push(TENS[t]);
   }
@@ -163,7 +196,10 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
 
   const invoiceNo = nextInvoiceNumber();
   const totalQty = input.items.reduce((a, i) => a + (Number(i.qty) || 0), 0);
-  const totalAmount = input.items.reduce((a, i) => a + (Number(i.qty) || 0) * (Number(i.price) || 0), 0);
+  const totalAmount = input.items.reduce(
+    (a, i) => a + (Number(i.qty) || 0) * (Number(i.price) || 0),
+    0,
+  );
   const amountInt = Math.floor(totalAmount);
   const words = `${numberToArabicWords(amountInt)} ${currencyWord(input.currency)}`;
 
@@ -173,17 +209,42 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
       {
         width: "*",
         stack: [
-          { text: (input.adminUsername || "").toUpperCase() || "—", fontSize: 12, bold: true, alignment: "left" },
+          {
+            text: (input.adminUsername || "").toUpperCase() || "—",
+            fontSize: 12,
+            bold: true,
+            alignment: "left",
+          },
           { text: input.networkRegion ? "YEMEN" : "", fontSize: 11, alignment: "left" },
-          { text: input.networkPhone ? `+967 ${input.networkPhone}` : "", fontSize: 11, alignment: "left" },
+          {
+            text: input.networkPhone ? `+967 ${input.networkPhone}` : "",
+            fontSize: 11,
+            alignment: "left",
+          },
         ],
       },
       {
         width: "*",
         stack: [
-          { text: ar(input.networkName), direction: "rtl", fontSize: 13, bold: true, alignment: "right" },
-          { text: ar(input.networkRegion || ""), direction: "rtl", fontSize: 11, alignment: "right" },
-          { text: ar(input.networkPhone ? `+967 ${input.networkPhone}` : ""), direction: "rtl", fontSize: 11, alignment: "right" },
+          {
+            text: ar(input.networkName),
+            direction: "rtl",
+            fontSize: 13,
+            bold: true,
+            alignment: "right",
+          },
+          {
+            text: ar(input.networkRegion || ""),
+            direction: "rtl",
+            fontSize: 11,
+            alignment: "right",
+          },
+          {
+            text: ar(input.networkPhone ? `+967 ${input.networkPhone}` : ""),
+            direction: "rtl",
+            fontSize: 11,
+            alignment: "right",
+          },
         ],
       },
     ],
@@ -196,8 +257,10 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
       body: [[cell("فاتورة بيع آجـــل", { bold: true, fontSize: 13, margin: [6, 4, 6, 4] })]],
     },
     layout: {
-      hLineColor: () => LINE, vLineColor: () => LINE,
-      hLineWidth: () => 1, vLineWidth: () => 1,
+      hLineColor: () => LINE,
+      vLineColor: () => LINE,
+      hLineWidth: () => 1,
+      vLineWidth: () => 1,
     },
     alignment: "center",
     margin: [0, 0, 0, 10],
@@ -205,8 +268,22 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
 
   const metaRow = {
     columns: [
-      { width: "*", text: ar(`رقم   ${invoiceNo}`), direction: "rtl", alignment: "left", bold: true, color: RED },
-      { width: "*", text: ar(`التاريخ : ${input.dateStr}`), direction: "rtl", alignment: "right", bold: true, color: BLUE },
+      {
+        width: "*",
+        text: ar(`رقم   ${invoiceNo}`),
+        direction: "rtl",
+        alignment: "left",
+        bold: true,
+        color: RED,
+      },
+      {
+        width: "*",
+        text: ar(`التاريخ : ${input.dateStr}`),
+        direction: "rtl",
+        alignment: "right",
+        bold: true,
+        color: BLUE,
+      },
     ],
     margin: [4, 0, 4, 6],
   };
@@ -214,7 +291,13 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
   const recipientRow = {
     columns: [
       { width: "*", text: ar("المحترم"), direction: "rtl", alignment: "left", bold: true },
-      { width: "*", text: ar(`الأخ  /  ${input.customerName}`), direction: "rtl", alignment: "right", bold: true },
+      {
+        width: "*",
+        text: ar(`الأخ  /  ${input.customerName}`),
+        direction: "rtl",
+        alignment: "right",
+        bold: true,
+      },
     ],
     margin: [4, 2, 4, 2],
   };
@@ -240,7 +323,11 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
   const itemRows = input.items.map((i, idx) => {
     const bg = idx % 2 === 0 ? "#fafafa" : undefined;
     return [
-      cell(String(Math.floor((Number(i.qty) || 0) * (Number(i.price) || 0))), { color: BLUE, bold: true, fillColor: bg }),
+      cell(String(Math.floor((Number(i.qty) || 0) * (Number(i.price) || 0))), {
+        color: BLUE,
+        bold: true,
+        fillColor: bg,
+      }),
       cell(String(i.price), { fillColor: bg }),
       cell(String(i.qty), { color: RED, bold: true, fillColor: bg }),
       cell(i.unit || "حبة", { fillColor: bg }),
@@ -254,27 +341,32 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
       body: [headerRowCells, ...itemRows],
     },
     layout: {
-      hLineColor: () => LINE, vLineColor: () => LINE,
-      hLineWidth: () => 1, vLineWidth: () => 1,
+      hLineColor: () => LINE,
+      vLineColor: () => LINE,
+      hLineWidth: () => 1,
+      vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 6],
   };
-
 
   // ---------- Totals row ----------
   const totalsRow = {
     table: {
       widths: ["*", 80, "*", 100],
-      body: [[
-        cell("الكمية", { bold: true, alignment: "right" }),
-        cell(String(totalQty), { bold: true }),
-        cell("الإجمالي", { bold: true, alignment: "right" }),
-        cell(`${fmtMoney(amountInt)}`, { bold: true, color: BLUE }),
-      ]],
+      body: [
+        [
+          cell("الكمية", { bold: true, alignment: "right" }),
+          cell(String(totalQty), { bold: true }),
+          cell("الإجمالي", { bold: true, alignment: "right" }),
+          cell(`${fmtMoney(amountInt)}`, { bold: true, color: BLUE }),
+        ],
+      ],
     },
     layout: {
-      hLineColor: () => LINE, vLineColor: () => LINE,
-      hLineWidth: () => 1, vLineWidth: () => 1,
+      hLineColor: () => LINE,
+      vLineColor: () => LINE,
+      hLineWidth: () => 1,
+      vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 6],
   };
@@ -285,8 +377,10 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
       body: [[cell(words, { color: RED, bold: true, alignment: "center", margin: [6, 8, 6, 8] })]],
     },
     layout: {
-      hLineColor: () => LINE, vLineColor: () => LINE,
-      hLineWidth: () => 1, vLineWidth: () => 1,
+      hLineColor: () => LINE,
+      vLineColor: () => LINE,
+      hLineWidth: () => 1,
+      vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 12],
   };
@@ -294,11 +388,22 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
   const balanceBox = {
     table: {
       widths: ["*"],
-      body: [[cell(`الرصيد عليكم ${fmtMoney(amountInt)}. ( ${words} )`, { color: RED, bold: true, alignment: "center", margin: [6, 8, 6, 8] })]],
+      body: [
+        [
+          cell(`الرصيد عليكم ${fmtMoney(amountInt)}. ( ${words} )`, {
+            color: RED,
+            bold: true,
+            alignment: "center",
+            margin: [6, 8, 6, 8],
+          }),
+        ],
+      ],
     },
     layout: {
-      hLineColor: () => LINE, vLineColor: () => LINE,
-      hLineWidth: () => 1, vLineWidth: () => 1,
+      hLineColor: () => LINE,
+      vLineColor: () => LINE,
+      hLineWidth: () => 1,
+      vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 20],
   };
@@ -315,8 +420,18 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
       {
         width: "*",
         stack: [
-          { text: ar(input.adminName || ""), direction: "rtl", alignment: "center", margin: [0, 0, 0, 2] },
-          { text: ar(`مدير ${input.networkName}`), direction: "rtl", alignment: "center", bold: true },
+          {
+            text: ar(input.adminName || ""),
+            direction: "rtl",
+            alignment: "center",
+            margin: [0, 0, 0, 2],
+          },
+          {
+            text: ar(`مدير ${input.networkName}`),
+            direction: "rtl",
+            alignment: "center",
+            bold: true,
+          },
         ],
       },
     ],
@@ -343,8 +458,21 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
       margin: [30, 0, 30, 0],
       columns: [
         { text: ar("© كرتي"), direction: "rtl", alignment: "left", fontSize: 8, color: "#64748b" },
-        { text: ar(`صفحة ${cp} / ${tp}`), direction: "rtl", alignment: "center", fontSize: 8, color: "#64748b" },
-        { text: ar("برمجة وتصميم مفيد الزري"), direction: "rtl", alignment: "right", fontSize: 8, color: "#0f766e", bold: true },
+        {
+          text: ar(`صفحة ${cp} / ${tp}`),
+          direction: "rtl",
+          alignment: "center",
+          fontSize: 8,
+          color: "#64748b",
+        },
+        {
+          text: ar("برمجة وتصميم مفيد الزري"),
+          direction: "rtl",
+          alignment: "right",
+          fontSize: 8,
+          color: "#0f766e",
+          bold: true,
+        },
       ],
     }),
   };
@@ -355,12 +483,17 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cb = (buffer: any) => {
         try {
-          const u8 = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer?.buffer ?? buffer);
+          const u8 =
+            buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer?.buffer ?? buffer);
           resolve(new Blob([u8], { type: "application/pdf" }));
-        } catch (e) { reject(e); }
+        } catch (e) {
+          reject(e);
+        }
       };
       const maybe = pdf.getBuffer(cb);
       if (maybe && typeof maybe.then === "function") maybe.then(cb).catch(reject);
-    } catch (e) { reject(e); }
+    } catch (e) {
+      reject(e);
+    }
   });
 }

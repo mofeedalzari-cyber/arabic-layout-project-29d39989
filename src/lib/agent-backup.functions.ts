@@ -21,14 +21,17 @@ export const backupMyAgentData = createServerFn({ method: "POST" })
       supabase.from("customers").select("*").eq("agent_id", userId),
       supabase.from("sales").select("*").eq("agent_id", userId),
       supabase.from("card_requests").select("*").eq("agent_id", userId),
-      supabase
-        .from("cards")
-        .select("*")
-        .or(`assigned_to.eq.${userId},sold_to.eq.${userId}`),
+      supabase.from("cards").select("*").or(`assigned_to.eq.${userId},sold_to.eq.${userId}`),
       supabase.from("customer_payments").select("*").eq("agent_id", userId),
     ]);
 
-    const errs = [customers.error, sales.error, requests.error, cards.error, custPayments.error].filter(Boolean);
+    const errs = [
+      customers.error,
+      sales.error,
+      requests.error,
+      cards.error,
+      custPayments.error,
+    ].filter(Boolean);
     if (errs.length) throw new Error(errs.map((e) => e!.message).join(" | "));
 
     // request_payments recorded by the agent
@@ -55,7 +58,6 @@ export const backupMyAgentData = createServerFn({ method: "POST" })
       customer_payments: custPayments.data ?? [],
     };
   });
-
 
 /**
  * Restore the agent's own data from a backup file.
@@ -93,7 +95,8 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
     const backupCustomers = Array.isArray(payload.customers) ? payload.customers : [];
     const oldCustomerIdToWhatsapp = new Map<string, string>();
     for (const c of backupCustomers) {
-      if (c?.id && c?.whatsapp) oldCustomerIdToWhatsapp.set(String(c.id), String(c.whatsapp).trim());
+      if (c?.id && c?.whatsapp)
+        oldCustomerIdToWhatsapp.set(String(c.id), String(c.whatsapp).trim());
     }
 
     // 1) Customers — insert new only (dedupe by whatsapp per agent)
@@ -102,7 +105,9 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
         .from("customers")
         .select("id, whatsapp")
         .eq("agent_id", userId);
-      const existingSet = new Set((existing ?? []).map((c: any) => String(c.whatsapp || "").trim()));
+      const existingSet = new Set(
+        (existing ?? []).map((c: any) => String(c.whatsapp || "").trim()),
+      );
 
       const toInsert = backupCustomers
         .filter((c: any) => c?.whatsapp && !existingSet.has(String(c.whatsapp).trim()))
@@ -126,7 +131,9 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
     // 2) Card requests — recreate as PENDING for packages still in the agent's network
     const requests = Array.isArray(payload.card_requests) ? payload.card_requests : [];
     if (requests.length && networkId) {
-      const pkgIds = Array.from(new Set(requests.map((r: any) => r.package_id).filter(Boolean))) as string[];
+      const pkgIds = Array.from(
+        new Set(requests.map((r: any) => r.package_id).filter(Boolean)),
+      ) as string[];
       const { data: pkgs } = await supabase
         .from("packages")
         .select("id, name, price, network_id")
@@ -149,7 +156,7 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
             network_name: r.network_name ?? "",
             quantity: qty,
             status: "PENDING",
-            payment_method: (r.payment_method === "CASH" ? "CASH" : "CREDIT"),
+            payment_method: r.payment_method === "CASH" ? "CASH" : "CREDIT",
             unit_price: unitPrice,
             total_value: unitPrice * qty,
             paid_amount: 0,
@@ -178,7 +185,7 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
         .select("id, whatsapp")
         .eq("agent_id", userId);
       const waToId = new Map<string, string>();
-      for (const c of (myCustomers ?? [])) {
+      for (const c of myCustomers ?? []) {
         if (c?.whatsapp) waToId.set(String(c.whatsapp).trim(), c.id);
       }
 
@@ -214,7 +221,7 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
     const cardsCount = Array.isArray(payload.cards) ? payload.cards.length : 0;
     if (salesCount || cardsCount) {
       notes.push(
-        "لا يمكن استعادة المبيعات والكروت مباشرة (ملكيتها للشبكة). أُعيد إنشاء الطلبات كطلبات جديدة بانتظار موافقة المدير."
+        "لا يمكن استعادة المبيعات والكروت مباشرة (ملكيتها للشبكة). أُعيد إنشاء الطلبات كطلبات جديدة بانتظار موافقة المدير.",
       );
     }
 
@@ -228,5 +235,3 @@ export const restoreMyAgentData = createServerFn({ method: "POST" })
       notes,
     };
   });
-
-

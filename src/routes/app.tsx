@@ -41,11 +41,17 @@ function AppLayout() {
           <p className="text-sm text-muted-foreground mb-6">
             حسابك قيد المراجعة. يرجى التواصل مع مدير النظام لتفعيله قبل البدء بالبيع.
           </p>
-          <Button variant="outline" className="rounded-xl" onClick={signOut}>تسجيل الخروج</Button>
+          <Button variant="outline" className="rounded-xl" onClick={signOut}>
+            تسجيل الخروج
+          </Button>
         </div>
       </div>
     );
   }
 
-  return <AppShell><Outlet /></AppShell>;
+  return (
+    <AppShell>
+      <Outlet />
+    </AppShell>
+  );
 }

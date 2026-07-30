@@ -9,18 +9,37 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
 import { Search, Pencil, Trash2, ChevronUp, ChevronDown, X, Printer } from "lucide-react";
@@ -58,7 +77,13 @@ function highlight(text: string, term: string) {
     const re = new RegExp(`(${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "ig");
     const parts = text.split(re);
     return parts.map((p, i) =>
-      re.test(p) ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-700/60 rounded px-0.5">{p}</mark> : <span key={i}>{p}</span>
+      re.test(p) ? (
+        <mark key={i} className="bg-yellow-200 dark:bg-yellow-700/60 rounded px-0.5">
+          {p}
+        </mark>
+      ) : (
+        <span key={i}>{p}</span>
+      ),
     );
   } catch {
     return text;
@@ -88,9 +113,13 @@ function SalesPage() {
   const { data: sales, isLoading } = useQuery({
     queryKey: ["sales"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("sales")
-        .select("id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_number, is_external, customers ( name ), cards ( username, password )")
-        .order("sold_at", { ascending: false }).limit(500);
+      const { data, error } = await supabase
+        .from("sales")
+        .select(
+          "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_number, is_external, customers ( name ), cards ( username, password )",
+        )
+        .order("sold_at", { ascending: false })
+        .limit(500);
       if (error) throw error;
       return (data ?? []).map((s: any) => ({
         ...s,
@@ -100,7 +129,6 @@ function SalesPage() {
       })) as SaleRow[];
     },
   });
-
 
   const customerOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -143,7 +171,10 @@ function SalesPage() {
   const someSelected = selected.size > 0;
   const displayedSales = pageSize === -1 ? filtered : filtered.slice(0, pageSize);
   const hasMore = filtered.length > displayedSales.length;
-  const activeFilters = (customerFilter !== "all" ? 1 : 0) + (agentFilter !== "all" ? 1 : 0) + (statusFilter !== "all" ? 1 : 0);
+  const activeFilters =
+    (customerFilter !== "all" ? 1 : 0) +
+    (agentFilter !== "all" ? 1 : 0) +
+    (statusFilter !== "all" ? 1 : 0);
 
   // Auto-hide scroll buttons based on scrollability
   useLayoutEffect(() => {
@@ -195,7 +226,8 @@ function SalesPage() {
   function toggleOne(id: string) {
     setSelected((prev) => {
       const n = new Set(prev);
-      if (n.has(id)) n.delete(id); else n.add(id);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
       return n;
     });
   }
@@ -225,7 +257,10 @@ function SalesPage() {
     }
     const { error } = await supabase.from("sales").update(payload).eq("id", toEdit.id);
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("تم حفظ التعديلات");
     setToEdit(null);
     qc.invalidateQueries({ queryKey: ["sales"] });
@@ -236,10 +271,15 @@ function SalesPage() {
     if (selected.size === 0) return;
     setBusy(true);
     const ids = Array.from(selected);
-    let ok = 0, fail = 0;
+    let ok = 0,
+      fail = 0;
     for (const id of ids) {
-      const { error } = await (supabase.rpc as any)("delete_sale", { _sale_id: id, _delete_card: deleteCards });
-      if (error) fail++; else ok++;
+      const { error } = await (supabase.rpc as any)("delete_sale", {
+        _sale_id: id,
+        _delete_card: deleteCards,
+      });
+      if (error) fail++;
+      else ok++;
     }
     setBusy(false);
     setConfirmDelete(false);
@@ -254,8 +294,13 @@ function SalesPage() {
 
   return (
     <>
-      <PageHeader title={isAdmin ? "جميع المبيعات" : "مبيعاتي"} description={`${filtered.length} عملية`} />
-      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+      <PageHeader
+        title={isAdmin ? "جميع المبيعات" : "مبيعاتي"}
+        description={`${filtered.length} عملية`}
+      />
+      <div className="mb-4 flex justify-start">
+        <RefreshButton />
+      </div>
 
       {/* Search + Bulk */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -281,7 +326,9 @@ function SalesPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => printSalesPdf({ sales: filtered, isAdmin, agentFilter, agentOptions, displayName })}
+          onClick={() =>
+            printSalesPdf({ sales: filtered, isAdmin, agentFilter, agentOptions, displayName })
+          }
           className="gap-1"
           disabled={filtered.length === 0}
         >
@@ -289,7 +336,12 @@ function SalesPage() {
           طباعة PDF
         </Button>
         {isAdmin && someSelected && (
-          <Button variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} className="gap-1">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setConfirmDelete(true)}
+            className="gap-1"
+          >
             <Trash2 className="h-4 w-4" />
             حذف المحدد ({selected.size})
           </Button>
@@ -316,7 +368,9 @@ function SalesPage() {
           <SelectContent>
             <SelectItem value="all">كل الزبائن</SelectItem>
             {customerOptions.map((c) => (
-              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              <SelectItem key={c.id} value={c.id}>
+                {c.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -329,7 +383,9 @@ function SalesPage() {
             <SelectContent>
               <SelectItem value="all">كل المناديب</SelectItem>
               {agentOptions.map((a) => (
-                <SelectItem key={a.username} value={a.username}>{a.name}</SelectItem>
+                <SelectItem key={a.username} value={a.username}>
+                  {a.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -349,7 +405,12 @@ function SalesPage() {
         </Select>
 
         {(activeFilters > 0 || q) && (
-          <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-1 text-muted-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetFilters}
+            className="gap-1 text-muted-foreground"
+          >
             <X className="h-3.5 w-3.5" /> مسح الفلاتر
           </Button>
         )}
@@ -387,44 +448,70 @@ function SalesPage() {
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={isAdmin ? 11 : 10} className="h-10 animate-pulse" /></TableRow>
+                  <TableRow key={i}>
+                    <TableCell colSpan={isAdmin ? 11 : 10} className="h-10 animate-pulse" />
+                  </TableRow>
                 ))
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 11 : 10} className="text-center py-12 text-muted-foreground">
+                  <TableCell
+                    colSpan={isAdmin ? 11 : 10}
+                    className="text-center py-12 text-muted-foreground"
+                  >
                     لا توجد مبيعات مطابقة.
                   </TableCell>
                 </TableRow>
-              ) : displayedSales.map((s, i) => (
-                <TableRow key={s.id} className={selected.has(s.id) ? "bg-primary/5" : ""}>
-                  {isAdmin && (
-                    <TableCell data-no-drag>
-                      <Checkbox
-                        checked={selected.has(s.id)}
-                        onCheckedChange={() => toggleOne(s.id)}
-                      />
-                    </TableCell>
-                  )}
-                  <TableCell className="text-muted-foreground text-xs">{i + 1}</TableCell>
-                  <TableCell className="font-mono text-[11px] whitespace-nowrap">{highlight(s.transaction_no, q)}</TableCell>
-                  <TableCell className="font-semibold">{highlight(s.package_name, q)}</TableCell>
-                  <TableCell className="text-xs">{highlight(s.network_name, q)}</TableCell>
-                  <TableCell className="text-xs">{highlight(displayName(s.agent_username), q)}</TableCell>
-                  <TableCell className="text-xs font-medium">{highlight(s.customer_name ?? s.buyer_name ?? "—", q)}</TableCell>
-                  <TableCell className="font-mono text-xs text-primary whitespace-nowrap" data-no-drag>
-                    <RevealText username={s.card_username} password={s.card_password} />
-                  </TableCell>
-                  <TableCell className="text-xs whitespace-nowrap">{fmtArabicDateTime(s.sold_at)}</TableCell>
-                  <TableCell className="text-primary font-bold whitespace-nowrap">{fmtMoney(Number(s.price))}</TableCell>
-                  <TableCell data-no-drag>
-                    {canModify(s) && (
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(s)} title="تعديل">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
+              ) : (
+                displayedSales.map((s, i) => (
+                  <TableRow key={s.id} className={selected.has(s.id) ? "bg-primary/5" : ""}>
+                    {isAdmin && (
+                      <TableCell data-no-drag>
+                        <Checkbox
+                          checked={selected.has(s.id)}
+                          onCheckedChange={() => toggleOne(s.id)}
+                        />
+                      </TableCell>
                     )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    <TableCell className="text-muted-foreground text-xs">{i + 1}</TableCell>
+                    <TableCell className="font-mono text-[11px] whitespace-nowrap">
+                      {highlight(s.transaction_no, q)}
+                    </TableCell>
+                    <TableCell className="font-semibold">{highlight(s.package_name, q)}</TableCell>
+                    <TableCell className="text-xs">{highlight(s.network_name, q)}</TableCell>
+                    <TableCell className="text-xs">
+                      {highlight(displayName(s.agent_username), q)}
+                    </TableCell>
+                    <TableCell className="text-xs font-medium">
+                      {highlight(s.customer_name ?? s.buyer_name ?? "—", q)}
+                    </TableCell>
+                    <TableCell
+                      className="font-mono text-xs text-primary whitespace-nowrap"
+                      data-no-drag
+                    >
+                      <RevealText username={s.card_username} password={s.card_password} />
+                    </TableCell>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {fmtArabicDateTime(s.sold_at)}
+                    </TableCell>
+                    <TableCell className="text-primary font-bold whitespace-nowrap">
+                      {fmtMoney(Number(s.price))}
+                    </TableCell>
+                    <TableCell data-no-drag>
+                      {canModify(s) && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => openEdit(s)}
+                          title="تعديل"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </ScrollContainer>
@@ -469,18 +556,30 @@ function SalesPage() {
           <div className="space-y-3">
             <div>
               <Label>اسم المشتري</Label>
-              <Input value={editBuyer} onChange={(e) => setEditBuyer(e.target.value)} placeholder="اختياري" />
+              <Input
+                value={editBuyer}
+                onChange={(e) => setEditBuyer(e.target.value)}
+                placeholder="اختياري"
+              />
             </div>
             {isAdmin && (
               <div>
                 <Label>السعر</Label>
-                <Input type="number" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} />
+                <Input
+                  type="number"
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value)}
+                />
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setToEdit(null)} disabled={busy}>إلغاء</Button>
-            <Button onClick={saveEdit} disabled={busy}>{busy ? "جاري..." : "حفظ"}</Button>
+            <Button variant="outline" onClick={() => setToEdit(null)} disabled={busy}>
+              إلغاء
+            </Button>
+            <Button onClick={saveEdit} disabled={busy}>
+              {busy ? "جاري..." : "حفظ"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -490,16 +589,27 @@ function SalesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>حذف {selected.size} عملية بيع؟</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم إرجاع الكروت المرتبطة إلى حالة "مُخصّصة" لدى المندوب، إلا إذا اخترت حذفها نهائياً.
+              سيتم إرجاع الكروت المرتبطة إلى حالة "مُخصّصة" لدى المندوب، إلا إذا اخترت حذفها
+              نهائياً.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex items-center gap-2 py-2">
-            <Checkbox id="del-cards" checked={deleteCards} onCheckedChange={(v) => setDeleteCards(!!v)} />
-            <Label htmlFor="del-cards" className="cursor-pointer">حذف الكروت نهائياً (بدون إرجاع)</Label>
+            <Checkbox
+              id="del-cards"
+              checked={deleteCards}
+              onCheckedChange={(v) => setDeleteCards(!!v)}
+            />
+            <Label htmlFor="del-cards" className="cursor-pointer">
+              حذف الكروت نهائياً (بدون إرجاع)
+            </Label>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={busy}>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={bulkDelete} disabled={busy} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={bulkDelete}
+              disabled={busy}
+              className="bg-destructive hover:bg-destructive/90"
+            >
               {busy ? "جاري الحذف..." : "تأكيد الحذف"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -547,27 +657,18 @@ async function printSalesPdf(args: {
         ? `${s.card_username} / ${s.card_password}`
         : s.card_username
       : "—";
-    const base = [
-      s.transaction_no,
-      s.package_name,
-      s.network_name,
-    ];
+    const base = [s.transaction_no, s.package_name, s.network_name];
     const tail = [
       nb(s.customer_name ?? s.buyer_name ?? "—"),
       card,
       fmtArabicDateTimePdf(s.sold_at),
       fmtMoney(Number(s.price)),
     ];
-    return isAdmin
-      ? [...base, nb(displayName(s.agent_username)), ...tail]
-      : [...base, ...tail];
+    return isAdmin ? [...base, nb(displayName(s.agent_username)), ...tail] : [...base, ...tail];
   });
 
   const title = `تقرير_المبيعات_${agentLabel}`;
-  await exportToPDF(
-    title,
-    summary,
-    [{ title: "جميع المبيعات", cols, rows }],
-    { reportName: `تقرير المبيعات — ${agentLabel}` },
-  );
+  await exportToPDF(title, summary, [{ title: "جميع المبيعات", cols, rows }], {
+    reportName: `تقرير المبيعات — ${agentLabel}`,
+  });
 }

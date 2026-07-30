@@ -8,49 +8,75 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { useMemo, useState } from "react";
 import { displayPhone, fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf } from "@/lib/format";
-import { Wifi, Package as PackageIcon, ShoppingCart, DollarSign, Layers, Clock, Printer, HandCoins } from "lucide-react";
+import {
+  Wifi,
+  Package as PackageIcon,
+  ShoppingCart,
+  DollarSign,
+  Layers,
+  Clock,
+  Printer,
+  HandCoins,
+} from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/app/agent-accounts")({ component: AgentAccountsPage });
 
 function AgentAccountsPage() {
-  const { role } = useAuth();
-  if (role && role !== "admin") return <Navigate to="/app" />;
+  const { role, loading } = useAuth();
+  if (loading) return null;
+  if (role !== "admin") return <Navigate to="/app" />;
+  return <AgentAccountsPageInner />;
+}
 
+function AgentAccountsPageInner() {
   const [networkId, setNetworkId] = useState<string>("all");
   const [agentId, setAgentId] = useState<string>("");
 
   const { data: networks } = useQuery({
     queryKey: ["aa-networks"],
-    queryFn: async () => (await supabase.from("networks").select("id, name, currency").order("name")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("networks").select("id, name, currency").order("name")).data ?? [],
   });
 
   const { data: agents } = useQuery({
     queryKey: ["aa-agents"],
     queryFn: async () => {
-      const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "agent");
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "agent");
       const ids = roles?.map((r) => r.user_id) ?? [];
       if (!ids.length) return [];
-      const { data } = await supabase.from("profiles")
-        .select("id, username, full_name, phone").in("id", ids).order("full_name");
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, phone")
+        .in("id", ids)
+        .order("full_name");
       return data ?? [];
     },
   });
 
   const { data: packages } = useQuery({
     queryKey: ["aa-packages"],
-    queryFn: async () => (await supabase.from("packages").select("id, name, price, network_id")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("packages").select("id, name, price, network_id")).data ?? [],
   });
 
   const { data: cards } = useQuery({
     queryKey: ["aa-cards", agentId],
     enabled: !!agentId,
     queryFn: async () => {
-      const { data } = await supabase.from("cards")
+      const { data } = await supabase
+        .from("cards")
         .select("id, status, package_id, network_id, assigned_to")
         .eq("assigned_to", agentId);
       return data ?? [];
@@ -61,9 +87,13 @@ function AgentAccountsPage() {
     queryKey: ["aa-sales", agentId],
     enabled: !!agentId,
     queryFn: async () => {
-      const { data } = await supabase.from("sales")
-        .select("id, transaction_no, package_id, package_name, network_id, network_name, price, sold_at")
-        .eq("agent_id", agentId).order("sold_at", { ascending: false });
+      const { data } = await supabase
+        .from("sales")
+        .select(
+          "id, transaction_no, package_id, package_name, network_id, network_name, price, sold_at",
+        )
+        .eq("agent_id", agentId)
+        .order("sold_at", { ascending: false });
       return data ?? [];
     },
   });
@@ -72,7 +102,8 @@ function AgentAccountsPage() {
     queryKey: ["aa-paid-requests", agentId],
     enabled: !!agentId,
     queryFn: async () => {
-      const { data } = await supabase.from("card_requests")
+      const { data } = await supabase
+        .from("card_requests")
         .select("network_id, total_value, paid_amount, status")
         .eq("agent_id", agentId)
         .eq("status", "APPROVED");
@@ -97,7 +128,7 @@ function AgentAccountsPage() {
 
   const filteredPaidRows = useMemo(() => {
     const entries = Array.from(paidByNetwork.entries()).filter(
-      ([nid]) => networkId === "all" || nid === networkId
+      ([nid]) => networkId === "all" || nid === networkId,
     );
     return entries.map(([nid, v]) => ({
       key: nid,
@@ -114,15 +145,17 @@ function AgentAccountsPage() {
 
   const filteredCards = useMemo(
     () => (cards ?? []).filter((c) => networkId === "all" || c.network_id === networkId),
-    [cards, networkId]
+    [cards, networkId],
   );
   const filteredSales = useMemo(
     () => (sales ?? []).filter((s) => networkId === "all" || s.network_id === networkId),
-    [sales, networkId]
+    [sales, networkId],
   );
 
   const agent = agents?.find((a) => a.id === agentId);
-  const agentLabel = agent ? `${agent.full_name || displayPhone((agent as any).phone, agent.username)} — ${displayPhone((agent as any).phone, agent.username)}` : "";
+  const agentLabel = agent
+    ? `${agent.full_name || displayPhone((agent as any).phone, agent.username)} — ${displayPhone((agent as any).phone, agent.username)}`
+    : "";
 
   // Totals
   const withdrawn = filteredCards.filter((c) => c.status === "ASSIGNED").length;
@@ -138,17 +171,39 @@ function AgentAccountsPage() {
   ]).size;
 
   // Group by network
-  type Row = { key: string; label: string; sub?: string; currency?: string; withdrawn: number; sold: number; value: number };
+  type Row = {
+    key: string;
+    label: string;
+    sub?: string;
+    currency?: string;
+    withdrawn: number;
+    sold: number;
+    value: number;
+  };
   const byNetwork: Row[] = useMemo(() => {
     const m = new Map<string, Row>();
     for (const c of filteredCards) {
       const net = netMap.get(c.network_id);
-      const cur = m.get(c.network_id) ?? { key: c.network_id, label: net?.name ?? "—", currency: net?.currency, withdrawn: 0, sold: 0, value: 0 };
+      const cur = m.get(c.network_id) ?? {
+        key: c.network_id,
+        label: net?.name ?? "—",
+        currency: net?.currency,
+        withdrawn: 0,
+        sold: 0,
+        value: 0,
+      };
       if (c.status === "ASSIGNED") cur.withdrawn++;
       m.set(c.network_id, cur);
     }
     for (const s of filteredSales) {
-      const cur = m.get(s.network_id) ?? { key: s.network_id, label: s.network_name, currency: netMap.get(s.network_id)?.currency, withdrawn: 0, sold: 0, value: 0 };
+      const cur = m.get(s.network_id) ?? {
+        key: s.network_id,
+        label: s.network_name,
+        currency: netMap.get(s.network_id)?.currency,
+        withdrawn: 0,
+        sold: 0,
+        value: 0,
+      };
       cur.sold++;
       cur.value += Number(s.price || 0);
       m.set(s.network_id, cur);
@@ -163,8 +218,14 @@ function AgentAccountsPage() {
       const pkg = pkgMap.get(c.package_id);
       const net = netMap.get(c.network_id);
       const cur = m.get(c.package_id) ?? {
-        key: c.package_id, label: pkg?.name ?? "—", sub: net?.name, currency: net?.currency,
-        price: pkg ? Number(pkg.price) : undefined, withdrawn: 0, sold: 0, value: 0,
+        key: c.package_id,
+        label: pkg?.name ?? "—",
+        sub: net?.name,
+        currency: net?.currency,
+        price: pkg ? Number(pkg.price) : undefined,
+        withdrawn: 0,
+        sold: 0,
+        value: 0,
       };
       if (c.status === "ASSIGNED") cur.withdrawn++;
       m.set(c.package_id, cur);
@@ -172,8 +233,14 @@ function AgentAccountsPage() {
     for (const s of filteredSales) {
       const pkg = pkgMap.get(s.package_id);
       const cur = m.get(s.package_id) ?? {
-        key: s.package_id, label: s.package_name, sub: s.network_name, currency: netMap.get(s.network_id)?.currency,
-        price: pkg ? Number(pkg.price) : Number(s.price), withdrawn: 0, sold: 0, value: 0,
+        key: s.package_id,
+        label: s.package_name,
+        sub: s.network_name,
+        currency: netMap.get(s.network_id)?.currency,
+        price: pkg ? Number(pkg.price) : Number(s.price),
+        withdrawn: 0,
+        sold: 0,
+        value: 0,
       };
       cur.sold++;
       cur.value += Number(s.price || 0);
@@ -184,29 +251,42 @@ function AgentAccountsPage() {
 
   return (
     <>
-      <PageHeader title="حسابات المناديب" description="عرض تفصيلي لحساب كل مندوب حسب الشبكة والفئة" />
-      <div className="mb-4 flex justify-start"><RefreshButton /></div>
-
+      <PageHeader
+        title="حسابات المناديب"
+        description="عرض تفصيلي لحساب كل مندوب حسب الشبكة والفئة"
+      />
+      <div className="mb-4 flex justify-start">
+        <RefreshButton />
+      </div>
 
       <div className="grid sm:grid-cols-2 gap-3 mb-4">
         <div>
           <Label className="text-xs mb-1.5 block">الشبكة</Label>
           <Select value={networkId} onValueChange={setNetworkId}>
-            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">كل الشبكات</SelectItem>
-              {networks?.map((n) => <SelectItem key={n.id} value={n.id}>{n.name}</SelectItem>)}
+              {networks?.map((n) => (
+                <SelectItem key={n.id} value={n.id}>
+                  {n.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         <div>
           <Label className="text-xs mb-1.5 block">المندوب</Label>
           <Select value={agentId} onValueChange={setAgentId}>
-            <SelectTrigger className="rounded-xl"><SelectValue placeholder="اختر..." /></SelectTrigger>
+            <SelectTrigger className="rounded-xl">
+              <SelectValue placeholder="اختر..." />
+            </SelectTrigger>
             <SelectContent>
               {agents?.map((a) => (
                 <SelectItem key={a.id} value={a.id}>
-                  {(a.full_name || displayPhone((a as any).phone, a.username))} ({displayPhone((a as any).phone, a.username)})
+                  {a.full_name || displayPhone((a as any).phone, a.username)} (
+                  {displayPhone((a as any).phone, a.username)})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -237,12 +317,26 @@ function AgentAccountsPage() {
                   المبلغ المسدد
                 </Button>
                 <Button
-                  onClick={() => printAgentReport({
-                    agentLabel, networkFilter: networkId === "all" ? "كل الشبكات" : (netMap.get(networkId)?.name ?? ""),
-                    withdrawn, sold, salesValue, distinctPackages: distinctPackages.size, networksCount,
-                    byNetwork, byPackage, sales: filteredSales, netMap,
-                    paidRows: filteredPaidRows, totalDebt, totalPaid, totalRemaining,
-                  })}
+                  onClick={() =>
+                    printAgentReport({
+                      agentLabel,
+                      networkFilter:
+                        networkId === "all" ? "كل الشبكات" : (netMap.get(networkId)?.name ?? ""),
+                      withdrawn,
+                      sold,
+                      salesValue,
+                      distinctPackages: distinctPackages.size,
+                      networksCount,
+                      byNetwork,
+                      byPackage,
+                      sales: filteredSales,
+                      netMap,
+                      paidRows: filteredPaidRows,
+                      totalDebt,
+                      totalPaid,
+                      totalRemaining,
+                    })
+                  }
                   className="rounded-xl gradient-primary-bg text-white"
                   size="sm"
                 >
@@ -260,7 +354,8 @@ function AgentAccountsPage() {
               <Stat icon={Layers} label="فئات مختلفة" value={String(distinctPackages.size)} />
             </div>
             <div className="text-[11px] text-muted-foreground mt-3">
-              شبكات: {networksCount} • فئات: {distinctPackages.size} • إجمالي المستحق: {fmtMoney(totalDebt)}
+              شبكات: {networksCount} • فئات: {distinctPackages.size} • إجمالي المستحق:{" "}
+              {fmtMoney(totalDebt)}
             </div>
           </Card>
 
@@ -312,16 +407,17 @@ function AgentAccountsPage() {
             ) : (
               <div className="space-y-2">
                 {filteredSales.slice(0, 20).map((s) => (
-                  <div key={s.id} className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 p-2.5">
+                  <div
+                    key={s.id}
+                    className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 p-2.5"
+                  >
                     <div className="min-w-0">
                       <div className="text-sm font-semibold truncate">{s.package_name}</div>
                       <div className="text-[11px] text-muted-foreground truncate">
                         {s.network_name} · {fmtArabicDateTime(s.sold_at)}
                       </div>
                     </div>
-                    <div className="text-sm font-bold shrink-0">
-                      {fmtMoney(Number(s.price))}
-                    </div>
+                    <div className="text-sm font-bold shrink-0">{fmtMoney(Number(s.price))}</div>
                   </div>
                 ))}
               </div>
@@ -380,16 +476,22 @@ type Cell = {
 
 function toneClass(tone?: Cell["tone"]) {
   switch (tone) {
-    case "primary": return "text-primary";
-    case "warning": return "text-warning";
-    case "success": return "text-success";
-    case "muted": return "text-muted-foreground";
-    default: return "text-foreground";
+    case "primary":
+      return "text-primary";
+    case "warning":
+      return "text-warning";
+    case "success":
+      return "text-success";
+    case "muted":
+      return "text-muted-foreground";
+    default:
+      return "text-foreground";
   }
 }
 
 function CellView({ c }: { c: Cell }) {
-  const align = c.align === "center" ? "text-center" : c.align === "end" ? "text-left" : "text-right";
+  const align =
+    c.align === "center" ? "text-center" : c.align === "end" ? "text-left" : "text-right";
   return (
     <div className={`inline-flex items-center gap-1.5 font-semibold ${toneClass(c.tone)} ${align}`}>
       {c.badge && (
@@ -403,13 +505,17 @@ function CellView({ c }: { c: Cell }) {
 }
 
 function StyledTable({ cols, rows, empty }: { cols: string[]; rows: Cell[][]; empty: string }) {
-  if (rows.length === 0) return <div className="text-center text-sm text-muted-foreground py-4">{empty}</div>;
+  if (rows.length === 0)
+    return <div className="text-center text-sm text-muted-foreground py-4">{empty}</div>;
   return (
     <div
       className="h-scroll -mx-4 px-4 pb-2 md:mx-0 md:px-0 md:pb-0 overflow-x-auto"
       style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
     >
-      <table dir="rtl" className="text-sm min-w-max w-max md:min-w-full md:w-full border-collapse border border-border">
+      <table
+        dir="rtl"
+        className="text-sm min-w-max w-max md:min-w-full md:w-full border-collapse border border-border"
+      >
         <thead>
           <tr className="text-[11px] text-muted-foreground">
             {cols.map((c, i) => (
@@ -449,16 +555,39 @@ type PrintArgs = {
   salesValue: number;
   distinctPackages: number;
   networksCount: number;
-  byNetwork: { key: string; label: string; currency?: string; withdrawn: number; sold: number; value: number }[];
-  byPackage: { key: string; label: string; sub?: string; currency?: string; price?: number; withdrawn: number; sold: number; value: number }[];
-  sales: { id: string; transaction_no?: string | null; package_name: string; network_name: string; network_id: string; price: number | string; sold_at: string }[];
+  byNetwork: {
+    key: string;
+    label: string;
+    currency?: string;
+    withdrawn: number;
+    sold: number;
+    value: number;
+  }[];
+  byPackage: {
+    key: string;
+    label: string;
+    sub?: string;
+    currency?: string;
+    price?: number;
+    withdrawn: number;
+    sold: number;
+    value: number;
+  }[];
+  sales: {
+    id: string;
+    transaction_no?: string | null;
+    package_name: string;
+    network_name: string;
+    network_id: string;
+    price: number | string;
+    sold_at: string;
+  }[];
   netMap: Map<string, { currency?: string | null }>;
   paidRows: { key: string; label: string; total: number; paid: number; remaining: number }[];
   totalDebt: number;
   totalPaid: number;
   totalRemaining: number;
 };
-
 
 async function printAgentReport(a: PrintArgs) {
   const { exportToPDF } = await import("@/lib/dashboard-export");
@@ -480,18 +609,18 @@ async function printAgentReport(a: PrintArgs) {
       title: "المبلغ المسدد حسب الشبكة",
       cols: ["الشبكة", "إجمالي المستحق", "المسدد", "المتبقي"],
       rows: a.paidRows.length
-        ? a.paidRows.map((r) => [r.label, fmtMoney(r.total), fmtMoney(r.paid), fmtMoney(r.remaining)])
+        ? a.paidRows.map((r) => [
+            r.label,
+            fmtMoney(r.total),
+            fmtMoney(r.paid),
+            fmtMoney(r.remaining),
+          ])
         : [["—", fmtMoney(0), fmtMoney(0), fmtMoney(0)]],
     },
     {
       title: "تفاصيل حسب الشبكة",
       cols: ["الشبكة", "مسحوب", "مباع", "قيمة المبيعات"],
-      rows: a.byNetwork.map((r) => [
-        r.label,
-        r.withdrawn,
-        r.sold,
-        fmtMoney(r.value),
-      ]),
+      rows: a.byNetwork.map((r) => [r.label, r.withdrawn, r.sold, fmtMoney(r.value)]),
     },
     {
       title: "تفاصيل حسب الفئة",

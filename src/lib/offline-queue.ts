@@ -46,7 +46,9 @@ const listeners = new Set<(size: number) => void>();
 function notifyListeners() {
   const size = readQueue().length;
   listeners.forEach((fn) => {
-    try { fn(size); } catch {}
+    try {
+      fn(size);
+    } catch {}
   });
 }
 
@@ -118,13 +120,19 @@ export async function flushQueue(): Promise<{ ok: number; failed: number; skippe
     return { ok: 0, failed: 0, skipped: 0 };
   }
   flushing = true;
-  let ok = 0, failed = 0, skipped = 0;
+  let ok = 0,
+    failed = 0,
+    skipped = 0;
   try {
     const q = readQueue();
     const remaining: QueuedOp[] = [];
     for (const op of q) {
       const handler = handlers.get(op.type);
-      if (!handler) { remaining.push(op); skipped++; continue; }
+      if (!handler) {
+        remaining.push(op);
+        skipped++;
+        continue;
+      }
       try {
         await handler(op.payload);
         ok++;
@@ -151,6 +159,8 @@ export function initOfflineQueueAutoSync() {
   });
   // Try once at startup in case we came back online while closed.
   if (navigator.onLine) {
-    setTimeout(() => { void flushQueue(); }, 1500);
+    setTimeout(() => {
+      void flushQueue();
+    }, 1500);
   }
 }

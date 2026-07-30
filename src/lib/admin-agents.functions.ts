@@ -12,22 +12,24 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  */
 export const adminUpdateAgent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
-    agentId: string;
-    full_name?: string | null;
-    phone?: string | null;
-    password?: string | null;
-  }) => input)
+  .inputValidator(
+    (input: {
+      agentId: string;
+      full_name?: string | null;
+      phone?: string | null;
+      password?: string | null;
+    }) => input,
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const agentId = data.agentId;
     if (!agentId) throw new Error("MISSING_AGENT_ID");
 
     // Authorize: caller is admin and owns a network
-    const { data: isAdmin, error: roleErr } = await (supabase.rpc as any)(
-      "has_role",
-      { _user_id: userId, _role: "admin" },
-    );
+    const { data: isAdmin, error: roleErr } = await (supabase.rpc as any)("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
     if (roleErr) throw new Error(roleErr.message);
     if (!isAdmin) throw new Error("FORBIDDEN");
 
@@ -113,8 +115,6 @@ export const adminUpdateAgent = createServerFn({ method: "POST" })
       if (upErr) throw new Error(`تعذّر حفظ بيانات الملف الشخصي: ${upErr.message}`);
     }
 
-
-
     return { ok: true };
   });
 
@@ -135,10 +135,10 @@ export const adminDeleteAgent = createServerFn({ method: "POST" })
     if (agentId === userId) throw new Error("CANNOT_DELETE_SELF");
 
     // Authorize: caller is admin and owns a network
-    const { data: isAdmin, error: roleErr } = await (supabase.rpc as any)(
-      "has_role",
-      { _user_id: userId, _role: "admin" },
-    );
+    const { data: isAdmin, error: roleErr } = await (supabase.rpc as any)("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
     if (roleErr) throw new Error(roleErr.message);
     if (!isAdmin) throw new Error("FORBIDDEN");
 
