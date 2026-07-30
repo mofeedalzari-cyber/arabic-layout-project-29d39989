@@ -267,6 +267,7 @@ function EditAgentDialog({
       setPhone(displayPhone(agent.phone, agent.username) === "—" ? "" : displayPhone(agent.phone, agent.username));
       setPassword("");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agent?.id]);
 
 
