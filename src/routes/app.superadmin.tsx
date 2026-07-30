@@ -20,10 +20,17 @@ import { ShieldCheck, Wifi, Users, Package as PkgIcon, CreditCard, Search, Power
 export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
 
 function SuperAdminPage() {
-  const { loading, profile, isSuperadmin } = useAuth();
-  const qc = useQueryClient();
+  const { loading, isSuperadmin } = useAuth();
   if (loading) return null;
   if (!isSuperadmin) return <Navigate to="/app" />;
+  return <SuperAdminPageInner />;
+}
+
+function SuperAdminPageInner() {
+  const { profile } = useAuth();
+  const qc = useQueryClient();
+
+
 
 
 
