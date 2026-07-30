@@ -5,7 +5,8 @@
 function isRefusedHost(hostname: string): boolean {
   if (hostname.startsWith("id-preview--") || hostname.startsWith("preview--")) return true;
   if (hostname === "lovableproject.com" || hostname.endsWith(".lovableproject.com")) return true;
-  if (hostname === "lovableproject-dev.com" || hostname.endsWith(".lovableproject-dev.com")) return true;
+  if (hostname === "lovableproject-dev.com" || hostname.endsWith(".lovableproject-dev.com"))
+    return true;
   if (hostname === "beta.lovable.dev" || hostname.endsWith(".beta.lovable.dev")) return true;
   return false;
 }
@@ -21,8 +22,10 @@ export function registerServiceWorker(): void {
   if (!("serviceWorker" in navigator)) return;
 
   // Kill-switch
-  if (new URLSearchParams(window.location.search).has("sw") &&
-      new URLSearchParams(window.location.search).get("sw") === "off") {
+  if (
+    new URLSearchParams(window.location.search).has("sw") &&
+    new URLSearchParams(window.location.search).get("sw") === "off"
+  ) {
     navigator.serviceWorker.getRegistrations().then((regs) => {
       regs.forEach((r) => {
         if (r.active?.scriptURL.endsWith("/sw.js")) r.unregister();
@@ -32,10 +35,7 @@ export function registerServiceWorker(): void {
   }
 
   const inIframe = window.self !== window.top;
-  const refused =
-    !import.meta.env.PROD ||
-    inIframe ||
-    isRefusedHost(window.location.hostname);
+  const refused = !import.meta.env.PROD || inIframe || isRefusedHost(window.location.hostname);
 
   // Allow registration inside Capacitor WebView even if it's an iframe-like host,
   // because native shell needs the SW to open offline.

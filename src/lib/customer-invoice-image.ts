@@ -12,8 +12,10 @@ function isNativeApp(): boolean {
 
 function safeFileName(name: string): string {
   return (
-    name.replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_").slice(0, 80) ||
-    "invoice"
+    name
+      .replace(/[\\/:*?"<>|]+/g, "_")
+      .replace(/\s+/g, "_")
+      .slice(0, 80) || "invoice"
   );
 }
 
@@ -53,11 +55,7 @@ async function pdfBlobToPngBlob(pdfBlob: Blob, scale = 2): Promise<Blob> {
   await page.render({ canvasContext: ctx, viewport, canvas }).promise;
 
   return await new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("toBlob failed"))),
-      "image/png",
-      0.95,
-    ),
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/png", 0.95),
   );
 }
 

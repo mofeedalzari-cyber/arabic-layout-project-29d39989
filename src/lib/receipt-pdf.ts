@@ -54,19 +54,52 @@ const FONTS = {
 };
 
 // ---------- Arabic number-to-words (integers up to millions) ----------
-const ONES = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة",
-  "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
+const ONES = [
+  "",
+  "واحد",
+  "اثنان",
+  "ثلاثة",
+  "أربعة",
+  "خمسة",
+  "ستة",
+  "سبعة",
+  "ثمانية",
+  "تسعة",
+  "عشرة",
+  "أحد عشر",
+  "اثنا عشر",
+  "ثلاثة عشر",
+  "أربعة عشر",
+  "خمسة عشر",
+  "ستة عشر",
+  "سبعة عشر",
+  "ثمانية عشر",
+  "تسعة عشر",
+];
 const TENS = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
-const HUNDREDS = ["", "مائة", "مئتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+const HUNDREDS = [
+  "",
+  "مائة",
+  "مئتان",
+  "ثلاثمائة",
+  "أربعمائة",
+  "خمسمائة",
+  "ستمائة",
+  "سبعمائة",
+  "ثمانمائة",
+  "تسعمائة",
+];
 
 function under1000(n: number): string {
   const parts: string[] = [];
   const h = Math.floor(n / 100);
   const rem = n % 100;
   if (h) parts.push(HUNDREDS[h]);
-  if (rem < 20) { if (rem) parts.push(ONES[rem]); }
-  else {
-    const o = rem % 10, t = Math.floor(rem / 10);
+  if (rem < 20) {
+    if (rem) parts.push(ONES[rem]);
+  } else {
+    const o = rem % 10,
+      t = Math.floor(rem / 10);
     if (o) parts.push(`${ONES[o]} و${TENS[t]}`);
     else parts.push(TENS[t]);
   }
@@ -169,18 +202,38 @@ export async function buildCreditReceiptPdfBlob(input: CreditReceiptInput): Prom
       {
         width: "*",
         stack: [
-          { text: (input.adminUsername || "").toUpperCase() || "—", fontSize: 12, bold: true, alignment: "left" },
+          {
+            text: (input.adminUsername || "").toUpperCase() || "—",
+            fontSize: 12,
+            bold: true,
+            alignment: "left",
+          },
           { text: region ? "YEMEN" : "", fontSize: 11, alignment: "left" },
-          { text: input.networkPhone ? `+${input.networkPhone.replace(/^\+/, "")}` : "", fontSize: 11, alignment: "left" },
+          {
+            text: input.networkPhone ? `+${input.networkPhone.replace(/^\+/, "")}` : "",
+            fontSize: 11,
+            alignment: "left",
+          },
         ],
       },
       // Right column (Arabic)
       {
         width: "*",
         stack: [
-          { text: ar(input.networkName), direction: "rtl", fontSize: 13, bold: true, alignment: "right" },
+          {
+            text: ar(input.networkName),
+            direction: "rtl",
+            fontSize: 13,
+            bold: true,
+            alignment: "right",
+          },
           { text: ar(region), direction: "rtl", fontSize: 11, alignment: "right" },
-          { text: ar(`+967 ${input.networkPhone}`.trim()), direction: "rtl", fontSize: 11, alignment: "right" },
+          {
+            text: ar(`+967 ${input.networkPhone}`.trim()),
+            direction: "rtl",
+            fontSize: 11,
+            alignment: "right",
+          },
         ],
       },
     ],
@@ -194,8 +247,10 @@ export async function buildCreditReceiptPdfBlob(input: CreditReceiptInput): Prom
       body: [[cell("سند إشعار دائن", { bold: true, fontSize: 12, margin: [6, 4, 6, 4] })]],
     },
     layout: {
-      hLineColor: () => LINE, vLineColor: () => LINE,
-      hLineWidth: () => 1, vLineWidth: () => 1,
+      hLineColor: () => LINE,
+      vLineColor: () => LINE,
+      hLineWidth: () => 1,
+      vLineWidth: () => 1,
     },
     alignment: "center",
     margin: [0, 0, 0, 10],
@@ -205,15 +260,19 @@ export async function buildCreditReceiptPdfBlob(input: CreditReceiptInput): Prom
   const metaRow = {
     table: {
       widths: ["*", "*", "*"],
-      body: [[
-        cell(`الرقم: ${receiptNo}`, { bold: true, color: "#1e3a8a", alignment: "center" }),
-        cell("سند إشعار دائن", { bold: true, fontSize: 14, alignment: "center" }),
-        cell(`التاريخ : ${input.dateStr}`, { bold: true, color: "#1e3a8a", alignment: "center" }),
-      ]],
+      body: [
+        [
+          cell(`الرقم: ${receiptNo}`, { bold: true, color: "#1e3a8a", alignment: "center" }),
+          cell("سند إشعار دائن", { bold: true, fontSize: 14, alignment: "center" }),
+          cell(`التاريخ : ${input.dateStr}`, { bold: true, color: "#1e3a8a", alignment: "center" }),
+        ],
+      ],
     },
     layout: {
-      hLineColor: () => LINE, vLineColor: () => LINE,
-      hLineWidth: () => 1, vLineWidth: () => 1,
+      hLineColor: () => LINE,
+      vLineColor: () => LINE,
+      hLineWidth: () => 1,
+      vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 8],
   };
@@ -222,7 +281,13 @@ export async function buildCreditReceiptPdfBlob(input: CreditReceiptInput): Prom
   const recipientRow = {
     columns: [
       { width: "*", text: ar("المحترم"), direction: "rtl", alignment: "left", bold: true },
-      { width: "*", text: ar(`إستلمت من الأخ الفاضل   /   ${input.agentName}`), direction: "rtl", alignment: "right", bold: true },
+      {
+        width: "*",
+        text: ar(`إستلمت من الأخ الفاضل   /   ${input.agentName}`),
+        direction: "rtl",
+        alignment: "right",
+        bold: true,
+      },
     ],
     margin: [4, 4, 4, 6],
   };
@@ -244,14 +309,38 @@ export async function buildCreditReceiptPdfBlob(input: CreditReceiptInput): Prom
           cell(fmtMoney(amountInt), { bold: true }),
           cell("المبلغ", { color: "#1e3a8a", bold: true }),
         ],
-        [cell(words, { colSpan: 3, alignment: "center", bold: true, margin: [4, 6, 4, 6] }), {}, {}],
-        [cell("البيــــــــان", { colSpan: 3, alignment: "center", bold: true, color: "#1e3a8a", margin: [4, 6, 4, 6] }), {}, {}],
-        [cell(input.statement || `تسديد من ${input.agentName}`, { colSpan: 3, alignment: "right", margin: [10, 10, 10, 24] }), {}, {}],
+        [
+          cell(words, { colSpan: 3, alignment: "center", bold: true, margin: [4, 6, 4, 6] }),
+          {},
+          {},
+        ],
+        [
+          cell("البيــــــــان", {
+            colSpan: 3,
+            alignment: "center",
+            bold: true,
+            color: "#1e3a8a",
+            margin: [4, 6, 4, 6],
+          }),
+          {},
+          {},
+        ],
+        [
+          cell(input.statement || `تسديد من ${input.agentName}`, {
+            colSpan: 3,
+            alignment: "right",
+            margin: [10, 10, 10, 24],
+          }),
+          {},
+          {},
+        ],
       ],
     },
     layout: {
-      hLineColor: () => LINE, vLineColor: () => LINE,
-      hLineWidth: () => 1, vLineWidth: () => 1,
+      hLineColor: () => LINE,
+      vLineColor: () => LINE,
+      hLineWidth: () => 1,
+      vLineWidth: () => 1,
     },
     margin: [0, 0, 0, 20],
   };
@@ -259,9 +348,37 @@ export async function buildCreditReceiptPdfBlob(input: CreditReceiptInput): Prom
   // ---------- Signatures ----------
   const signatures = {
     columns: [
-      { width: "*", stack: [{ text: ar(input.adminName), direction: "rtl", alignment: "center", margin: [0, 0, 0, 2] }, { text: ar("مستلم الكروت"), direction: "rtl", alignment: "center", bold: true }] },
-      { width: "*", stack: [{ text: ar("كروت"), direction: "rtl", alignment: "center", margin: [0, 0, 0, 2] }, { text: ar("مندوب"), direction: "rtl", alignment: "center", bold: true }] },
-      { width: "*", stack: [{ text: " ", margin: [0, 0, 0, 2] }, { text: ar(`مدير ${input.networkName}`), direction: "rtl", alignment: "center", bold: true }] },
+      {
+        width: "*",
+        stack: [
+          {
+            text: ar(input.adminName),
+            direction: "rtl",
+            alignment: "center",
+            margin: [0, 0, 0, 2],
+          },
+          { text: ar("مستلم الكروت"), direction: "rtl", alignment: "center", bold: true },
+        ],
+      },
+      {
+        width: "*",
+        stack: [
+          { text: ar("كروت"), direction: "rtl", alignment: "center", margin: [0, 0, 0, 2] },
+          { text: ar("مندوب"), direction: "rtl", alignment: "center", bold: true },
+        ],
+      },
+      {
+        width: "*",
+        stack: [
+          { text: " ", margin: [0, 0, 0, 2] },
+          {
+            text: ar(`مدير ${input.networkName}`),
+            direction: "rtl",
+            alignment: "center",
+            bold: true,
+          },
+        ],
+      },
     ],
     margin: [0, 20, 0, 0],
   };
@@ -275,8 +392,21 @@ export async function buildCreditReceiptPdfBlob(input: CreditReceiptInput): Prom
       margin: [30, 0, 30, 0],
       columns: [
         { text: ar("© كرتي"), direction: "rtl", alignment: "left", fontSize: 8, color: "#64748b" },
-        { text: ar(`صفحة ${cp} / ${tp}`), direction: "rtl", alignment: "center", fontSize: 8, color: "#64748b" },
-        { text: ar("برمجة وتصميم مفيد الزري"), direction: "rtl", alignment: "right", fontSize: 8, color: "#0f766e", bold: true },
+        {
+          text: ar(`صفحة ${cp} / ${tp}`),
+          direction: "rtl",
+          alignment: "center",
+          fontSize: 8,
+          color: "#64748b",
+        },
+        {
+          text: ar("برمجة وتصميم مفيد الزري"),
+          direction: "rtl",
+          alignment: "right",
+          fontSize: 8,
+          color: "#0f766e",
+          bold: true,
+        },
       ],
     }),
   };
@@ -286,12 +416,17 @@ export async function buildCreditReceiptPdfBlob(input: CreditReceiptInput): Prom
     try {
       const cb = (buffer: any) => {
         try {
-          const u8 = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer?.buffer ?? buffer);
+          const u8 =
+            buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer?.buffer ?? buffer);
           resolve(new Blob([u8], { type: "application/pdf" }));
-        } catch (e) { reject(e); }
+        } catch (e) {
+          reject(e);
+        }
       };
       const maybe = pdf.getBuffer(cb);
       if (maybe && typeof maybe.then === "function") maybe.then(cb).catch(reject);
-    } catch (e) { reject(e); }
+    } catch (e) {
+      reject(e);
+    }
   });
 }

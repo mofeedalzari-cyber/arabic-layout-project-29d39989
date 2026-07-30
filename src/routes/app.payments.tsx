@@ -10,14 +10,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
@@ -41,13 +55,21 @@ function PaymentsPageInner() {
   const [agentId, setAgentId] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
   const [note, setNote] = useState<string>("");
-  const [lastSettled, setLastSettled] = useState<{ applied: number; remaining: number; agentId: string } | null>(null);
+  const [lastSettled, setLastSettled] = useState<{
+    applied: number;
+    remaining: number;
+    agentId: string;
+  } | null>(null);
 
   const { data: network } = useQuery({
     queryKey: ["pay-network", profile?.id],
     enabled: !!profile?.id,
     queryFn: async () => {
-      const { data } = await supabase.from("networks").select("id, name, currency").eq("owner_id", profile!.id).maybeSingle();
+      const { data } = await supabase
+        .from("networks")
+        .select("id, name, currency")
+        .eq("owner_id", profile!.id)
+        .maybeSingle();
       return data;
     },
   });
@@ -56,7 +78,8 @@ function PaymentsPageInner() {
     queryKey: ["pay-agents", network?.id],
     enabled: !!network?.id,
     queryFn: async () => {
-      const { data } = await supabase.from("profiles")
+      const { data } = await supabase
+        .from("profiles")
         .select("id, username, full_name, phone")
         .eq("network_id", network!.id)
         .order("full_name");
@@ -68,7 +91,8 @@ function PaymentsPageInner() {
     queryKey: ["pay-debt", agentId, network?.id],
     enabled: !!agentId && !!network?.id,
     queryFn: async () => {
-      const { data } = await supabase.from("card_requests")
+      const { data } = await supabase
+        .from("card_requests")
         .select("total_value, paid_amount")
         .eq("agent_id", agentId)
         .eq("network_id", network!.id)
@@ -97,7 +121,10 @@ function PaymentsPageInner() {
         .select("id, request_id, amount, note, created_at, recorded_by_username")
         .in("request_id", ids)
         .order("created_at", { ascending: false });
-      return (data ?? []).map((p: any) => ({ ...p, package_name: nameMap.get(p.request_id) ?? "" }));
+      return (data ?? []).map((p: any) => ({
+        ...p,
+        package_name: nameMap.get(p.request_id) ?? "",
+      }));
     },
   });
 
@@ -119,7 +146,9 @@ function PaymentsPageInner() {
       const amt = Number(editAmount);
       if (!amt || amt <= 0) throw new Error("INVALID_AMOUNT");
       const { error } = await supabase.rpc("admin_update_request_payment" as any, {
-        _payment_id: editRow.id, _amount: amt, _note: editNote || null,
+        _payment_id: editRow.id,
+        _amount: amt,
+        _note: editNote || null,
       });
       if (error) throw error;
     },
@@ -129,10 +158,15 @@ function PaymentsPageInner() {
       invalidateAll();
     },
     onError: (e: Error) => {
-      const m = e.message.includes("INVALID_AMOUNT") ? "أدخل مبلغاً صحيحاً"
-        : e.message.includes("EXCEEDS_TOTAL") ? "المبلغ يتجاوز إجمالي المستحق"
-        : e.message.includes("FORBIDDEN") ? "غير مسموح"
-        : e.message.includes("NOT_FOUND") ? "العملية غير موجودة" : e.message;
+      const m = e.message.includes("INVALID_AMOUNT")
+        ? "أدخل مبلغاً صحيحاً"
+        : e.message.includes("EXCEEDS_TOTAL")
+          ? "المبلغ يتجاوز إجمالي المستحق"
+          : e.message.includes("FORBIDDEN")
+            ? "غير مسموح"
+            : e.message.includes("NOT_FOUND")
+              ? "العملية غير موجودة"
+              : e.message;
       toast.error(m);
     },
   });
@@ -153,7 +187,9 @@ function PaymentsPageInner() {
   });
 
   const agent = useMemo(() => agents?.find((a) => a.id === agentId), [agents, agentId]);
-  const agentName = agent ? (agent.full_name || displayPhone((agent as any).phone, agent.username)) : "";
+  const agentName = agent
+    ? agent.full_name || displayPhone((agent as any).phone, agent.username)
+    : "";
   const agentPhone = agent ? displayPhone((agent as any).phone, agent.username) : "";
 
   const settle = useMutation({
@@ -162,35 +198,50 @@ function PaymentsPageInner() {
       if (!agentId) throw new Error("اختر المندوب");
       if (!amt || amt <= 0) throw new Error("أدخل مبلغاً صحيحاً");
       const { data, error } = await supabase.rpc("settle_agent_debt" as any, {
-        _agent_id: agentId, _amount: amt, _note: note || null,
+        _agent_id: agentId,
+        _amount: amt,
+        _note: note || null,
       });
       if (error) throw error;
       const r: any = Array.isArray(data) ? data[0] : data;
-      return { applied: Number(r?.applied ?? 0), remaining_debt: Number(r?.remaining_debt ?? 0), payments_count: Number(r?.payments_count ?? 0) };
+      return {
+        applied: Number(r?.applied ?? 0),
+        remaining_debt: Number(r?.remaining_debt ?? 0),
+        payments_count: Number(r?.payments_count ?? 0),
+      };
     },
     onSuccess: async (r) => {
-      toast.success(`تم السداد — طُبِّق ${fmtMoney(r.applied)} • المتبقي ${fmtMoney(r.remaining_debt)}`);
+      toast.success(
+        `تم السداد — طُبِّق ${fmtMoney(r.applied)} • المتبقي ${fmtMoney(r.remaining_debt)}`,
+      );
       const dateStr = fmtArabicDateTimePdf(new Date());
       await printReceiptPDF({
-        agentName, agentPhone,
+        agentName,
+        agentPhone,
         networkName: network?.name ?? "—",
         currency: (network as any)?.currency ?? "",
         amountPaid: r.applied,
         remaining: r.remaining_debt,
-        prevRemaining: (debt?.remaining ?? 0),
-        note, dateStr,
+        prevRemaining: debt?.remaining ?? 0,
+        note,
+        dateStr,
         adminName: profile?.full_name || profile?.username || "المدير",
       });
       setLastSettled({ applied: r.applied, remaining: r.remaining_debt, agentId });
       qc.invalidateQueries({ queryKey: ["pay-debt"] });
       qc.invalidateQueries({ queryKey: ["card-requests"] });
       refetchDebt();
-      setAmount(""); setNote("");
+      setAmount("");
+      setNote("");
     },
     onError: (e: Error) => {
-      const msg = e.message.includes("INVALID_AMOUNT") ? "أدخل مبلغاً صحيحاً" :
-                  e.message.includes("AGENT_NOT_IN_NETWORK") ? "المندوب ليس ضمن شبكتك" :
-                  e.message.includes("FORBIDDEN") ? "غير مسموح" : e.message;
+      const msg = e.message.includes("INVALID_AMOUNT")
+        ? "أدخل مبلغاً صحيحاً"
+        : e.message.includes("AGENT_NOT_IN_NETWORK")
+          ? "المندوب ليس ضمن شبكتك"
+          : e.message.includes("FORBIDDEN")
+            ? "غير مسموح"
+            : e.message;
       toast.error(msg);
     },
   });
@@ -202,19 +253,23 @@ function PaymentsPageInner() {
   return (
     <>
       <PageHeader title="السداد" description="تسجيل سداد المندوب وخصمه من ديونه تلقائياً" />
-      <div className="mb-4 flex justify-start"><RefreshButton /></div>
-
+      <div className="mb-4 flex justify-start">
+        <RefreshButton />
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="p-4 card-elegant border-0 space-y-3">
           <div>
             <Label className="text-xs mb-1.5 block">المندوب</Label>
             <Select value={agentId} onValueChange={setAgentId}>
-              <SelectTrigger className="rounded-xl"><SelectValue placeholder="اختر المندوب" /></SelectTrigger>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="اختر المندوب" />
+              </SelectTrigger>
               <SelectContent>
                 {agents?.map((a) => (
                   <SelectItem key={a.id} value={a.id}>
-                    {(a.full_name || displayPhone((a as any).phone, a.username))} ({displayPhone((a as any).phone, a.username)})
+                    {a.full_name || displayPhone((a as any).phone, a.username)} (
+                    {displayPhone((a as any).phone, a.username)})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -222,20 +277,29 @@ function PaymentsPageInner() {
           </div>
 
           <div>
-            <Label className="text-xs mb-1.5 block">المبلغ المُسدَّد {currency && `(${currency})`}</Label>
+            <Label className="text-xs mb-1.5 block">
+              المبلغ المُسدَّد {currency && `(${currency})`}
+            </Label>
             <Input
-              type="number" inputMode="decimal" min="0" step="0.01"
-              className="rounded-xl" placeholder="مثال: 100"
-              value={amount} onChange={(e) => setAmount(e.target.value)}
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              className="rounded-xl"
+              placeholder="مثال: 100"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
             />
           </div>
 
           <div>
             <Label className="text-xs mb-1.5 block">ملاحظة (اختياري)</Label>
             <Textarea
-              className="rounded-xl" rows={2}
+              className="rounded-xl"
+              rows={2}
               placeholder="ملاحظة على السداد..."
-              value={note} onChange={(e) => setNote(e.target.value)}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
             />
           </div>
 
@@ -267,21 +331,32 @@ function PaymentsPageInner() {
                 <Row
                   label="المتبقي بعد السداد"
                   value={fmtMoney(Math.max(remaining - Number(amount), 0))}
-                  tone="primary" bold
+                  tone="primary"
+                  bold
                 />
               )}
               {agentPhone && agentPhone !== "—" && (
                 <Button
-                  variant="outline" className="w-full rounded-xl mt-1"
+                  variant="outline"
+                  className="w-full rounded-xl mt-1"
                   onClick={() => {
-                    const useLast = lastSettled && lastSettled.agentId === agentId && !Number(amount);
-                    const waAmount = useLast ? lastSettled!.applied : (Number(amount) || 0);
-                    const waRemaining = useLast ? lastSettled!.remaining : Math.max(remaining - (Number(amount) || 0), 0);
-                    openWhatsApp(agentPhone, buildWhatsAppText({
-                      agentName, networkName: network?.name ?? "—",
-                      amount: waAmount, remaining: waRemaining,
-                      currency, adminName: profile?.full_name || profile?.username || "المدير",
-                    }));
+                    const useLast =
+                      lastSettled && lastSettled.agentId === agentId && !Number(amount);
+                    const waAmount = useLast ? lastSettled!.applied : Number(amount) || 0;
+                    const waRemaining = useLast
+                      ? lastSettled!.remaining
+                      : Math.max(remaining - (Number(amount) || 0), 0);
+                    openWhatsApp(
+                      agentPhone,
+                      buildWhatsAppText({
+                        agentName,
+                        networkName: network?.name ?? "—",
+                        amount: waAmount,
+                        remaining: waRemaining,
+                        currency,
+                        adminName: profile?.full_name || profile?.username || "المدير",
+                      }),
+                    );
                   }}
                 >
                   <Share2 className="h-4 w-4 ml-1" />
@@ -324,7 +399,9 @@ function PaymentsPageInner() {
                       <td className="p-2">
                         <div className="flex gap-1">
                           <Button
-                            size="icon" variant="ghost" className="h-8 w-8"
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
                             onClick={() => {
                               setEditRow(p);
                               setEditAmount(String(p.amount));
@@ -334,7 +411,9 @@ function PaymentsPageInner() {
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
-                            size="icon" variant="ghost" className="h-8 w-8 text-destructive"
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-destructive"
                             onClick={() => setDeleteRow(p)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -359,21 +438,29 @@ function PaymentsPageInner() {
             <div>
               <Label className="text-xs mb-1.5 block">المبلغ {currency && `(${currency})`}</Label>
               <Input
-                type="number" inputMode="decimal" min="0" step="0.01"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
                 className="rounded-xl"
-                value={editAmount} onChange={(e) => setEditAmount(e.target.value)}
+                value={editAmount}
+                onChange={(e) => setEditAmount(e.target.value)}
               />
             </div>
             <div>
               <Label className="text-xs mb-1.5 block">الملاحظة</Label>
               <Textarea
-                className="rounded-xl" rows={2}
-                value={editNote} onChange={(e) => setEditNote(e.target.value)}
+                className="rounded-xl"
+                rows={2}
+                value={editNote}
+                onChange={(e) => setEditNote(e.target.value)}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditRow(null)}>إلغاء</Button>
+            <Button variant="outline" onClick={() => setEditRow(null)}>
+              إلغاء
+            </Button>
             <Button
               onClick={() => editPayment.mutate()}
               disabled={editPayment.isPending || Number(editAmount) <= 0}
@@ -390,7 +477,8 @@ function PaymentsPageInner() {
           <AlertDialogHeader>
             <AlertDialogTitle>حذف عملية التسديد؟</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم حذف عملية التسديد بمبلغ {deleteRow ? fmtMoney(deleteRow.amount) : ""} وإرجاع المبلغ إلى دين المندوب. لا يمكن التراجع عن هذا الإجراء.
+              سيتم حذف عملية التسديد بمبلغ {deleteRow ? fmtMoney(deleteRow.amount) : ""} وإرجاع
+              المبلغ إلى دين المندوب. لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -408,18 +496,44 @@ function PaymentsPageInner() {
   );
 }
 
-function Row({ label, value, tone, bold }: { label: string; value: string; tone?: "success" | "warning" | "primary"; bold?: boolean }) {
-  const toneCls = tone === "success" ? "text-success" : tone === "warning" ? "text-warning" : tone === "primary" ? "text-primary" : "";
+function Row({
+  label,
+  value,
+  tone,
+  bold,
+}: {
+  label: string;
+  value: string;
+  tone?: "success" | "warning" | "primary";
+  bold?: boolean;
+}) {
+  const toneCls =
+    tone === "success"
+      ? "text-success"
+      : tone === "warning"
+        ? "text-warning"
+        : tone === "primary"
+          ? "text-primary"
+          : "";
   return (
     <div className="flex items-center justify-between gap-3 text-sm rounded-lg bg-muted/40 px-3 py-2">
       <span className="text-muted-foreground text-xs">{label}</span>
-      <span className={`${toneCls} ${bold ? "font-extrabold" : "font-semibold"} [overflow-wrap:anywhere] text-left`}>{value}</span>
+      <span
+        className={`${toneCls} ${bold ? "font-extrabold" : "font-semibold"} [overflow-wrap:anywhere] text-left`}
+      >
+        {value}
+      </span>
     </div>
   );
 }
 
 function buildWhatsAppText(p: {
-  agentName: string; networkName: string; amount: number; remaining: number; currency: string; adminName: string;
+  agentName: string;
+  networkName: string;
+  amount: number;
+  remaining: number;
+  currency: string;
+  adminName: string;
 }) {
   return [
     `سند سداد — ${p.networkName}`,
@@ -433,11 +547,17 @@ function buildWhatsAppText(p: {
   ].join("\n");
 }
 
-
 async function printReceiptPDF(a: {
-  agentName: string; agentPhone: string; networkName: string; currency: string;
-  amountPaid: number; remaining: number; prevRemaining: number; note: string;
-  dateStr: string; adminName: string;
+  agentName: string;
+  agentPhone: string;
+  networkName: string;
+  currency: string;
+  amountPaid: number;
+  remaining: number;
+  prevRemaining: number;
+  note: string;
+  dateStr: string;
+  adminName: string;
 }) {
   const { buildCreditReceiptPdfBlob } = await import("@/lib/receipt-pdf");
   const { sharePdfBlob } = await import("@/lib/native-pdf");

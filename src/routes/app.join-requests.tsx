@@ -9,9 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Check, X, Clock, UserPlus, Inbox } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -35,13 +33,21 @@ function JoinRequestsPageInner() {
         title="طلبات انضمام المناديب"
         description="مراجعة طلبات المناديب الجدد للانضمام إلى شبكتك"
       />
-      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+      <div className="mb-4 flex justify-start">
+        <RefreshButton />
+      </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)} dir="rtl">
         <TabsList dir="rtl" className="rounded-xl mb-4">
-          <TabsTrigger value="PENDING" className="rounded-lg">قيد المراجعة</TabsTrigger>
-          <TabsTrigger value="APPROVED" className="rounded-lg">مقبولة</TabsTrigger>
-          <TabsTrigger value="REJECTED" className="rounded-lg">مرفوضة</TabsTrigger>
+          <TabsTrigger value="PENDING" className="rounded-lg">
+            قيد المراجعة
+          </TabsTrigger>
+          <TabsTrigger value="APPROVED" className="rounded-lg">
+            مقبولة
+          </TabsTrigger>
+          <TabsTrigger value="REJECTED" className="rounded-lg">
+            مرفوضة
+          </TabsTrigger>
         </TabsList>
         <TabsContent value={tab}>
           <JoinList status={tab} />
@@ -56,8 +62,11 @@ function JoinList({ status }: { status: string }) {
   const { data: rows, isLoading } = useQuery({
     queryKey: ["join-requests", status],
     queryFn: async () => {
-      const { data, error } = await supabase.from("join_requests")
-        .select("*").eq("status", status).order("requested_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("join_requests")
+        .select("*")
+        .eq("status", status)
+        .order("requested_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -86,19 +95,22 @@ function JoinList({ status }: { status: string }) {
     },
     onSuccess: () => {
       toast.success("تم رفض الطلب");
-      setRejectFor(null); setReason("");
+      setRejectFor(null);
+      setReason("");
       qc.invalidateQueries({ queryKey: ["join-requests"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  if (isLoading) return <div className="text-center py-16 text-muted-foreground">جارٍ التحميل...</div>;
-  if (!rows?.length) return (
-    <div className="text-center py-16 space-y-2">
-      <Inbox className="h-10 w-10 mx-auto text-muted-foreground" />
-      <div className="text-muted-foreground">لا توجد طلبات.</div>
-    </div>
-  );
+  if (isLoading)
+    return <div className="text-center py-16 text-muted-foreground">جارٍ التحميل...</div>;
+  if (!rows?.length)
+    return (
+      <div className="text-center py-16 space-y-2">
+        <Inbox className="h-10 w-10 mx-auto text-muted-foreground" />
+        <div className="text-muted-foreground">لا توجد طلبات.</div>
+      </div>
+    );
 
   return (
     <>
@@ -114,9 +126,14 @@ function JoinList({ status }: { status: string }) {
                   <div className="font-bold text-base truncate">
                     {r.agent_full_name || displayPhone(r.agent_phone, r.agent_username)}
                   </div>
-                  <div className="text-xs text-muted-foreground">{displayPhone(r.agent_phone, r.agent_username)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {displayPhone(r.agent_phone, r.agent_username)}
+                  </div>
                   {r.agent_phone && (
-                    <div className="text-xs"><span className="text-muted-foreground">الهاتف: </span>{displayPhone(r.agent_phone, r.agent_username)}</div>
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">الهاتف: </span>
+                      {displayPhone(r.agent_phone, r.agent_username)}
+                    </div>
                   )}
                   <div className="text-xs text-muted-foreground">
                     التاريخ: {fmtArabicDateTime(r.requested_at)}
@@ -133,13 +150,24 @@ function JoinList({ status }: { status: string }) {
 
             {r.status === "PENDING" && (
               <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-border/50">
-                <Button disabled={approve.isPending} onClick={() => approve.mutate(r.id)}
-                  className="rounded-lg gradient-primary-bg border-0 text-white h-9 px-3">
-                  <Check className="h-4 w-4 ml-1" />قبول
+                <Button
+                  disabled={approve.isPending}
+                  onClick={() => approve.mutate(r.id)}
+                  className="rounded-lg gradient-primary-bg border-0 text-white h-9 px-3"
+                >
+                  <Check className="h-4 w-4 ml-1" />
+                  قبول
                 </Button>
-                <Button variant="outline" className="rounded-lg h-9 px-3 text-destructive border-destructive/40"
-                  onClick={() => { setRejectFor(r); setReason(""); }}>
-                  <X className="h-4 w-4 ml-1" />رفض
+                <Button
+                  variant="outline"
+                  className="rounded-lg h-9 px-3 text-destructive border-destructive/40"
+                  onClick={() => {
+                    setRejectFor(r);
+                    setReason("");
+                  }}
+                >
+                  <X className="h-4 w-4 ml-1" />
+                  رفض
                 </Button>
               </div>
             )}
@@ -149,20 +177,40 @@ function JoinList({ status }: { status: string }) {
 
       <Dialog open={!!rejectFor} onOpenChange={(o) => !o && setRejectFor(null)}>
         <DialogContent className="max-w-md rounded-3xl" dir="rtl">
-          <DialogHeader><DialogTitle>رفض طلب الانضمام</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>رفض طلب الانضمام</DialogTitle>
+          </DialogHeader>
           {rejectFor && (
             <div className="space-y-3">
               <div className="text-sm text-muted-foreground">
-                طلب <b>{rejectFor.agent_full_name || displayPhone(rejectFor.agent_phone, rejectFor.agent_username)}</b>
+                طلب{" "}
+                <b>
+                  {rejectFor.agent_full_name ||
+                    displayPhone(rejectFor.agent_phone, rejectFor.agent_username)}
+                </b>
               </div>
               <div>
                 <Label className="text-xs mb-1.5 block">سبب الرفض (اختياري)</Label>
-                <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} className="rounded-xl" />
+                <Textarea
+                  rows={3}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="rounded-xl"
+                />
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setRejectFor(null)}>إلغاء</Button>
-                <Button disabled={reject.isPending} onClick={() => reject.mutate({ id: rejectFor.id, r: reason })}
-                  className="flex-1 rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl"
+                  onClick={() => setRejectFor(null)}
+                >
+                  إلغاء
+                </Button>
+                <Button
+                  disabled={reject.isPending}
+                  onClick={() => reject.mutate({ id: rejectFor.id, r: reason })}
+                  className="flex-1 rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                >
                   تأكيد الرفض
                 </Button>
               </div>
@@ -183,8 +231,11 @@ function StatusBadge({ status }: { status: string }) {
   const s = map[status] ?? map.PENDING;
   const Icon = s.Icon;
   return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${s.c}`}>
-      <Icon className="h-3 w-3" />{s.l}
+    <span
+      className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${s.c}`}
+    >
+      <Icon className="h-3 w-3" />
+      {s.l}
     </span>
   );
 }

@@ -17,10 +17,15 @@ import { getWaApp, setWaApp, WA_APP_LABELS, type WaApp } from "@/lib/wa-open";
 import { useEffect, useRef, useState } from "react";
 import { displayPhone } from "@/lib/format";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
 
 export const Route = createFileRoute("/app/settings")({ component: SettingsPage });
 
@@ -31,14 +36,19 @@ function SettingsPage() {
   const [fullName, setFullName] = useState<string>("");
 
   useEffect(() => {
-    setPhone(displayPhone(profile?.phone, profile?.username) === "—" ? "" : displayPhone(profile?.phone, profile?.username));
+    setPhone(
+      displayPhone(profile?.phone, profile?.username) === "—"
+        ? ""
+        : displayPhone(profile?.phone, profile?.username),
+    );
     setFullName(profile?.full_name ?? "");
   }, [profile?.phone, profile?.full_name, profile?.username]);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!profile?.id) throw new Error("no profile");
-      const { error } = await supabase.from("profiles")
+      const { error } = await supabase
+        .from("profiles")
         .update({ phone: phone.trim() || null, full_name: fullName.trim() || null })
         .eq("id", profile.id);
       if (error) throw error;
@@ -61,15 +71,29 @@ function SettingsPage() {
         <Row label="الحالة" value={profile?.is_active ? "مفعّل" : "موقوف"} />
         <div className="space-y-2">
           <Label className="text-xs">الاسم الكامل</Label>
-          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="rounded-xl" />
+          <Input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="rounded-xl"
+          />
         </div>
         <div className="space-y-2">
           <Label className="text-xs">رقم الهاتف</Label>
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-xl" dir="ltr" placeholder="7xxxxxxxx" />
+          <Input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="rounded-xl"
+            dir="ltr"
+            placeholder="7xxxxxxxx"
+          />
         </div>
-        <Button disabled={save.isPending} onClick={() => save.mutate()}
-          className="w-full rounded-xl gradient-primary-bg border-0 font-semibold">
-          <Save className="h-4 w-4 ml-1" />حفظ التعديلات
+        <Button
+          disabled={save.isPending}
+          onClick={() => save.mutate()}
+          className="w-full rounded-xl gradient-primary-bg border-0 font-semibold"
+        >
+          <Save className="h-4 w-4 ml-1" />
+          حفظ التعديلات
         </Button>
       </Card>
 
@@ -82,10 +106,11 @@ function SettingsPage() {
   );
 }
 
-
 function WhatsAppAppCard() {
   const [pref, setPref] = useState<WaApp>("auto");
-  useEffect(() => { setPref(getWaApp()); }, []);
+  useEffect(() => {
+    setPref(getWaApp());
+  }, []);
   const opts: WaApp[] = ["auto", "business", "personal"];
   return (
     <Card className="card-elegant border-0 p-5 max-w-md mt-6 space-y-3">
@@ -100,9 +125,15 @@ function WhatsAppAppCard() {
           <button
             key={o}
             type="button"
-            onClick={() => { setWaApp(o); setPref(o); toast.success(`تم اختيار: ${WA_APP_LABELS[o]}`); }}
+            onClick={() => {
+              setWaApp(o);
+              setPref(o);
+              toast.success(`تم اختيار: ${WA_APP_LABELS[o]}`);
+            }}
             className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition ${
-              pref === o ? "border-primary bg-primary/10 font-semibold" : "border-border hover:bg-muted/50"
+              pref === o
+                ? "border-primary bg-primary/10 font-semibold"
+                : "border-border hover:bg-muted/50"
             }`}
           >
             <span>{WA_APP_LABELS[o]}</span>
@@ -115,7 +146,6 @@ function WhatsAppAppCard() {
 }
 
 import { backupMyAgentData, restoreMyAgentData } from "@/lib/agent-backup.functions";
-
 
 function AgentBackupCard() {
   const qc = useQueryClient();
@@ -137,10 +167,14 @@ function AgentBackupCard() {
       try {
         const { saveBlobToDevice } = await import("@/lib/native-pdf");
         const res = await saveBlobToDevice({
-          blob, filename, mimeType: "application/json",
+          blob,
+          filename,
+          mimeType: "application/json",
           dialogTitle: "حفظ النسخة الاحتياطية",
         });
-        toast.success(res.shared ? "تم تجهيز النسخة — اختر مكان الحفظ" : "تم حفظ النسخة في مجلد التنزيلات");
+        toast.success(
+          res.shared ? "تم تجهيز النسخة — اختر مكان الحفظ" : "تم حفظ النسخة في مجلد التنزيلات",
+        );
       } catch (err: any) {
         toast.error(`تعذر حفظ الملف: ${err?.message ?? ""}`);
       }
@@ -170,7 +204,10 @@ function AgentBackupCard() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      if (!parsed || (parsed.kind && parsed.kind !== "agent-backup" && !Array.isArray(parsed.customers))) {
+      if (
+        !parsed ||
+        (parsed.kind && parsed.kind !== "agent-backup" && !Array.isArray(parsed.customers))
+      ) {
         throw new Error("الملف ليس نسخة احتياطية للمندوب");
       }
       setPendingPayload(parsed);
@@ -190,7 +227,9 @@ function AgentBackupCard() {
         <h3 className="font-bold">النسخة الاحتياطية لبياناتي</h3>
       </div>
       <p className="text-xs text-muted-foreground mb-3">
-        تنزيل ملف يحتوي زبائنك، مبيعاتك، طلباتك وكروتك. الاستعادة تُعيد الزبائن وطلبات الكروت (كطلبات جديدة بانتظار موافقة المدير). المبيعات والكروت مملوكة للشبكة ولا يمكن استعادتها مباشرة من حساب المندوب.
+        تنزيل ملف يحتوي زبائنك، مبيعاتك، طلباتك وكروتك. الاستعادة تُعيد الزبائن وطلبات الكروت
+        (كطلبات جديدة بانتظار موافقة المدير). المبيعات والكروت مملوكة للشبكة ولا يمكن استعادتها
+        مباشرة من حساب المندوب.
       </p>
 
       <div className="space-y-2">
@@ -227,7 +266,8 @@ function AgentBackupCard() {
           <AlertDialogHeader>
             <AlertDialogTitle>تأكيد تنزيل النسخة الاحتياطية</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم إنشاء ملف JSON يحتوي بياناتك الخاصة (الزبائن، المبيعات، الطلبات، الكروت المخصصة لك).
+              سيتم إنشاء ملف JSON يحتوي بياناتك الخاصة (الزبائن، المبيعات، الطلبات، الكروت المخصصة
+              لك).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -242,12 +282,18 @@ function AgentBackupCard() {
           <AlertDialogHeader>
             <AlertDialogTitle>تأكيد الاستعادة</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم استعادة الزبائن (مع تخطي الأرقام المكررة) وإعادة إنشاء طلبات الكروت كطلبات جديدة بانتظار موافقة المدير. لن تُستعاد المبيعات والكروت لأن ملكيتها للشبكة.
+              سيتم استعادة الزبائن (مع تخطي الأرقام المكررة) وإعادة إنشاء طلبات الكروت كطلبات جديدة
+              بانتظار موافقة المدير. لن تُستعاد المبيعات والكروت لأن ملكيتها للشبكة.
               <span className="block mt-1 font-mono text-xs">{pendingName}</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setPendingPayload(null); setPendingName(""); }}>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingPayload(null);
+                setPendingName("");
+              }}
+            >
               إلغاء
             </AlertDialogCancel>
             <AlertDialogAction onClick={() => pendingPayload && restore.mutate(pendingPayload)}>
@@ -259,7 +305,6 @@ function AgentBackupCard() {
     </Card>
   );
 }
-
 
 function BackupCard() {
   const qc = useQueryClient();
@@ -303,7 +348,7 @@ function BackupCard() {
     onSuccess: (res: any) => {
       const s = res?.stats ?? {};
       toast.success(
-        `تم الاستعادة — مناديب: ${s.profiles ?? 0}, باقات: ${s.packages ?? 0}, كروت: ${s.cards ?? 0}, مبيعات: ${s.sales ?? 0}`
+        `تم الاستعادة — مناديب: ${s.profiles ?? 0}, باقات: ${s.packages ?? 0}, كروت: ${s.cards ?? 0}, مبيعات: ${s.sales ?? 0}`,
       );
       setPendingPayload(null);
       setPendingName("");
@@ -373,8 +418,8 @@ function BackupCard() {
           <AlertDialogHeader>
             <AlertDialogTitle>تأكيد تنزيل النسخة الاحتياطية</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم إنشاء ملف JSON يحتوي جميع بيانات شبكتك (الباقات، الكروت، المبيعات، الطلبات، المدفوعات).
-              هل تريد المتابعة؟
+              سيتم إنشاء ملف JSON يحتوي جميع بيانات شبكتك (الباقات، الكروت، المبيعات، الطلبات،
+              المدفوعات). هل تريد المتابعة؟
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -397,7 +442,12 @@ function BackupCard() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setPendingPayload(null); setPendingName(""); }}>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingPayload(null);
+                setPendingName("");
+              }}
+            >
               إلغاء
             </AlertDialogCancel>
             <AlertDialogAction
@@ -412,7 +462,6 @@ function BackupCard() {
     </Card>
   );
 }
-
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -451,8 +500,8 @@ function DangerZone({ adminId }: { adminId?: string }) {
         <h3 className="font-bold text-destructive">منطقة الخطر</h3>
       </div>
       <p className="text-xs text-muted-foreground mb-3">
-        سيتم حذف كل الشبكات، الباقات، الكروت، طلبات السحب، المبيعات، السجل، وحسابات المناديب.
-        لا يمكن التراجع عن هذا الإجراء. سيبقى حسابك كمدير.
+        سيتم حذف كل الشبكات، الباقات، الكروت، طلبات السحب، المبيعات، السجل، وحسابات المناديب. لا
+        يمكن التراجع عن هذا الإجراء. سيبقى حسابك كمدير.
       </p>
 
       {!expanded ? (
@@ -474,12 +523,21 @@ function DangerZone({ adminId }: { adminId?: string }) {
           />
           <div className="flex gap-2">
             <Button
-              variant="destructive" size="sm"
+              variant="destructive"
+              size="sm"
               disabled={!canDelete || wipe.isPending}
-              onClick={() => wipe.mutate()}>
+              onClick={() => wipe.mutate()}
+            >
               {wipe.isPending ? "جاري المسح…" : "تأكيد المسح النهائي"}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => { setExpanded(false); setConfirmText(""); }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setExpanded(false);
+                setConfirmText("");
+              }}
+            >
               إلغاء
             </Button>
           </div>

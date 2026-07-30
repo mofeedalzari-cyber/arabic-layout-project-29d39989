@@ -151,7 +151,7 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
   // convention used by our HTML reports, then to <body>.
   const reportRoot =
     doc.body.querySelector<HTMLElement>('[data-pdf-report="true"]') ??
-    doc.body.querySelector<HTMLElement>('.page') ??
+    doc.body.querySelector<HTMLElement>(".page") ??
     doc.body;
 
   // Wait for fonts and images so html2canvas snapshots a fully painted layout.
@@ -219,7 +219,6 @@ async function htmlToPdfBlob(html: string, filename = "document.pdf"): Promise<B
   return blob;
 }
 
-
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -250,11 +249,7 @@ export async function sharePdfOrPrint(opts: {
 /**
  * Share (native) or open (web) a pre-generated PDF blob.
  */
-export async function sharePdfBlob(opts: {
-  blob: Blob;
-  filename: string;
-  dialogTitle?: string;
-}) {
+export async function sharePdfBlob(opts: { blob: Blob; filename: string; dialogTitle?: string }) {
   const { blob, filename, dialogTitle } = opts;
 
   if (!isNativeApp()) {

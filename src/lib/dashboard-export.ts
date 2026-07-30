@@ -24,7 +24,10 @@ export async function exportToExcel(
 
     // Summary sheet
     const sumData: Cell[][] = [
-      [{ value: "البند", type: String, fontWeight: "bold" }, { value: "القيمة", type: String, fontWeight: "bold" }],
+      [
+        { value: "البند", type: String, fontWeight: "bold" },
+        { value: "القيمة", type: String, fontWeight: "bold" },
+      ],
       ...summary.map((s) => [toCell(s.label), toCell(s.value)]),
     ];
     sheets.push(sumData);
@@ -38,18 +41,19 @@ export async function exportToExcel(
       sheetNames.push(name);
     });
 
-    await writeXlsxFile(sheets as any, {
-      sheets: sheetNames,
-      fileName: `${fileName}.xlsx`,
-      rightToLeft: true,
-    } as any);
+    await writeXlsxFile(
+      sheets as any,
+      {
+        sheets: sheetNames,
+        fileName: `${fileName}.xlsx`,
+        rightToLeft: true,
+      } as any,
+    );
   } catch (err) {
     console.error("[exportToExcel] failed:", err);
     alert("فشل تصدير ملف Excel، يرجى المحاولة مجدداً");
   }
 }
-
-
 
 export type ReportMeta = {
   reportName?: string;
@@ -83,7 +87,11 @@ export async function exportToPDF(
             "—";
         }
         if (!userRole && u?.id) {
-          const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", u.id).maybeSingle();
+          const { data: r } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", u.id)
+            .maybeSingle();
           const role = (r as any)?.role;
           userRole = role === "admin" ? "المدير" : role === "agent" ? "المندوب" : "المستخدم";
         }
@@ -111,7 +119,6 @@ export async function exportToPDF(
       },
     });
 
-
     await sharePdfBlob({
       blob,
       filename: title,
@@ -119,7 +126,9 @@ export async function exportToPDF(
     });
   } catch (err) {
     console.error("[exportToPDF] failed:", err);
-    alert("حدث خطأ غير متوقع أثناء طباعة التقرير: " + String((err as any)?.message || err).slice(0, 120));
+    alert(
+      "حدث خطأ غير متوقع أثناء طباعة التقرير: " +
+        String((err as any)?.message || err).slice(0, 120),
+    );
   }
 }
-

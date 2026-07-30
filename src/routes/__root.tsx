@@ -58,15 +58,16 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4" dir="rtl">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          حدث خطأ ما
-        </h1>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">حدث خطأ ما</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {error.message || "تعذر تحميل الصفحة. يرجى المحاولة مرة أخرى."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => { router.invalidate(); reset(); }}
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
             className="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             إعادة المحاولة
@@ -87,9 +88,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover",
+      },
       { title: "كرتي — إدارة وبيع" },
-      { name: "description", content: "منصة احترافية لإدارة وبيع كروت الإنترنت للمديرين والمناديب." },
+      {
+        name: "description",
+        content: "منصة احترافية لإدارة وبيع كروت الإنترنت للمديرين والمناديب.",
+      },
       { name: "theme-color", content: "#009688" },
       { property: "og:title", content: "كرتي" },
       { property: "og:description", content: "منصة احترافية لإدارة وبيع كروت الإنترنت." },
@@ -185,4 +192,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-

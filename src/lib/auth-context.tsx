@@ -24,12 +24,14 @@ interface AuthContextValue {
   refresh: () => Promise<void>;
 }
 
-
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 // Convert username -> synthetic internal email
 export const usernameToEmail = (u: string) =>
-  `${u.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "")}@wificards.local`;
+  `${u
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, "")}@wificards.local`;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -41,7 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = async (uid: string) => {
     const [{ data: prof }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("id, username, full_name, phone, is_active, network_id").eq("id", uid).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("id, username, full_name, phone, is_active, network_id")
+        .eq("id", uid)
+        .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
     setProfile(prof as Profile | null);
@@ -49,13 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsSuperadmin(has("superadmin"));
     // Effective role: prefer admin/agent so superadmin users get the same UI
     // as a network admin. isSuperadmin exposes the extra capability separately.
-    const r = has("admin") ? "admin"
-      : has("agent") ? "agent"
-      : has("superadmin") ? "superadmin"
-      : null;
+    const r = has("admin")
+      ? "admin"
+      : has("agent")
+        ? "agent"
+        : has("superadmin")
+          ? "superadmin"
+          : null;
     setRole((r as Role | null) ?? null);
   };
-
 
   useEffect(() => {
     let mounted = true;
@@ -65,14 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        setTimeout(() => { loadProfile(s.user.id).catch(console.error); }, 0);
+        setTimeout(() => {
+          loadProfile(s.user.id).catch(console.error);
+        }, 0);
       } else {
         setProfile(null);
         setRole(null);
         setIsSuperadmin(false);
       }
     });
-
 
     (async () => {
       try {
@@ -81,7 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(data.session);
         setUser(data.session?.user ?? null);
         if (data.session?.user) {
-          try { await loadProfile(data.session.user.id); } catch (e) { console.error(e); }
+          try {
+            await loadProfile(data.session.user.id);
+          } catch (e) {
+            console.error(e);
+          }
         }
       } catch (e) {
         console.error("[auth] getSession failed", e);
@@ -95,40 +108,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
 
     // Long safety net only (10s) — protects against a truly hung getSession call.
-    const failsafe = setTimeout(() => { if (mounted) setLoading(false); }, 10000);
+    const failsafe = setTimeout(() => {
+      if (mounted) setLoading(false);
+    }, 10000);
 
-    return () => { mounted = false; clearTimeout(failsafe); sub.subscription.unsubscribe(); };
+    return () => {
+      mounted = false;
+      clearTimeout(failsafe);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
-  const value = useMemo<AuthContextValue>(() => ({
-    user, session, profile, role, isSuperadmin, loading,
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      session,
+      profile,
+      role,
+      isSuperadmin,
+      loading,
 
-    signOut: async () => {
-      // Clear local state first so UI updates immediately
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      setRole(null);
-      setIsSuperadmin(false);
+      signOut: async () => {
+        // Clear local state first so UI updates immediately
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setRole(null);
+        setIsSuperadmin(false);
 
-      try {
-        await supabase.auth.signOut({ scope: "local" });
-      } catch (e) {
-        console.error("[auth] signOut failed", e);
-      }
-      // Purge any stale supabase tokens from storage (belt & suspenders for WebView)
-      if (typeof window !== "undefined") {
         try {
-          Object.keys(window.localStorage)
-            .filter((k) => k.startsWith("sb-") || k.includes("supabase"))
-            .forEach((k) => window.localStorage.removeItem(k));
-        } catch {}
-        // Hard reload to /auth so no cached protected state remains
-        window.location.href = "/auth";
-      }
-    },
-    refresh: async () => { if (user) await loadProfile(user.id); },
-  }), [user, session, profile, role, isSuperadmin, loading]);
+          await supabase.auth.signOut({ scope: "local" });
+        } catch (e) {
+          console.error("[auth] signOut failed", e);
+        }
+        // Purge any stale supabase tokens from storage (belt & suspenders for WebView)
+        if (typeof window !== "undefined") {
+          try {
+            Object.keys(window.localStorage)
+              .filter((k) => k.startsWith("sb-") || k.includes("supabase"))
+              .forEach((k) => window.localStorage.removeItem(k));
+          } catch {}
+          // Hard reload to /auth so no cached protected state remains
+          window.location.href = "/auth";
+        }
+      },
+      refresh: async () => {
+        if (user) await loadProfile(user.id);
+      },
+    }),
+    [user, session, profile, role, isSuperadmin, loading],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

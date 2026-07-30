@@ -131,9 +131,7 @@ async function createPdf(docDefinition: TDocumentDefinitions): Promise<Blob> {
       const cb = (buffer: any) => {
         try {
           const u8 =
-            buffer instanceof Uint8Array
-              ? buffer
-              : new Uint8Array(buffer?.buffer ?? buffer);
+            buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer?.buffer ?? buffer);
           resolve(new Blob([u8], { type: "application/pdf" }));
         } catch (e) {
           reject(e);
@@ -147,7 +145,6 @@ async function createPdf(docDefinition: TDocumentDefinitions): Promise<Blob> {
       reject(err);
     }
   });
-
 }
 
 // -----------------------------------------------------------------------------
@@ -167,7 +164,6 @@ export type PdfReportMeta = {
   userRole?: string;
   systemName?: string;
 };
-
 
 const COLORS = {
   ink: "#0f172a",
@@ -211,16 +207,51 @@ function headerBlock(title: string, meta: Required<PdfReportMeta>, dateStr: stri
       {
         width: "*",
         stack: [
-          { text: rtlText(meta.systemName), direction: "rtl", fontSize: 13, bold: true, color: COLORS.ink, alignment: "right" },
-          { text: rtlText(meta.reportName || title), direction: "rtl", fontSize: 16, bold: true, color: COLORS.brand, alignment: "right", margin: [0, 4, 0, 0] },
+          {
+            text: rtlText(meta.systemName),
+            direction: "rtl",
+            fontSize: 13,
+            bold: true,
+            color: COLORS.ink,
+            alignment: "right",
+          },
+          {
+            text: rtlText(meta.reportName || title),
+            direction: "rtl",
+            fontSize: 16,
+            bold: true,
+            color: COLORS.brand,
+            alignment: "right",
+            margin: [0, 4, 0, 0],
+          },
         ],
       },
       {
         width: 200,
         stack: [
-          { text: rtlText(`التاريخ: ${dateStr}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right" },
-          { text: rtlText(`الفرع / الشبكة: ${meta.branch}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right", margin: [0, 3, 0, 0] },
-          { text: rtlText(`${meta.userRole}: ${meta.user}`), direction: "rtl", fontSize: 9, color: COLORS.muted, alignment: "right", margin: [0, 3, 0, 0] },
+          {
+            text: rtlText(`التاريخ: ${dateStr}`),
+            direction: "rtl",
+            fontSize: 9,
+            color: COLORS.muted,
+            alignment: "right",
+          },
+          {
+            text: rtlText(`الفرع / الشبكة: ${meta.branch}`),
+            direction: "rtl",
+            fontSize: 9,
+            color: COLORS.muted,
+            alignment: "right",
+            margin: [0, 3, 0, 0],
+          },
+          {
+            text: rtlText(`${meta.userRole}: ${meta.user}`),
+            direction: "rtl",
+            fontSize: 9,
+            color: COLORS.muted,
+            alignment: "right",
+            margin: [0, 3, 0, 0],
+          },
         ],
       },
     ],
@@ -284,7 +315,8 @@ function tableSection(sec: PdfTableSection, dense = false): any {
   const cols = ["#", ...sec.cols];
   // Columns that need narrow width + tight padding + character wrapping
   const NARROW_HEADERS = new Set(["رقم العملية", "الكرت", "السعر", "التاريخ"]);
-  const isNarrow = (idx: number) => idx > 0 && NARROW_HEADERS.has(String(sec.cols[idx - 1] ?? "").trim());
+  const isNarrow = (idx: number) =>
+    idx > 0 && NARROW_HEADERS.has(String(sec.cols[idx - 1] ?? "").trim());
   const narrowWidthFor = (idx: number) => {
     const h = String(sec.cols[idx - 1] ?? "").trim();
     if (h === "السعر") return dense ? 34 : 44;
@@ -367,7 +399,6 @@ function tableSection(sec: PdfTableSection, dense = false): any {
         ],
       ];
 
-
   return {
     stack: [
       {
@@ -426,7 +457,6 @@ export async function buildReportPdfBlob(opts: {
     branch: opts.meta?.branch || "—",
     user: opts.meta?.user || "—",
     userRole: opts.meta?.userRole || "المستخدم",
-
   };
   // Use Latin digits (ar-EG-u-nu-latn) — the embedded Cairo TTF subset
   // doesn't include Arabic-Indic digit glyphs, so ٠-٩ would render as tofu.
@@ -435,7 +465,6 @@ export async function buildReportPdfBlob(opts: {
     timeStyle: "short",
   });
 
-
   // Always portrait; compact layout when many columns to fit all in width.
   const maxCols = opts.sections.reduce((m, s) => Math.max(m, s.cols.length + 1), 0);
   const dense = maxCols >= 7;
@@ -443,7 +472,20 @@ export async function buildReportPdfBlob(opts: {
 
   const content: any[] = [
     headerBlock(opts.title, meta, dateStr),
-    { canvas: [{ type: "line", x1: 0, y1: 0, x2: lineWidth, y2: 0, lineWidth: 1.2, lineColor: COLORS.brand }], margin: [0, 0, 0, 10] },
+    {
+      canvas: [
+        {
+          type: "line",
+          x1: 0,
+          y1: 0,
+          x2: lineWidth,
+          y2: 0,
+          lineWidth: 1.2,
+          lineColor: COLORS.brand,
+        },
+      ],
+      margin: [0, 0, 0, 10],
+    },
   ];
   const sum = summaryBlock(opts.summary);
   if (sum) content.push(sum);
@@ -458,8 +500,8 @@ export async function buildReportPdfBlob(opts: {
       margin: [30, 0, 30, 0],
       columns: [
         {
-      text: rtlText("© كرتي"),
-      direction: "rtl",
+          text: rtlText("© كرتي"),
+          direction: "rtl",
           alignment: "left",
           fontSize: 8,
           color: COLORS.muted,

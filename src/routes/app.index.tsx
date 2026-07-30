@@ -6,24 +6,47 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
-import { Wifi, Package, ShoppingCart, DollarSign, Users, TrendingUp, Activity, Layers, UserCheck, FileSpreadsheet, FileText, Eraser } from "lucide-react";
+import {
+  Wifi,
+  Package,
+  ShoppingCart,
+  DollarSign,
+  Users,
+  TrendingUp,
+  Activity,
+  Layers,
+  UserCheck,
+  FileSpreadsheet,
+  FileText,
+  Eraser,
+} from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { TableSection, SummaryRow } from "@/lib/dashboard-export";
 
 // Lazy-loaded to keep exceljs/pdfmake out of the initial bundle
-async function exportToExcel(...args: Parameters<typeof import("@/lib/dashboard-export").exportToExcel>) {
+async function exportToExcel(
+  ...args: Parameters<typeof import("@/lib/dashboard-export").exportToExcel>
+) {
   const mod = await import("@/lib/dashboard-export");
   return mod.exportToExcel(...args);
 }
-async function exportToPDF(...args: Parameters<typeof import("@/lib/dashboard-export").exportToPDF>) {
+async function exportToPDF(
+  ...args: Parameters<typeof import("@/lib/dashboard-export").exportToPDF>
+) {
   const mod = await import("@/lib/dashboard-export");
   return mod.exportToPDF(...args);
 }
@@ -35,7 +58,11 @@ export const Route = createFileRoute("/app/")({ component: DashboardPage });
 
 function DashboardPage() {
   const { role, profile } = useAuth();
-  return role === "admin" ? <AdminDashboard /> : <AgentHome name={profile?.full_name || displayPhone(profile?.phone, profile?.username)} />;
+  return role === "admin" ? (
+    <AdminDashboard />
+  ) : (
+    <AgentHome name={profile?.full_name || displayPhone(profile?.phone, profile?.username)} />
+  );
 }
 
 function AdminDashboard() {
@@ -45,9 +72,14 @@ function AdminDashboard() {
       const { data, error } = await supabase.rpc("admin_stats");
       if (error) throw error;
       return data as {
-        total_cards: number; available: number; sold: number;
-        sold_value: number; available_value: number;
-        networks: number; packages: number; agents: number;
+        total_cards: number;
+        available: number;
+        sold: number;
+        sold_value: number;
+        available_value: number;
+        networks: number;
+        packages: number;
+        agents: number;
       };
     },
   });
@@ -55,16 +87,37 @@ function AdminDashboard() {
   return (
     <div className="w-full max-w-full overflow-hidden">
       <PageHeader title="لوحة التحكم" description="نظرة شاملة على أداء المتجر" />
-      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+      <div className="mb-4 flex justify-start">
+        <RefreshButton />
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3 md:gap-4 mb-5">
-        <StatCard icon={Package} label="إجمالي الكروت" value={stats?.total_cards ?? 0} tone="primary" />
-        <StatCard icon={ShoppingCart} label="المتوفر" value={stats?.available ?? 0} tone="success" />
+        <StatCard
+          icon={Package}
+          label="إجمالي الكروت"
+          value={stats?.total_cards ?? 0}
+          tone="primary"
+        />
+        <StatCard
+          icon={ShoppingCart}
+          label="المتوفر"
+          value={stats?.available ?? 0}
+          tone="success"
+        />
         <StatCard icon={Activity} label="المباع" value={stats?.sold ?? 0} tone="warning" />
-        <StatCard icon={DollarSign} label="قيمة المبيعات" value={fmtMoney(stats?.sold_value ?? 0)} tone="primary" />
+        <StatCard
+          icon={DollarSign}
+          label="قيمة المبيعات"
+          value={fmtMoney(stats?.sold_value ?? 0)}
+          tone="primary"
+        />
         <StatCard icon={Wifi} label="الشبكات" value={stats?.networks ?? 0} />
         <StatCard icon={Package} label="الباقات" value={stats?.packages ?? 0} />
         <StatCard icon={Users} label="المناديب" value={stats?.agents ?? 0} />
-        <StatCard icon={TrendingUp} label="قيمة المتوفر" value={fmtMoney(stats?.available_value ?? 0)} />
+        <StatCard
+          icon={TrendingUp}
+          label="قيمة المتوفر"
+          value={fmtMoney(stats?.available_value ?? 0)}
+        />
       </div>
 
       <AdminBreakdowns />
@@ -79,20 +132,31 @@ function AdminBreakdowns() {
   });
   const { data: packages } = useQuery({
     queryKey: ["dash-packages"],
-    queryFn: async () => (await supabase.from("packages").select("id, name, price, network_id")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("packages").select("id, name, price, network_id")).data ?? [],
   });
   const { data: cards } = useQuery({
     queryKey: ["dash-cards"],
-    queryFn: async () => (await supabase.from("cards").select("id, status, package_id, network_id, assigned_to")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("cards").select("id, status, package_id, network_id, assigned_to"))
+        .data ?? [],
   });
   const { data: sales } = useQuery({
     queryKey: ["dash-sales-all"],
-    queryFn: async () => (await supabase.from("sales").select("agent_id, agent_username, package_id, network_id, price")).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("sales")
+          .select("agent_id, agent_username, package_id, network_id, price")
+      ).data ?? [],
   });
   const { data: paymentsCollected } = useQuery({
     queryKey: ["dash-payments-collected"],
     queryFn: async () => {
-      const { data } = await supabase.from("card_requests").select("paid_amount").eq("status", "APPROVED");
+      const { data } = await supabase
+        .from("card_requests")
+        .select("paid_amount")
+        .eq("status", "APPROVED");
       return (data ?? []).reduce((s, r: any) => s + Number(r.paid_amount || 0), 0);
     },
   });
@@ -106,10 +170,17 @@ function AdminBreakdowns() {
   const { data: agents } = useQuery({
     queryKey: ["dash-agents"],
     queryFn: async () => {
-      const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "agent");
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "agent");
       const ids = roles?.map((r) => r.user_id) ?? [];
       if (!ids.length) return [];
-      const { data } = await supabase.from("profiles").select("id, username, full_name, phone, is_active").in("id", ids).order("full_name");
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, phone, is_active")
+        .in("id", ids)
+        .order("full_name");
       return data ?? [];
     },
   });
@@ -119,10 +190,31 @@ function AdminBreakdowns() {
   const agentMap = useMemo(() => new Map(agents?.map((a) => [a.id, a]) ?? []), [agents]);
 
   const salesByPkg = useMemo(() => {
-    const m = new Map<string, { network: string; pkg: string; total: number; sold: number; withdrawn: number; remaining: number; value: number; currency?: string }>();
+    const m = new Map<
+      string,
+      {
+        network: string;
+        pkg: string;
+        total: number;
+        sold: number;
+        withdrawn: number;
+        remaining: number;
+        value: number;
+        currency?: string;
+      }
+    >();
     (packages ?? []).forEach((p) => {
       const net = netMap.get(p.network_id);
-      m.set(p.id, { network: net?.name ?? "—", pkg: p.name, total: 0, sold: 0, withdrawn: 0, remaining: 0, value: 0, currency: net?.currency });
+      m.set(p.id, {
+        network: net?.name ?? "—",
+        pkg: p.name,
+        total: 0,
+        sold: 0,
+        withdrawn: 0,
+        remaining: 0,
+        value: 0,
+        currency: net?.currency,
+      });
     });
     (cards ?? []).forEach((c) => {
       const row = m.get(c.package_id);
@@ -150,11 +242,28 @@ function AdminBreakdowns() {
       const p = pkgMap.get(c.package_id);
       return s + (p ? Number(p.price) : 0);
     }, 0);
-    return { total, sold, remaining, salesValue, debts, collected: paymentsCollected ?? 0, settled: paymentsSettled ?? 0, agentsCount: agents?.length ?? 0 };
+    return {
+      total,
+      sold,
+      remaining,
+      salesValue,
+      debts,
+      collected: paymentsCollected ?? 0,
+      settled: paymentsSettled ?? 0,
+      agentsCount: agents?.length ?? 0,
+    };
   }, [cards, sales, pkgMap, agents, paymentsCollected, paymentsSettled]);
 
   const agentStats = useMemo(() => {
-    type Row = { agentId: string; agent: string; phone: string; pkg: string; price: number; currency?: string; holding: number };
+    type Row = {
+      agentId: string;
+      agent: string;
+      phone: string;
+      pkg: string;
+      price: number;
+      currency?: string;
+      holding: number;
+    };
     const m = new Map<string, Row>();
     (cards ?? []).forEach((c) => {
       if (c.status !== "ASSIGNED" || !c.assigned_to) return;
@@ -193,23 +302,26 @@ function AdminBreakdowns() {
         title: "إحصائيات المبيعات حسب الفئات",
         cols: ["الشبكة", "الفئة", "إجمالي الكروت", "مباعة", "متبقية", "إجمالي القيمة"],
         rows: salesByPkg.map((r) => [
-          r.network, r.pkg, r.total, r.sold, r.remaining,
+          r.network,
+          r.pkg,
+          r.total,
+          r.sold,
+          r.remaining,
           fmtMoney(r.value),
         ]),
       },
       {
         title: "إحصائيات المناديب",
         cols: ["المندوب", "الهاتف", "الفئة", "لديه", "السعر"],
-        rows: agentStats.map((r) => [
-          r.agent, r.phone, r.pkg, r.holding,
-          fmtMoney(r.price),
-        ]),
+        rows: agentStats.map((r) => [r.agent, r.phone, r.pkg, r.holding, fmtMoney(r.price)]),
       },
       {
         title: "المناديب المرتبطين بالشبكة",
         cols: ["المندوب", "الهاتف", "الحالة"],
         rows: (agents ?? []).map((a) => [
-          a.full_name || displayPhone((a as any).phone, a.username), displayPhone((a as any).phone, a.username), a.is_active ? "نشط" : "موقوف",
+          a.full_name || displayPhone((a as any).phone, a.username),
+          displayPhone((a as any).phone, a.username),
+          a.is_active ? "نشط" : "موقوف",
         ]),
       },
     ];
@@ -235,11 +347,21 @@ function AdminBreakdowns() {
             <h3 className="font-bold text-sm sm:text-base">ملخص الشبكة</h3>
           </div>
           <div className="flex flex-col sm:flex-row sm:mr-auto gap-2 w-full sm:w-auto">
-            <Button size="sm" variant="outline" onClick={handleExcel} className="h-9 gap-1.5 text-xs w-full sm:w-auto">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleExcel}
+              className="h-9 gap-1.5 text-xs w-full sm:w-auto"
+            >
               <FileSpreadsheet className="h-3.5 w-3.5" />
               تصدير Excel
             </Button>
-            <Button size="sm" variant="outline" onClick={handlePDF} className="h-9 gap-1.5 text-xs w-full sm:w-auto">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handlePDF}
+              className="h-9 gap-1.5 text-xs w-full sm:w-auto"
+            >
               <FileText className="h-3.5 w-3.5" />
               تصدير PDF
             </Button>
@@ -250,7 +372,11 @@ function AdminBreakdowns() {
           <SummaryItem label="الكروت المُباعة" value={String(summary.sold)} tone="success" />
           <SummaryItem label="الكروت المتبقية" value={String(summary.remaining)} tone="warning" />
           <SummaryItem label="عدد المناديب" value={String(summary.agentsCount)} />
-          <SummaryItem label="إجمالي قيمة المبيعات" value={fmtMoney(summary.salesValue)} tone="primary" />
+          <SummaryItem
+            label="إجمالي قيمة المبيعات"
+            value={fmtMoney(summary.salesValue)}
+            tone="primary"
+          />
           <SummaryItem label="إجمالي ديون المناديب" value={fmtMoney(summary.debts)} tone="danger" />
           <SummaryItem label="المسدد" value={fmtMoney(summary.settled)} tone="primary" />
           <SummaryItem
@@ -278,19 +404,32 @@ function AdminBreakdowns() {
               const totalRemaining = salesByPkg.reduce((s, r) => s + r.remaining, 0);
               const totalValue = salesByPkg.reduce((s, r) => s + r.value, 0);
               const rows: (string | number)[][] = salesByPkg.map((r) => [
-                r.network, r.pkg, r.total, r.sold, r.remaining,
+                r.network,
+                r.pkg,
+                r.total,
+                r.sold,
+                r.remaining,
                 fmtMoney(r.value),
               ]);
-              rows.push(["الإجمالي", "", totalCards, totalSold, totalRemaining, fmtMoney(totalValue)]);
+              rows.push([
+                "الإجمالي",
+                "",
+                totalCards,
+                totalSold,
+                totalRemaining,
+                fmtMoney(totalValue),
+              ]);
               const stamp = new Date().toISOString().slice(0, 10);
               exportToPDF(
                 `إحصائيات المبيعات حسب الفئات — ${stamp}`,
                 [],
-                [{
-                  title: "إحصائيات المبيعات حسب الفئات",
-                  cols: ["الشبكة", "الفئة", "إجمالي الكروت", "مباعة", "متبقية", "إجمالي القيمة"],
-                  rows,
-                }],
+                [
+                  {
+                    title: "إحصائيات المبيعات حسب الفئات",
+                    cols: ["الشبكة", "الفئة", "إجمالي الكروت", "مباعة", "متبقية", "إجمالي القيمة"],
+                    rows,
+                  },
+                ],
               );
             }}
           >
@@ -333,15 +472,13 @@ function AdminBreakdowns() {
                   { label: "الرصيد", value: fmtMoney(summary.collected) },
                 ];
                 const stamp = new Date().toISOString().slice(0, 10);
-                exportToPDF(
-                  `إحصائيات المناديب — ${stamp}`,
-                  sumRows,
-                  [{
+                exportToPDF(`إحصائيات المناديب — ${stamp}`, sumRows, [
+                  {
                     title: "إحصائيات المناديب",
                     cols: ["المندوب", "الهاتف", "الفئة", "القيمة الاسمية", "العملة", "المسحوبة"],
                     rows,
-                  }],
-                );
+                  },
+                ]);
               }}
             >
               <FileText className="h-3.5 w-3.5" />
@@ -360,33 +497,48 @@ function AdminBreakdowns() {
           {agentStats.length > 0 && (
             <div className="mt-3 flex justify-center">
               <Button asChild size="sm" variant="outline" className="h-9 text-xs gap-1.5">
-                <Link to="/app/agents">
-                  عرض التفاصيل الكاملة
-                </Link>
+                <Link to="/app/agents">عرض التفاصيل الكاملة</Link>
               </Button>
             </div>
           )}
-
         </Card>
-
       </div>
     </div>
   );
 }
 
-function SummaryItem({ label, value, tone, action }: { label: string; value: string; tone?: "primary" | "success" | "warning" | "danger"; action?: React.ReactNode }) {
-  const toneClass = tone === "success" ? "text-success"
-    : tone === "warning" ? "text-warning"
-    : tone === "danger" ? "text-destructive"
-    : tone === "primary" ? "text-primary"
-    : "text-foreground";
+function SummaryItem({
+  label,
+  value,
+  tone,
+  action,
+}: {
+  label: string;
+  value: string;
+  tone?: "primary" | "success" | "warning" | "danger";
+  action?: React.ReactNode;
+}) {
+  const toneClass =
+    tone === "success"
+      ? "text-success"
+      : tone === "warning"
+        ? "text-warning"
+        : tone === "danger"
+          ? "text-destructive"
+          : tone === "primary"
+            ? "text-primary"
+            : "text-foreground";
   return (
     <div className="rounded-xl bg-muted/40 p-2.5 sm:p-3 min-w-0">
       <div className="flex items-center justify-between gap-1">
-        <div className="text-[11px] text-muted-foreground mb-1 [overflow-wrap:anywhere]">{label}</div>
+        <div className="text-[11px] text-muted-foreground mb-1 [overflow-wrap:anywhere]">
+          {label}
+        </div>
         {action}
       </div>
-      <div className={`text-sm sm:text-base font-bold ${toneClass} [overflow-wrap:anywhere]`}>{value}</div>
+      <div className={`text-sm sm:text-base font-bold ${toneClass} [overflow-wrap:anywhere]`}>
+        {value}
+      </div>
     </div>
   );
 }
@@ -414,7 +566,8 @@ function ResetBalanceButton({ amount }: { amount: number }) {
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <Button
-        size="sm" variant="ghost"
+        size="sm"
+        variant="ghost"
         className="h-6 px-1.5 text-[10px] gap-1 text-muted-foreground hover:text-destructive"
         onClick={() => setOpen(true)}
         disabled={amount <= 0}
@@ -426,13 +579,17 @@ function ResetBalanceButton({ amount }: { amount: number }) {
         <AlertDialogHeader>
           <AlertDialogTitle>تصفير الرصيد</AlertDialogTitle>
           <AlertDialogDescription>
-            سيتم تصفير الرصيد الحالي ({fmtMoney(amount)}) وخصم المبلغ المدفوع من إجمالي الدين لكل طلب. لن يتأثر الدين المتبقي على المناديب. لا يمكن التراجع عن هذه العملية.
+            سيتم تصفير الرصيد الحالي ({fmtMoney(amount)}) وخصم المبلغ المدفوع من إجمالي الدين لكل
+            طلب. لن يتأثر الدين المتبقي على المناديب. لا يمكن التراجع عن هذه العملية.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={m.isPending}>إلغاء</AlertDialogCancel>
           <AlertDialogAction
-            onClick={(e) => { e.preventDefault(); m.mutate(); }}
+            onClick={(e) => {
+              e.preventDefault();
+              m.mutate();
+            }}
             disabled={m.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
@@ -450,7 +607,8 @@ function AgentHome({ name }: { name: string }) {
     queryKey: ["agent-packages", profile?.network_id],
     queryFn: async () => {
       if (!profile?.network_id) return [];
-      const { data, error } = await supabase.from("packages")
+      const { data, error } = await supabase
+        .from("packages")
         .select("id, name, description, price, allowed_time, network_id")
         .eq("network_id", profile.network_id)
         .eq("is_active", true)
@@ -463,10 +621,10 @@ function AgentHome({ name }: { name: string }) {
 
   return (
     <div dir="rtl" className="w-full max-w-full overflow-hidden text-right">
-
       <PageHeader title={`أهلاً، ${name}`} description="لوحة البيع" />
-      <div className="mb-4 flex justify-start"><RefreshButton /></div>
-
+      <div className="mb-4 flex justify-start">
+        <RefreshButton />
+      </div>
 
       {user && (
         <div className="mb-4">
@@ -477,16 +635,29 @@ function AgentHome({ name }: { name: string }) {
           />
         </div>
       )}
-
     </div>
   );
 }
 
-function StatCard({ icon: Icon, label, value, tone }: { icon: LucideIcon; label: string; value: string | number; tone?: "primary" | "success" | "warning" }) {
-  const toneClass = tone === "success" ? "bg-success/15 text-success"
-    : tone === "warning" ? "bg-warning/15 text-warning"
-    : tone === "primary" ? "bg-primary/15 text-primary"
-    : "bg-muted text-muted-foreground";
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string | number;
+  tone?: "primary" | "success" | "warning";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "bg-success/15 text-success"
+      : tone === "warning"
+        ? "bg-warning/15 text-warning"
+        : tone === "primary"
+          ? "bg-primary/15 text-primary"
+          : "bg-muted text-muted-foreground";
   return (
     <Card className="card-elegant border-0 p-3 sm:p-4 slide-up w-full max-w-full">
       <div className="flex items-start gap-2 sm:gap-3">
@@ -494,8 +665,12 @@ function StatCard({ icon: Icon, label, value, tone }: { icon: LucideIcon; label:
           <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[11px] text-muted-foreground leading-tight [overflow-wrap:anywhere]">{label}</div>
-          <div className="text-base sm:text-lg font-bold [overflow-wrap:anywhere] leading-tight mt-1">{value}</div>
+          <div className="text-[11px] text-muted-foreground leading-tight [overflow-wrap:anywhere]">
+            {label}
+          </div>
+          <div className="text-base sm:text-lg font-bold [overflow-wrap:anywhere] leading-tight mt-1">
+            {value}
+          </div>
         </div>
       </div>
     </Card>

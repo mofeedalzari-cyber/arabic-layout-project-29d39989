@@ -33,7 +33,7 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
       const isInteractive = (t: EventTarget | null) => {
         const n = t as HTMLElement | null;
         return !!n?.closest?.(
-          'button, a, input, textarea, select, label, [role="button"], [role="checkbox"], [data-no-drag]'
+          'button, a, input, textarea, select, label, [role="button"], [role="checkbox"], [data-no-drag]',
         );
       };
 
@@ -68,7 +68,9 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
 
       const stop = (e: PointerEvent) => {
         if (dragging) {
-          try { el.releasePointerCapture?.(e.pointerId); } catch {}
+          try {
+            el.releasePointerCapture?.(e.pointerId);
+          } catch {}
         }
         isDown = false;
         dragging = false;
@@ -94,5 +96,5 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
         {children}
       </div>
     );
-  }
+  },
 );

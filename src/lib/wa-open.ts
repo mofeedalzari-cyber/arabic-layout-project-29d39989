@@ -43,9 +43,11 @@ export async function openWhatsApp(rawPhone: string, text?: string) {
       const personal = `whatsapp://send?${query}`;
       const pref = getWaApp();
       const candidates =
-        pref === "business" ? [business, personal]
-        : pref === "personal" ? [personal, business]
-        : [personal, business];
+        pref === "business"
+          ? [business, personal]
+          : pref === "personal"
+            ? [personal, business]
+            : [personal, business];
 
       for (const url of candidates) {
         try {
@@ -69,8 +71,5 @@ export async function openWhatsApp(rawPhone: string, text?: string) {
     }
   }
 
-  window.open(
-    `https://wa.me/${phone}${encoded ? `?text=${encoded}` : ""}`,
-    "_blank",
-  );
+  window.open(`https://wa.me/${phone}${encoded ? `?text=${encoded}` : ""}`, "_blank");
 }

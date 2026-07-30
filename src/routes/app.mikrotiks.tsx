@@ -8,14 +8,31 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,8 +40,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Router, Plus, Pencil, Trash2, ExternalLink, RefreshCw, Eye, EyeOff, Loader2,
-  Wifi, Users, CreditCard, Package as PackageIcon, LogOut,
+  Router,
+  Plus,
+  Pencil,
+  Trash2,
+  ExternalLink,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Loader2,
+  Wifi,
+  Users,
+  CreditCard,
+  Package as PackageIcon,
+  LogOut,
 } from "lucide-react";
 import { RevealText } from "@/components/reveal-text";
 
@@ -112,7 +141,9 @@ function MikrotiksPage() {
         const { error } = await supabase.from("mikrotiks").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("mikrotiks").insert({ ...payload, created_by: profile.id });
+        const { error } = await supabase
+          .from("mikrotiks")
+          .insert({ ...payload, created_by: profile.id });
         if (error) throw error;
       }
     },
@@ -151,7 +182,13 @@ function MikrotiksPage() {
         title="الميكروتيك"
         description="إدارة أجهزة الميكروتيك والاتصال بها عبر REST API (RouterOS v7+). استخدم التطبيق من داخل نفس الشبكة المحلية."
         action={
-          <Dialog open={openForm} onOpenChange={(o) => { setOpenForm(o); if (!o) setEditing(null); }}>
+          <Dialog
+            open={openForm}
+            onOpenChange={(o) => {
+              setOpenForm(o);
+              if (!o) setEditing(null);
+            }}
+          >
             <DialogTrigger asChild>
               <Button className="rounded-xl gradient-primary-bg text-primary-foreground gap-2">
                 <Plus className="h-4 w-4" />
@@ -162,19 +199,33 @@ function MikrotiksPage() {
               <DialogHeader>
                 <DialogTitle>{editing ? "تعديل الميكروتيك" : "إضافة ميكروتيك"}</DialogTitle>
                 <DialogDescription>
-                  للاتصال عبر REST يوصى بمنفذ 80 (HTTP) أو 443 (HTTPS) وتفعيل www / www-ssl في IP → Services.
+                  للاتصال عبر REST يوصى بمنفذ 80 (HTTP) أو 443 (HTTPS) وتفعيل www / www-ssl في IP →
+                  Services.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-3">
                 <FormRow label="اسم الجهاز">
-                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: راوتر الفرع الرئيسي" />
+                  <Input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="مثال: راوتر الفرع الرئيسي"
+                  />
                 </FormRow>
                 <FormRow label="عنوان IP المحلي أو الدومين">
-                  <Input value={form.host} onChange={(e) => setForm({ ...form, host: e.target.value })} placeholder="192.168.88.1" dir="ltr" />
+                  <Input
+                    value={form.host}
+                    onChange={(e) => setForm({ ...form, host: e.target.value })}
+                    placeholder="192.168.88.1"
+                    dir="ltr"
+                  />
                 </FormRow>
                 <div className="grid grid-cols-2 gap-3">
                   <FormRow label="اسم المستخدم">
-                    <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} dir="ltr" />
+                    <Input
+                      value={form.username}
+                      onChange={(e) => setForm({ ...form, username: e.target.value })}
+                      dir="ltr"
+                    />
                   </FormRow>
                   <FormRow label="منفذ REST">
                     <Input
@@ -187,21 +238,36 @@ function MikrotiksPage() {
                   </FormRow>
                 </div>
                 <FormRow label="كلمة المرور">
-                  <PasswordInput value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
+                  <PasswordInput
+                    value={form.password}
+                    onChange={(v) => setForm({ ...form, password: v })}
+                  />
                 </FormRow>
                 <div className="flex items-center justify-between p-3 rounded-xl border">
                   <div>
                     <div className="text-sm font-medium">استخدام HTTPS</div>
-                    <div className="text-xs text-muted-foreground">فعّل لو www-ssl مُشغّل في الميكروتيك</div>
+                    <div className="text-xs text-muted-foreground">
+                      فعّل لو www-ssl مُشغّل في الميكروتيك
+                    </div>
                   </div>
-                  <Switch checked={form.use_https} onCheckedChange={(v) => setForm({ ...form, use_https: v })} />
+                  <Switch
+                    checked={form.use_https}
+                    onCheckedChange={(v) => setForm({ ...form, use_https: v })}
+                  />
                 </div>
                 <FormRow label="ملاحظات (اختياري)">
-                  <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                  <Input
+                    value={form.notes}
+                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  />
                 </FormRow>
               </div>
               <DialogFooter>
-                <Button onClick={() => save.mutate()} disabled={save.isPending} className="rounded-xl">
+                <Button
+                  onClick={() => save.mutate()}
+                  disabled={save.isPending}
+                  className="rounded-xl"
+                >
                   {save.isPending && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
                   {editing ? "حفظ التعديلات" : "حفظ"}
                 </Button>
@@ -215,14 +281,19 @@ function MikrotiksPage() {
         <strong>ملاحظات اتصال:</strong>
         <ul className="list-disc pr-5 mt-1 space-y-0.5">
           <li>يجب أن يكون جوالك متصلاً بنفس شبكة الميكروتيك الواي فاي.</li>
-          <li>فعّل REST API في الميكروتيك: <span dir="ltr">/ip service enable www</span> (RouterOS v7).</li>
+          <li>
+            فعّل REST API في الميكروتيك: <span dir="ltr">/ip service enable www</span> (RouterOS
+            v7).
+          </li>
           <li>منفذ REST الافتراضي: 80 (HTTP) أو 443 (HTTPS) — وليس 8728.</li>
           <li>إذا فشل الاتصال من المتصفح بسبب CORS، استخدم تطبيق الأندرويد (APK).</li>
         </ul>
       </Card>
 
       {isLoading ? (
-        <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        <div className="flex justify-center py-10">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
       ) : items.length === 0 ? (
         <Card className="p-8 text-center">
           <div className="mx-auto rounded-2xl bg-primary/10 p-3 w-fit mb-3">
@@ -238,7 +309,10 @@ function MikrotiksPage() {
               key={m.id}
               item={m}
               onOpen={() => setSelected(m)}
-              onEdit={() => { setEditing(m); setOpenForm(true); }}
+              onEdit={() => {
+                setEditing(m);
+                setOpenForm(true);
+              }}
               onDelete={() => del.mutate(m.id)}
             />
           ))}
@@ -282,8 +356,16 @@ function PasswordInput({ value, onChange }: { value: string; onChange: (v: strin
   );
 }
 
-function MikrotikCard({ item, onOpen, onEdit, onDelete }: {
-  item: Mikrotik; onOpen: () => void; onEdit: () => void; onDelete: () => void;
+function MikrotikCard({
+  item,
+  onOpen,
+  onEdit,
+  onDelete,
+}: {
+  item: Mikrotik;
+  onOpen: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const webUrl = `${item.use_https ? "https" : "http"}://${item.host}`;
   return (
@@ -295,7 +377,9 @@ function MikrotikCard({ item, onOpen, onEdit, onDelete }: {
           </div>
           <div className="min-w-0">
             <div className="font-semibold truncate">{item.name}</div>
-            <div className="text-xs text-muted-foreground truncate" dir="ltr">{item.host}:{item.port}</div>
+            <div className="text-xs text-muted-foreground truncate" dir="ltr">
+              {item.host}:{item.port}
+            </div>
           </div>
         </div>
       </div>
@@ -311,7 +395,11 @@ function MikrotikCard({ item, onOpen, onEdit, onDelete }: {
       </div>
 
       <div className="flex flex-wrap gap-2 mt-auto">
-        <Button size="sm" className="rounded-xl gradient-primary-bg text-primary-foreground gap-1 flex-1" onClick={onOpen}>
+        <Button
+          size="sm"
+          className="rounded-xl gradient-primary-bg text-primary-foreground gap-1 flex-1"
+          onClick={onOpen}
+        >
           <ExternalLink className="h-4 w-4" />
           الدخول
         </Button>
@@ -333,11 +421,18 @@ function MikrotikCard({ item, onOpen, onEdit, onDelete }: {
           <AlertDialogContent dir="rtl">
             <AlertDialogHeader>
               <AlertDialogTitle>حذف الجهاز</AlertDialogTitle>
-              <AlertDialogDescription>سيتم حذف بيانات "{item.name}". هل تريد المتابعة؟</AlertDialogDescription>
+              <AlertDialogDescription>
+                سيتم حذف بيانات "{item.name}". هل تريد المتابعة؟
+              </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>إلغاء</AlertDialogCancel>
-              <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground">حذف</AlertDialogAction>
+              <AlertDialogAction
+                onClick={onDelete}
+                className="bg-destructive text-destructive-foreground"
+              >
+                حذف
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -350,7 +445,9 @@ function InfoPill({ label, value, ltr }: { label: string; value: string; ltr?: b
   return (
     <div className="rounded-lg bg-muted/50 p-2">
       <div className="text-[10px] text-muted-foreground">{label}</div>
-      <div className="text-xs font-medium truncate" dir={ltr ? "ltr" : "rtl"}>{value}</div>
+      <div className="text-xs font-medium truncate" dir={ltr ? "ltr" : "rtl"}>
+        {value}
+      </div>
     </div>
   );
 }
@@ -369,7 +466,10 @@ function useMikrotikApi(item: Mikrotik | null) {
     const headers: HeadersInit = { Authorization: auth, "Content-Type": "application/json" };
 
     async function req(path: string, init?: RequestInit) {
-      const res = await fetch(`${base}${path}`, { ...init, headers: { ...headers, ...(init?.headers ?? {}) } });
+      const res = await fetch(`${base}${path}`, {
+        ...init,
+        headers: { ...headers, ...(init?.headers ?? {}) },
+      });
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         throw new Error(`${res.status} ${res.statusText} ${text}`.trim());
@@ -381,8 +481,10 @@ function useMikrotikApi(item: Mikrotik | null) {
 
     return {
       get: (path: string) => req(path),
-      post: (path: string, body: unknown) => req(path, { method: "POST", body: JSON.stringify(body) }),
-      del: (path: string, id: string) => req(`${path}/${encodeURIComponent(id)}`, { method: "DELETE" }),
+      post: (path: string, body: unknown) =>
+        req(path, { method: "POST", body: JSON.stringify(body) }),
+      del: (path: string, id: string) =>
+        req(`${path}/${encodeURIComponent(id)}`, { method: "DELETE" }),
       patch: (path: string, id: string, body: unknown) =>
         req(`${path}/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) }),
     };
@@ -412,16 +514,27 @@ function MikrotikDetailsDialog({ item, onClose }: { item: Mikrotik | null; onClo
             {item?.name}
           </DialogTitle>
           <DialogDescription>
-            <span dir="ltr" className="inline-block">{item?.host}:{item?.port}</span> — REST API
+            <span dir="ltr" className="inline-block">
+              {item?.host}:{item?.port}
+            </span>{" "}
+            — REST API
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="overview" dir="rtl">
           <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="overview" className="gap-1"><Wifi className="h-4 w-4" /> نظرة عامة</TabsTrigger>
-            <TabsTrigger value="active" className="gap-1"><Users className="h-4 w-4" /> النشطون</TabsTrigger>
-            <TabsTrigger value="users" className="gap-1"><CreditCard className="h-4 w-4" /> الكروت</TabsTrigger>
-            <TabsTrigger value="profiles" className="gap-1"><PackageIcon className="h-4 w-4" /> الباقات</TabsTrigger>
+            <TabsTrigger value="overview" className="gap-1">
+              <Wifi className="h-4 w-4" /> نظرة عامة
+            </TabsTrigger>
+            <TabsTrigger value="active" className="gap-1">
+              <Users className="h-4 w-4" /> النشطون
+            </TabsTrigger>
+            <TabsTrigger value="users" className="gap-1">
+              <CreditCard className="h-4 w-4" /> الكروت
+            </TabsTrigger>
+            <TabsTrigger value="profiles" className="gap-1">
+              <PackageIcon className="h-4 w-4" /> الباقات
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-4">
@@ -458,10 +571,14 @@ function ErrorBox({ error, onRetry }: { error: unknown; onRetry?: () => void }) 
   return (
     <div className="p-3 rounded-xl bg-warning/10 border border-warning/30 text-sm space-y-2">
       <div className="font-semibold">تعذّر الاتصال بالميكروتيك</div>
-      <div className="text-xs text-muted-foreground break-all" dir="ltr">{msg}</div>
+      <div className="text-xs text-muted-foreground break-all" dir="ltr">
+        {msg}
+      </div>
       <ul className="text-xs list-disc pr-5 space-y-0.5 text-muted-foreground">
         <li>تأكد أن جوالك على نفس شبكة الميكروتيك المحلية.</li>
-        <li>تأكد من تفعيل REST (RouterOS v7): <span dir="ltr">/ip service enable www</span>.</li>
+        <li>
+          تأكد من تفعيل REST (RouterOS v7): <span dir="ltr">/ip service enable www</span>.
+        </li>
         <li>جرّب تعديل المنفذ إلى 80 أو 443 بدلاً من 8728.</li>
       </ul>
       {onRetry && (
@@ -518,7 +635,12 @@ function OverviewTab({ api }: { api: Api }) {
       <StatCell label="الذاكرة الحرة" value={bytesToMB(info.freeMemory)} />
       <StatCell label="إجمالي الذاكرة" value={bytesToMB(info.totalMemory)} />
       <div className="col-span-2 md:col-span-4">
-        <Button size="sm" variant="outline" className="rounded-xl gap-1 w-full" onClick={() => q.refetch()}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="rounded-xl gap-1 w-full"
+          onClick={() => q.refetch()}
+        >
           <RefreshCw className="h-4 w-4" /> تحديث
         </Button>
       </div>
@@ -553,8 +675,15 @@ function ActiveTab({ api }: { api: Api }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">عدد النشطين: <strong>{list.length}</strong></div>
-        <Button size="sm" variant="outline" className="rounded-xl gap-1" onClick={() => q.refetch()}>
+        <div className="text-sm text-muted-foreground">
+          عدد النشطين: <strong>{list.length}</strong>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="rounded-xl gap-1"
+          onClick={() => q.refetch()}
+        >
           <RefreshCw className="h-3 w-3" /> تحديث
         </Button>
       </div>
@@ -563,14 +692,18 @@ function ActiveTab({ api }: { api: Api }) {
           <Card key={u[".id"]} className="p-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="min-w-0">
-                <div className="font-semibold text-sm truncate" dir="ltr">{u.user}</div>
+                <div className="font-semibold text-sm truncate" dir="ltr">
+                  {u.user}
+                </div>
                 <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3" dir="ltr">
                   <span>IP: {u.address}</span>
                   <span>MAC: {u["mac-address"]}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-[10px]">{u.uptime}</Badge>
+                <Badge variant="secondary" className="text-[10px]">
+                  {u.uptime}
+                </Badge>
                 <Button
                   size="sm"
                   variant="outline"
@@ -601,7 +734,8 @@ function UsersTab({ api }: { api: Api }) {
 
   const profiles = useQuery({
     queryKey: ["mt-profiles-list"],
-    queryFn: async () => (await api.get("/ip/hotspot/user/profile")) as Array<Record<string, string>>,
+    queryFn: async () =>
+      (await api.get("/ip/hotspot/user/profile")) as Array<Record<string, string>>,
     retry: false,
   });
 
@@ -641,14 +775,24 @@ function UsersTab({ api }: { api: Api }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <div className="text-sm text-muted-foreground">إجمالي الكروت: <strong>{list.length}</strong></div>
+        <div className="text-sm text-muted-foreground">
+          إجمالي الكروت: <strong>{list.length}</strong>
+        </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="rounded-xl gap-1" onClick={() => users.refetch()}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl gap-1"
+            onClick={() => users.refetch()}
+          >
             <RefreshCw className="h-3 w-3" /> تحديث
           </Button>
           <Dialog open={openAdd} onOpenChange={setOpenAdd}>
             <DialogTrigger asChild>
-              <Button size="sm" className="rounded-xl gradient-primary-bg text-primary-foreground gap-1">
+              <Button
+                size="sm"
+                className="rounded-xl gradient-primary-bg text-primary-foreground gap-1"
+              >
                 <Plus className="h-3 w-3" /> إضافة كرت
               </Button>
             </DialogTrigger>
@@ -658,25 +802,44 @@ function UsersTab({ api }: { api: Api }) {
               </DialogHeader>
               <div className="grid gap-3">
                 <FormRow label="اسم المستخدم">
-                  <Input dir="ltr" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                  <Input
+                    dir="ltr"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
                 </FormRow>
                 <FormRow label="كلمة المرور">
-                  <Input dir="ltr" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                  <Input
+                    dir="ltr"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  />
                 </FormRow>
                 <FormRow label="الباقة (Profile)">
-                  <Select value={form.profile} onValueChange={(v) => setForm({ ...form, profile: v })}>
-                    <SelectTrigger><SelectValue placeholder="default" /></SelectTrigger>
+                  <Select
+                    value={form.profile}
+                    onValueChange={(v) => setForm({ ...form, profile: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="default" />
+                    </SelectTrigger>
                     <SelectContent>
                       {profList.length === 0 && <SelectItem value="default">default</SelectItem>}
                       {profList.map((p) => (
-                        <SelectItem key={p[".id"]} value={p.name}>{p.name}</SelectItem>
+                        <SelectItem key={p[".id"]} value={p.name}>
+                          {p.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </FormRow>
               </div>
               <DialogFooter>
-                <Button onClick={() => add.mutate()} disabled={add.isPending} className="rounded-xl">
+                <Button
+                  onClick={() => add.mutate()}
+                  disabled={add.isPending}
+                  className="rounded-xl"
+                >
                   {add.isPending && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
                   حفظ
                 </Button>
@@ -686,13 +849,17 @@ function UsersTab({ api }: { api: Api }) {
         </div>
       </div>
 
-      {list.length === 0 ? <EmptyRow label="لا توجد كروت" /> : (
+      {list.length === 0 ? (
+        <EmptyRow label="لا توجد كروت" />
+      ) : (
         <div className="grid gap-2">
           {list.map((u) => (
             <Card key={u[".id"]} className="p-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="min-w-0">
-                  <div className="font-semibold text-sm truncate" dir="ltr">{u.name}</div>
+                  <div className="font-semibold text-sm truncate" dir="ltr">
+                    {u.name}
+                  </div>
                   <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3" dir="ltr">
                     <span>Profile: {u.profile ?? "default"}</span>
                     {u["limit-uptime"] && <span>Limit: {u["limit-uptime"]}</span>}
@@ -700,7 +867,11 @@ function UsersTab({ api }: { api: Api }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {u.disabled === "true" && <Badge variant="destructive" className="text-[10px]">معطّل</Badge>}
+                  {u.disabled === "true" && (
+                    <Badge variant="destructive" className="text-[10px]">
+                      معطّل
+                    </Badge>
+                  )}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button size="sm" variant="outline" className="rounded-xl text-destructive">
@@ -710,11 +881,16 @@ function UsersTab({ api }: { api: Api }) {
                     <AlertDialogContent dir="rtl">
                       <AlertDialogHeader>
                         <AlertDialogTitle>حذف الكرت</AlertDialogTitle>
-                        <AlertDialogDescription>سيتم حذف "{u.name}" من الميكروتيك.</AlertDialogDescription>
+                        <AlertDialogDescription>
+                          سيتم حذف "{u.name}" من الميكروتيك.
+                        </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => del.mutate(u[".id"])} className="bg-destructive text-destructive-foreground">
+                        <AlertDialogAction
+                          onClick={() => del.mutate(u[".id"])}
+                          className="bg-destructive text-destructive-foreground"
+                        >
                           حذف
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -733,11 +909,17 @@ function UsersTab({ api }: { api: Api }) {
 function ProfilesTab({ api }: { api: Api }) {
   const qc = useQueryClient();
   const [openAdd, setOpenAdd] = useState(false);
-  const [form, setForm] = useState({ name: "", rate_limit: "", session_timeout: "", shared_users: "1" });
+  const [form, setForm] = useState({
+    name: "",
+    rate_limit: "",
+    session_timeout: "",
+    shared_users: "1",
+  });
 
   const profiles = useQuery({
     queryKey: ["mt-profiles"],
-    queryFn: async () => (await api.get("/ip/hotspot/user/profile")) as Array<Record<string, string>>,
+    queryFn: async () =>
+      (await api.get("/ip/hotspot/user/profile")) as Array<Record<string, string>>,
     retry: false,
   });
 
@@ -776,14 +958,24 @@ function ProfilesTab({ api }: { api: Api }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2">
-        <div className="text-sm text-muted-foreground">إجمالي الباقات: <strong>{list.length}</strong></div>
+        <div className="text-sm text-muted-foreground">
+          إجمالي الباقات: <strong>{list.length}</strong>
+        </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="rounded-xl gap-1" onClick={() => profiles.refetch()}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl gap-1"
+            onClick={() => profiles.refetch()}
+          >
             <RefreshCw className="h-3 w-3" /> تحديث
           </Button>
           <Dialog open={openAdd} onOpenChange={setOpenAdd}>
             <DialogTrigger asChild>
-              <Button size="sm" className="rounded-xl gradient-primary-bg text-primary-foreground gap-1">
+              <Button
+                size="sm"
+                className="rounded-xl gradient-primary-bg text-primary-foreground gap-1"
+              >
                 <Plus className="h-3 w-3" /> إضافة باقة
               </Button>
             </DialogTrigger>
@@ -793,20 +985,44 @@ function ProfilesTab({ api }: { api: Api }) {
               </DialogHeader>
               <div className="grid gap-3">
                 <FormRow label="اسم الباقة">
-                  <Input dir="ltr" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: 10M-30days" />
+                  <Input
+                    dir="ltr"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="مثال: 10M-30days"
+                  />
                 </FormRow>
                 <FormRow label="السرعة (Rate Limit)">
-                  <Input dir="ltr" value={form.rate_limit} onChange={(e) => setForm({ ...form, rate_limit: e.target.value })} placeholder="10M/10M" />
+                  <Input
+                    dir="ltr"
+                    value={form.rate_limit}
+                    onChange={(e) => setForm({ ...form, rate_limit: e.target.value })}
+                    placeholder="10M/10M"
+                  />
                 </FormRow>
                 <FormRow label="مدة الجلسة (Session Timeout)">
-                  <Input dir="ltr" value={form.session_timeout} onChange={(e) => setForm({ ...form, session_timeout: e.target.value })} placeholder="30d 00:00:00" />
+                  <Input
+                    dir="ltr"
+                    value={form.session_timeout}
+                    onChange={(e) => setForm({ ...form, session_timeout: e.target.value })}
+                    placeholder="30d 00:00:00"
+                  />
                 </FormRow>
                 <FormRow label="مستخدمون متزامنون">
-                  <Input dir="ltr" type="number" value={form.shared_users} onChange={(e) => setForm({ ...form, shared_users: e.target.value })} />
+                  <Input
+                    dir="ltr"
+                    type="number"
+                    value={form.shared_users}
+                    onChange={(e) => setForm({ ...form, shared_users: e.target.value })}
+                  />
                 </FormRow>
               </div>
               <DialogFooter>
-                <Button onClick={() => add.mutate()} disabled={add.isPending} className="rounded-xl">
+                <Button
+                  onClick={() => add.mutate()}
+                  disabled={add.isPending}
+                  className="rounded-xl"
+                >
                   {add.isPending && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
                   حفظ
                 </Button>
@@ -816,13 +1032,17 @@ function ProfilesTab({ api }: { api: Api }) {
         </div>
       </div>
 
-      {list.length === 0 ? <EmptyRow label="لا توجد باقات" /> : (
+      {list.length === 0 ? (
+        <EmptyRow label="لا توجد باقات" />
+      ) : (
         <div className="grid gap-2">
           {list.map((p) => (
             <Card key={p[".id"]} className="p-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="min-w-0">
-                  <div className="font-semibold text-sm truncate" dir="ltr">{p.name}</div>
+                  <div className="font-semibold text-sm truncate" dir="ltr">
+                    {p.name}
+                  </div>
                   <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3" dir="ltr">
                     {p["rate-limit"] && <span>Rate: {p["rate-limit"]}</span>}
                     {p["session-timeout"] && <span>Timeout: {p["session-timeout"]}</span>}
@@ -839,11 +1059,16 @@ function ProfilesTab({ api }: { api: Api }) {
                     <AlertDialogContent dir="rtl">
                       <AlertDialogHeader>
                         <AlertDialogTitle>حذف الباقة</AlertDialogTitle>
-                        <AlertDialogDescription>سيتم حذف "{p.name}" من الميكروتيك.</AlertDialogDescription>
+                        <AlertDialogDescription>
+                          سيتم حذف "{p.name}" من الميكروتيك.
+                        </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => del.mutate(p[".id"])} className="bg-destructive text-destructive-foreground">
+                        <AlertDialogAction
+                          onClick={() => del.mutate(p[".id"])}
+                          className="bg-destructive text-destructive-foreground"
+                        >
                           حذف
                         </AlertDialogAction>
                       </AlertDialogFooter>

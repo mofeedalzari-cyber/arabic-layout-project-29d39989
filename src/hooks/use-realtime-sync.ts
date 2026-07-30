@@ -33,10 +33,8 @@ export function useRealtimeSync() {
 
     const channel = supabase.channel("global-sync");
     TABLES.forEach((table) => {
-      channel.on(
-        "postgres_changes" as any,
-        { event: "*", schema: "public", table },
-        () => scheduleInvalidate(),
+      channel.on("postgres_changes" as any, { event: "*", schema: "public", table }, () =>
+        scheduleInvalidate(),
       );
     });
     channel.subscribe();

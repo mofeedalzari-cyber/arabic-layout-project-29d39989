@@ -5,11 +5,7 @@ export interface PickedContact {
   phone: string;
 }
 
-export type PickContactError =
-  | "unsupported"
-  | "permission_denied"
-  | "cancelled"
-  | "failed";
+export type PickContactError = "unsupported" | "permission_denied" | "cancelled" | "failed";
 
 export interface PickContactResult {
   ok: boolean;
@@ -30,7 +26,8 @@ export async function pickContact(): Promise<PickContactResult> {
         return {
           ok: false,
           error: "unsupported",
-          message: "إضافة جهات الاتصال غير مفعّلة في نسخة APK الحالية — أعد بناء التطبيق بآخر تحديث ثم ثبّته من جديد",
+          message:
+            "إضافة جهات الاتصال غير مفعّلة في نسخة APK الحالية — أعد بناء التطبيق بآخر تحديث ثم ثبّته من جديد",
         };
       }
 
@@ -39,7 +36,11 @@ export async function pickContact(): Promise<PickContactResult> {
       const perm = await Contacts.requestPermissions();
       const granted = perm?.contacts === "granted" || perm?.contacts === true;
       if (!granted) {
-        return { ok: false, error: "permission_denied", message: "لم يتم منح صلاحية الوصول لجهات الاتصال" };
+        return {
+          ok: false,
+          error: "permission_denied",
+          message: "لم يتم منح صلاحية الوصول لجهات الاتصال",
+        };
       }
       const res = await Contacts.pickContact({ projection: { name: true, phones: true } });
       const c = res?.contact;
@@ -55,7 +56,8 @@ export async function pickContact(): Promise<PickContactResult> {
         return {
           ok: false,
           error: "unsupported",
-          message: "إضافة جهات الاتصال غير مسجلة في نسخة APK الحالية — أعد بناء التطبيق بعد تشغيل npx cap sync android",
+          message:
+            "إضافة جهات الاتصال غير مسجلة في نسخة APK الحالية — أعد بناء التطبيق بعد تشغيل npx cap sync android",
         };
       }
       return { ok: false, error: "failed", message: msg || "فشل الوصول لجهات الاتصال" };
@@ -64,7 +66,13 @@ export async function pickContact(): Promise<PickContactResult> {
 
   // Web Contact Picker API — only works in the top frame, over HTTPS, on Chrome Android.
   const anyNav = navigator as any;
-  const inIframe = (() => { try { return window.top !== window.self; } catch { return true; } })();
+  const inIframe = (() => {
+    try {
+      return window.top !== window.self;
+    } catch {
+      return true;
+    }
+  })();
   if (anyNav?.contacts && typeof anyNav.contacts.select === "function" && !inIframe) {
     try {
       const contacts = await anyNav.contacts.select(["name", "tel"], { multiple: false });
@@ -80,7 +88,11 @@ export async function pickContact(): Promise<PickContactResult> {
     } catch (err: any) {
       const msg = String(err?.message ?? "");
       if (/top frame/i.test(msg)) {
-        return { ok: false, error: "unsupported", message: "جهات الاتصال متاحة داخل تطبيق أندرويد فقط — أدخل البيانات يدوياً" };
+        return {
+          ok: false,
+          error: "unsupported",
+          message: "جهات الاتصال متاحة داخل تطبيق أندرويد فقط — أدخل البيانات يدوياً",
+        };
       }
       return { ok: false, error: "failed", message: msg || "فشل جلب جهة الاتصال" };
     }

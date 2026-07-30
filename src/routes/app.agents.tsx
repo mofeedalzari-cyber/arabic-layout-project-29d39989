@@ -8,23 +8,37 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Search, BarChart3, Wifi, RefreshCw, Wallet, Receipt, Coins, Shapes, Network, Tag, Pencil, Trash2,
+  Search,
+  BarChart3,
+  Wifi,
+  RefreshCw,
+  Wallet,
+  Receipt,
+  Coins,
+  Shapes,
+  Network,
+  Tag,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { displayPhone, fmtMoney } from "@/lib/format";
 import { useServerFn } from "@tanstack/react-start";
 import { adminUpdateAgent, adminDeleteAgent } from "@/lib/admin-agents.functions";
 import { Label } from "@/components/ui/label";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
 
 export const Route = createFileRoute("/app/agents")({ component: AgentsPage });
 
@@ -38,8 +52,15 @@ function AgentsPage() {
 function AgentsPageInner() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
-  const [statsFor, setStatsFor] = useState<{ id: string; name: string; username: string } | null>(null);
-  const [editFor, setEditFor] = useState<{ id: string; username: string; full_name: string | null; phone?: string | null } | null>(null);
+  const [statsFor, setStatsFor] = useState<{ id: string; name: string; username: string } | null>(
+    null,
+  );
+  const [editFor, setEditFor] = useState<{
+    id: string;
+    username: string;
+    full_name: string | null;
+    phone?: string | null;
+  } | null>(null);
   const [deleteFor, setDeleteFor] = useState<{ id: string; name: string } | null>(null);
   const deleteFn = useServerFn(adminDeleteAgent);
   const [deleting, setDeleting] = useState(false);
@@ -59,7 +80,6 @@ function AgentsPageInner() {
     }
   };
 
-
   const { data: networks } = useQuery({
     queryKey: ["networks-simple"],
     queryFn: async () => {
@@ -71,11 +91,16 @@ function AgentsPageInner() {
   const { data: agents } = useQuery({
     queryKey: ["agents"],
     queryFn: async () => {
-      const { data: roles } = await supabase.from("user_roles").select("user_id, role").eq("role", "agent");
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .eq("role", "agent");
       const ids = roles?.map((r) => r.user_id) ?? [];
       if (ids.length === 0) return [];
-      const { data: profs } = await supabase.from("profiles")
-        .select("id, username, full_name, phone, is_active, created_at, network_id").in("id", ids)
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, phone, is_active, created_at, network_id")
+        .in("id", ids)
         .order("created_at", { ascending: false });
 
       const { data: salesData } = await supabase.from("sales").select("agent_id, price");
@@ -96,130 +121,222 @@ function AgentsPageInner() {
       const { error } = await supabase.rpc("set_agent_active", { _agent_id: id, _active: active });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("تم التحديث"); qc.invalidateQueries({ queryKey: ["agents"] }); },
+    onSuccess: () => {
+      toast.success("تم التحديث");
+      qc.invalidateQueries({ queryKey: ["agents"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const setNetwork = useMutation({
     mutationFn: async ({ id, networkId }: { id: string; networkId: string | null }) => {
-      const { error } = await supabase.rpc("set_agent_network", { _agent_id: id, _network_id: networkId as string });
+      const { error } = await supabase.rpc("set_agent_network", {
+        _agent_id: id,
+        _network_id: networkId as string,
+      });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("تم تحديث الشبكة"); qc.invalidateQueries({ queryKey: ["agents"] }); },
+    onSuccess: () => {
+      toast.success("تم تحديث الشبكة");
+      qc.invalidateQueries({ queryKey: ["agents"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const filtered = agents?.filter((a) => !q || a.username.toLowerCase().includes(q.toLowerCase()) || (a.full_name ?? "").toLowerCase().includes(q.toLowerCase()));
+  const filtered = agents?.filter(
+    (a) =>
+      !q ||
+      a.username.toLowerCase().includes(q.toLowerCase()) ||
+      (a.full_name ?? "").toLowerCase().includes(q.toLowerCase()),
+  );
 
   return (
     <>
       <PageHeader title="المناديب" description="إدارة حسابات المناديب وعرض إحصائياتهم" />
-      <div className="mb-4 flex justify-start"><RefreshButton /></div>
+      <div className="mb-4 flex justify-start">
+        <RefreshButton />
+      </div>
 
       <div className="relative mb-4 max-w-md">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="بحث..." value={q} onChange={(e) => setQ(e.target.value)} className="pr-9 rounded-xl" />
+        <Input
+          placeholder="بحث..."
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="pr-9 rounded-xl"
+        />
       </div>
       <div className="grid gap-3">
         {filtered?.map((a) => (
           <Card key={a.id} className="card-elegant border-0 p-3 sm:p-4">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="h-11 w-11 rounded-full gradient-primary-bg flex items-center justify-center font-bold text-white shrink-0">
-                {displayPhone((a as any).phone, a.username).slice(0, 2).toUpperCase()}
+                {displayPhone((a as any).phone, a.username)
+                  .slice(0, 2)
+                  .toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-bold truncate">{a.full_name || displayPhone((a as any).phone, a.username)}</div>
-                <div className="text-xs text-muted-foreground truncate" dir="ltr">{displayPhone((a as any).phone, a.username)} · {a.sales.count} مبيعة · {fmtMoney(a.sales.total)}</div>
+                <div className="font-bold truncate">
+                  {a.full_name || displayPhone((a as any).phone, a.username)}
+                </div>
+                <div className="text-xs text-muted-foreground truncate" dir="ltr">
+                  {displayPhone((a as any).phone, a.username)} · {a.sales.count} مبيعة ·{" "}
+                  {fmtMoney(a.sales.total)}
+                </div>
               </div>
               <Button
-                variant="outline" size="sm"
+                variant="outline"
+                size="sm"
                 className="hidden sm:inline-flex rounded-xl shrink-0"
-                onClick={() => setStatsFor({ id: a.id, name: a.full_name || displayPhone((a as any).phone, a.username), username: a.username })}
+                onClick={() =>
+                  setStatsFor({
+                    id: a.id,
+                    name: a.full_name || displayPhone((a as any).phone, a.username),
+                    username: a.username,
+                  })
+                }
               >
-                <BarChart3 className="h-4 w-4 ml-1" />الإحصائيات
+                <BarChart3 className="h-4 w-4 ml-1" />
+                الإحصائيات
               </Button>
               <Button
-                variant="outline" size="icon"
+                variant="outline"
+                size="icon"
                 className="hidden sm:inline-flex rounded-xl shrink-0 h-9 w-9"
                 title="تعديل بيانات المندوب"
-                onClick={() => setEditFor({ id: a.id, username: a.username, full_name: a.full_name, phone: (a as any).phone })}
+                onClick={() =>
+                  setEditFor({
+                    id: a.id,
+                    username: a.username,
+                    full_name: a.full_name,
+                    phone: (a as any).phone,
+                  })
+                }
               >
                 <Pencil className="h-4 w-4" />
               </Button>
               <Button
-                variant="outline" size="icon"
+                variant="outline"
+                size="icon"
                 className="hidden sm:inline-flex rounded-xl shrink-0 h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
                 title="حذف المندوب نهائياً"
-                onClick={() => setDeleteFor({ id: a.id, name: a.full_name || displayPhone((a as any).phone, a.username) })}
+                onClick={() =>
+                  setDeleteFor({
+                    id: a.id,
+                    name: a.full_name || displayPhone((a as any).phone, a.username),
+                  })
+                }
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
               <div className="flex items-center gap-2 shrink-0">
-                <span className={`hidden sm:inline text-[11px] font-semibold ${a.is_active ? "text-success" : "text-muted-foreground"}`}>
+                <span
+                  className={`hidden sm:inline text-[11px] font-semibold ${a.is_active ? "text-success" : "text-muted-foreground"}`}
+                >
                   {a.is_active ? "مفعّل" : "موقوف"}
                 </span>
-                <Switch checked={a.is_active} onCheckedChange={(v) => toggle.mutate({ id: a.id, active: v })} />
+                <Switch
+                  checked={a.is_active}
+                  onCheckedChange={(v) => toggle.mutate({ id: a.id, active: v })}
+                />
               </div>
-
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-1 min-w-[180px]">
                 <Network className="h-4 w-4 text-primary shrink-0" />
                 <select
                   value={a.network_id ?? ""}
-                  onChange={(e) => setNetwork.mutate({ id: a.id, networkId: e.target.value || null })}
+                  onChange={(e) =>
+                    setNetwork.mutate({ id: a.id, networkId: e.target.value || null })
+                  }
                   disabled={!!a.network_id}
                   className="rounded-xl border bg-background text-sm px-2 py-1.5 flex-1 min-w-0 disabled:opacity-100 disabled:cursor-not-allowed"
                   title={a.network_id ? "لا يمكن تغيير الشبكة بعد الانضمام" : undefined}
                 >
                   {!a.network_id && <option value="">— اختر الشبكة —</option>}
                   {networks?.map((n) => (
-                    <option key={n.id} value={n.id}>{n.name}</option>
+                    <option key={n.id} value={n.id}>
+                      {n.name}
+                    </option>
                   ))}
                 </select>
               </div>
               <div className="flex items-center gap-2 sm:hidden">
-                <span className={`text-[11px] font-semibold ${a.is_active ? "text-success" : "text-muted-foreground"}`}>
+                <span
+                  className={`text-[11px] font-semibold ${a.is_active ? "text-success" : "text-muted-foreground"}`}
+                >
                   {a.is_active ? "مفعّل" : "موقوف"}
                 </span>
                 <Button
-                  variant="outline" size="sm" className="rounded-xl h-8"
-                  onClick={() => setStatsFor({ id: a.id, name: a.full_name || displayPhone((a as any).phone, a.username), username: a.username })}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl h-8"
+                  onClick={() =>
+                    setStatsFor({
+                      id: a.id,
+                      name: a.full_name || displayPhone((a as any).phone, a.username),
+                      username: a.username,
+                    })
+                  }
                 >
-                  <BarChart3 className="h-4 w-4 ml-1" />الإحصائيات
+                  <BarChart3 className="h-4 w-4 ml-1" />
+                  الإحصائيات
                 </Button>
                 <Button
-                  variant="outline" size="icon" className="rounded-xl h-8 w-8"
-                  onClick={() => setEditFor({ id: a.id, username: a.username, full_name: a.full_name, phone: (a as any).phone })}
+                  variant="outline"
+                  size="icon"
+                  className="rounded-xl h-8 w-8"
+                  onClick={() =>
+                    setEditFor({
+                      id: a.id,
+                      username: a.username,
+                      full_name: a.full_name,
+                      phone: (a as any).phone,
+                    })
+                  }
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant="outline" size="icon"
+                  variant="outline"
+                  size="icon"
                   className="rounded-xl h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => setDeleteFor({ id: a.id, name: a.full_name || displayPhone((a as any).phone, a.username) })}
+                  onClick={() =>
+                    setDeleteFor({
+                      id: a.id,
+                      name: a.full_name || displayPhone((a as any).phone, a.username),
+                    })
+                  }
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
-
               </div>
             </div>
           </Card>
         ))}
-        {filtered?.length === 0 && <div className="text-center py-16 text-muted-foreground">لا يوجد وكلاء.</div>}
+        {filtered?.length === 0 && (
+          <div className="text-center py-16 text-muted-foreground">لا يوجد وكلاء.</div>
+        )}
       </div>
 
       <Dialog open={!!statsFor} onOpenChange={(o) => !o && setStatsFor(null)}>
         <DialogContent className="max-w-2xl rounded-3xl max-h-[92vh] overflow-y-auto p-0" dir="rtl">
-          <DialogHeader className="sr-only"><DialogTitle>إحصائيات — {statsFor?.name}</DialogTitle></DialogHeader>
-          {statsFor && <AgentStats agentId={statsFor.id} name={statsFor.name} username={statsFor.username} />}
+          <DialogHeader className="sr-only">
+            <DialogTitle>إحصائيات — {statsFor?.name}</DialogTitle>
+          </DialogHeader>
+          {statsFor && (
+            <AgentStats agentId={statsFor.id} name={statsFor.name} username={statsFor.username} />
+          )}
         </DialogContent>
       </Dialog>
 
       <EditAgentDialog
         agent={editFor}
         onClose={() => setEditFor(null)}
-        onSaved={() => { setEditFor(null); qc.invalidateQueries({ queryKey: ["agents"] }); }}
+        onSaved={() => {
+          setEditFor(null);
+          qc.invalidateQueries({ queryKey: ["agents"] });
+        }}
       />
 
       <AlertDialog open={!!deleteFor} onOpenChange={(o) => !o && !deleting && setDeleteFor(null)}>
@@ -227,16 +344,21 @@ function AgentsPageInner() {
           <AlertDialogHeader>
             <AlertDialogTitle>حذف المندوب نهائياً</AlertDialogTitle>
             <AlertDialogDescription>
-              هل أنت متأكد من حذف المندوب <span className="font-bold">{deleteFor?.name}</span> نهائياً؟
-              سيتم حذف حسابه بالكامل ولا يمكن التراجع. الكروت المتاحة لديه ستعود إلى المخزون،
-              وسجلّ المبيعات السابقة سيبقى محفوظاً.
+              هل أنت متأكد من حذف المندوب <span className="font-bold">{deleteFor?.name}</span>{" "}
+              نهائياً؟ سيتم حذف حسابه بالكامل ولا يمكن التراجع. الكروت المتاحة لديه ستعود إلى
+              المخزون، وسجلّ المبيعات السابقة سيبقى محفوظاً.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting} className="rounded-xl">إلغاء</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting} className="rounded-xl">
+              إلغاء
+            </AlertDialogCancel>
             <AlertDialogAction
               disabled={deleting}
-              onClick={(e) => { e.preventDefault(); doDelete(); }}
+              onClick={(e) => {
+                e.preventDefault();
+                doDelete();
+              }}
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleting ? "جارٍ الحذف..." : "حذف نهائي"}
@@ -249,7 +371,9 @@ function AgentsPageInner() {
 }
 
 function EditAgentDialog({
-  agent, onClose, onSaved,
+  agent,
+  onClose,
+  onSaved,
 }: {
   agent: { id: string; username: string; full_name: string | null; phone?: string | null } | null;
   onClose: () => void;
@@ -264,12 +388,15 @@ function EditAgentDialog({
   useEffect(() => {
     if (agent) {
       setFullName(agent.full_name ?? "");
-      setPhone(displayPhone(agent.phone, agent.username) === "—" ? "" : displayPhone(agent.phone, agent.username));
+      setPhone(
+        displayPhone(agent.phone, agent.username) === "—"
+          ? ""
+          : displayPhone(agent.phone, agent.username),
+      );
       setPassword("");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agent?.id]);
-
 
   const submit = async () => {
     if (!agent) return;
@@ -296,33 +423,55 @@ function EditAgentDialog({
     <Dialog open={!!agent} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md rounded-3xl" dir="rtl">
         <DialogHeader>
-          <DialogTitle>تعديل بيانات المندوب {displayPhone(agent?.phone, agent?.username)}</DialogTitle>
+          <DialogTitle>
+            تعديل بيانات المندوب {displayPhone(agent?.phone, agent?.username)}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label>الاسم الكامل</Label>
-            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} dir="rtl" className="text-right rounded-xl" />
+            <Input
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              dir="rtl"
+              className="text-right rounded-xl"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>رقم الهاتف</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" dir="rtl" className="text-right rounded-xl" placeholder="7xxxxxxxx" />
+            <Input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              inputMode="tel"
+              dir="rtl"
+              className="text-right rounded-xl"
+              placeholder="7xxxxxxxx"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>كلمة السر الجديدة</Label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} dir="rtl" className="text-right rounded-xl" placeholder="اتركها فارغة لعدم التغيير" />
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              dir="rtl"
+              className="text-right rounded-xl"
+              placeholder="اتركها فارغة لعدم التغيير"
+            />
           </div>
           <div className="flex gap-2 pt-2">
             <Button className="flex-1 rounded-xl" onClick={submit} disabled={saving}>
               {saving ? "جارٍ الحفظ..." : "حفظ"}
             </Button>
-            <Button variant="outline" className="rounded-xl" onClick={onClose} disabled={saving}>إلغاء</Button>
+            <Button variant="outline" className="rounded-xl" onClick={onClose} disabled={saving}>
+              إلغاء
+            </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-
 
 type PkgRow = {
   package_id: string;
@@ -335,31 +484,44 @@ type PkgRow = {
   sold: number;
 };
 
-export function AgentStats({ agentId, name, username }: { agentId: string; name: string; username: string }) {
+export function AgentStats({
+  agentId,
+  name,
+  username,
+}: {
+  agentId: string;
+  name: string;
+  username: string;
+}) {
   const qc = useQueryClient();
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["agent-stats-full", agentId, fromDate, toDate],
     queryFn: async () => {
-      let salesQ = supabase.from("sales")
+      let salesQ = supabase
+        .from("sales")
         .select("id, price, package_id, package_name, network_id, network_name, sold_at")
         .eq("agent_id", agentId);
       if (fromDate) salesQ = salesQ.gte("sold_at", new Date(fromDate + "T00:00:00").toISOString());
       if (toDate) salesQ = salesQ.lte("sold_at", new Date(toDate + "T23:59:59.999").toISOString());
       const [cardsRes, salesRes, reqRes] = await Promise.all([
-        supabase.from("cards")
-          .select("id, status, package_id, network_id, assigned_to, sold_to, packages!inner(price, name), networks!inner(name, currency)")
+        supabase
+          .from("cards")
+          .select(
+            "id, status, package_id, network_id, assigned_to, sold_to, packages!inner(price, name), networks!inner(name, currency)",
+          )
           .or(`assigned_to.eq.${agentId},sold_to.eq.${agentId}`),
         salesQ,
-        supabase.from("card_requests")
+        supabase
+          .from("card_requests")
           .select("id, network_id, network_name, total_value, paid_amount, status")
-          .eq("agent_id", agentId).eq("status", "APPROVED"),
+          .eq("agent_id", agentId)
+          .eq("status", "APPROVED"),
       ]);
       if (cardsRes.error) throw cardsRes.error;
       if (salesRes.error) throw salesRes.error;
       if (reqRes.error) throw reqRes.error;
-
 
       const cards = (cardsRes.data ?? []) as any[];
       const sales = salesRes.data ?? [];
@@ -375,13 +537,16 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
           network_name: c.networks?.name ?? "—",
           currency: c.networks?.currency ?? "",
           price: Number(c.packages?.price ?? 0),
-          available: 0, sold: 0,
+          available: 0,
+          sold: 0,
         };
         if (c.status === "ASSIGNED" && c.assigned_to === agentId) cur.available++;
         if (c.status === "SOLD" && c.sold_to === agentId) cur.sold++;
         pkgMap.set(key, cur);
       }
-      const byPkgBase = [...pkgMap.values()].sort((a, b) => (b.sold + b.available) - (a.sold + a.available));
+      const byPkgBase = [...pkgMap.values()].sort(
+        (a, b) => b.sold + b.available - (a.sold + a.available),
+      );
 
       const soldValueByPkg = new Map<string, number>();
       const soldCountByPkg = new Map<string, number>();
@@ -392,38 +557,71 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
 
       type Agg = { available: number; sold: number; availableValue: number; soldValue: number };
       const byCurrency = new Map<string, Agg>();
-      const byNetworkMap = new Map<string, Agg & { network_id: string; name: string; currency: string }>();
-      let totalAvailable = 0, totalSold = 0, totalAvailableValue = 0, totalSoldValue = 0;
+      const byNetworkMap = new Map<
+        string,
+        Agg & { network_id: string; name: string; currency: string }
+      >();
+      let totalAvailable = 0,
+        totalSold = 0,
+        totalAvailableValue = 0,
+        totalSoldValue = 0;
 
       const byPkg = byPkgBase.map((p) => {
         const availValue = p.available * p.price;
         const soldValue = soldValueByPkg.get(p.package_id) ?? p.sold * p.price;
         const soldCount = soldCountByPkg.get(p.package_id) ?? p.sold;
 
-        const cAgg = byCurrency.get(p.currency) ?? { available: 0, sold: 0, availableValue: 0, soldValue: 0 };
-        cAgg.available += p.available; cAgg.sold += soldCount;
-        cAgg.availableValue += availValue; cAgg.soldValue += soldValue;
+        const cAgg = byCurrency.get(p.currency) ?? {
+          available: 0,
+          sold: 0,
+          availableValue: 0,
+          soldValue: 0,
+        };
+        cAgg.available += p.available;
+        cAgg.sold += soldCount;
+        cAgg.availableValue += availValue;
+        cAgg.soldValue += soldValue;
         byCurrency.set(p.currency, cAgg);
 
-        const nAgg = byNetworkMap.get(p.network_id) ?? { network_id: p.network_id, name: p.network_name, currency: p.currency, available: 0, sold: 0, availableValue: 0, soldValue: 0 };
-        nAgg.available += p.available; nAgg.sold += soldCount;
-        nAgg.availableValue += availValue; nAgg.soldValue += soldValue;
+        const nAgg = byNetworkMap.get(p.network_id) ?? {
+          network_id: p.network_id,
+          name: p.network_name,
+          currency: p.currency,
+          available: 0,
+          sold: 0,
+          availableValue: 0,
+          soldValue: 0,
+        };
+        nAgg.available += p.available;
+        nAgg.sold += soldCount;
+        nAgg.availableValue += availValue;
+        nAgg.soldValue += soldValue;
         byNetworkMap.set(p.network_id, nAgg);
 
-        totalAvailable += p.available; totalSold += soldCount;
-        totalAvailableValue += availValue; totalSoldValue += soldValue;
+        totalAvailable += p.available;
+        totalSold += soldCount;
+        totalAvailableValue += availValue;
+        totalSoldValue += soldValue;
 
         return { ...p, soldCount, soldValue };
       });
 
-      const debtByNet = new Map<string, { network_id: string; name: string; amount: number; paid: number }>();
+      const debtByNet = new Map<
+        string,
+        { network_id: string; name: string; amount: number; paid: number }
+      >();
       let totalDebt = 0;
       let totalPaid = 0;
       for (const r of requests) {
         const paid = Number(r.paid_amount ?? 0);
         const remaining = Math.max(0, Number(r.total_value ?? 0) - paid);
         totalPaid += paid;
-        const cur = debtByNet.get(r.network_id) ?? { network_id: r.network_id, name: r.network_name ?? "—", amount: 0, paid: 0 };
+        const cur = debtByNet.get(r.network_id) ?? {
+          network_id: r.network_id,
+          name: r.network_name ?? "—",
+          amount: 0,
+          paid: 0,
+        };
         cur.amount += remaining;
         cur.paid += paid;
         debtByNet.set(r.network_id, cur);
@@ -435,12 +633,17 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
           totalValue: totalAvailableValue + totalSoldValue,
           soldValue: totalSoldValue,
           availableValue: totalAvailableValue,
-          available: totalAvailable, sold: totalSold,
+          available: totalAvailable,
+          sold: totalSold,
         },
         byPkg,
         byCurrency: [...byCurrency.entries()].map(([currency, v]) => ({ currency, ...v })),
         byNetwork: [...byNetworkMap.values()],
-        debt: { total: totalDebt, paid: totalPaid, byNet: [...debtByNet.values()].sort((a, b) => b.amount - a.amount) },
+        debt: {
+          total: totalDebt,
+          paid: totalPaid,
+          byNet: [...debtByNet.values()].sort((a, b) => b.amount - a.amount),
+        },
       };
     },
   });
@@ -458,24 +661,38 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
         network_id: d.network_id,
         name: d.name,
         currency: "",
-        available: 0, sold: 0, availableValue: 0, soldValue: 0,
+        available: 0,
+        sold: 0,
+        availableValue: 0,
+        soldValue: 0,
       });
     }
     return list;
   }, [data]);
 
-  if (isLoading || !data) return <div className="py-16 text-center text-muted-foreground text-sm">جارٍ التحميل...</div>;
+  if (isLoading || !data)
+    return <div className="py-16 text-center text-muted-foreground text-sm">جارٍ التحميل...</div>;
   const t = data.totals;
 
   return (
     <div dir="rtl" className="bg-muted/30 rounded-3xl text-right">
       <div className="p-4 pb-3 flex items-center justify-between gap-3">
-        <Button size="icon" variant="ghost" className="rounded-full h-9 w-9" onClick={() => { refetch(); qc.invalidateQueries({ queryKey: ["agents"] }); }}>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="rounded-full h-9 w-9"
+          onClick={() => {
+            refetch();
+            qc.invalidateQueries({ queryKey: ["agents"] });
+          }}
+        >
           <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
         </Button>
         <div className="text-center flex-1">
           <div className="text-lg font-extrabold">لوحة الإحصائيات</div>
-          <div className="text-xs text-muted-foreground">{name} <span className="opacity-60">· {displayPhone(null, username)}</span></div>
+          <div className="text-xs text-muted-foreground">
+            {name} <span className="opacity-60">· {displayPhone(null, username)}</span>
+          </div>
         </div>
         <div className="h-10 w-10 rounded-full gradient-primary-bg flex items-center justify-center text-white">
           <BarChart3 className="h-5 w-5" />
@@ -487,14 +704,34 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
           <div className="flex flex-wrap items-end gap-2">
             <div className="flex-1 min-w-[130px]">
               <Label className="text-[11px] text-muted-foreground">من تاريخ</Label>
-              <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="rounded-xl h-9 text-sm" dir="ltr" />
+              <Input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="rounded-xl h-9 text-sm"
+                dir="ltr"
+              />
             </div>
             <div className="flex-1 min-w-[130px]">
               <Label className="text-[11px] text-muted-foreground">إلى تاريخ</Label>
-              <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="rounded-xl h-9 text-sm" dir="ltr" />
+              <Input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="rounded-xl h-9 text-sm"
+                dir="ltr"
+              />
             </div>
             {(fromDate || toDate) && (
-              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => { setFromDate(""); setToDate(""); }}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl h-9"
+                onClick={() => {
+                  setFromDate("");
+                  setToDate("");
+                }}
+              >
                 مسح
               </Button>
             )}
@@ -516,7 +753,6 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
         </div>
       </div>
 
-
       <div className="p-4 space-y-4">
         {perNetwork.length === 0 && (
           <Card className="p-8 text-center text-muted-foreground border-0 card-elegant text-sm">
@@ -530,7 +766,9 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
           return (
             <div key={n.network_id} className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="h-6 w-6 rounded-md bg-primary/15 text-primary flex items-center justify-center text-[10px] font-bold">UP</div>
+                <div className="h-6 w-6 rounded-md bg-primary/15 text-primary flex items-center justify-center text-[10px] font-bold">
+                  UP
+                </div>
                 <div className="text-sm font-extrabold">{n.name} — الإحصائيات</div>
               </div>
 
@@ -547,11 +785,15 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
                 <SectionTitle icon={Receipt} title="الديون والمسدد" />
                 <div className="mt-3 flex flex-wrap gap-2">
                   <div className="inline-flex items-center gap-2 rounded-full bg-success/10 px-4 py-2">
-                    <span className="text-lg font-extrabold text-success">{fmtMoney(debt?.amount ?? 0)}</span>
+                    <span className="text-lg font-extrabold text-success">
+                      {fmtMoney(debt?.amount ?? 0)}
+                    </span>
                     <span className="text-xs text-muted-foreground">إجمالي الديون</span>
                   </div>
                   <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2">
-                    <span className="text-lg font-extrabold text-primary">{fmtMoney(debt?.paid ?? 0)}</span>
+                    <span className="text-lg font-extrabold text-primary">
+                      {fmtMoney(debt?.paid ?? 0)}
+                    </span>
                     <span className="text-xs text-muted-foreground">المسدد</span>
                   </div>
                 </div>
@@ -564,8 +806,12 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
                         <span className="font-semibold">{n.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="rounded-full bg-primary/10 text-primary font-bold px-3 py-1 text-xs">مسدد: {fmtMoney(debt?.paid ?? 0)}</span>
-                        <span className="rounded-full bg-success/10 text-success font-bold px-3 py-1 text-xs">دين: {fmtMoney(debt?.amount ?? 0)}</span>
+                        <span className="rounded-full bg-primary/10 text-primary font-bold px-3 py-1 text-xs">
+                          مسدد: {fmtMoney(debt?.paid ?? 0)}
+                        </span>
+                        <span className="rounded-full bg-success/10 text-success font-bold px-3 py-1 text-xs">
+                          دين: {fmtMoney(debt?.amount ?? 0)}
+                        </span>
                       </div>
                     </div>
                   </>
@@ -593,11 +839,15 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
               <Card className="p-4 border-0 card-elegant">
                 <SectionTitle icon={Shapes} title="المبيعات حسب الفئات" />
                 <div className="mt-3 space-y-2">
-                  {netPkgs.length === 0 && <div className="text-xs text-muted-foreground text-center py-3">لا بيانات.</div>}
+                  {netPkgs.length === 0 && (
+                    <div className="text-xs text-muted-foreground text-center py-3">لا بيانات.</div>
+                  )}
                   {netPkgs.map((p) => (
                     <div key={p.package_id} className="rounded-2xl bg-muted/40 p-3">
                       <div className="flex items-center justify-start gap-2 mb-2">
-                        <span className="rounded-full bg-primary/10 text-primary text-[11px] font-bold px-2.5 py-1 truncate max-w-[70%]">{p.package_name}</span>
+                        <span className="rounded-full bg-primary/10 text-primary text-[11px] font-bold px-2.5 py-1 truncate max-w-[70%]">
+                          {p.package_name}
+                        </span>
                         <Tag className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <div className="grid grid-cols-4 gap-1 text-center">
@@ -630,7 +880,9 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
                   <div className="flex items-center justify-start gap-2 mb-2">
                     <span className="font-bold text-sm">{n.name}</span>
                     <Wifi className="h-4 w-4 text-primary" />
-                    <span className="text-[11px] rounded-full bg-primary/10 text-primary px-2 py-0.5 font-bold">{n.currency}</span>
+                    <span className="text-[11px] rounded-full bg-primary/10 text-primary px-2 py-0.5 font-bold">
+                      {n.currency}
+                    </span>
                   </div>
                   <div className="grid grid-cols-4 gap-1 text-center">
                     <MiniCol v={String(n.available + n.sold)} l="إجمالي" />
@@ -650,9 +902,15 @@ export function AgentStats({ agentId, name, username }: { agentId: string; name:
 
 function TopStat({ label, value, tone }: { label: string; value: string; tone?: "primary" }) {
   return (
-    <div className={`rounded-2xl p-3 text-center ${tone === "primary" ? "gradient-primary-bg text-white" : "bg-card border border-border/50"}`}>
+    <div
+      className={`rounded-2xl p-3 text-center ${tone === "primary" ? "gradient-primary-bg text-white" : "bg-card border border-border/50"}`}
+    >
       <div className="text-base font-extrabold truncate">{value}</div>
-      <div className={`text-[11px] mt-0.5 ${tone === "primary" ? "text-white/80" : "text-muted-foreground"}`}>{label}</div>
+      <div
+        className={`text-[11px] mt-0.5 ${tone === "primary" ? "text-white/80" : "text-muted-foreground"}`}
+      >
+        {label}
+      </div>
     </div>
   );
 }

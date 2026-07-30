@@ -54,7 +54,6 @@ export async function printCards(opts: {
   });
 }
 
-
 /** يرسم كل كرت (قالب + الكود) على canvas ويحوّله إلى dataURL. */
 async function renderCardImage(template: CardTemplate, code: string): Promise<string> {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -67,7 +66,8 @@ async function renderCardImage(template: CardTemplate, code: string): Promise<st
   const W = Math.max(400, Math.min(1600, img.naturalWidth || 800));
   const H = Math.round(W * ((img.naturalHeight || 500) / (img.naturalWidth || 800)));
   const c = document.createElement("canvas");
-  c.width = W; c.height = H;
+  c.width = W;
+  c.height = H;
   const ctx = c.getContext("2d")!;
   ctx.drawImage(img, 0, 0, W, H);
 
@@ -124,20 +124,34 @@ export async function printCardsPdf(opts: {
   const toB64 = async (u: string) => {
     const r = await fetch(u);
     const buf = new Uint8Array(await r.arrayBuffer());
-    let bin = ""; const CHUNK = 0x8000;
-    for (let i = 0; i < buf.length; i += CHUNK) bin += String.fromCharCode(...buf.subarray(i, i + CHUNK));
+    let bin = "";
+    const CHUNK = 0x8000;
+    for (let i = 0; i < buf.length; i += CHUNK)
+      bin += String.fromCharCode(...buf.subarray(i, i + CHUNK));
     return btoa(bin);
   };
   const vfs = Object.fromEntries(
-    await Promise.all(Object.entries(FONT_URLS).map(async ([n, u]) => [n, await toB64(u)] as const)),
+    await Promise.all(
+      Object.entries(FONT_URLS).map(async ([n, u]) => [n, await toB64(u)] as const),
+    ),
   );
   if (typeof pdfMake.addVirtualFileSystem === "function") pdfMake.addVirtualFileSystem(vfs);
   else pdfMake.vfs = { ...(pdfMake.vfs || {}), ...vfs };
-  const FONTS = { Cairo: { normal: "Cairo-Regular.ttf", bold: "Cairo-Bold.ttf", italics: "Cairo-Regular.ttf", bolditalics: "Cairo-Bold.ttf" } };
+  const FONTS = {
+    Cairo: {
+      normal: "Cairo-Regular.ttf",
+      bold: "Cairo-Bold.ttf",
+      italics: "Cairo-Regular.ttf",
+      bolditalics: "Cairo-Bold.ttf",
+    },
+  };
   if (typeof pdfMake.addFonts === "function") pdfMake.addFonts(FONTS);
   else pdfMake.fonts = { ...(pdfMake.fonts || {}), ...FONTS };
 
-  const dateStr = new Date().toLocaleString("ar-EG-u-nu-latn", { dateStyle: "medium", timeStyle: "short" });
+  const dateStr = new Date().toLocaleString("ar-EG-u-nu-latn", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 
   const doc: any = {
     pageSize: "A4",
@@ -147,7 +161,12 @@ export async function printCardsPdf(opts: {
       {
         columns: [
           { text: title, alignment: "right", bold: true, fontSize: 12 },
-          { text: `${codes.length} كرت — ${dateStr}`, alignment: "left", fontSize: 9, color: "#64748b" },
+          {
+            text: `${codes.length} كرت — ${dateStr}`,
+            alignment: "left",
+            fontSize: 9,
+            color: "#64748b",
+          },
         ],
         margin: [0, 0, 0, 8],
       },
@@ -166,7 +185,9 @@ export async function printCardsPdf(opts: {
       };
       const maybe: any = pdfMake.createPdf(doc).getBuffer(cb);
       if (maybe && typeof maybe.then === "function") maybe.then(cb).catch(reject);
-    } catch (e) { reject(e); }
+    } catch (e) {
+      reject(e);
+    }
   });
 
   const { sharePdfBlob } = await import("./native-pdf");
@@ -194,17 +215,24 @@ export async function printAssignedCards(opts: {
     if (!d) return "—";
     try {
       return new Intl.DateTimeFormat("ar-EG-u-nu-latn", {
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
       }).format(new Date(d));
-    } catch { return "—"; }
+    } catch {
+      return "—";
+    }
   };
   const printedAt = fmtDate(new Date().toISOString());
   const total = rows.length;
 
   // ملخص حسب المندوب
   const byAgent = new Map<string, number>();
-  rows.forEach((r) => byAgent.set(r.agent_name || "—", (byAgent.get(r.agent_name || "—") ?? 0) + 1));
+  rows.forEach((r) =>
+    byAgent.set(r.agent_name || "—", (byAgent.get(r.agent_name || "—") ?? 0) + 1),
+  );
 
   // pdfmake setup (نفس آلية printCardsPdf)
   const pdfMakeMod: any = await import("pdfmake/build/pdfmake");
@@ -218,16 +246,27 @@ export async function printAssignedCards(opts: {
   const toB64 = async (u: string) => {
     const r = await fetch(u);
     const buf = new Uint8Array(await r.arrayBuffer());
-    let bin = ""; const CHUNK = 0x8000;
-    for (let i = 0; i < buf.length; i += CHUNK) bin += String.fromCharCode(...buf.subarray(i, i + CHUNK));
+    let bin = "";
+    const CHUNK = 0x8000;
+    for (let i = 0; i < buf.length; i += CHUNK)
+      bin += String.fromCharCode(...buf.subarray(i, i + CHUNK));
     return btoa(bin);
   };
   const vfs = Object.fromEntries(
-    await Promise.all(Object.entries(FONT_URLS).map(async ([n, u]) => [n, await toB64(u)] as const)),
+    await Promise.all(
+      Object.entries(FONT_URLS).map(async ([n, u]) => [n, await toB64(u)] as const),
+    ),
   );
   if (typeof pdfMake.addVirtualFileSystem === "function") pdfMake.addVirtualFileSystem(vfs);
   else pdfMake.vfs = { ...(pdfMake.vfs || {}), ...vfs };
-  const FONTS = { Cairo: { normal: "Cairo-Regular.ttf", bold: "Cairo-Bold.ttf", italics: "Cairo-Regular.ttf", bolditalics: "Cairo-Bold.ttf" } };
+  const FONTS = {
+    Cairo: {
+      normal: "Cairo-Regular.ttf",
+      bold: "Cairo-Bold.ttf",
+      italics: "Cairo-Regular.ttf",
+      bolditalics: "Cairo-Bold.ttf",
+    },
+  };
   if (typeof pdfMake.addFonts === "function") pdfMake.addFonts(FONTS);
   else pdfMake.fonts = { ...(pdfMake.fonts || {}), ...FONTS };
 
@@ -260,7 +299,20 @@ export async function printAssignedCards(opts: {
     ]);
   });
   if (rows.length === 0) {
-    body.push([{ text: ar("لا توجد بيانات"), colSpan: 6, alignment: "center", color: "#6b7280", margin: [0, 8, 0, 8] } as any, {}, {}, {}, {}, {}]);
+    body.push([
+      {
+        text: ar("لا توجد بيانات"),
+        colSpan: 6,
+        alignment: "center",
+        color: "#6b7280",
+        margin: [0, 8, 0, 8],
+      } as any,
+      {},
+      {},
+      {},
+      {},
+      {},
+    ]);
   }
 
   const summaryChips = Array.from(byAgent.entries()).map(([n, c]) => ({
@@ -279,7 +331,14 @@ export async function printAssignedCards(opts: {
           {
             stack: [
               { text: ar(title), bold: true, fontSize: 16, color: "#1e3a8a" },
-              networkName ? { text: `${ar("الشبكة")}: ${ar(networkName)}`, fontSize: 11, color: "#374151", margin: [0, 2, 0, 0] } : {},
+              networkName
+                ? {
+                    text: `${ar("الشبكة")}: ${ar(networkName)}`,
+                    fontSize: 11,
+                    color: "#374151",
+                    margin: [0, 2, 0, 0],
+                  }
+                : {},
             ],
           },
           {
@@ -287,13 +346,24 @@ export async function printAssignedCards(opts: {
             alignment: "left",
             stack: [
               { text: `${ar("تاريخ الطباعة")}: ${printedAt}`, fontSize: 9, color: "#374151" },
-              { text: `${ar("إجمالي الكروت")}: ${total}`, fontSize: 10, bold: true, color: "#0f172a", margin: [0, 2, 0, 0] },
+              {
+                text: `${ar("إجمالي الكروت")}: ${total}`,
+                fontSize: 10,
+                bold: true,
+                color: "#0f172a",
+                margin: [0, 2, 0, 0],
+              },
             ],
           },
         ],
         margin: [0, 0, 0, 8],
       },
-      { canvas: [{ type: "line", x1: 0, y1: 0, x2: 547, y2: 0, lineWidth: 1.5, lineColor: "#1e3a8a" }], margin: [0, 0, 0, 8] },
+      {
+        canvas: [
+          { type: "line", x1: 0, y1: 0, x2: 547, y2: 0, lineWidth: 1.5, lineColor: "#1e3a8a" },
+        ],
+        margin: [0, 0, 0, 8],
+      },
       summaryChips.length ? { columns: summaryChips, margin: [0, 0, 0, 8] } : { text: "" },
       {
         table: { widths: [22, "*", "*", "*", "*", 70], headerRows: 1, body },
@@ -302,13 +372,24 @@ export async function printAssignedCards(opts: {
           vLineWidth: () => 0.6,
           hLineColor: () => "#1f2937",
           vLineColor: () => "#1f2937",
-          fillColor: (rowIndex: number) => (rowIndex === 0 ? "#1e3a8a" : rowIndex % 2 === 0 ? "#f8fafc" : null),
+          fillColor: (rowIndex: number) =>
+            rowIndex === 0 ? "#1e3a8a" : rowIndex % 2 === 0 ? "#f8fafc" : null,
         },
       },
       {
         columns: [
-          { text: ar("توقيع المندوب"), alignment: "center", margin: [0, 30, 0, 0], decoration: "overline" },
-          { text: ar("توقيع المدير"), alignment: "center", margin: [0, 30, 0, 0], decoration: "overline" },
+          {
+            text: ar("توقيع المندوب"),
+            alignment: "center",
+            margin: [0, 30, 0, 0],
+            decoration: "overline",
+          },
+          {
+            text: ar("توقيع المدير"),
+            alignment: "center",
+            margin: [0, 30, 0, 0],
+            decoration: "overline",
+          },
         ],
       },
     ],
@@ -326,10 +407,11 @@ export async function printAssignedCards(opts: {
       };
       const maybe: any = pdfMake.createPdf(doc).getBuffer(cb);
       if (maybe && typeof maybe.then === "function") maybe.then(cb).catch(reject);
-    } catch (e) { reject(e); }
+    } catch (e) {
+      reject(e);
+    }
   });
 
   const { sharePdfBlob } = await import("./native-pdf");
   await sharePdfBlob({ blob, filename: title, dialogTitle: "طباعة أو مشاركة كشف الكروت المسحوبة" });
 }
-

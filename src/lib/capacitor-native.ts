@@ -36,7 +36,9 @@ export async function initCapacitorNative(router: Router<any, any>) {
 
   document.documentElement.classList.add("capacitor-native");
 
-  const applyNativeSafeArea = async (StatusBar?: { getInfo?: () => Promise<{ height?: number }> }) => {
+  const applyNativeSafeArea = async (StatusBar?: {
+    getInfo?: () => Promise<{ height?: number }>;
+  }) => {
     const statusInfo = await StatusBar?.getInfo?.().catch(() => undefined);
     const statusHeight = Math.max(statusInfo?.height ?? 0, 30);
 
@@ -57,8 +59,12 @@ export async function initCapacitorNative(router: Router<any, any>) {
       await applyNativeSafeArea(StatusBar);
     } catch {}
 
-    window.addEventListener("resize", () => { applyNativeSafeArea(StatusBar).catch(() => {}); });
-    window.visualViewport?.addEventListener("resize", () => { applyNativeSafeArea(StatusBar).catch(() => {}); });
+    window.addEventListener("resize", () => {
+      applyNativeSafeArea(StatusBar).catch(() => {});
+    });
+    window.visualViewport?.addEventListener("resize", () => {
+      applyNativeSafeArea(StatusBar).catch(() => {});
+    });
 
     // Hide splash after the app is ready
     setTimeout(() => {
@@ -86,7 +92,9 @@ export async function initCapacitorNative(router: Router<any, any>) {
         '[data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]',
       );
       if (openOverlay) {
-        const closeBtn = openOverlay.querySelector<HTMLElement>('[data-dismiss], [aria-label="Close"], [aria-label="إغلاق"]');
+        const closeBtn = openOverlay.querySelector<HTMLElement>(
+          '[data-dismiss], [aria-label="Close"], [aria-label="إغلاق"]',
+        );
         if (closeBtn) closeBtn.click();
         else window.history.back();
         return;
@@ -113,7 +121,9 @@ export async function initCapacitorNative(router: Router<any, any>) {
           hint.style.cssText =
             "position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 90px);transform:translateX(-50%);background:#111c;color:#fff;padding:8px 16px;border-radius:999px;font:600 13px Cairo,Tahoma,sans-serif;z-index:9999;pointer-events:none;transition:opacity .3s;";
           document.body.appendChild(hint);
-          setTimeout(() => { hint.style.opacity = "0"; }, 1500);
+          setTimeout(() => {
+            hint.style.opacity = "0";
+          }, 1500);
           setTimeout(() => hint.remove(), 1900);
         } catch {}
       }

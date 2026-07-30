@@ -21,8 +21,12 @@ export function fmtArabicDateTime(value?: string | number | Date | null) {
   const d = value instanceof Date ? value : new Date(value);
   if (isNaN(d.getTime())) return "—";
   const dt = d.toLocaleString("ar-EG", {
-    year: "numeric", month: "numeric", day: "numeric",
-    hour: "numeric", minute: "2-digit", hour12: true,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
   });
   const wd = d.toLocaleString("ar-EG", { weekday: "long" });
   return `${dt} ${wd}`;
@@ -49,11 +53,13 @@ export function fmtArabicDateTimePdf(value?: string | number | Date | null) {
   const d = value instanceof Date ? value : new Date(value);
   if (isNaN(d.getTime())) return "—";
   const dt = d.toLocaleString("ar-EG-u-nu-latn", {
-    year: "numeric", month: "numeric", day: "numeric",
-    hour: "numeric", minute: "2-digit", hour12: true,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
   });
   const wd = d.toLocaleString("ar-EG", { weekday: "long" });
   return `${dt} ${wd}`;
 }
-
-
