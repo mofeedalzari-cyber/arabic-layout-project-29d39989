@@ -52,7 +52,7 @@ function LogsPageInner() {
   });
 
   const toggle = (id: string) => setSelected((s) => {
-    const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n;
+    const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
   });
   const allSelected = !!logs?.length && logs.every((l) => selected.has(l.id));
   const toggleAll = () => setSelected(allSelected ? new Set() : new Set((logs ?? []).map((l) => l.id)));

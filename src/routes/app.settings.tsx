@@ -33,7 +33,7 @@ function SettingsPage() {
   useEffect(() => {
     setPhone(displayPhone(profile?.phone, profile?.username) === "—" ? "" : displayPhone(profile?.phone, profile?.username));
     setFullName(profile?.full_name ?? "");
-  }, [profile?.phone, profile?.full_name]);
+  }, [profile?.phone, profile?.full_name, profile?.username]);
 
   const save = useMutation({
     mutationFn: async () => {

@@ -450,7 +450,9 @@ async function printReceiptPDF(a: {
     const u = data?.user;
     adminPhone = String(u?.phone || (u?.user_metadata as any)?.phone || "").replace(/\D/g, "");
     adminUsername = (u?.user_metadata as any)?.username || "";
-  } catch {}
+  } catch {
+    // تجاهل: بيانات المدير غير متاحة
+  }
 
   const statement = a.note?.trim() ? a.note.trim() : `تسديد من ${a.agentName}`;
 

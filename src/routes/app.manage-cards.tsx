@@ -251,7 +251,7 @@ function ManageCardsPageInner() {
 
 
   function toggle(id: string) {
-    setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   }
   function selectPage() { setSelected((s) => { const n = new Set(s); pageIds.forEach((id) => n.add(id)); return n; }); }
   function unselectPage() { setSelected((s) => { const n = new Set(s); pageIds.forEach((id) => n.delete(id)); return n; }); }
@@ -345,7 +345,7 @@ function ManageCardsPageInner() {
   });
 
   function toggleReveal(id: string) {
-    setRevealed((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setRevealed((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   }
 
   return (

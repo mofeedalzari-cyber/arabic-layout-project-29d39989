@@ -95,7 +95,7 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
   });
 
   const toggleSel = (id: string) => setSelected((s) => {
-    const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n;
+    const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
   });
   const allSelected = !!rows?.length && rows.every((r: any) => selected.has(r.id));
   const toggleAll = () => setSelected(allSelected ? new Set() : new Set((rows ?? []).map((r: any) => r.id)));
