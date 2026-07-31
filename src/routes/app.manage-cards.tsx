@@ -337,7 +337,36 @@ function ManageCardsPageInner() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const selectedSoldIds = (cards ?? [])
+    .filter((c) => c.status === "SOLD" && selected.has(c.id))
+    .map((c) => c.id);
+
+  const transferSold = useMutation({
+    mutationFn: async () => {
+      if (!transferTo) throw new Error("اختر المندوب المستلم أولاً");
+      if (!selectedSoldIds.length) throw new Error("حدّد كروتاً مباعة أولاً");
+      const { data, error } = await (supabase.rpc as any)("admin_transfer_sold_cards", {
+        _ids: selectedSoldIds,
+        _to_agent: transferTo,
+      });
+      if (error) throw error;
+      const r = Array.isArray(data) ? data[0] : data;
+      return { moved: r?.moved ?? 0, amount: Number(r?.amount ?? 0) };
+    },
+    onSuccess: (r) => {
+      toast.success(
+        r.moved
+          ? `تم نقل ${r.moved} كرت مباع وتحويل ${fmtMoney(r.amount)} إلى المندوب الجديد`
+          : "لا يوجد كروت قابلة للنقل",
+      );
+      setSelected(new Set());
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   function toggle(id: string) {
+
     setSelected((s) => {
       const n = new Set(s);
       if (n.has(id)) n.delete(id);
