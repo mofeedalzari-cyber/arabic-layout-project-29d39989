@@ -87,14 +87,106 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
       el.addEventListener("pointercancel", stop);
       el.addEventListener("pointerleave", stop);
 
+      // ---- Touch drag (finger drag scrolls this container in both axes) ----
+      let tId: number | null = null;
+      let tx = 0;
+      let ty = 0;
+      let tScrollLeft = 0;
+      let tScrollTop = 0;
+      let tDragging = false;
+      let lastX = 0;
+      let lastY = 0;
+      let lastT = 0;
+      let vx = 0;
+      let vy = 0;
+      let raf = 0;
+
+      // nearest horizontally scrollable element (self or a descendant under finger)
+      const hTarget = (from: EventTarget | null): HTMLElement => {
+        let n = from as HTMLElement | null;
+        while (n && n !== el.parentElement) {
+          if (n.scrollWidth > n.clientWidth + 1) return n;
+          n = n.parentElement;
+        }
+        return el;
+      };
+      let hEl: HTMLElement = el;
+
+      const onTouchStart = (e: TouchEvent) => {
+        if (!dragTouch || e.touches.length !== 1) return;
+        cancelAnimationFrame(raf);
+        const t = e.touches[0];
+        tId = t.identifier;
+        tDragging = false;
+        tx = lastX = t.clientX;
+        ty = lastY = t.clientY;
+        lastT = performance.now();
+        vx = vy = 0;
+        hEl = hTarget(e.target);
+        tScrollLeft = hEl.scrollLeft;
+        tScrollTop = el.scrollTop;
+      };
+
+      const onTouchMove = (e: TouchEvent) => {
+        if (!dragTouch || tId === null) return;
+        const t = Array.from(e.touches).find((x) => x.identifier === tId);
+        if (!t) return;
+        const dx = t.clientX - tx;
+        const dy = t.clientY - ty;
+        if (!tDragging && Math.hypot(dx, dy) < THRESHOLD) return;
+        tDragging = true;
+        if (e.cancelable) e.preventDefault();
+        hEl.scrollLeft = tScrollLeft - dx;
+        el.scrollTop = tScrollTop - dy;
+        const now = performance.now();
+        const dt = Math.max(1, now - lastT);
+        vx = (t.clientX - lastX) / dt;
+        vy = (t.clientY - lastY) / dt;
+        lastX = t.clientX;
+        lastY = t.clientY;
+        lastT = now;
+      };
+
+      const onTouchEnd = () => {
+        if (!dragTouch || tId === null) return;
+        tId = null;
+        if (!tDragging) return;
+        tDragging = false;
+        // inertia
+        let ivx = vx * 16;
+        let ivy = vy * 16;
+        const step = () => {
+          ivx *= 0.94;
+          ivy *= 0.94;
+          if (Math.abs(ivx) < 0.2 && Math.abs(ivy) < 0.2) return;
+          hEl.scrollLeft -= ivx;
+          el.scrollTop -= ivy;
+          raf = requestAnimationFrame(step);
+        };
+        raf = requestAnimationFrame(step);
+      };
+
+      if (dragTouch) {
+        el.addEventListener("touchstart", onTouchStart, { passive: true });
+        el.addEventListener("touchmove", onTouchMove, { passive: false });
+        el.addEventListener("touchend", onTouchEnd);
+        el.addEventListener("touchcancel", onTouchEnd);
+      }
+
       return () => {
         el.removeEventListener("pointerdown", onPointerDown);
         el.removeEventListener("pointermove", onPointerMove);
         el.removeEventListener("pointerup", stop);
         el.removeEventListener("pointercancel", stop);
         el.removeEventListener("pointerleave", stop);
+        cancelAnimationFrame(raf);
+        el.removeEventListener("touchstart", onTouchStart);
+        el.removeEventListener("touchmove", onTouchMove);
+        el.removeEventListener("touchend", onTouchEnd);
+        el.removeEventListener("touchcancel", onTouchEnd);
       };
-    }, []);
+    }, [dragTouch]);
+
 
     return (
       <div
@@ -103,15 +195,12 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
         style={
           dragTouch
             ? {
-                // Native touch scrolling (smooth momentum, no jitter), confined
-                // to this container so the page behind never moves.
-                // `auto` (not "pan-x pan-y") — Android WebView ignores vertical
-                // panning when both axes are listed explicitly.
-                touchAction: "auto",
+                // We drive touch dragging ourselves (with inertia), so the
+                // browser must not claim the gesture.
+                touchAction: "none",
                 overflowX: "auto",
                 overflowY: "auto",
                 overscrollBehavior: "contain",
-                WebkitOverflowScrolling: "touch",
                 ...style,
               }
             : style
