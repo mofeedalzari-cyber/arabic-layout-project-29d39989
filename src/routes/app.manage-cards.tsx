@@ -173,10 +173,27 @@ function ManageCardsPageInner() {
           r.sold_full_name = r.sold_to ? (nameMap.get(r.sold_to) ?? null) : null;
         });
       }
+      // اسم الزبون من سجل المبيعات
+      const cardIds = rows.map((r) => r.id);
+      if (cardIds.length) {
+        const { data: salesRows } = await supabase
+          .from("sales")
+          .select("card_id, buyer_name, customers(name)")
+          .in("card_id", cardIds);
+        const custMap = new Map<string, string>();
+        (salesRows ?? []).forEach((s: any) => {
+          const name = (s.customers?.name as string | null) || (s.buyer_name as string | null);
+          if (s.card_id && name) custMap.set(s.card_id, name);
+        });
+        rows.forEach((r) => {
+          r.customer_name = custMap.get(r.id) ?? null;
+        });
+      }
       return rows;
     },
     enabled: !!networkId,
   });
+
 
   const sortedCards = useMemo(() => {
     const src = cards ?? [];
