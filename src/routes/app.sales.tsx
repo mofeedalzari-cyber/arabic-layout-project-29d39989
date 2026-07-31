@@ -423,11 +423,12 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant relative mt-4 flex-1 min-h-0 w-full flex flex-col overflow-hidden border-0">
+      <Card className="card-elegant relative mt-4 w-full flex flex-col overflow-hidden border-0">
         <ScrollContainer
           ref={tableScrollRef}
-          dragTouch
-          className="flex-1 min-h-0 w-full [overscroll-behavior:contain] [&>div]:w-max [&>div]:min-w-full [&>div]:overflow-visible"
+          style={{ overflowY: "visible", touchAction: "pan-y pinch-zoom" }}
+          className="w-full [&>div]:w-max [&>div]:min-w-full [&>div]:overflow-visible"
+
         >
           <Table className="w-[1100px] min-w-[1100px] table-fixed">
             <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
