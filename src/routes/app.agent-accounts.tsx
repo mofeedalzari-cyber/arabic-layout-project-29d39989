@@ -40,6 +40,9 @@ function AgentAccountsPage() {
 function AgentAccountsPageInner() {
   const [networkId, setNetworkId] = useState<string>("all");
   const [agentId, setAgentId] = useState<string>("");
+  const [reconciling, setReconciling] = useState(false);
+  const qc = useQueryClient();
+
 
   const { data: networks } = useQuery({
     queryKey: ["aa-networks"],
