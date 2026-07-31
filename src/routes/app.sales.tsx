@@ -440,8 +440,7 @@ function SalesPage() {
             style={{
               overflowX: "auto",
               overflowY: "visible",
-              touchAction: "pan-x pan-y",
-              WebkitOverflowScrolling: "touch",
+              touchAction: "none",
             }}
             className="w-full [&>div]:w-max [&>div]:min-w-full [&>div]:overflow-visible"
           >
