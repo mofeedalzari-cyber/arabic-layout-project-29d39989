@@ -418,7 +418,7 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant relative mt-4 flex-1 min-h-0 w-full flex flex-col overflow-hidden border-0 mb-[calc(env(safe-area-inset-bottom)+5rem)]">
+      <Card className="card-elegant relative mt-4 flex-1 min-h-0 w-full flex flex-col overflow-hidden border-0">
         <ScrollContainer
           ref={tableScrollRef}
           dragTouch
