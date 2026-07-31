@@ -11,7 +11,7 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppLayout() {
-  const { user, loading, profile, role, signOut } = useAuth();
+  const { user, loading, profile, role, signOut, profileError, refresh } = useAuth();
   const navigate = useNavigate();
   useRequestNotifications();
 
@@ -28,6 +28,33 @@ function AppLayout() {
       </div>
     );
   }
+
+  // Signed in but the profile/role could not be fetched (flaky network, RLS).
+  // Show an explicit retry instead of an app shell with empty data everywhere.
+  if (!profile || !role) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center bg-background px-4" dir="rtl">
+        <div className="max-w-md text-center card-elegant p-8 fade-in">
+          <div className="mx-auto rounded-2xl bg-warning/15 p-3 w-fit mb-4">
+            <ShieldAlert className="h-8 w-8 text-warning" />
+          </div>
+          <h2 className="text-xl font-bold mb-2">تعذر تحميل بيانات الحساب</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            {profileError || "تحقّق من الاتصال بالإنترنت ثم أعد المحاولة."}
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button className="rounded-xl" onClick={() => void refresh()}>
+              إعادة المحاولة
+            </Button>
+            <Button variant="outline" className="rounded-xl" onClick={signOut}>
+              تسجيل الخروج
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   // Inactive agent gate
   if (role === "agent" && profile && !profile.is_active) {
