@@ -885,7 +885,7 @@ function ManageCardsPageInner() {
                 })}
                 {pageRows.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="p-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={10} className="p-10 text-center text-sm text-muted-foreground">
                       {isFetching ? "جارٍ التحميل..." : "لا توجد كروت مطابقة"}
                     </td>
                   </tr>
