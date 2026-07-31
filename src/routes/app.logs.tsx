@@ -129,7 +129,13 @@ function LogsPageInner() {
                 <span className="text-muted-foreground">
                   — {l.actor_username ? displayName(l.actor_username) : "نظام"}
                 </span>
+                {isDeletedSale(l) && (
+                  <span className="ms-2 align-middle rounded-md bg-destructive/15 text-destructive text-[10px] px-1.5 py-0.5">
+                    عملية محذوفة
+                  </span>
+                )}
               </div>
+
               {l.metadata && (
                 <div className="text-[11px] text-muted-foreground font-mono truncate">
                   {JSON.stringify(l.metadata)}
