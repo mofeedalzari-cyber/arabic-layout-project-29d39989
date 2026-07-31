@@ -229,7 +229,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             touchAction: "pan-y",
           }}
         >
-          <div className="mx-auto max-w-6xl fade-in">{children}</div>
+          <div className="mx-auto max-w-6xl fade-in h-full">{children}</div>
         </main>
 
         {/* Mobile bottom nav — يرتفع فوق أزرار النظام (Back / Home / Recents) */}
