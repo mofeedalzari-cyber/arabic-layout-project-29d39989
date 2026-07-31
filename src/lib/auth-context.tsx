@@ -183,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (user) await loadProfile(user.id);
       },
     }),
-    [user, session, profile, role, isSuperadmin, loading],
+    [user, session, profile, role, isSuperadmin, loading, profileError],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
