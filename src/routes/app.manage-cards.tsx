@@ -66,6 +66,7 @@ type CardRow = {
   created_at: string;
   assigned_at?: string | null;
   sold_at?: string | null;
+  customer_name?: string | null;
 };
 
 function mask(v: string | null | undefined) {
@@ -73,6 +74,15 @@ function mask(v: string | null | undefined) {
   if (v.length <= 6) return "•".repeat(Math.max(0, v.length));
   return `${v.slice(0, 3)}${"•".repeat(Math.max(4, v.length - 6))}${v.slice(-3)}`;
 }
+
+/** رقم نظامي ثابت (باركود) مشتق من معرّف الكرت — 12 رقم */
+function systemCode(id: string) {
+  const hex = id.replace(/[^0-9a-f]/gi, "").slice(-12);
+  let out = "";
+  for (const ch of hex) out += (parseInt(ch, 16) % 10).toString();
+  return out.padStart(12, "0");
+}
+
 
 function ManageCardsPage() {
   const { role, loading } = useAuth();
