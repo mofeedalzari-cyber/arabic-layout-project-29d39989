@@ -42,7 +42,7 @@ import {
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { displayPhone, fmtArabicDateTime } from "@/lib/format";
+import { displayPhone, fmtArabicDateTime, fmtMoney } from "@/lib/format";
 import { printAssignedCards } from "@/lib/card-print";
 
 export const Route = createFileRoute("/app/manage-cards")({ component: ManageCardsPage });
