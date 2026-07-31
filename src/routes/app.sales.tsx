@@ -176,9 +176,13 @@ function SalesPage() {
     (agentFilter !== "all" ? 1 : 0) +
     (statusFilter !== "all" ? 1 : 0);
 
+  // The page-level scroller (app shell content area) handles vertical scrolling
+  const getPageScroller = () =>
+    (tableScrollRef.current?.closest(".smooth-scroll") as HTMLElement | null) ?? null;
+
   // Auto-hide scroll buttons based on scrollability
   useLayoutEffect(() => {
-    const el = tableScrollRef.current;
+    const el = getPageScroller();
     if (!el) return;
     const check = () => setShowScrollBtns(el.scrollHeight > el.clientHeight + 8);
     check();
@@ -194,7 +198,7 @@ function SalesPage() {
   // Auto-scroll first result into view on search
   useEffect(() => {
     if (!q.trim()) return;
-    const el = tableScrollRef.current;
+    const el = getPageScroller();
     if (!el) return;
     el.scrollTo({ top: 0, behavior: "smooth" });
   }, [q]);
@@ -204,13 +208,14 @@ function SalesPage() {
   }
 
   function scrollSales(direction: "up" | "down") {
-    const target = tableScrollRef.current;
+    const target = getPageScroller();
     if (!target) return;
     target.scrollBy({
       top: direction === "down" ? target.clientHeight * 0.85 : -target.clientHeight * 0.85,
       behavior: "smooth",
     });
   }
+
 
   function resetFilters() {
     setQ("");
@@ -293,7 +298,7 @@ function SalesPage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col">
       <div className="shrink-0">
         <PageHeader
           title={isAdmin ? "جميع المبيعات" : "مبيعاتي"}
@@ -418,11 +423,12 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant relative mt-4 flex-1 min-h-0 w-full flex flex-col overflow-hidden border-0">
+      <Card className="card-elegant relative mt-4 w-full flex flex-col overflow-hidden border-0">
         <ScrollContainer
           ref={tableScrollRef}
-          dragTouch
-          className="flex-1 min-h-0 w-full [overscroll-behavior:contain] [&>div]:w-max [&>div]:min-w-full [&>div]:overflow-visible"
+          style={{ overflowY: "visible", touchAction: "auto" }}
+          className="w-full [&>div]:w-max [&>div]:min-w-full [&>div]:overflow-visible"
+
         >
           <Table className="w-[1100px] min-w-[1100px] table-fixed">
             <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
@@ -519,7 +525,7 @@ function SalesPage() {
           </Table>
         </ScrollContainer>
         {showScrollBtns && (
-          <div className="pointer-events-none absolute bottom-3 left-3 z-20 flex gap-1 md:hidden animate-in fade-in duration-200">
+          <div className="pointer-events-none fixed bottom-24 left-3 z-30 flex gap-1 md:hidden animate-in fade-in duration-200">
             <Button
               type="button"
               variant="secondary"
