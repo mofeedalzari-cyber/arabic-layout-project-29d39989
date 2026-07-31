@@ -760,6 +760,13 @@ export type Database = {
         }[]
       }
       admin_stats: { Args: never; Returns: Json }
+      admin_transfer_sold_cards: {
+        Args: { _ids: string[]; _to_agent: string }
+        Returns: {
+          amount: number
+          moved: number
+        }[]
+      }
       admin_unassign_cards: { Args: { _ids: string[] }; Returns: number }
       admin_update_request_payment: {
         Args: { _amount: number; _note: string; _payment_id: string }

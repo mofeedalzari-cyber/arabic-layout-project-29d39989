@@ -42,7 +42,7 @@ import {
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { displayPhone, fmtArabicDateTime } from "@/lib/format";
+import { displayPhone, fmtArabicDateTime, fmtMoney } from "@/lib/format";
 import { printAssignedCards } from "@/lib/card-print";
 
 export const Route = createFileRoute("/app/manage-cards")({ component: ManageCardsPage });
@@ -97,6 +97,8 @@ function ManageCardsPageInner() {
   const [extendedDelete, setExtendedDelete] = useState(false);
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<string>("created_desc");
+  const [transferTo, setTransferTo] = useState<string>("");
+
 
   const { data: networks } = useQuery({
     queryKey: ["networks-all"],
@@ -335,7 +337,36 @@ function ManageCardsPageInner() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const selectedSoldIds = (cards ?? [])
+    .filter((c) => c.status === "SOLD" && selected.has(c.id))
+    .map((c) => c.id);
+
+  const transferSold = useMutation({
+    mutationFn: async () => {
+      if (!transferTo) throw new Error("اختر المندوب المستلم أولاً");
+      if (!selectedSoldIds.length) throw new Error("حدّد كروتاً مباعة أولاً");
+      const { data, error } = await (supabase.rpc as any)("admin_transfer_sold_cards", {
+        _ids: selectedSoldIds,
+        _to_agent: transferTo,
+      });
+      if (error) throw error;
+      const r = Array.isArray(data) ? data[0] : data;
+      return { moved: r?.moved ?? 0, amount: Number(r?.amount ?? 0) };
+    },
+    onSuccess: (r) => {
+      toast.success(
+        r.moved
+          ? `تم نقل ${r.moved} كرت مباع وتحويل ${fmtMoney(r.amount)} إلى المندوب الجديد`
+          : "لا يوجد كروت قابلة للنقل",
+      );
+      setSelected(new Set());
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   function toggle(id: string) {
+
     setSelected((s) => {
       const n = new Set(s);
       if (n.has(id)) n.delete(id);
@@ -655,6 +686,48 @@ function ManageCardsPageInner() {
           >
             تحديد كل المباع
           </Button>
+          {selectedSoldIds.length > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border border-primary/40 p-1.5">
+              <span className="text-xs whitespace-nowrap">
+                نقل المباع ({selectedSoldIds.length}) إلى:
+              </span>
+              <Select value={transferTo} onValueChange={setTransferTo}>
+                <SelectTrigger className="rounded-lg h-8 w-40 text-xs">
+                  <SelectValue placeholder="اختر المندوب" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(agents ?? []).map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="rounded-lg h-8" disabled={!transferTo || transferSold.isPending}>
+                    نقل
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent dir="rtl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>نقل {selectedSoldIds.length} كرت مباع؟</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      سيتم نقل الكروت المباعة المحددة إلى المندوب المختار، وخصم مبلغها من حساب
+                      المندوب السابق وإضافته على حساب المندوب الجديد.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => transferSold.mutate()}>
+                      تأكيد النقل
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+
           <Button
             variant="outline"
             className="rounded-lg h-9 text-blue-600 border-blue-500/40"
