@@ -421,8 +421,10 @@ function SalesPage() {
       <Card className="card-elegant relative mt-4 flex-1 min-h-0 flex flex-col overflow-hidden border-0 mb-[calc(env(safe-area-inset-bottom)+5rem)]">
         <ScrollContainer
           ref={tableScrollRef}
-          className="flex-1 min-h-0 [overscroll-behavior-y:contain]"
+          dragTouch
+          className="flex-1 min-h-0 [overscroll-behavior:contain]"
         >
+
           <Table className="min-w-[900px]">
             <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
               <TableRow className="border-b-2">
