@@ -87,96 +87,31 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
       el.addEventListener("pointercancel", stop);
       el.addEventListener("pointerleave", stop);
 
-      // ---- Touch: manual drag confined to this container ----
-      let tStartX = 0;
-      let tStartY = 0;
-      let tScrollLeft = 0;
-      let tScrollTop = 0;
-      let tActive = false;
-      let lastY = 0;
-      let lastX = 0;
-      let lastT = 0;
-      let vy = 0;
-      let vx = 0;
-      let raf = 0;
-
-      const onTouchStart = (e: TouchEvent) => {
-        if (!dragTouch || e.touches.length !== 1) return;
-        if (raf) cancelAnimationFrame(raf), (raf = 0);
-        const t = e.touches[0];
-        tActive = true;
-        tStartX = lastX = t.clientX;
-        tStartY = lastY = t.clientY;
-        tScrollLeft = el.scrollLeft;
-        tScrollTop = el.scrollTop;
-        lastT = performance.now();
-        vx = vy = 0;
-      };
-
-      const onTouchMove = (e: TouchEvent) => {
-        if (!dragTouch || !tActive || e.touches.length !== 1) return;
-        const t = e.touches[0];
-        // Stop the page (and any ancestor) from scrolling.
-        if (e.cancelable) e.preventDefault();
-        el.scrollLeft = tScrollLeft - (t.clientX - tStartX);
-        el.scrollTop = tScrollTop - (t.clientY - tStartY);
-        const now = performance.now();
-        const dt = now - lastT;
-        if (dt > 0) {
-          vy = (t.clientY - lastY) / dt;
-          vx = (t.clientX - lastX) / dt;
-        }
-        lastT = now;
-        lastX = t.clientX;
-        lastY = t.clientY;
-      };
-
-      const onTouchEnd = () => {
-        if (!dragTouch || !tActive) return;
-        tActive = false;
-        // Light inertia
-        let velY = vy;
-        let velX = vx;
-        const step = () => {
-          velY *= 0.94;
-          velX *= 0.94;
-          if (Math.abs(velY) < 0.02 && Math.abs(velX) < 0.02) {
-            raf = 0;
-            return;
-          }
-          el.scrollTop -= velY * 16;
-          el.scrollLeft -= velX * 16;
-          raf = requestAnimationFrame(step);
-        };
-        raf = requestAnimationFrame(step);
-      };
-
-      if (dragTouch) {
-        el.addEventListener("touchstart", onTouchStart, { passive: true });
-        el.addEventListener("touchmove", onTouchMove, { passive: false });
-        el.addEventListener("touchend", onTouchEnd);
-        el.addEventListener("touchcancel", onTouchEnd);
-      }
-
       return () => {
         el.removeEventListener("pointerdown", onPointerDown);
         el.removeEventListener("pointermove", onPointerMove);
         el.removeEventListener("pointerup", stop);
         el.removeEventListener("pointercancel", stop);
         el.removeEventListener("pointerleave", stop);
-        el.removeEventListener("touchstart", onTouchStart);
-        el.removeEventListener("touchmove", onTouchMove);
-        el.removeEventListener("touchend", onTouchEnd);
-        el.removeEventListener("touchcancel", onTouchEnd);
-        if (raf) cancelAnimationFrame(raf);
       };
-    }, [dragTouch]);
+    }, []);
 
     return (
       <div
         ref={innerRef}
         className={cn("scroll-container", className)}
-        style={dragTouch ? { touchAction: "none", overscrollBehavior: "contain", ...style } : style}
+        style={
+          dragTouch
+            ? {
+                // Native touch scrolling (smooth momentum, no jitter), confined
+                // to this container so the page behind never moves.
+                touchAction: "pan-x pan-y",
+                overscrollBehavior: "contain",
+                WebkitOverflowScrolling: "touch",
+                ...style,
+              }
+            : style
+        }
         {...rest}
       >
         {children}
@@ -184,3 +119,4 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
     );
   },
 );
+
