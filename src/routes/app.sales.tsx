@@ -105,7 +105,7 @@ function SalesPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteCards, setDeleteCards] = useState(false);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
   const [showScrollBtns, setShowScrollBtns] = useState(false);
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
   const { display: displayName } = useUserNames();
@@ -200,7 +200,7 @@ function SalesPage() {
   }, [q]);
 
   function loadMore() {
-    setPageSize((prev) => prev + 25);
+    setPageSize((prev) => prev + 10);
   }
 
   function scrollSales(direction: "up" | "down") {
@@ -418,18 +418,17 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant relative mt-4 flex-1 min-h-0 flex flex-col overflow-hidden border-0 mb-[calc(env(safe-area-inset-bottom)+5rem)]">
+      <Card className="card-elegant relative mt-4 flex-1 min-h-0 w-full flex flex-col overflow-hidden border-0 mb-[calc(env(safe-area-inset-bottom)+5rem)]">
         <ScrollContainer
           ref={tableScrollRef}
           dragTouch
-          className="flex-1 min-h-0 [overscroll-behavior:contain] [&>div]:overflow-visible [&>div]:[touch-action:none]"
+          className="flex-1 min-h-0 w-full [overscroll-behavior:contain] [&>div]:w-max [&>div]:min-w-full [&>div]:overflow-visible [&>div]:[touch-action:none]"
         >
-
-          <Table className="min-w-[900px]">
+          <Table className="w-[1100px] min-w-[1100px] table-fixed">
             <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
               <TableRow className="border-b-2">
                 {isAdmin && (
-                  <TableHead className="w-10 bg-card sticky top-0" data-no-drag>
+                  <TableHead className="w-12 bg-card sticky top-0" data-no-drag>
                     <Checkbox
                       checked={allSelected}
                       onCheckedChange={toggleAll}
@@ -437,16 +436,16 @@ function SalesPage() {
                     />
                   </TableHead>
                 )}
-                <TableHead className="text-right bg-card sticky top-0">#</TableHead>
-                <TableHead className="text-right bg-card sticky top-0">رقم العملية</TableHead>
-                <TableHead className="text-right bg-card sticky top-0">الباقة</TableHead>
-                <TableHead className="text-right bg-card sticky top-0">الشبكة</TableHead>
-                <TableHead className="text-right bg-card sticky top-0">المندوب</TableHead>
-                <TableHead className="text-right bg-card sticky top-0">الزبون</TableHead>
-                <TableHead className="text-right bg-card sticky top-0">الكرت</TableHead>
-                <TableHead className="text-right bg-card sticky top-0">التاريخ</TableHead>
-                <TableHead className="text-right bg-card sticky top-0">السعر</TableHead>
-                <TableHead className="text-right bg-card sticky top-0">إجراء</TableHead>
+                <TableHead className="w-12 text-center bg-card sticky top-0">#</TableHead>
+                <TableHead className="w-44 text-right bg-card sticky top-0">رقم العملية</TableHead>
+                <TableHead className="w-28 text-right bg-card sticky top-0">الباقة</TableHead>
+                <TableHead className="w-28 text-right bg-card sticky top-0">الشبكة</TableHead>
+                <TableHead className="w-32 text-right bg-card sticky top-0">المندوب</TableHead>
+                <TableHead className="w-32 text-right bg-card sticky top-0">الزبون</TableHead>
+                <TableHead className="w-36 text-right bg-card sticky top-0">الكرت</TableHead>
+                <TableHead className="w-36 text-right bg-card sticky top-0">التاريخ</TableHead>
+                <TableHead className="w-24 text-right bg-card sticky top-0">السعر</TableHead>
+                <TableHead className="w-16 text-center bg-card sticky top-0">إجراء</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
