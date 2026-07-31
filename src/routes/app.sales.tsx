@@ -423,27 +423,21 @@ function SalesPage() {
       </div>
 
       <Card className="card-elegant relative mt-4 w-full flex flex-col overflow-hidden border-0">
-        {/* Vertical scroller (outer) — mirrors the horizontal one below.
-            Splitting the axes keeps both directions working on Android WebView. */}
+        {/* Single scroller for BOTH axes — native touch scrolling so Android
+            WebView (Capacitor) handles momentum itself without jitter. */}
         <ScrollContainer
           ref={tableScrollRef}
-          dragTouch
           style={{
-            overflowX: "hidden",
+            overflowX: "auto",
             overflowY: "auto",
+            touchAction: "auto",
             overscrollBehavior: "contain",
+            WebkitOverflowScrolling: "touch",
           }}
           className="w-full h-[62dvh] md:h-[68dvh]"
         >
-          {/* Horizontal scroller (inner) */}
-          <ScrollContainer
-            style={{
-              overflowX: "auto",
-              overflowY: "visible",
-              touchAction: "none",
-            }}
-            className="w-full [&>div]:w-max [&>div]:min-w-full [&>div]:overflow-visible"
-          >
+          <div className="w-max min-w-full pb-20">
+
           <Table className="w-[1100px] min-w-[1100px] table-fixed">
             <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
               <TableRow className="border-b-2">
@@ -537,7 +531,7 @@ function SalesPage() {
               )}
             </TableBody>
           </Table>
-          </ScrollContainer>
+          </div>
         </ScrollContainer>
         {showScrollBtns && (
           <div className="pointer-events-none absolute bottom-3 left-3 z-30 flex gap-1 md:hidden animate-in fade-in duration-200">
