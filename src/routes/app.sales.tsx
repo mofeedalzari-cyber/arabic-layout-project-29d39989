@@ -435,7 +435,10 @@ function SalesPage() {
           <div className="w-max min-w-full pb-20">
 
 
-          <Table className="w-[1100px] min-w-[1100px] table-fixed">
+          <Table
+            containerClassName="w-max overflow-visible touch-auto"
+            className="w-[1100px] min-w-[1100px] table-fixed"
+          >
             <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
               <TableRow className="border-b-2">
                 {isAdmin && (
