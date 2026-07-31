@@ -195,15 +195,12 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
         style={
           dragTouch
             ? {
-                // Native touch scrolling (smooth momentum, no jitter), confined
-                // to this container so the page behind never moves.
-                // `auto` (not "pan-x pan-y") — Android WebView ignores vertical
-                // panning when both axes are listed explicitly.
-                touchAction: "auto",
+                // We drive touch dragging ourselves (with inertia), so the
+                // browser must not claim the gesture.
+                touchAction: "none",
                 overflowX: "auto",
                 overflowY: "auto",
                 overscrollBehavior: "contain",
-                WebkitOverflowScrolling: "touch",
                 ...style,
               }
             : style
