@@ -298,7 +298,7 @@ function SalesPage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col">
       <div className="shrink-0">
         <PageHeader
           title={isAdmin ? "جميع المبيعات" : "مبيعاتي"}
@@ -426,7 +426,7 @@ function SalesPage() {
       <Card className="card-elegant relative mt-4 w-full flex flex-col overflow-hidden border-0">
         <ScrollContainer
           ref={tableScrollRef}
-          style={{ overflowY: "visible", touchAction: "pan-y pinch-zoom" }}
+          style={{ overflowY: "visible", touchAction: "auto" }}
           className="w-full [&>div]:w-max [&>div]:min-w-full [&>div]:overflow-visible"
 
         >
@@ -525,7 +525,7 @@ function SalesPage() {
           </Table>
         </ScrollContainer>
         {showScrollBtns && (
-          <div className="pointer-events-none absolute bottom-3 left-3 z-20 flex gap-1 md:hidden animate-in fade-in duration-200">
+          <div className="pointer-events-none fixed bottom-24 left-3 z-30 flex gap-1 md:hidden animate-in fade-in duration-200">
             <Button
               type="button"
               variant="secondary"
