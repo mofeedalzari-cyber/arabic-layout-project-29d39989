@@ -781,8 +781,10 @@ function ManageCardsPageInner() {
                     />
                   </th>
                   <th className="p-3 text-right w-10">#</th>
-                  <th className="p-3 text-right">الكود</th>
+                  <th className="p-3 text-right">الكود (باركود)</th>
                   <th className="p-3 text-right">اسم المستخدم</th>
+                  <th className="p-3 text-right">اسم الزبون</th>
+
                   <th className="p-3 text-right">الحالة</th>
                   <th className="p-3 text-right">المندوب</th>
                   <th className="p-3 text-right">تاريخ الإضافة</th>
