@@ -176,9 +176,13 @@ function SalesPage() {
     (agentFilter !== "all" ? 1 : 0) +
     (statusFilter !== "all" ? 1 : 0);
 
+  // The page-level scroller (app shell content area) handles vertical scrolling
+  const getPageScroller = () =>
+    (tableScrollRef.current?.closest(".smooth-scroll") as HTMLElement | null) ?? null;
+
   // Auto-hide scroll buttons based on scrollability
   useLayoutEffect(() => {
-    const el = tableScrollRef.current;
+    const el = getPageScroller();
     if (!el) return;
     const check = () => setShowScrollBtns(el.scrollHeight > el.clientHeight + 8);
     check();
@@ -194,7 +198,7 @@ function SalesPage() {
   // Auto-scroll first result into view on search
   useEffect(() => {
     if (!q.trim()) return;
-    const el = tableScrollRef.current;
+    const el = getPageScroller();
     if (!el) return;
     el.scrollTo({ top: 0, behavior: "smooth" });
   }, [q]);
@@ -204,13 +208,14 @@ function SalesPage() {
   }
 
   function scrollSales(direction: "up" | "down") {
-    const target = tableScrollRef.current;
+    const target = getPageScroller();
     if (!target) return;
     target.scrollBy({
       top: direction === "down" ? target.clientHeight * 0.85 : -target.clientHeight * 0.85,
       behavior: "smooth",
     });
   }
+
 
   function resetFilters() {
     setQ("");
