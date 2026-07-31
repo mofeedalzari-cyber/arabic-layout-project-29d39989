@@ -32,13 +32,34 @@ function LogsPageInner() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("logs")
-        .select("id, actor_username, action, entity, metadata, created_at")
+        .select("id, actor_username, action, entity, entity_id, metadata, created_at")
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
       return data;
     },
   });
+
+  // معرفات المبيعات الموجودة فعلياً — لتمييز سجلات بيع تم حذف عمليتها لاحقاً
+  const saleIds = (logs ?? [])
+    .filter((l) => l.action === "SELL_CARD" && l.entity === "sale" && l.entity_id)
+    .map((l) => l.entity_id as string);
+
+  const { data: existingSales } = useQuery({
+    queryKey: ["logs-sale-exists", saleIds],
+    enabled: saleIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("sales").select("id").in("id", saleIds);
+      if (error) throw error;
+      return new Set((data ?? []).map((s) => s.id));
+    },
+  });
+
+  const isDeletedSale = (l: { action: string; entity: string | null; entity_id: string | null }) =>
+    l.action === "SELL_CARD" &&
+    l.entity === "sale" &&
+    (!l.entity_id || (!!existingSales && !existingSales.has(l.entity_id)));
+
 
   const del = useMutation({
     mutationFn: async (ids: string[]) => {
@@ -108,7 +129,13 @@ function LogsPageInner() {
                 <span className="text-muted-foreground">
                   — {l.actor_username ? displayName(l.actor_username) : "نظام"}
                 </span>
+                {isDeletedSale(l) && (
+                  <span className="ms-2 align-middle rounded-md bg-destructive/15 text-destructive text-[10px] px-1.5 py-0.5">
+                    عملية محذوفة
+                  </span>
+                )}
               </div>
+
               {l.metadata && (
                 <div className="text-[11px] text-muted-foreground font-mono truncate">
                   {JSON.stringify(l.metadata)}
