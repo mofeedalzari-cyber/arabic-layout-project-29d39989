@@ -97,6 +97,8 @@ function ManageCardsPageInner() {
   const [extendedDelete, setExtendedDelete] = useState(false);
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<string>("created_desc");
+  const [transferTo, setTransferTo] = useState<string>("");
+
 
   const { data: networks } = useQuery({
     queryKey: ["networks-all"],
