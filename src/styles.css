@@ -254,9 +254,10 @@
   /* auto (not smooth) so the content follows the finger 1:1 and keeps
      native momentum/inertia on touch devices */
   scroll-behavior: auto;
+  /* ✅ السماح بالتمرير العمودي للصفحة والأفقي للجدول */
   touch-action: pan-x pan-y;
   overscroll-behavior-x: contain;
-  overscroll-behavior-y: auto;
+  overscroll-behavior-y: auto; /* ← مهم للسماح بتمرير الصفحة */
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
