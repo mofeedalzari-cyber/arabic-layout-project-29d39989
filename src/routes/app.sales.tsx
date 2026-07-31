@@ -530,7 +530,7 @@ function SalesPage() {
             </TableBody>
           </Table>
           </div>
-        </ScrollContainer>
+        </div>
         {showScrollBtns && (
           <div className="pointer-events-none absolute bottom-3 left-3 z-30 flex gap-1 md:hidden animate-in fade-in duration-200">
             <Button
