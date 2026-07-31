@@ -177,8 +177,7 @@ function SalesPage() {
     (statusFilter !== "all" ? 1 : 0);
 
   // The page-level scroller (app shell content area) handles vertical scrolling
-  const getPageScroller = () =>
-    (tableScrollRef.current?.closest(".smooth-scroll") as HTMLElement | null) ?? null;
+  const getPageScroller = () => tableScrollRef.current;
 
   // Auto-hide scroll buttons based on scrollability
   useLayoutEffect(() => {
@@ -426,8 +425,8 @@ function SalesPage() {
       <Card className="card-elegant relative mt-4 w-full flex flex-col overflow-hidden border-0">
         <ScrollContainer
           ref={tableScrollRef}
-          style={{ overflowY: "visible", touchAction: "auto" }}
-          className="w-full [&>div]:w-max [&>div]:min-w-full [&>div]:overflow-visible"
+          style={{ overflowX: "auto", overflowY: "auto", touchAction: "auto", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }}
+          className="w-full h-[62dvh] md:h-[68dvh] [&>div]:w-max [&>div]:min-w-full [&>div]:overflow-visible"
 
         >
           <Table className="w-[1100px] min-w-[1100px] table-fixed">
@@ -525,7 +524,7 @@ function SalesPage() {
           </Table>
         </ScrollContainer>
         {showScrollBtns && (
-          <div className="pointer-events-none fixed bottom-24 left-3 z-30 flex gap-1 md:hidden animate-in fade-in duration-200">
+          <div className="pointer-events-none absolute bottom-3 left-3 z-30 flex gap-1 md:hidden animate-in fade-in duration-200">
             <Button
               type="button"
               variant="secondary"
