@@ -152,6 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role,
       isSuperadmin,
       loading,
+      profileError,
+
 
       signOut: async () => {
         // Clear local state first so UI updates immediately
