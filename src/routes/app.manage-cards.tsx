@@ -827,8 +827,8 @@ function ManageCardsPageInner() {
                       <td className="p-3 text-muted-foreground">
                         {(currentPage - 1) * PAGE_SIZE + idx + 1}
                       </td>
-                      <td className="p-3 font-mono text-xs whitespace-nowrap">
-                        {isRevealed ? code : mask(code)}
+                      <td className="p-3 font-mono text-xs whitespace-nowrap tracking-widest">
+                        {barcode}
                       </td>
                       <td className="p-3">
                         <button
@@ -848,6 +848,10 @@ function ManageCardsPageInner() {
                           )}
                         </button>
                       </td>
+                      <td className="p-3 text-xs">
+                        {c.customer_name || <span className="text-muted-foreground">—</span>}
+                      </td>
+
                       <td className="p-3">
                         <StatusBadge status={c.status} />
                       </td>
