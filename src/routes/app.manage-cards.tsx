@@ -66,13 +66,18 @@ type CardRow = {
   created_at: string;
   assigned_at?: string | null;
   sold_at?: string | null;
+  customer_name?: string | null;
 };
 
-function mask(v: string | null | undefined) {
-  if (!v) return "—";
-  if (v.length <= 6) return "•".repeat(Math.max(0, v.length));
-  return `${v.slice(0, 3)}${"•".repeat(Math.max(4, v.length - 6))}${v.slice(-3)}`;
+
+/** رقم نظامي ثابت (باركود) مشتق من معرّف الكرت — 12 رقم */
+function systemCode(id: string) {
+  const hex = id.replace(/[^0-9a-f]/gi, "").slice(-12);
+  let out = "";
+  for (const ch of hex) out += (parseInt(ch, 16) % 10).toString();
+  return out.padStart(12, "0");
 }
+
 
 function ManageCardsPage() {
   const { role, loading } = useAuth();
@@ -163,10 +168,27 @@ function ManageCardsPageInner() {
           r.sold_full_name = r.sold_to ? (nameMap.get(r.sold_to) ?? null) : null;
         });
       }
+      // اسم الزبون من سجل المبيعات
+      const cardIds = rows.map((r) => r.id);
+      if (cardIds.length) {
+        const { data: salesRows } = await supabase
+          .from("sales")
+          .select("card_id, buyer_name, customers(name)")
+          .in("card_id", cardIds);
+        const custMap = new Map<string, string>();
+        (salesRows ?? []).forEach((s: any) => {
+          const name = (s.customers?.name as string | null) || (s.buyer_name as string | null);
+          if (s.card_id && name) custMap.set(s.card_id, name);
+        });
+        rows.forEach((r) => {
+          r.customer_name = custMap.get(r.id) ?? null;
+        });
+      }
       return rows;
     },
     enabled: !!networkId,
   });
+
 
   const sortedCards = useMemo(() => {
     const src = cards ?? [];
@@ -754,8 +776,10 @@ function ManageCardsPageInner() {
                     />
                   </th>
                   <th className="p-3 text-right w-10">#</th>
-                  <th className="p-3 text-right">الكود</th>
+                  <th className="p-3 text-right">الكود (باركود)</th>
                   <th className="p-3 text-right">اسم المستخدم</th>
+                  <th className="p-3 text-right">اسم الزبون</th>
+
                   <th className="p-3 text-right">الحالة</th>
                   <th className="p-3 text-right">المندوب</th>
                   <th className="p-3 text-right">تاريخ الإضافة</th>
@@ -772,7 +796,8 @@ function ManageCardsPageInner() {
                         ? c.sold_full_name || displayPhone(null, c.sold_username)
                         : null;
                   const isRevealed = revealed.has(c.id);
-                  const code = c.password ?? c.username;
+                  const barcode = systemCode(c.id);
+
                   return (
                     <tr
                       key={c.id}
@@ -797,8 +822,8 @@ function ManageCardsPageInner() {
                       <td className="p-3 text-muted-foreground">
                         {(currentPage - 1) * PAGE_SIZE + idx + 1}
                       </td>
-                      <td className="p-3 font-mono text-xs whitespace-nowrap">
-                        {isRevealed ? code : mask(code)}
+                      <td className="p-3 font-mono text-xs whitespace-nowrap tracking-widest">
+                        {barcode}
                       </td>
                       <td className="p-3">
                         <button
@@ -818,6 +843,10 @@ function ManageCardsPageInner() {
                           )}
                         </button>
                       </td>
+                      <td className="p-3 text-xs">
+                        {c.customer_name || <span className="text-muted-foreground">—</span>}
+                      </td>
+
                       <td className="p-3">
                         <StatusBadge status={c.status} />
                       </td>
@@ -851,7 +880,7 @@ function ManageCardsPageInner() {
                 })}
                 {pageRows.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="p-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={10} className="p-10 text-center text-sm text-muted-foreground">
                       {isFetching ? "جارٍ التحميل..." : "لا توجد كروت مطابقة"}
                     </td>
                   </tr>
