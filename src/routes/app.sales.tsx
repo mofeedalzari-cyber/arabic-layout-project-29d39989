@@ -105,7 +105,7 @@ function SalesPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteCards, setDeleteCards] = useState(false);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(-1);
   const [showScrollBtns, setShowScrollBtns] = useState(false);
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
   const { display: displayName } = useUserNames();
@@ -301,7 +301,7 @@ function SalesPage() {
       <div className="shrink-0">
         <PageHeader
           title={isAdmin ? "جميع المبيعات" : "مبيعاتي"}
-          description={`${filtered.length} عملية`}
+          description={`عرض ${displayedSales.length} من ${filtered.length} عملية`}
         />
         <div className="mb-4 flex justify-start">
           <RefreshButton />
