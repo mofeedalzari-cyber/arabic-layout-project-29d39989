@@ -427,12 +427,11 @@ function SalesPage() {
             Splitting the axes keeps both directions working on Android WebView. */}
         <ScrollContainer
           ref={tableScrollRef}
+          dragTouch
           style={{
             overflowX: "hidden",
             overflowY: "auto",
-            touchAction: "pan-y",
             overscrollBehavior: "contain",
-            WebkitOverflowScrolling: "touch",
           }}
           className="w-full h-[62dvh] md:h-[68dvh]"
         >
