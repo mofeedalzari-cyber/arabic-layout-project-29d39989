@@ -255,7 +255,8 @@
      native momentum/inertia on touch devices */
   scroll-behavior: auto;
   touch-action: pan-x pan-y;
-  overscroll-behavior: contain;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
