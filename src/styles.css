@@ -53,29 +53,29 @@
 }
 
 :root {
-  --radius: 0.75rem; /* 12px — أنعم وأصغر */
+  --radius: 0.75rem;
   --app-safe-top: env(safe-area-inset-top);
   --app-safe-bottom: env(safe-area-inset-bottom);
-  --background: oklch(0.985 0.005 220); /* #F8FAFC */
-  --foreground: oklch(0.18 0.03 250); /* #0F172A */
+  --background: oklch(0.985 0.005 220);
+  --foreground: oklch(0.18 0.03 250);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.18 0.03 250);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.03 250);
-  --primary: oklch(0.58 0.11 190); /* #009688 teal */
+  --primary: oklch(0.58 0.11 190);
   --primary-foreground: oklch(0.99 0 0);
-  --primary-glow: oklch(0.72 0.13 180); /* #14B8A6 */
+  --primary-glow: oklch(0.72 0.13 180);
   --secondary: oklch(0.96 0.015 200);
   --secondary-foreground: oklch(0.22 0.04 250);
   --muted: oklch(0.96 0.008 220);
   --muted-foreground: oklch(0.48 0.02 240);
   --accent: oklch(0.94 0.03 190);
   --accent-foreground: oklch(0.28 0.08 190);
-  --destructive: oklch(0.63 0.22 25); /* #EF4444 */
+  --destructive: oklch(0.63 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.68 0.17 145); /* #22C55E */
+  --success: oklch(0.68 0.17 145);
   --success-foreground: oklch(0.99 0 0);
-  --warning: oklch(0.77 0.15 70); /* #F59E0B */
+  --warning: oklch(0.77 0.15 70);
   --warning-foreground: oklch(0.2 0.03 60);
   --border: oklch(0.92 0.01 220);
   --input: oklch(0.94 0.01 220);
@@ -137,17 +137,16 @@
   }
   html {
     font-family: var(--font-sans);
-    font-size: 12px; /* base مضغوط */
+    font-size: 12px;
     background-color: var(--color-background);
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-size: 1rem; /* = 12px بسبب html */
+    font-size: 1rem;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
-    /* Safe area horizontal fallback (top/bottom يتم إدارتها بواسطة الهيدر والشريط السفلي) */
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
@@ -251,13 +250,10 @@
 
 @utility scroll-container {
   overflow: auto;
-  /* auto (not smooth) so the content follows the finger 1:1 and keeps
-     native momentum/inertia on touch devices */
   scroll-behavior: auto;
-  /* ✅ السماح بالتمرير العمودي للصفحة والأفقي للجدول */
   touch-action: pan-x pan-y;
   overscroll-behavior-x: contain;
-  overscroll-behavior-y: auto; /* ← مهم للسماح بتمرير الصفحة */
+  overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -331,7 +327,7 @@
   transform: translateZ(0);
 }
 
-/* Centered popup toast — رسالة منبثقة في وسط الشاشة تختفي سريعاً */
+/* Centered popup toast */
 .toaster.toaster-center {
   top: 50% !important;
   left: 50% !important;
