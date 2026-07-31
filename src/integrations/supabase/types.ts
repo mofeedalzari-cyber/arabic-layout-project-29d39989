@@ -842,6 +842,13 @@ export type Database = {
           sold: number
         }[]
       }
+      reconcile_agent_debts: {
+        Args: { _network_id?: string }
+        Returns: {
+          created: number
+          total_value: number
+        }[]
+      }
       record_external_sale: {
         Args: {
           _buyer_name: string
