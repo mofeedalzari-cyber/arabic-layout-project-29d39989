@@ -46,7 +46,6 @@ import { Search, Pencil, Trash2, ChevronUp, ChevronDown, X, Printer } from "luci
 import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
-import { ScrollContainer } from "@/components/scroll-container";
 import { RevealText } from "@/components/reveal-text";
 
 export const Route = createFileRoute("/app/sales")({ component: SalesPage });
@@ -297,7 +296,7 @@ function SalesPage() {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="shrink-0">
         <PageHeader
           title={isAdmin ? "جميع المبيعات" : "مبيعاتي"}
@@ -422,21 +421,19 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant relative mt-4 w-full flex flex-col overflow-hidden border-0">
-        {/* Single scroller for BOTH axes — native touch scrolling so Android
-            WebView (Capacitor) handles momentum itself without jitter. */}
-        <ScrollContainer
+      <Card className="card-elegant relative mt-4 flex w-full min-h-0 flex-1 flex-col overflow-hidden border-0">
+        {/* Plain scroll container: nothing wraps it that clips overflow, native
+            touch scrolling on both axes (works inside Android WebView). */}
+        <div
           ref={tableScrollRef}
+          className="sales-scroll min-h-0 w-full flex-1 overflow-x-auto overflow-y-auto overscroll-contain"
           style={{
-            overflowX: "auto",
-            overflowY: "auto",
-            touchAction: "auto",
-            overscrollBehavior: "contain",
             WebkitOverflowScrolling: "touch",
+            touchAction: "auto",
           }}
-          className="w-full h-[62dvh] md:h-[68dvh]"
         >
           <div className="w-max min-w-full pb-20">
+
 
           <Table className="w-[1100px] min-w-[1100px] table-fixed">
             <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
@@ -532,7 +529,7 @@ function SalesPage() {
             </TableBody>
           </Table>
           </div>
-        </ScrollContainer>
+        </div>
         {showScrollBtns && (
           <div className="pointer-events-none absolute bottom-3 left-3 z-30 flex gap-1 md:hidden animate-in fade-in duration-200">
             <Button
@@ -558,7 +555,7 @@ function SalesPage() {
           </div>
         )}
         {hasMore && (
-          <div className="border-t bg-muted/30 p-3 text-center">
+          <div className="shrink-0 border-t bg-muted/30 p-3 text-center">
             <Button variant="outline" size="sm" onClick={loadMore} className="gap-1 rounded-xl">
               عرض المزيد ({filtered.length - displayedSales.length} متبقي)
             </Button>
