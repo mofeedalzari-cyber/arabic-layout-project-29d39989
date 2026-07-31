@@ -293,17 +293,19 @@ function SalesPage() {
   }
 
   return (
-    <>
-      <PageHeader
-        title={isAdmin ? "جميع المبيعات" : "مبيعاتي"}
-        description={`${filtered.length} عملية`}
-      />
-      <div className="mb-4 flex justify-start">
-        <RefreshButton />
+    <div className="h-full flex flex-col">
+      <div className="shrink-0">
+        <PageHeader
+          title={isAdmin ? "جميع المبيعات" : "مبيعاتي"}
+          description={`${filtered.length} عملية`}
+        />
+        <div className="mb-4 flex justify-start">
+          <RefreshButton />
+        </div>
       </div>
 
       {/* Search + Bulk */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+      <div className="flex flex-wrap items-center gap-2 mb-3 shrink-0">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -349,7 +351,7 @@ function SalesPage() {
       </div>
 
       {/* Quick filters */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-0 shrink-0">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
           <SelectTrigger className="w-[140px] rounded-xl">
             <SelectValue placeholder="الحالة" />
@@ -416,7 +418,7 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant relative mb-[calc(env(safe-area-inset-bottom)+5rem)] flex flex-col overflow-hidden border-0">
+      <Card className="card-elegant relative mt-4 flex-1 min-h-0 flex flex-col overflow-hidden border-0 mb-[calc(env(safe-area-inset-bottom)+5rem)]">
         <ScrollContainer
           ref={tableScrollRef}
           className="pb-4"
