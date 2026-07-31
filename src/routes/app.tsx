@@ -43,9 +43,10 @@ function AppLayout() {
             {profileError || "تحقّق من الاتصال بالإنترنت ثم أعد المحاولة."}
           </p>
           <div className="flex gap-2 justify-center">
-            <Button className="rounded-xl" onClick={() => void refresh()}>
+            <Button className="rounded-xl" onClick={() => void refresh().catch(() => {})}>
               إعادة المحاولة
             </Button>
+
             <Button variant="outline" className="rounded-xl" onClick={signOut}>
               تسجيل الخروج
             </Button>
