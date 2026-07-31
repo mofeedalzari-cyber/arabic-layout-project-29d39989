@@ -686,6 +686,48 @@ function ManageCardsPageInner() {
           >
             تحديد كل المباع
           </Button>
+          {selectedSoldIds.length > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border border-primary/40 p-1.5">
+              <span className="text-xs whitespace-nowrap">
+                نقل المباع ({selectedSoldIds.length}) إلى:
+              </span>
+              <Select value={transferTo} onValueChange={setTransferTo}>
+                <SelectTrigger className="rounded-lg h-8 w-40 text-xs">
+                  <SelectValue placeholder="اختر المندوب" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(agents ?? []).map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="rounded-lg h-8" disabled={!transferTo || transferSold.isPending}>
+                    نقل
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent dir="rtl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>نقل {selectedSoldIds.length} كرت مباع؟</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      سيتم نقل الكروت المباعة المحددة إلى المندوب المختار، وخصم مبلغها من حساب
+                      المندوب السابق وإضافته على حساب المندوب الجديد.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => transferSold.mutate()}>
+                      تأكيد النقل
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+
           <Button
             variant="outline"
             className="rounded-lg h-9 text-blue-600 border-blue-500/40"
