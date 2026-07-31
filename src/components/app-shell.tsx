@@ -77,6 +77,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const loc = useLocation();
+  const isSalesPage = loc.pathname === "/app/sales";
 
   useEffect(() => {
     const saved = localStorage.getItem("theme") === "dark";
@@ -221,12 +222,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <main
-          className="flex-1 min-h-0 p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden overflow-y-auto smooth-scroll"
+          className={cn(
+            "flex-1 min-h-0 p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden overflow-y-auto",
+            !isSalesPage && "smooth-scroll",
+          )}
           style={{
             paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
             paddingRight: "max(0.75rem, env(safe-area-inset-right))",
             paddingBottom: "calc(7rem + var(--app-safe-bottom, env(safe-area-inset-bottom)))",
-            touchAction: "pan-y",
+            touchAction: isSalesPage ? "auto" : "pan-y",
           }}
         >
           <div className="mx-auto max-w-6xl fade-in h-full">{children}</div>

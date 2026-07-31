@@ -2,11 +2,14 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
+type TableProps = React.HTMLAttributes<HTMLTableElement> & {
+  containerClassName?: string;
+};
+
+const Table = React.forwardRef<HTMLTableElement, TableProps>(
+  ({ className, containerClassName, ...props }, ref) => (
     <div
-      className="relative w-full h-scroll"
-      style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+      className={cn("relative w-full h-scroll", containerClassName)}
     >
       <table
         ref={ref}
