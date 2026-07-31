@@ -1,6 +1,7 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
 import { RefreshButton } from "@/components/refresh-button";
@@ -269,7 +270,7 @@ function AgentAccountsPageInner() {
             setReconciling(true);
             try {
               const { data, error } = await supabase.rpc("reconcile_agent_debts", {
-                _network_id: networkId === "all" ? null : networkId,
+                _network_id: networkId === "all" ? undefined : networkId,
               });
               if (error) throw error;
               const row = Array.isArray(data) ? (data[0] as any) : (data as any);
