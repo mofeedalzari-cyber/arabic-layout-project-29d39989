@@ -143,12 +143,13 @@ function AdminBreakdowns() {
   });
   const { data: sales } = useQuery({
     queryKey: ["dash-sales-all"],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("sales")
-          .select("agent_id, agent_username, package_id, network_id, price")
-      ).data ?? [],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("sales")
+        .select("agent_id, agent_username, package_id, network_id, price, card_id, is_external");
+      // الإحصائيات خاصة بالكروت المباعة من داخل التطبيق فقط
+      return (data ?? []).filter((s: any) => !s.is_external && s.card_id);
+    },
   });
   const { data: paymentsCollected } = useQuery({
     queryKey: ["dash-payments-collected"],
