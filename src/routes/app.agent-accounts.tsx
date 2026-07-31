@@ -1,6 +1,7 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
 import { RefreshButton } from "@/components/refresh-button";
@@ -40,6 +41,9 @@ function AgentAccountsPage() {
 function AgentAccountsPageInner() {
   const [networkId, setNetworkId] = useState<string>("all");
   const [agentId, setAgentId] = useState<string>("");
+  const [reconciling, setReconciling] = useState(false);
+  const qc = useQueryClient();
+
 
   const { data: networks } = useQuery({
     queryKey: ["aa-networks"],
@@ -255,9 +259,42 @@ function AgentAccountsPageInner() {
         title="حسابات المناديب"
         description="عرض تفصيلي لحساب كل مندوب حسب الشبكة والفئة"
       />
-      <div className="mb-4 flex justify-start">
+      <div className="mb-4 flex justify-start gap-2">
         <RefreshButton />
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-xl gap-1.5"
+          disabled={reconciling}
+          onClick={async () => {
+            setReconciling(true);
+            try {
+              const { data, error } = await supabase.rpc("reconcile_agent_debts", {
+                _network_id: networkId === "all" ? undefined : networkId,
+              });
+              if (error) throw error;
+              const row = Array.isArray(data) ? (data[0] as any) : (data as any);
+              const created = Number(row?.created ?? 0);
+              if (created > 0) {
+                toast.success(
+                  `تمت تسوية ${created} سجل مديونية بقيمة ${fmtMoney(Number(row?.total_value ?? 0))}`,
+                );
+              } else {
+                toast.success("لا توجد كروت بدون مديونية — الحسابات مطابقة");
+              }
+              await qc.invalidateQueries();
+            } catch (e: any) {
+              toast.error(e?.message || "تعذر تنفيذ التسوية");
+            } finally {
+              setReconciling(false);
+            }
+          }}
+        >
+          <HandCoins className="h-4 w-4" />
+          {reconciling ? "جارٍ التسوية…" : "تسوية الديون"}
+        </Button>
       </div>
+
 
       <div className="grid sm:grid-cols-2 gap-3 mb-4">
         <div>
