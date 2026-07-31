@@ -69,11 +69,6 @@ type CardRow = {
   customer_name?: string | null;
 };
 
-function mask(v: string | null | undefined) {
-  if (!v) return "—";
-  if (v.length <= 6) return "•".repeat(Math.max(0, v.length));
-  return `${v.slice(0, 3)}${"•".repeat(Math.max(4, v.length - 6))}${v.slice(-3)}`;
-}
 
 /** رقم نظامي ثابت (باركود) مشتق من معرّف الكرت — 12 رقم */
 function systemCode(id: string) {
