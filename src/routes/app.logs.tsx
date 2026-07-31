@@ -32,13 +32,34 @@ function LogsPageInner() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("logs")
-        .select("id, actor_username, action, entity, metadata, created_at")
+        .select("id, actor_username, action, entity, entity_id, metadata, created_at")
         .order("created_at", { ascending: false })
         .limit(200);
       if (error) throw error;
       return data;
     },
   });
+
+  // معرفات المبيعات الموجودة فعلياً — لتمييز سجلات بيع تم حذف عمليتها لاحقاً
+  const saleIds = (logs ?? [])
+    .filter((l) => l.action === "SELL_CARD" && l.entity === "sale" && l.entity_id)
+    .map((l) => l.entity_id as string);
+
+  const { data: existingSales } = useQuery({
+    queryKey: ["logs-sale-exists", saleIds],
+    enabled: saleIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("sales").select("id").in("id", saleIds);
+      if (error) throw error;
+      return new Set((data ?? []).map((s) => s.id));
+    },
+  });
+
+  const isDeletedSale = (l: { action: string; entity: string | null; entity_id: string | null }) =>
+    l.action === "SELL_CARD" &&
+    l.entity === "sale" &&
+    (!l.entity_id || (!!existingSales && !existingSales.has(l.entity_id)));
+
 
   const del = useMutation({
     mutationFn: async (ids: string[]) => {
