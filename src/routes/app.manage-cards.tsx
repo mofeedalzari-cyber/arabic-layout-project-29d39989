@@ -801,7 +801,8 @@ function ManageCardsPageInner() {
                         ? c.sold_full_name || displayPhone(null, c.sold_username)
                         : null;
                   const isRevealed = revealed.has(c.id);
-                  const code = c.password ?? c.username;
+                  const barcode = systemCode(c.id);
+
                   return (
                     <tr
                       key={c.id}
