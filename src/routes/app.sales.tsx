@@ -46,7 +46,6 @@ import { Search, Pencil, Trash2, ChevronUp, ChevronDown, X, Printer } from "luci
 import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf } from "@/lib/format";
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
-import { ScrollContainer } from "@/components/scroll-container";
 import { RevealText } from "@/components/reveal-text";
 
 export const Route = createFileRoute("/app/sales")({ component: SalesPage });
