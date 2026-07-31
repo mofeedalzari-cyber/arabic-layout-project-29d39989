@@ -555,7 +555,7 @@ function SalesPage() {
           </div>
         )}
         {hasMore && (
-          <div className="border-t bg-muted/30 p-3 text-center">
+          <div className="shrink-0 border-t bg-muted/30 p-3 text-center">
             <Button variant="outline" size="sm" onClick={loadMore} className="gap-1 rounded-xl">
               عرض المزيد ({filtered.length - displayedSales.length} متبقي)
             </Button>
