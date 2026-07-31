@@ -422,21 +422,19 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant relative mt-4 w-full flex flex-col overflow-hidden border-0">
-        {/* Single scroller for BOTH axes — native touch scrolling so Android
-            WebView (Capacitor) handles momentum itself without jitter. */}
-        <ScrollContainer
+      <Card className="card-elegant relative mt-4 flex w-full min-h-0 flex-1 flex-col overflow-hidden border-0">
+        {/* Plain scroll container: nothing wraps it that clips overflow, native
+            touch scrolling on both axes (works inside Android WebView). */}
+        <div
           ref={tableScrollRef}
+          className="sales-scroll min-h-0 w-full flex-1 overflow-x-auto overflow-y-auto overscroll-contain"
           style={{
-            overflowX: "auto",
-            overflowY: "auto",
-            touchAction: "auto",
-            overscrollBehavior: "contain",
             WebkitOverflowScrolling: "touch",
+            touchAction: "auto",
           }}
-          className="w-full h-[62dvh] md:h-[68dvh]"
         >
           <div className="w-max min-w-full pb-20">
+
 
           <Table className="w-[1100px] min-w-[1100px] table-fixed">
             <TableHeader className="sticky top-0 z-20 bg-card shadow-sm">
