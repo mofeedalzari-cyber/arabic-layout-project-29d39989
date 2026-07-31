@@ -38,9 +38,8 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
       };
 
       const onPointerDown = (e: PointerEvent) => {
-        // Only left mouse / pen; touch keeps native momentum scroll
-        if (e.pointerType === "touch") return;
-        if (e.button !== 0) return;
+        // السماح باللمس (touch) مع الاحتفاظ بالتمرير العمودي للصفحة
+        if (e.button !== 0 && e.pointerType !== "touch") return;
         if (isInteractive(e.target)) return;
         isDown = true;
         dragging = false;
@@ -63,7 +62,8 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
         e.preventDefault();
         // RTL-aware: scrollLeft direction already handled by browser
         el.scrollLeft = scrollLeft - dx;
-        el.scrollTop = scrollTop - dy;
+        // ❌ لا نغير scrollTop ليظل التمرير العمودي للصفحة
+        // el.scrollTop = scrollTop - dy;
       };
 
       const stop = (e: PointerEvent) => {
