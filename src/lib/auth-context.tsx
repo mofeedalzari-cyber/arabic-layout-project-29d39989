@@ -20,6 +20,7 @@ interface AuthContextValue {
   role: Role | null;
   isSuperadmin: boolean;
   loading: boolean;
+  profileError: string | null;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -40,9 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<Role | null>(null);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
-  const loadProfile = async (uid: string) => {
-    const [{ data: prof }, { data: roles }] = await Promise.all([
+  const loadProfileOnce = async (uid: string) => {
+    const [{ data: prof, error: profErr }, { data: roles, error: rolesErr }] = await Promise.all([
       supabase
         .from("profiles")
         .select("id, username, full_name, phone, is_active, network_id")
@@ -50,6 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", uid),
     ]);
+    if (profErr) throw profErr;
+    if (rolesErr) throw rolesErr;
     setProfile(prof as Profile | null);
     const has = (name: string) => !!roles?.find((x) => x.role === name);
     setIsSuperadmin(has("superadmin"));
@@ -63,7 +67,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ? "superadmin"
           : null;
     setRole((r as Role | null) ?? null);
+    setProfileError(null);
   };
+
+  // Retries transient failures (flaky mobile networks / cold start) instead of
+  // silently leaving profile=null, which used to render an endless "loading" UI.
+  const loadProfile = async (uid: string, attempts = 3) => {
+    let lastErr: unknown = null;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        await loadProfileOnce(uid);
+        return;
+      } catch (e) {
+        lastErr = e;
+        await new Promise((r) => setTimeout(r, 800 * 2 ** i));
+      }
+    }
+    setProfileError(
+      (lastErr as any)?.message ? String((lastErr as any).message) : "تعذر تحميل بيانات الحساب",
+    );
+    throw lastErr;
+  };
+
 
   useEffect(() => {
     let mounted = true;
@@ -127,6 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role,
       isSuperadmin,
       loading,
+      profileError,
+
 
       signOut: async () => {
         // Clear local state first so UI updates immediately
@@ -156,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (user) await loadProfile(user.id);
       },
     }),
-    [user, session, profile, role, isSuperadmin, loading],
+    [user, session, profile, role, isSuperadmin, loading, profileError],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
