@@ -2,14 +2,8 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, type HTMLAttributes
 import { cn } from "@/lib/utils";
 
 /**
- * ScrollContainer — smooth 2D scroll container with hidden scrollbars and
- * drag-to-scroll on both pointer (desktop) and touch (mobile momentum) devices.
- *
- * - Hides native scrollbars in all browsers.
- * - Vertical + horizontal + diagonal scroll.
- * - Drag from anywhere; clicks on buttons/inputs still work (drag activates
- *   only after a small movement threshold).
- * - Preserves native touch momentum scrolling on iOS/Android.
+ * ScrollContainer — horizontal scroll only container with hidden scrollbars.
+ * Vertical scroll passes through to the page/parent container.
  */
 export interface ScrollContainerProps extends HTMLAttributes<HTMLDivElement> {}
 
@@ -23,12 +17,9 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
       if (!el) return;
 
       let isDown = false;
-      let dragging = false;
       let startX = 0;
-      let startY = 0;
       let scrollLeft = 0;
-      let scrollTop = 0;
-      const THRESHOLD = 6; // px before we treat as drag
+      let startY = 0;
 
       const isInteractive = (t: EventTarget | null) => {
         const n = t as HTMLElement | null;
@@ -38,56 +29,60 @@ export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
       };
 
       const onPointerDown = (e: PointerEvent) => {
-        // السماح باللمس (touch) مع الاحتفاظ بالتمرير العمودي للصفحة
-        if (e.button !== 0 && e.pointerType !== "touch") return;
         if (isInteractive(e.target)) return;
+        
         isDown = true;
-        dragging = false;
         startX = e.clientX;
         startY = e.clientY;
         scrollLeft = el.scrollLeft;
-        scrollTop = el.scrollTop;
+        el.setPointerCapture?.(e.pointerId);
       };
 
       const onPointerMove = (e: PointerEvent) => {
         if (!isDown) return;
+        
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        if (!dragging && Math.hypot(dx, dy) < THRESHOLD) return;
-        if (!dragging) {
-          dragging = true;
-          el.setPointerCapture?.(e.pointerId);
-          el.classList.add("is-dragging");
+        
+        // إذا كانت الحركة صغيرة جداً، نتجاهلها
+        if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+        
+        // إذا كانت الحركة عمودية (فوق/تحت) أكثر من الأفقية
+        if (Math.abs(dy) > Math.abs(dx)) {
+          // نحرر القبضة للسماح للصفحة بالتمرير العمودي
+          if (isDown) {
+            try {
+              el.releasePointerCapture?.(e.pointerId);
+            } catch {}
+            isDown = false;
+          }
+          return;
         }
+        
+        // حركة أفقية - نمرر الجدول يمين/يسار
         e.preventDefault();
-        // RTL-aware: scrollLeft direction already handled by browser
         el.scrollLeft = scrollLeft - dx;
-        // ❌ لا نغير scrollTop ليظل التمرير العمودي للصفحة
-        // el.scrollTop = scrollTop - dy;
       };
 
-      const stop = (e: PointerEvent) => {
-        if (dragging) {
+      const onPointerUp = (e: PointerEvent) => {
+        if (isDown) {
           try {
             el.releasePointerCapture?.(e.pointerId);
           } catch {}
         }
         isDown = false;
-        dragging = false;
-        el.classList.remove("is-dragging");
       };
 
       el.addEventListener("pointerdown", onPointerDown);
       el.addEventListener("pointermove", onPointerMove);
-      el.addEventListener("pointerup", stop);
-      el.addEventListener("pointercancel", stop);
-      el.addEventListener("pointerleave", stop);
+      el.addEventListener("pointerup", onPointerUp);
+      el.addEventListener("pointercancel", onPointerUp);
+      
       return () => {
         el.removeEventListener("pointerdown", onPointerDown);
         el.removeEventListener("pointermove", onPointerMove);
-        el.removeEventListener("pointerup", stop);
-        el.removeEventListener("pointercancel", stop);
-        el.removeEventListener("pointerleave", stop);
+        el.removeEventListener("pointerup", onPointerUp);
+        el.removeEventListener("pointercancel", onPointerUp);
       };
     }, []);
 
