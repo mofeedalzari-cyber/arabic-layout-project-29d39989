@@ -422,7 +422,7 @@ function SalesPage() {
         <ScrollContainer
           ref={tableScrollRef}
           dragTouch
-          className="flex-1 min-h-0 [overscroll-behavior:contain]"
+          className="flex-1 min-h-0 [overscroll-behavior:contain] [&>div]:overflow-visible [&>div]:[touch-action:none]"
         >
 
           <Table className="min-w-[900px]">
