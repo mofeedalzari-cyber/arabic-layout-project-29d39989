@@ -217,7 +217,7 @@ function CardsPageInner() {
         <RefreshButton />
       </div>
 
-      <Card className="card-elegant border-0 p-5 max-w-3xl">
+      <Card className="card-elegant border-0 p-5 max-w-3xl mb-28 md:mb-6">
         <div className="grid md:grid-cols-2 gap-3 mb-4">
           <div>
             <Label className="text-xs mb-1.5 block">الشبكة</Label>
