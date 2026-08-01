@@ -78,6 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const loc = useLocation();
   const isSalesPage = loc.pathname === "/app/sales";
+  const isCardsPage = loc.pathname === "/app/cards";
 
   useEffect(() => {
     const saved = localStorage.getItem("theme") === "dark";
@@ -224,7 +225,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main
           className={cn(
             "flex-1 min-h-0 p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden overflow-y-auto",
-            !isSalesPage && "smooth-scroll",
+            !isSalesPage && !isCardsPage && "smooth-scroll",
           )}
           style={{
             paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
@@ -233,7 +234,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             touchAction: isSalesPage ? "auto" : "pan-y",
           }}
         >
-          <div className="mx-auto max-w-6xl fade-in h-full">{children}</div>
+          <div className="mx-auto min-h-full max-w-6xl fade-in">{children}</div>
         </main>
 
         {/* Mobile bottom nav — يرتفع فوق أزرار النظام (Back / Home / Recents) */}
