@@ -222,7 +222,49 @@ function SuperAdminPageInner() {
         </TabsList>
 
         <TabsContent value="networks" className="mt-3 space-y-3">
-          <Card className="overflow-hidden">
+          {/* بطاقات الشبكات — عرض مناسب للجوال */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            {(networks.data ?? []).map((n: any) => (
+              <Card key={n.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="font-bold truncate">{n.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      المالك: {cleanPhoneLike(n.owner_username) || "—"}
+                    </div>
+                    <div className="text-xs text-muted-foreground" dir="ltr">
+                      {displayPhone(n.owner_phone, n.owner_username)}
+                    </div>
+                  </div>
+                  {n.is_active ? (
+                    <Badge>نشطة</Badge>
+                  ) : (
+                    <Badge variant="secondary">موقوفة</Badge>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <MiniStat label="مناديب" value={n.agents_count ?? 0} />
+                  <MiniStat label="باقات" value={n.packages_count ?? 0} />
+                  <MiniStat label="كروت" value={n.cards_count ?? 0} />
+                  <MiniStat label="مباع" value={n.sold_count ?? 0} />
+                </div>
+                <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
+                  <div className="text-[11px] text-muted-foreground">قيمة المبيعات</div>
+                  <div className="font-bold">{fmtMoney(Number(n.sold_value ?? 0))}</div>
+                </div>
+                <Button className="w-full" onClick={() => setDetailNetId(n.id)}>
+                  <BarChart3 className="h-4 w-4 ml-1" />
+                  تفاصيل وإحصائيات الشبكة
+                </Button>
+              </Card>
+            ))}
+            {networks.data?.length === 0 && (
+              <Card className="p-8 text-center text-muted-foreground">لا توجد شبكات</Card>
+            )}
+          </div>
+
+          <Card className="overflow-hidden hidden lg:block">
+
             <div className="overflow-x-auto">
               <table dir="rtl" className="w-full text-sm border-collapse border">
                 <thead className="bg-muted/50">
