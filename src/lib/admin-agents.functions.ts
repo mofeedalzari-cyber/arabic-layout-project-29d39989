@@ -115,7 +115,19 @@ export const adminUpdateAgent = createServerFn({ method: "POST" })
       if (upErr) throw new Error(`تعذّر حفظ بيانات الملف الشخصي: ${upErr.message}`);
     }
 
+    // Keep historical username snapshots in sync so old rows don't show the
+    // stale phone digits instead of the agent's name.
+    if (newUsername && newUsername !== prof.username) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      for (const table of ["sales", "card_requests", "join_requests"] as const) {
+        await (supabaseAdmin.from(table) as any)
+          .update({ agent_username: newUsername })
+          .eq("agent_id", agentId);
+      }
+    }
+
     return { ok: true };
+
   });
 
 /**
