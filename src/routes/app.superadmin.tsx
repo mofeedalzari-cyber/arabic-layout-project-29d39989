@@ -1218,3 +1218,257 @@ function NetworkDetail({
     </div>
   );
 }
+
+/** تعديل بيانات الشبكة (الاسم والعملة) */
+function EditNetworkButton({ network }: { network: any }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(network.name ?? "");
+  const [currency, setCurrency] = useState(network.currency ?? "");
+  const m = useMutation({
+    mutationFn: async () => {
+      if (!name.trim()) throw new Error("اسم الشبكة مطلوب");
+      const { error } = await (supabase.rpc as any)("superadmin_update_network", {
+        _network_id: network.id,
+        _name: name.trim(),
+        _currency: currency.trim() || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تعديل بيانات الشبكة");
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["sa-networks"] });
+    },
+    onError: (e: any) =>
+      toast.error(e?.message === "NETWORK_NAME_TAKEN" ? "اسم الشبكة مستخدم" : (e?.message ?? "فشل")),
+  });
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) {
+          setName(network.name ?? "");
+          setCurrency(network.currency ?? "");
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Pencil className="h-4 w-4 ml-1" />
+          تعديل الشبكة
+        </Button>
+      </DialogTrigger>
+      <DialogContent dir="rtl" className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>تعديل بيانات الشبكة</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>اسم الشبكة</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <Label>العملة</Label>
+            <Input
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              placeholder="SAR"
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            إلغاء
+          </Button>
+          <Button disabled={m.isPending} onClick={() => m.mutate()}>
+            حفظ
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** إجراءات الشبكة: توقيف/تفعيل + حذف نهائي */
+function NetworkActions({ network, onDeleted }: { network: any; onDeleted?: () => void }) {
+  const qc = useQueryClient();
+  const invalidateAll = () => {
+    ["sa-networks", "sa-stats", "sa-agents", "sa-packages", "sa-cards"].forEach((k) =>
+      qc.invalidateQueries({ queryKey: [k] }),
+    );
+  };
+  const toggle = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("superadmin_set_network_active", {
+        _network_id: network.id,
+        _active: !network.is_active,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(network.is_active ? "تم إيقاف الشبكة" : "تم تفعيل الشبكة");
+      invalidateAll();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل"),
+  });
+  const del = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.rpc as any)("superadmin_delete_network", {
+        _network_id: network.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف الشبكة بالكامل");
+      invalidateAll();
+      onDeleted?.();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل الحذف"),
+  });
+
+  return (
+    <>
+      <Button
+        size="sm"
+        variant={network.is_active ? "secondary" : "default"}
+        disabled={toggle.isPending}
+        onClick={() => {
+          const msg = network.is_active
+            ? `إيقاف شبكة "${network.name}"؟ لن يتمكن مستخدموها من الدخول.`
+            : `إعادة تفعيل شبكة "${network.name}"؟`;
+          if (window.confirm(msg)) toggle.mutate();
+        }}
+      >
+        {network.is_active ? (
+          <>
+            <PowerOff className="h-4 w-4 ml-1" />
+            إيقاف
+          </>
+        ) : (
+          <>
+            <Power className="h-4 w-4 ml-1" />
+            تفعيل
+          </>
+        )}
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button size="sm" variant="destructive" disabled={del.isPending}>
+            <Trash2 className="h-4 w-4 ml-1" />
+            حذف
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف نهائي لشبكة "{network.name}"؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف جميع المناديب والباقات والكروت والطلبات والمبيعات المرتبطة بها. لا يمكن
+              التراجع.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => del.mutate()}
+            >
+              نعم، حذف نهائي
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+/** إجراءات المندوب: توقيف/تفعيل + حذف نهائي */
+function AgentActions({ agent }: { agent: any }) {
+  const qc = useQueryClient();
+  const invalidateAll = () => {
+    ["sa-agents", "sa-networks", "sa-stats", "sa-cards"].forEach((k) =>
+      qc.invalidateQueries({ queryKey: [k] }),
+    );
+    qc.invalidateQueries({ queryKey: ["sa-net-cards"] });
+  };
+  const name = agent.full_name || cleanPhoneLike(agent.username) || "المندوب";
+  const toggle = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.rpc as any)("superadmin_set_agent_active", {
+        _agent_id: agent.id,
+        _active: !agent.is_active,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(agent.is_active ? "تم إيقاف المستخدم" : "تم تفعيل المستخدم");
+      invalidateAll();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل"),
+  });
+  const del = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.rpc as any)("superadmin_delete_agent", {
+        _agent_id: agent.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف المستخدم نهائيًا");
+      invalidateAll();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل الحذف"),
+  });
+
+  return (
+    <div className="flex gap-1 flex-wrap">
+      <Button
+        size="sm"
+        variant={agent.is_active ? "secondary" : "default"}
+        disabled={toggle.isPending}
+        onClick={() => {
+          const msg = agent.is_active ? `إيقاف "${name}"؟` : `تفعيل "${name}"؟`;
+          if (window.confirm(msg)) toggle.mutate();
+        }}
+      >
+        {agent.is_active ? (
+          <>
+            <PowerOff className="h-4 w-4 ml-1" />
+            إيقاف
+          </>
+        ) : (
+          <>
+            <Power className="h-4 w-4 ml-1" />
+            تفعيل
+          </>
+        )}
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button size="sm" variant="destructive" disabled={del.isPending}>
+            <Trash2 className="h-4 w-4 ml-1" />
+            حذف
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف "{name}" نهائيًا؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم إرجاع الكروت المسحوبة إلى المتاح والحفاظ على سجل المبيعات، وحذف الحساب نهائيًا.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => del.mutate()}
+            >
+              نعم، حذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
