@@ -257,8 +257,27 @@ function SuperAdminPageInner() {
                 </div>
                 <Button className="w-full" onClick={() => setDetailNetId(n.id)}>
                   <BarChart3 className="h-4 w-4 ml-1" />
-                  تفاصيل وإحصائيات الشبكة
+                  تفاصيل وإدارة الشبكة
                 </Button>
+                <div className="flex flex-wrap gap-1">
+                  <EditNetworkButton network={n} />
+                  {n.owner_id ? (
+                    <>
+                      <ResetPasswordButton
+                        userId={n.owner_id}
+                        label={`مدير ${n.name}`}
+                        triggerLabel="كلمة سر المدير"
+                      />
+                      <EditPhoneButton
+                        userId={n.owner_id}
+                        currentPhone={n.owner_phone ?? ""}
+                        label={`مدير ${n.name}`}
+                        triggerLabel="هاتف المدير"
+                      />
+                    </>
+                  ) : null}
+                  <NetworkActions network={n} />
+                </div>
               </Card>
             ))}
             {networks.data?.length === 0 && (
