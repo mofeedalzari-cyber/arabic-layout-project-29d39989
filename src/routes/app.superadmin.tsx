@@ -840,7 +840,7 @@ function EditPhoneButton({
     >
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
-          تعديل
+          {triggerLabel ?? "تعديل"}
         </Button>
       </DialogTrigger>
       <DialogContent dir="rtl" className="sm:max-w-md">
