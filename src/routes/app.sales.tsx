@@ -504,7 +504,7 @@ function SalesPage() {
                     <TableCell className="font-semibold">{highlight(s.package_name, q)}</TableCell>
                     <TableCell className="text-xs">{highlight(s.network_name, q)}</TableCell>
                     <TableCell className="text-xs">
-                      {highlight(displayName(s.agent_username), q)}
+                      {highlight(displayName(s.agent_username, s.agent_id), q)}
                     </TableCell>
                     <TableCell className="text-xs font-medium">
                       {highlight(s.customer_name ?? s.buyer_name ?? "—", q)}
@@ -690,7 +690,7 @@ async function printSalesPdf(args: {
       fmtArabicDateTimePdf(s.sold_at),
       fmtMoney(Number(s.price)),
     ];
-    return isAdmin ? [...base, nb(displayName(s.agent_username)), ...tail] : [...base, ...tail];
+    return isAdmin ? [...base, nb(displayName(s.agent_username, s.agent_id)), ...tail] : [...base, ...tail];
   });
 
   const title = `تقرير_المبيعات_${agentLabel}`;
