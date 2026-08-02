@@ -806,10 +806,12 @@ function EditPhoneButton({
   userId,
   currentPhone,
   label,
+  triggerLabel,
 }: {
   userId: string;
   currentPhone: string;
   label: string;
+  triggerLabel?: string;
 }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
