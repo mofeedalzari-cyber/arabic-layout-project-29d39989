@@ -52,5 +52,13 @@ export const superadminUpdateUserPhone = createServerFn({ method: "POST" })
       .eq("id", targetId);
     if (upErr) throw new Error(`تعذّر حفظ رقم الهاتف: ${upErr.message}`);
 
+    // Keep historical username snapshots in sync so old rows keep showing the name.
+    for (const table of ["sales", "card_requests", "join_requests"] as const) {
+      await (supabaseAdmin.from(table) as any)
+        .update({ agent_username: newUsername })
+        .eq("agent_id", targetId);
+    }
+
     return { ok: true, username: newUsername, phone: digits };
+
   });
