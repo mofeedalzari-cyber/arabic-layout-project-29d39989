@@ -377,6 +377,13 @@ function SuperAdminPageInner() {
                           {fmtArabicDateTime(a.created_at)}
                         </Td>
                         <Td>
+                          <EditPhoneButton
+                            userId={a.id}
+                            currentPhone={a.phone ?? ""}
+                            label={a.full_name ?? cleanPhoneLike(a.username) ?? ""}
+                          />
+                        </Td>
+                        <Td>
                           <ResetPasswordButton
                             userId={a.id}
                             label={a.full_name ?? cleanPhoneLike(a.username) ?? ""}
@@ -386,11 +393,12 @@ function SuperAdminPageInner() {
                     ))}
                   {agents.data?.length === 0 && (
                     <tr>
-                      <Td colSpan={10} className="text-center text-muted-foreground py-8">
+                      <Td colSpan={11} className="text-center text-muted-foreground py-8">
                         لا يوجد مناديب
                       </Td>
                     </tr>
                   )}
+
                 </tbody>
               </table>
             </div>
