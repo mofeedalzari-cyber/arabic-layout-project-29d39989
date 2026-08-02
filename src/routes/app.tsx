@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { AppShell } from "@/components/app-shell";
@@ -11,13 +11,22 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppLayout() {
-  const { user, loading, profile, role, signOut, profileError, refresh } = useAuth();
+  const { user, loading, profile, role, signOut, profileError, refresh, isSuperadmin } = useAuth();
   const navigate = useNavigate();
+  const loc = useLocation();
   useRequestNotifications();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [user, loading, navigate]);
+
+  // مدير التطبيق: يُحصر داخل صفحة الإدارة العامة فقط
+  useEffect(() => {
+    if (!loading && user && isSuperadmin && loc.pathname !== "/app/superadmin") {
+      navigate({ to: "/app/superadmin", replace: true });
+    }
+  }, [loading, user, isSuperadmin, loc.pathname, navigate]);
+
 
   if (loading || !user) {
     return (
