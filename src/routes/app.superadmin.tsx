@@ -48,6 +48,7 @@ import {
   Trash2,
   BarChart3,
   ArrowRight,
+  Pencil,
 } from "lucide-react";
 
 export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
@@ -256,8 +257,27 @@ function SuperAdminPageInner() {
                 </div>
                 <Button className="w-full" onClick={() => setDetailNetId(n.id)}>
                   <BarChart3 className="h-4 w-4 ml-1" />
-                  تفاصيل وإحصائيات الشبكة
+                  تفاصيل وإدارة الشبكة
                 </Button>
+                <div className="flex flex-wrap gap-1">
+                  <EditNetworkButton network={n} />
+                  {n.owner_id ? (
+                    <>
+                      <ResetPasswordButton
+                        userId={n.owner_id}
+                        label={`مدير ${n.name}`}
+                        triggerLabel="كلمة سر المدير"
+                      />
+                      <EditPhoneButton
+                        userId={n.owner_id}
+                        currentPhone={n.owner_phone ?? ""}
+                        label={`مدير ${n.name}`}
+                        triggerLabel="هاتف المدير"
+                      />
+                    </>
+                  ) : null}
+                  <NetworkActions network={n} />
+                </div>
               </Card>
             ))}
             {networks.data?.length === 0 && (
@@ -412,6 +432,8 @@ function SuperAdminPageInner() {
                     <Th>التسجيل</Th>
                     <Th>تعديل الهاتف</Th>
                     <Th>كلمة المرور</Th>
+                    <Th>إجراءات</Th>
+
 
                   </tr>
                 </thead>
@@ -450,13 +472,17 @@ function SuperAdminPageInner() {
                             label={a.full_name ?? cleanPhoneLike(a.username) ?? ""}
                           />
                         </Td>
+                        <Td>
+                          <AgentActions agent={a} />
+                        </Td>
                       </tr>
                     ))}
                   {agents.data?.length === 0 && (
                     <tr>
-                      <Td colSpan={11} className="text-center text-muted-foreground py-8">
+                      <Td colSpan={12} className="text-center text-muted-foreground py-8">
                         لا يوجد مناديب
                       </Td>
+
                     </tr>
                   )}
 
@@ -786,10 +812,12 @@ function EditPhoneButton({
   userId,
   currentPhone,
   label,
+  triggerLabel,
 }: {
   userId: string;
   currentPhone: string;
   label: string;
+  triggerLabel?: string;
 }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -818,7 +846,7 @@ function EditPhoneButton({
     >
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
-          تعديل
+          {triggerLabel ?? "تعديل"}
         </Button>
       </DialogTrigger>
       <DialogContent dir="rtl" className="sm:max-w-md">
@@ -851,7 +879,15 @@ function EditPhoneButton({
   );
 }
 
-function ResetPasswordButton({ userId, label }: { userId: string; label: string }) {
+function ResetPasswordButton({
+  userId,
+  label,
+  triggerLabel,
+}: {
+  userId: string;
+  label: string;
+  triggerLabel?: string;
+}) {
 
   const [open, setOpen] = useState(false);
   const [pwd, setPwd] = useState("");
@@ -888,7 +924,7 @@ function ResetPasswordButton({ userId, label }: { userId: string; label: string 
     >
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
-          تعديل
+          {triggerLabel ?? "تعديل"}
         </Button>
       </DialogTrigger>
       <DialogContent dir="rtl" className="sm:max-w-md">
@@ -1159,11 +1195,79 @@ function NetworkDetail({
         <MiniStat label="قيمة المخزون" value={fmtMoney(stockValue)} />
       </div>
 
-      <Tabs defaultValue="pkgs" dir="rtl" className="mt-2">
-        <TabsList dir="rtl" className="grid grid-cols-2 w-full">
-          <TabsTrigger value="pkgs">إحصائيات الباقات</TabsTrigger>
-          <TabsTrigger value="agents">إحصائيات المناديب</TabsTrigger>
+      <Card className="p-3 flex flex-wrap gap-2">
+        <EditNetworkButton network={network} />
+        {network.owner_id ? (
+          <>
+            <ResetPasswordButton
+              userId={network.owner_id}
+              label={`مدير ${network.name}`}
+              triggerLabel="كلمة سر المدير"
+            />
+            <EditPhoneButton
+              userId={network.owner_id}
+              currentPhone={network.owner_phone ?? ""}
+              label={`مدير ${network.name}`}
+              triggerLabel="هاتف المدير"
+            />
+          </>
+        ) : null}
+        <NetworkActions network={network} onDeleted={onBack} />
+      </Card>
+
+      <Tabs defaultValue="agents" dir="rtl" className="mt-2">
+        <TabsList dir="rtl" className="grid grid-cols-3 w-full">
+          <TabsTrigger value="agents">المناديب</TabsTrigger>
+          <TabsTrigger value="pkgs">الباقات</TabsTrigger>
+          <TabsTrigger value="cards">الكروت</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="cards" className="mt-3">
+          <Card className="overflow-hidden">
+            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
+              <table dir="rtl" className="w-full text-sm border-collapse border">
+                <thead className="bg-muted/50 sticky top-0">
+                  <tr>
+                    <Th>الرقم</Th>
+                    <Th>كلمة السر</Th>
+                    <Th>الحالة</Th>
+                    <Th>الباقة</Th>
+                    <Th>المندوب</Th>
+                    <Th>البيع</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {list.map((c: any) => (
+                    <tr key={c.id} className="border-t">
+                      <Td dir="ltr" className="font-mono">
+                        {c.username}
+                      </Td>
+                      <Td dir="ltr" className="font-mono">
+                        {c.password ?? "—"}
+                      </Td>
+                      <Td className="text-xs">
+                        {c.status === "SOLD" ? "مباع" : c.status === "ASSIGNED" ? "مسحوب" : "متاح"}
+                      </Td>
+                      <Td>{c.package_name}</Td>
+                      <Td>{cleanPhoneLike(c.sold_username ?? c.assigned_username) || "—"}</Td>
+                      <Td className="whitespace-nowrap text-xs">
+                        {c.sold_at ? fmtArabicDateTime(c.sold_at) : "—"}
+                      </Td>
+                    </tr>
+                  ))}
+                  {list.length === 0 && (
+                    <tr>
+                      <Td colSpan={6} className="text-center text-muted-foreground py-8">
+                        لا توجد كروت
+                      </Td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </TabsContent>
+
 
         <TabsContent value="pkgs" className="mt-3 space-y-3">
           {perPackage.map((p) => (
@@ -1208,6 +1312,21 @@ function NetworkDetail({
                 <MiniStat label="مسحوب" value={a.assignedCount} />
                 <MiniStat label="القيمة" value={fmtMoney(a.soldValue)} />
               </div>
+              <div className="flex flex-wrap gap-1 mt-3">
+                <EditPhoneButton
+                  userId={a.id}
+                  currentPhone={a.phone ?? ""}
+                  label={a.full_name || cleanPhoneLike(a.username) || ""}
+                  triggerLabel="تعديل الهاتف"
+                />
+                <ResetPasswordButton
+                  userId={a.id}
+                  label={a.full_name || cleanPhoneLike(a.username) || ""}
+                  triggerLabel="كلمة المرور"
+                />
+                <AgentActions agent={a} />
+              </div>
+
             </Card>
           ))}
           {perAgent.length === 0 && (
@@ -1215,6 +1334,260 @@ function NetworkDetail({
           )}
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+/** تعديل بيانات الشبكة (الاسم والعملة) */
+function EditNetworkButton({ network }: { network: any }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(network.name ?? "");
+  const [currency, setCurrency] = useState(network.currency ?? "");
+  const m = useMutation({
+    mutationFn: async () => {
+      if (!name.trim()) throw new Error("اسم الشبكة مطلوب");
+      const { error } = await (supabase.rpc as any)("superadmin_update_network", {
+        _network_id: network.id,
+        _name: name.trim(),
+        _currency: currency.trim() || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تعديل بيانات الشبكة");
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["sa-networks"] });
+    },
+    onError: (e: any) =>
+      toast.error(e?.message === "NETWORK_NAME_TAKEN" ? "اسم الشبكة مستخدم" : (e?.message ?? "فشل")),
+  });
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) {
+          setName(network.name ?? "");
+          setCurrency(network.currency ?? "");
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Pencil className="h-4 w-4 ml-1" />
+          تعديل الشبكة
+        </Button>
+      </DialogTrigger>
+      <DialogContent dir="rtl" className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>تعديل بيانات الشبكة</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>اسم الشبكة</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <Label>العملة</Label>
+            <Input
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              placeholder="SAR"
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            إلغاء
+          </Button>
+          <Button disabled={m.isPending} onClick={() => m.mutate()}>
+            حفظ
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** إجراءات الشبكة: توقيف/تفعيل + حذف نهائي */
+function NetworkActions({ network, onDeleted }: { network: any; onDeleted?: () => void }) {
+  const qc = useQueryClient();
+  const invalidateAll = () => {
+    ["sa-networks", "sa-stats", "sa-agents", "sa-packages", "sa-cards"].forEach((k) =>
+      qc.invalidateQueries({ queryKey: [k] }),
+    );
+  };
+  const toggle = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("superadmin_set_network_active", {
+        _network_id: network.id,
+        _active: !network.is_active,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(network.is_active ? "تم إيقاف الشبكة" : "تم تفعيل الشبكة");
+      invalidateAll();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل"),
+  });
+  const del = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.rpc as any)("superadmin_delete_network", {
+        _network_id: network.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف الشبكة بالكامل");
+      invalidateAll();
+      onDeleted?.();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل الحذف"),
+  });
+
+  return (
+    <>
+      <Button
+        size="sm"
+        variant={network.is_active ? "secondary" : "default"}
+        disabled={toggle.isPending}
+        onClick={() => {
+          const msg = network.is_active
+            ? `إيقاف شبكة "${network.name}"؟ لن يتمكن مستخدموها من الدخول.`
+            : `إعادة تفعيل شبكة "${network.name}"؟`;
+          if (window.confirm(msg)) toggle.mutate();
+        }}
+      >
+        {network.is_active ? (
+          <>
+            <PowerOff className="h-4 w-4 ml-1" />
+            إيقاف
+          </>
+        ) : (
+          <>
+            <Power className="h-4 w-4 ml-1" />
+            تفعيل
+          </>
+        )}
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button size="sm" variant="destructive" disabled={del.isPending}>
+            <Trash2 className="h-4 w-4 ml-1" />
+            حذف
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف نهائي لشبكة "{network.name}"؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف جميع المناديب والباقات والكروت والطلبات والمبيعات المرتبطة بها. لا يمكن
+              التراجع.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => del.mutate()}
+            >
+              نعم، حذف نهائي
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+/** إجراءات المندوب: توقيف/تفعيل + حذف نهائي */
+function AgentActions({ agent }: { agent: any }) {
+  const qc = useQueryClient();
+  const invalidateAll = () => {
+    ["sa-agents", "sa-networks", "sa-stats", "sa-cards"].forEach((k) =>
+      qc.invalidateQueries({ queryKey: [k] }),
+    );
+    qc.invalidateQueries({ queryKey: ["sa-net-cards"] });
+  };
+  const name = agent.full_name || cleanPhoneLike(agent.username) || "المندوب";
+  const toggle = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.rpc as any)("superadmin_set_agent_active", {
+        _agent_id: agent.id,
+        _active: !agent.is_active,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(agent.is_active ? "تم إيقاف المستخدم" : "تم تفعيل المستخدم");
+      invalidateAll();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل"),
+  });
+  const del = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.rpc as any)("superadmin_delete_agent", {
+        _agent_id: agent.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف المستخدم نهائيًا");
+      invalidateAll();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل الحذف"),
+  });
+
+  return (
+    <div className="flex gap-1 flex-wrap">
+      <Button
+        size="sm"
+        variant={agent.is_active ? "secondary" : "default"}
+        disabled={toggle.isPending}
+        onClick={() => {
+          const msg = agent.is_active ? `إيقاف "${name}"؟` : `تفعيل "${name}"؟`;
+          if (window.confirm(msg)) toggle.mutate();
+        }}
+      >
+        {agent.is_active ? (
+          <>
+            <PowerOff className="h-4 w-4 ml-1" />
+            إيقاف
+          </>
+        ) : (
+          <>
+            <Power className="h-4 w-4 ml-1" />
+            تفعيل
+          </>
+        )}
+      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button size="sm" variant="destructive" disabled={del.isPending}>
+            <Trash2 className="h-4 w-4 ml-1" />
+            حذف
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>حذف "{name}" نهائيًا؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم إرجاع الكروت المسحوبة إلى المتاح والحفاظ على سجل المبيعات، وحذف الحساب نهائيًا.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => del.mutate()}
+            >
+              نعم، حذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
