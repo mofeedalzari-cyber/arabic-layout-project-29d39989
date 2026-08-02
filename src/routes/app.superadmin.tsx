@@ -873,7 +873,15 @@ function EditPhoneButton({
   );
 }
 
-function ResetPasswordButton({ userId, label }: { userId: string; label: string }) {
+function ResetPasswordButton({
+  userId,
+  label,
+  triggerLabel,
+}: {
+  userId: string;
+  label: string;
+  triggerLabel?: string;
+}) {
 
   const [open, setOpen] = useState(false);
   const [pwd, setPwd] = useState("");
