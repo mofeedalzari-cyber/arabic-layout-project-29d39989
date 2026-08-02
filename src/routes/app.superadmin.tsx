@@ -1312,6 +1312,21 @@ function NetworkDetail({
                 <MiniStat label="مسحوب" value={a.assignedCount} />
                 <MiniStat label="القيمة" value={fmtMoney(a.soldValue)} />
               </div>
+              <div className="flex flex-wrap gap-1 mt-3">
+                <EditPhoneButton
+                  userId={a.id}
+                  currentPhone={a.phone ?? ""}
+                  label={a.full_name || cleanPhoneLike(a.username) || ""}
+                  triggerLabel="تعديل الهاتف"
+                />
+                <ResetPasswordButton
+                  userId={a.id}
+                  label={a.full_name || cleanPhoneLike(a.username) || ""}
+                  triggerLabel="كلمة المرور"
+                />
+                <AgentActions agent={a} />
+              </div>
+
             </Card>
           ))}
           {perAgent.length === 0 && (
