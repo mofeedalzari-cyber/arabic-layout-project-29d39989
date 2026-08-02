@@ -1035,3 +1035,186 @@ function ResetRequestsPanel() {
     </Card>
   );
 }
+
+/** واجهة تفاصيل وإحصائيات شبكة واحدة */
+function NetworkDetail({
+  network,
+  agents,
+  packages,
+  onBack,
+}: {
+  network: any;
+  agents: any[];
+  packages: any[];
+  onBack: () => void;
+}) {
+  const cards = useQuery({
+    queryKey: ["sa-net-cards", network.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("superadmin_cards", {
+        _network_id: network.id,
+        _package_id: undefined,
+        _status: undefined,
+        _search: undefined,
+        _limit: 5000,
+      });
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  const list = cards.data ?? [];
+  const available = list.filter((c) => c.status === "AVAILABLE").length;
+  const assigned = list.filter((c) => c.status === "ASSIGNED").length;
+  const sold = list.filter((c) => c.status === "SOLD").length;
+  const priceOf = (pkgId: string) =>
+    Number(packages.find((p) => p.id === pkgId)?.price ?? 0);
+  const soldValue = list
+    .filter((c) => c.status === "SOLD")
+    .reduce((sum, c) => sum + priceOf(c.package_id), 0);
+  const stockValue = list
+    .filter((c) => c.status !== "SOLD")
+    .reduce((sum, c) => sum + priceOf(c.package_id), 0);
+
+  const perPackage = packages.map((p) => {
+    const pc = list.filter((c) => c.package_id === p.id);
+    const s = pc.filter((c) => c.status === "SOLD").length;
+    return {
+      ...p,
+      total: pc.length,
+      sold: s,
+      remaining: pc.length - s,
+      value: s * Number(p.price ?? 0),
+    };
+  });
+
+  const perAgent = agents
+    .map((a) => {
+      const ac = list.filter((c) => c.sold_to === a.id);
+      return {
+        ...a,
+        soldCount: ac.length,
+        soldValue: ac.reduce((sum, c) => sum + priceOf(c.package_id), 0),
+        assignedCount: list.filter((c) => c.status === "ASSIGNED" && c.assigned_to === a.id).length,
+      };
+    })
+    .sort((x, y) => y.soldValue - x.soldValue);
+
+  return (
+    <div dir="rtl" className="space-y-4">
+      <div className="flex items-center justify-between gap-2">
+        <Button variant="outline" size="sm" onClick={onBack}>
+          <ArrowRight className="h-4 w-4 ml-1" />
+          رجوع للشبكات
+        </Button>
+        <RefreshButton />
+      </div>
+
+      <Card className="p-4 bg-primary/5 border-primary/30">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <Wifi className="h-5 w-5 text-primary" />
+              <h2 className="font-bold text-lg truncate">{network.name}</h2>
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              المالك: {cleanPhoneLike(network.owner_username) || "—"} •{" "}
+              <span dir="ltr">{displayPhone(network.owner_phone, network.owner_username)}</span>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              تاريخ الإنشاء: {fmtArabicDateTime(network.created_at)}
+            </div>
+          </div>
+          {network.is_active ? <Badge>نشطة</Badge> : <Badge variant="secondary">موقوفة</Badge>}
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          label="المناديب"
+          value={agents.length}
+          icon={<Users className="h-5 w-5" />}
+        />
+        <StatCard
+          label="الباقات"
+          value={packages.length}
+          icon={<PkgIcon className="h-5 w-5" />}
+        />
+        <StatCard
+          label="الكروت"
+          value={list.length}
+          sub={`متاح: ${available} • مسحوب: ${assigned}`}
+          icon={<CreditCard className="h-5 w-5" />}
+        />
+        <StatCard
+          label="قيمة المبيعات"
+          value={fmtMoney(soldValue)}
+          sub={`مباع: ${sold}`}
+          icon={<BarChart3 className="h-5 w-5" />}
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <MiniStat label="متاح" value={available} />
+        <MiniStat label="مسحوب" value={assigned} />
+        <MiniStat label="قيمة المخزون" value={fmtMoney(stockValue)} />
+      </div>
+
+      <Tabs defaultValue="pkgs" dir="rtl" className="mt-2">
+        <TabsList dir="rtl" className="grid grid-cols-2 w-full">
+          <TabsTrigger value="pkgs">إحصائيات الباقات</TabsTrigger>
+          <TabsTrigger value="agents">إحصائيات المناديب</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pkgs" className="mt-3 space-y-3">
+          {perPackage.map((p) => (
+            <Card key={p.id} className="p-4">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="font-semibold truncate">{p.name}</div>
+                <Badge variant="secondary">{fmtMoney(Number(p.price ?? 0))}</Badge>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                <MiniStat label="كروت" value={p.total} />
+                <MiniStat label="مباع" value={p.sold} />
+                <MiniStat label="متبقي" value={p.remaining} />
+                <MiniStat label="القيمة" value={fmtMoney(p.value)} />
+              </div>
+            </Card>
+          ))}
+          {perPackage.length === 0 && (
+            <Card className="p-8 text-center text-muted-foreground">لا توجد باقات</Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="agents" className="mt-3 space-y-3">
+          {perAgent.map((a) => (
+            <Card key={a.id} className="p-4">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="min-w-0">
+                  <div className="font-semibold truncate">
+                    {a.full_name || cleanPhoneLike(a.username)}
+                  </div>
+                  <div className="text-xs text-muted-foreground" dir="ltr">
+                    {displayPhone(a.phone, a.username)}
+                  </div>
+                </div>
+                {a.is_active ? (
+                  <Badge>نشط</Badge>
+                ) : (
+                  <Badge variant="secondary">موقوف</Badge>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <MiniStat label="مباع" value={a.soldCount} />
+                <MiniStat label="مسحوب" value={a.assignedCount} />
+                <MiniStat label="القيمة" value={fmtMoney(a.soldValue)} />
+              </div>
+            </Card>
+          ))}
+          {perAgent.length === 0 && (
+            <Card className="p-8 text-center text-muted-foreground">لا يوجد مناديب</Card>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
