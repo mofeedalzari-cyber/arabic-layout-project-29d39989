@@ -46,6 +46,8 @@ import {
   PowerOff,
   Plus,
   Trash2,
+  BarChart3,
+  ArrowRight,
 } from "lucide-react";
 
 export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
