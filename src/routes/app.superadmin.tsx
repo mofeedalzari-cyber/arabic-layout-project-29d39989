@@ -721,7 +721,77 @@ function MyNetworkPanel({
   );
 }
 
+function EditPhoneButton({
+  userId,
+  currentPhone,
+  label,
+}: {
+  userId: string;
+  currentPhone: string;
+  label: string;
+}) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState(currentPhone);
+  const updatePhone = useServerFn(superadminUpdateUserPhone);
+  const m = useMutation({
+    mutationFn: async () => {
+      const digits = phone.replace(/\D/g, "");
+      if (digits.length < 6) throw new Error("رقم الهاتف غير صحيح");
+      return await updatePhone({ data: { userId, phone: digits } });
+    },
+    onSuccess: () => {
+      toast.success("تم تعديل رقم الهاتف");
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["sa-agents"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل التعديل"),
+  });
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) setPhone(currentPhone);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          تعديل
+        </Button>
+      </DialogTrigger>
+      <DialogContent dir="rtl" className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>تعديل رقم الهاتف {label ? `— ${label}` : ""}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label>رقم الهاتف</Label>
+          <Input
+            dir="ltr"
+            inputMode="numeric"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="7xxxxxxxx"
+          />
+          <p className="text-xs text-muted-foreground">
+            سيتم تحديث اسم الدخول تلقائيًا حسب الرقم الجديد.
+          </p>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            إلغاء
+          </Button>
+          <Button disabled={m.isPending} onClick={() => m.mutate()}>
+            حفظ
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ResetPasswordButton({ userId, label }: { userId: string; label: string }) {
+
   const [open, setOpen] = useState(false);
   const [pwd, setPwd] = useState("");
   const [pwd2, setPwd2] = useState("");
