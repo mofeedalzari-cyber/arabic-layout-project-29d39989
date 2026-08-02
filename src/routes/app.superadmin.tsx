@@ -154,9 +154,23 @@ function SuperAdminPageInner() {
   });
 
   const s = stats.data ?? {};
+  const [detailNetId, setDetailNetId] = useState<string | null>(null);
+  const detailNet = (networks.data ?? []).find((n: any) => n.id === detailNetId) ?? null;
+
+  if (detailNetId && detailNet) {
+    return (
+      <NetworkDetail
+        network={detailNet}
+        agents={(agents.data ?? []).filter((a: any) => a.network_id === detailNetId)}
+        packages={(packages.data ?? []).filter((p: any) => p.network_id === detailNetId)}
+        onBack={() => setDetailNetId(null)}
+      />
+    );
+  }
 
   return (
     <div dir="rtl" className="space-y-4">
+
       <PageHeader
         title="مدير التطبيق العام"
         description="عرض شامل لكل الشبكات والمناديب والباقات والكروت."
