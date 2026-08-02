@@ -137,10 +137,17 @@ function SalesPage() {
     return Array.from(map, ([id, name]) => ({ id, name }));
   }, [sales]);
 
+  // Key agents by user id when available: sales rows keep a snapshot of the
+  // username, which changes when an agent's phone is edited. Keying by id
+  // prevents the same agent appearing twice (once by name, once by digits).
+  const agentKey = (s: { agent_id: string | null; agent_username: string }) =>
+    s.agent_id ?? s.agent_username;
+
   const agentOptions = useMemo(() => {
     const map = new Map<string, string>();
     (sales ?? []).forEach((s) => {
-      if (s.agent_username) map.set(s.agent_username, displayName(s.agent_username));
+      if (s.agent_username || s.agent_id)
+        map.set(agentKey(s), displayName(s.agent_username, s.agent_id));
     });
     return Array.from(map, ([u, name]) => ({ username: u, name }));
   }, [sales, displayName]);
@@ -149,7 +156,7 @@ function SalesPage() {
     const s = q.trim().toLowerCase();
     return (sales ?? []).filter((r) => {
       if (customerFilter !== "all" && r.customer_id !== customerFilter) return false;
-      if (agentFilter !== "all" && r.agent_username !== agentFilter) return false;
+      if (agentFilter !== "all" && agentKey(r) !== agentFilter) return false;
       if (statusFilter === "customer" && !r.customer_id) return false;
       if (statusFilter === "direct" && r.customer_id) return false;
       if (!s) return true;
@@ -161,10 +168,11 @@ function SalesPage() {
         (r.buyer_name ?? "").toLowerCase().includes(s) ||
         (r.customer_name ?? "").toLowerCase().includes(s) ||
         (r.card_username ?? "").toLowerCase().includes(s) ||
-        displayName(r.agent_username).toLowerCase().includes(s)
+        displayName(r.agent_username, r.agent_id).toLowerCase().includes(s)
       );
     });
   }, [sales, q, customerFilter, agentFilter, statusFilter, displayName]);
+
 
   const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
   const someSelected = selected.size > 0;
