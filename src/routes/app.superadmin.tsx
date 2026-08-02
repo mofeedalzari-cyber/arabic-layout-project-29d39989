@@ -1195,11 +1195,79 @@ function NetworkDetail({
         <MiniStat label="قيمة المخزون" value={fmtMoney(stockValue)} />
       </div>
 
-      <Tabs defaultValue="pkgs" dir="rtl" className="mt-2">
-        <TabsList dir="rtl" className="grid grid-cols-2 w-full">
-          <TabsTrigger value="pkgs">إحصائيات الباقات</TabsTrigger>
-          <TabsTrigger value="agents">إحصائيات المناديب</TabsTrigger>
+      <Card className="p-3 flex flex-wrap gap-2">
+        <EditNetworkButton network={network} />
+        {network.owner_id ? (
+          <>
+            <ResetPasswordButton
+              userId={network.owner_id}
+              label={`مدير ${network.name}`}
+              triggerLabel="كلمة سر المدير"
+            />
+            <EditPhoneButton
+              userId={network.owner_id}
+              currentPhone={network.owner_phone ?? ""}
+              label={`مدير ${network.name}`}
+              triggerLabel="هاتف المدير"
+            />
+          </>
+        ) : null}
+        <NetworkActions network={network} onDeleted={onBack} />
+      </Card>
+
+      <Tabs defaultValue="agents" dir="rtl" className="mt-2">
+        <TabsList dir="rtl" className="grid grid-cols-3 w-full">
+          <TabsTrigger value="agents">المناديب</TabsTrigger>
+          <TabsTrigger value="pkgs">الباقات</TabsTrigger>
+          <TabsTrigger value="cards">الكروت</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="cards" className="mt-3">
+          <Card className="overflow-hidden">
+            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
+              <table dir="rtl" className="w-full text-sm border-collapse border">
+                <thead className="bg-muted/50 sticky top-0">
+                  <tr>
+                    <Th>الرقم</Th>
+                    <Th>كلمة السر</Th>
+                    <Th>الحالة</Th>
+                    <Th>الباقة</Th>
+                    <Th>المندوب</Th>
+                    <Th>البيع</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {list.map((c: any) => (
+                    <tr key={c.id} className="border-t">
+                      <Td dir="ltr" className="font-mono">
+                        {c.username}
+                      </Td>
+                      <Td dir="ltr" className="font-mono">
+                        {c.password ?? "—"}
+                      </Td>
+                      <Td className="text-xs">
+                        {c.status === "SOLD" ? "مباع" : c.status === "ASSIGNED" ? "مسحوب" : "متاح"}
+                      </Td>
+                      <Td>{c.package_name}</Td>
+                      <Td>{cleanPhoneLike(c.sold_username ?? c.assigned_username) || "—"}</Td>
+                      <Td className="whitespace-nowrap text-xs">
+                        {c.sold_at ? fmtArabicDateTime(c.sold_at) : "—"}
+                      </Td>
+                    </tr>
+                  ))}
+                  {list.length === 0 && (
+                    <tr>
+                      <Td colSpan={6} className="text-center text-muted-foreground py-8">
+                        لا توجد كروت
+                      </Td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </TabsContent>
+
 
         <TabsContent value="pkgs" className="mt-3 space-y-3">
           {perPackage.map((p) => (
