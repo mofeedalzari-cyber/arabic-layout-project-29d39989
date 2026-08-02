@@ -48,6 +48,7 @@ import {
   Trash2,
   BarChart3,
   ArrowRight,
+  Pencil,
 } from "lucide-react";
 
 export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
