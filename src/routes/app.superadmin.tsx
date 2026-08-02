@@ -432,6 +432,8 @@ function SuperAdminPageInner() {
                     <Th>التسجيل</Th>
                     <Th>تعديل الهاتف</Th>
                     <Th>كلمة المرور</Th>
+                    <Th>إجراءات</Th>
+
 
                   </tr>
                 </thead>
