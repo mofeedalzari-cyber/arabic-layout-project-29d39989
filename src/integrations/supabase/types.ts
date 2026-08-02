@@ -983,6 +983,7 @@ export type Database = {
         }
         Returns: string
       }
+      superadmin_delete_agent: { Args: { _agent_id: string }; Returns: Json }
       superadmin_delete_network: {
         Args: { _network_id: string }
         Returns: Json
@@ -1044,11 +1045,19 @@ export type Database = {
         Args: { _id: string; _status?: string }
         Returns: undefined
       }
+      superadmin_set_agent_active: {
+        Args: { _active: boolean; _agent_id: string }
+        Returns: undefined
+      }
       superadmin_set_network_active: {
         Args: { _active: boolean; _network_id: string }
         Returns: undefined
       }
       superadmin_stats: { Args: never; Returns: Json }
+      superadmin_update_network: {
+        Args: { _currency?: string; _name?: string; _network_id: string }
+        Returns: undefined
+      }
       username_from_phone: { Args: { _phone: string }; Returns: string }
     }
     Enums: {
