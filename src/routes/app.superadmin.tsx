@@ -472,13 +472,17 @@ function SuperAdminPageInner() {
                             label={a.full_name ?? cleanPhoneLike(a.username) ?? ""}
                           />
                         </Td>
+                        <Td>
+                          <AgentActions agent={a} />
+                        </Td>
                       </tr>
                     ))}
                   {agents.data?.length === 0 && (
                     <tr>
-                      <Td colSpan={11} className="text-center text-muted-foreground py-8">
+                      <Td colSpan={12} className="text-center text-muted-foreground py-8">
                         لا يوجد مناديب
                       </Td>
+
                     </tr>
                   )}
 
