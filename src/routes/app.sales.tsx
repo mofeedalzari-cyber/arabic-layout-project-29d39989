@@ -650,7 +650,7 @@ async function printSalesPdf(args: {
   isAdmin: boolean;
   agentFilter: string;
   agentOptions: { username: string; name: string }[];
-  displayName: (u: string) => string;
+  displayName: (u?: string | null, id?: string | null) => string;
 }) {
   const { sales, isAdmin, agentFilter, agentOptions, displayName } = args;
   const { exportToPDF } = await import("@/lib/dashboard-export");
