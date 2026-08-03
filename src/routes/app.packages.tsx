@@ -368,7 +368,7 @@ function PackagesPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 rounded-xl"
+                    className="flex-1 rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white"
                     onClick={() => {
                       setEditing(p);
                       setOpen(true);
@@ -380,7 +380,7 @@ function PackagesPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="rounded-xl text-destructive"
+                    className="rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white"
                     onClick={() => {
                       if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name });
                     }}
@@ -392,7 +392,7 @@ function PackagesPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant="outline"
-                    className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold"
+                    className="rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white h-11 font-semibold"
                     onClick={() => {
                       setRequestPkg(p);
                       setReqQty(10);
@@ -406,13 +406,14 @@ function PackagesPage() {
                   <Button
                     asChild
                     variant="outline"
-                    className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold"
+                    className="rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white h-11 font-semibold"
                   >
                     <Link to="/app/cabin">
                       <LayoutGrid className="h-4 w-4 ml-1.5" />
                       كبينة البيع
                     </Link>
                   </Button>
+
                 </div>
               )}
             </Card>
