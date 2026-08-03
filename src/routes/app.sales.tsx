@@ -183,8 +183,17 @@ function SalesPage() {
     (agentFilter !== "all" ? 1 : 0) +
     (statusFilter !== "all" ? 1 : 0);
 
-  // The page-level scroller (app shell content area) handles vertical scrolling
-  const getPageScroller = () => tableScrollRef.current;
+  // The page-level scroller (app shell <main>) handles vertical scrolling
+  const getPageScroller = (): HTMLElement | null => {
+    let n: HTMLElement | null = tableScrollRef.current;
+    while (n) {
+      const oy = getComputedStyle(n).overflowY;
+      if ((oy === "auto" || oy === "scroll") && n.scrollHeight > n.clientHeight + 8) return n;
+      n = n.parentElement;
+    }
+    return (document.querySelector("main") as HTMLElement | null) ?? null;
+  };
+
 
   // Auto-hide scroll buttons based on scrollability
   useLayoutEffect(() => {
@@ -304,7 +313,7 @@ function SalesPage() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="flex flex-col pb-40 md:pb-6">
       <div className="shrink-0">
         <PageHeader
           title={isAdmin ? "جميع المبيعات" : "مبيعاتي"}
@@ -429,18 +438,20 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant relative mt-4 flex w-full min-h-0 flex-1 flex-col overflow-hidden border-0">
-        {/* Plain scroll container: nothing wraps it that clips overflow, native
-            touch scrolling on both axes (works inside Android WebView). */}
+      <Card className="card-elegant relative mt-4 flex w-full flex-col border-0">
+        {/* Page (main) handles vertical scrolling; this container only scrolls
+            horizontally so Android WebView never blocks the vertical gesture. */}
         <div
           ref={tableScrollRef}
-          className="sales-scroll min-h-0 w-full flex-1 overflow-x-auto overflow-y-auto overscroll-contain"
+          className="sales-scroll w-full overflow-x-auto"
           style={{
             WebkitOverflowScrolling: "touch",
-            touchAction: "auto",
+            touchAction: "pan-x pan-y",
+            overscrollBehaviorX: "contain",
           }}
         >
-          <div className="w-max min-w-full pb-20">
+          <div className="w-max min-w-full">
+
 
 
           <Table
