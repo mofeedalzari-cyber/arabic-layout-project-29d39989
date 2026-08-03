@@ -305,37 +305,34 @@ function PackagesPage() {
           const net = netMap.get(p.network_id);
           const c = counts?.get(p.id) ?? { total: 0, avail: 0, assigned: 0, sold: 0 };
           const shortId = p.id.replace(/-/g, "").slice(0, 8).toUpperCase();
+          const pc = p.color ?? "#009688";
           return (
             <Card
               key={p.id}
-              className="card-elegant border border-border/40 bg-card rounded-3xl p-4 space-y-3"
+              className="card-elegant border-0 rounded-3xl p-4 space-y-3 text-white"
+              style={{ background: `linear-gradient(135deg, ${pc}, ${pc}c0)` }}
             >
               {/* Header: icon + name + price pill */}
               <div className="flex items-center justify-between gap-3">
-                <div
-                  className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
-                  style={{ background: p.color ?? "#009688" }}
-                >
+                <div className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 bg-white/20">
                   <Layers className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0 text-right">
-                  <div className="text-base font-extrabold truncate">باقة {p.name}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">
-                    {net?.name ?? "—"}
-                  </div>
+                  <div className="text-base font-extrabold truncate text-white">باقة {p.name}</div>
+                  <div className="text-[11px] text-white/80 truncate">{net?.name ?? "—"}</div>
                 </div>
-                <div className="rounded-full bg-destructive/10 text-destructive text-xs font-bold px-3 py-1.5 whitespace-nowrap">
+                <div className="rounded-full bg-white/20 text-white text-xs font-bold px-3 py-1.5 whitespace-nowrap">
                   {fmtMoney(Number(p.price))}
                 </div>
               </div>
 
               {/* Available now */}
-              <div className="rounded-2xl bg-muted/50 px-4 py-3 flex items-center justify-between">
-                <div className="text-sm text-muted-foreground flex items-center gap-2">
+              <div className="rounded-2xl bg-white/15 px-4 py-3 flex items-center justify-between">
+                <div className="text-sm text-white/85 flex items-center gap-2">
                   <Archive className="h-4 w-4" />
                   المتاح الآن
                 </div>
-                <div className="text-2xl font-extrabold text-foreground">{c.avail}</div>
+                <div className="text-2xl font-extrabold text-white">{c.avail}</div>
               </div>
 
               {/* Three feature tiles */}
@@ -359,10 +356,11 @@ function PackagesPage() {
 
               {/* ID chip */}
               <div className="flex">
-                <span className="inline-flex items-center rounded-full bg-muted/60 text-muted-foreground text-[11px] font-medium px-3 py-1">
+                <span className="inline-flex items-center rounded-full bg-white/15 text-white/80 text-[11px] font-medium px-3 py-1">
                   ID: {shortId}
                 </span>
               </div>
+
 
               {/* Actions */}
               {canManage ? (
