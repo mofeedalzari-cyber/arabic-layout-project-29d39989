@@ -429,18 +429,20 @@ function SalesPage() {
         )}
       </div>
 
-      <Card className="card-elegant relative mt-4 flex w-full min-h-0 flex-1 flex-col overflow-hidden border-0">
-        {/* Plain scroll container: nothing wraps it that clips overflow, native
-            touch scrolling on both axes (works inside Android WebView). */}
+      <Card className="card-elegant relative mt-4 flex w-full flex-col border-0">
+        {/* Page (main) handles vertical scrolling; this container only scrolls
+            horizontally so Android WebView never blocks the vertical gesture. */}
         <div
           ref={tableScrollRef}
-          className="sales-scroll min-h-0 w-full flex-1 overflow-x-auto overflow-y-auto overscroll-contain"
+          className="sales-scroll w-full overflow-x-auto"
           style={{
             WebkitOverflowScrolling: "touch",
-            touchAction: "auto",
+            touchAction: "pan-x pan-y",
+            overscrollBehaviorX: "contain",
           }}
         >
-          <div className="w-max min-w-full pb-20">
+          <div className="w-max min-w-full">
+
 
 
           <Table
