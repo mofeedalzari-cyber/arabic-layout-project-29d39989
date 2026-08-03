@@ -183,8 +183,17 @@ function SalesPage() {
     (agentFilter !== "all" ? 1 : 0) +
     (statusFilter !== "all" ? 1 : 0);
 
-  // The page-level scroller (app shell content area) handles vertical scrolling
-  const getPageScroller = () => tableScrollRef.current;
+  // The page-level scroller (app shell <main>) handles vertical scrolling
+  const getPageScroller = (): HTMLElement | null => {
+    let n: HTMLElement | null = tableScrollRef.current;
+    while (n) {
+      const oy = getComputedStyle(n).overflowY;
+      if ((oy === "auto" || oy === "scroll") && n.scrollHeight > n.clientHeight + 8) return n;
+      n = n.parentElement;
+    }
+    return (document.querySelector("main") as HTMLElement | null) ?? null;
+  };
+
 
   // Auto-hide scroll buttons based on scrollability
   useLayoutEffect(() => {
