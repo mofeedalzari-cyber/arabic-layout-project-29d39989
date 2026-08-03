@@ -262,11 +262,12 @@ function CabinPage() {
           {rows!.map((r) => {
             const noStock = r.available === 0;
             return (
-              <Card key={r.package_id} className="card-elegant border-0 overflow-hidden p-0">
-                <div
-                  className="p-5 relative"
-                  style={{ background: `linear-gradient(135deg, ${r.color}, ${r.color}dd)` }}
-                >
+              <Card
+                key={r.package_id}
+                className="card-elegant border-0 overflow-hidden p-0 text-white"
+                style={{ background: `linear-gradient(135deg, ${r.color}, ${r.color}c0)` }}
+              >
+                <div className="p-5 relative">
                   <Wifi className="absolute top-3 left-3 h-5 w-5 text-white/40" />
                   <div className="text-white/80 text-[11px] mb-1">{r.network_name}</div>
                   <div className="text-white text-sm mb-1">{r.package_name}</div>
@@ -285,37 +286,37 @@ function CabinPage() {
                     )}
                   </div>
                 </div>
-                <div className="p-4">
+                <div className="p-4 bg-black/10">
                   <div className="grid grid-cols-2 gap-2 text-center text-xs mb-3">
                     <button
                       type="button"
                       onClick={() => setDetailsPkg(r)}
-                      className="rounded-lg bg-success/10 py-1.5 hover:bg-success/15 transition"
+                      className="rounded-lg bg-white/15 py-1.5 hover:bg-white/25 transition"
                     >
-                      <div className="font-bold text-success text-lg">{r.available}</div>
-                      <div className="text-[10px] text-muted-foreground">متاحة الآن</div>
+                      <div className="font-bold text-white text-lg">{r.available}</div>
+                      <div className="text-[10px] text-white/75">متاحة الآن</div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setDetailsPkg(r)}
-                      className="rounded-lg bg-warning/10 py-1.5 hover:bg-warning/15 transition"
+                      className="rounded-lg bg-white/15 py-1.5 hover:bg-white/25 transition"
                     >
-                      <div className="font-bold text-warning text-lg">{r.sold_count}</div>
-                      <div className="text-[10px] text-muted-foreground">مباع</div>
+                      <div className="font-bold text-white text-lg">{r.sold_count}</div>
+                      <div className="text-[10px] text-white/75">مباع</div>
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       onClick={() => setDetailsPkg(r)}
-                      className="w-full rounded-xl font-semibold h-10"
+                      className="w-full rounded-xl font-semibold h-10 bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white"
                     >
                       التفاصيل
                     </Button>
                     <Button
                       disabled={noStock}
                       onClick={() => setConfirmPkg(r)}
-                      className="w-full rounded-xl gradient-primary-bg border-0 font-semibold h-10"
+                      className="w-full rounded-xl border-0 font-semibold h-10 bg-white text-foreground hover:bg-white/90"
                     >
                       {noStock ? "لا كروت" : "بيع كرت"}
                     </Button>
@@ -323,6 +324,7 @@ function CabinPage() {
                 </div>
               </Card>
             );
+
           })}
         </div>
       )}
