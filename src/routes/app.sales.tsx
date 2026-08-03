@@ -304,7 +304,7 @@ function SalesPage() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="flex flex-col pb-40 md:pb-6">
       <div className="shrink-0">
         <PageHeader
           title={isAdmin ? "جميع المبيعات" : "مبيعاتي"}
