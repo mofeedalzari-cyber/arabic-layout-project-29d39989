@@ -755,10 +755,11 @@ function FeatureTile({
   label: string;
 }) {
   return (
-    <div className="rounded-2xl bg-muted/40 border border-border/40 px-2 py-2.5 text-center">
-      <div className="flex items-center justify-center text-primary mb-1">{icon}</div>
-      <div className="text-sm font-extrabold text-foreground leading-tight truncate">{value}</div>
-      <div className="text-[10px] text-muted-foreground mt-0.5">{label}</div>
+    <div className="rounded-2xl bg-white/15 border border-white/25 px-2 py-2.5 text-center">
+      <div className="flex items-center justify-center text-white mb-1">{icon}</div>
+      <div className="text-sm font-extrabold text-white leading-tight truncate">{value}</div>
+      <div className="text-[10px] text-white/75 mt-0.5">{label}</div>
     </div>
   );
+
 }
