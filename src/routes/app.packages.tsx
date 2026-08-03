@@ -305,37 +305,34 @@ function PackagesPage() {
           const net = netMap.get(p.network_id);
           const c = counts?.get(p.id) ?? { total: 0, avail: 0, assigned: 0, sold: 0 };
           const shortId = p.id.replace(/-/g, "").slice(0, 8).toUpperCase();
+          const pc = p.color ?? "#009688";
           return (
             <Card
               key={p.id}
-              className="card-elegant border border-border/40 bg-card rounded-3xl p-4 space-y-3"
+              className="card-elegant border-0 rounded-3xl p-4 space-y-3 text-white"
+              style={{ background: `linear-gradient(135deg, ${pc}, ${pc}c0)` }}
             >
               {/* Header: icon + name + price pill */}
               <div className="flex items-center justify-between gap-3">
-                <div
-                  className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
-                  style={{ background: p.color ?? "#009688" }}
-                >
+                <div className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 bg-white/20">
                   <Layers className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0 text-right">
-                  <div className="text-base font-extrabold truncate">باقة {p.name}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">
-                    {net?.name ?? "—"}
-                  </div>
+                  <div className="text-base font-extrabold truncate text-white">باقة {p.name}</div>
+                  <div className="text-[11px] text-white/80 truncate">{net?.name ?? "—"}</div>
                 </div>
-                <div className="rounded-full bg-destructive/10 text-destructive text-xs font-bold px-3 py-1.5 whitespace-nowrap">
+                <div className="rounded-full bg-white/20 text-white text-xs font-bold px-3 py-1.5 whitespace-nowrap">
                   {fmtMoney(Number(p.price))}
                 </div>
               </div>
 
               {/* Available now */}
-              <div className="rounded-2xl bg-muted/50 px-4 py-3 flex items-center justify-between">
-                <div className="text-sm text-muted-foreground flex items-center gap-2">
+              <div className="rounded-2xl bg-white/15 px-4 py-3 flex items-center justify-between">
+                <div className="text-sm text-white/85 flex items-center gap-2">
                   <Archive className="h-4 w-4" />
                   المتاح الآن
                 </div>
-                <div className="text-2xl font-extrabold text-foreground">{c.avail}</div>
+                <div className="text-2xl font-extrabold text-white">{c.avail}</div>
               </div>
 
               {/* Three feature tiles */}
@@ -359,10 +356,11 @@ function PackagesPage() {
 
               {/* ID chip */}
               <div className="flex">
-                <span className="inline-flex items-center rounded-full bg-muted/60 text-muted-foreground text-[11px] font-medium px-3 py-1">
+                <span className="inline-flex items-center rounded-full bg-white/15 text-white/80 text-[11px] font-medium px-3 py-1">
                   ID: {shortId}
                 </span>
               </div>
+
 
               {/* Actions */}
               {canManage ? (
@@ -370,7 +368,7 @@ function PackagesPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 rounded-xl"
+                    className="flex-1 rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white"
                     onClick={() => {
                       setEditing(p);
                       setOpen(true);
@@ -382,7 +380,7 @@ function PackagesPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="rounded-xl text-destructive"
+                    className="rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white"
                     onClick={() => {
                       if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name });
                     }}
@@ -394,7 +392,7 @@ function PackagesPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant="outline"
-                    className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold"
+                    className="rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white h-11 font-semibold"
                     onClick={() => {
                       setRequestPkg(p);
                       setReqQty(10);
@@ -408,13 +406,14 @@ function PackagesPage() {
                   <Button
                     asChild
                     variant="outline"
-                    className="rounded-xl border-primary/40 text-primary hover:bg-primary/5 h-11 font-semibold"
+                    className="rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white h-11 font-semibold"
                   >
                     <Link to="/app/cabin">
                       <LayoutGrid className="h-4 w-4 ml-1.5" />
                       كبينة البيع
                     </Link>
                   </Button>
+
                 </div>
               )}
             </Card>
@@ -756,10 +755,11 @@ function FeatureTile({
   label: string;
 }) {
   return (
-    <div className="rounded-2xl bg-muted/40 border border-border/40 px-2 py-2.5 text-center">
-      <div className="flex items-center justify-center text-primary mb-1">{icon}</div>
-      <div className="text-sm font-extrabold text-foreground leading-tight truncate">{value}</div>
-      <div className="text-[10px] text-muted-foreground mt-0.5">{label}</div>
+    <div className="rounded-2xl bg-white/15 border border-white/25 px-2 py-2.5 text-center">
+      <div className="flex items-center justify-center text-white mb-1">{icon}</div>
+      <div className="text-sm font-extrabold text-white leading-tight truncate">{value}</div>
+      <div className="text-[10px] text-white/75 mt-0.5">{label}</div>
     </div>
   );
+
 }
