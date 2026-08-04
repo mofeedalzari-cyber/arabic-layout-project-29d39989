@@ -150,9 +150,6 @@ function UserOrdersPage() {
                   />
                 </div>
               </div>
-                  </div>
-                </div>
-              </div>
               <div className="text-xs text-muted-foreground">
                 {fmtArabicDateTime(r.created_at)} — متاح {r.available}
                 {r.note ? ` — ${r.note}` : ""}
