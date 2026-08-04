@@ -64,7 +64,9 @@ const pkgSchema = z.object({
   color: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/)
-    .default("#009688"),
+    .nullable()
+    .default(null),
+
   sort_order: z.number().int().default(0),
   is_active: z.boolean().default(true),
 });
