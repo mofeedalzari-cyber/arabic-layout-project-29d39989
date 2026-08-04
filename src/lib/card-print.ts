@@ -1,3 +1,5 @@
+import { sanitizePdfText } from "./pdfmake-report";
+
 export interface CardTemplate {
   image: string; // data URL
   // نسبة موقع رمز الدخول من صورة القالب (%)
