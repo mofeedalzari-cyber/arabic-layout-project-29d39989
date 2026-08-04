@@ -56,7 +56,7 @@ interface CabinRow {
   network_id: string;
   network_name: string;
   price: number;
-  color: string;
+  color: string | null;
   data_size: string | null;
   speed: string | null;
   validity: string | null;
@@ -264,8 +264,12 @@ function CabinPage() {
             return (
               <Card
                 key={r.package_id}
-                className="card-elegant border-0 overflow-hidden p-0 text-white"
-                style={{ background: `linear-gradient(135deg, ${r.color}, ${r.color}c0)` }}
+                className={`card-elegant border-0 overflow-hidden p-0 ${r.color ? "text-white" : "pkg-plain"}`}
+                style={
+                  r.color
+                    ? { background: `linear-gradient(135deg, ${r.color}, ${r.color}c0)` }
+                    : undefined
+                }
               >
                 <div className="p-5 relative">
                   <Wifi className="absolute top-3 left-3 h-5 w-5 text-white/40" />
@@ -352,10 +356,14 @@ function CabinPage() {
           {confirmPkg && (
             <div className="mt-4 space-y-4">
               <div
-                className="rounded-2xl p-5 text-white"
-                style={{
-                  background: `linear-gradient(135deg, ${confirmPkg.color}, ${confirmPkg.color}dd)`,
-                }}
+                className={`rounded-2xl p-5 ${confirmPkg.color ? "text-white" : "pkg-plain"}`}
+                style={
+                  confirmPkg.color
+                    ? {
+                        background: `linear-gradient(135deg, ${confirmPkg.color}, ${confirmPkg.color}dd)`,
+                      }
+                    : undefined
+                }
               >
                 <div className="opacity-80 text-sm">
                   {confirmPkg.network_name} — {confirmPkg.package_name}

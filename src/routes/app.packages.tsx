@@ -307,12 +307,12 @@ function PackagesPage() {
           const net = netMap.get(p.network_id);
           const c = counts?.get(p.id) ?? { total: 0, avail: 0, assigned: 0, sold: 0 };
           const shortId = p.id.replace(/-/g, "").slice(0, 8).toUpperCase();
-          const pc = p.color ?? "#009688";
+          const pc = p.color;
           return (
             <Card
               key={p.id}
-              className="card-elegant border-0 rounded-3xl p-4 space-y-3 text-white"
-              style={{ background: `linear-gradient(135deg, ${pc}, ${pc}c0)` }}
+              className={`card-elegant border-0 rounded-3xl p-4 space-y-3 ${pc ? "text-white" : "pkg-plain"}`}
+              style={pc ? { background: `linear-gradient(135deg, ${pc}, ${pc}c0)` } : undefined}
             >
               {/* Header: icon + name + price pill */}
               <div className="flex items-center justify-between gap-3">
@@ -458,7 +458,9 @@ function PackagesPage() {
                   <div
                     className="rounded-2xl p-5 text-white"
                     style={{
-                      background: `linear-gradient(135deg, ${requestPkg.color ?? "#009688"}, ${requestPkg.color ?? "#009688"}dd)`,
+                      background: requestPkg.color
+                    ? `linear-gradient(135deg, ${requestPkg.color}, ${requestPkg.color}dd)`
+                    : "var(--muted)",
                     }}
                   >
                     <div className="opacity-80 text-sm">{net?.name ?? ""}</div>
@@ -591,7 +593,7 @@ function PackageForm({
     validity: initial?.validity ?? "",
     allowed_time: initial?.allowed_time ?? "",
     description: initial?.description ?? "",
-    color: initial?.color ?? "#009688",
+    color: initial?.color ?? null,
     sort_order: initial?.sort_order ?? 0,
     is_active: initial?.is_active ?? true,
   });
@@ -675,7 +677,7 @@ function PackageForm({
           <div className="flex items-center gap-2">
             <Input
               type="color"
-              value={form.color}
+              value={form.color ?? "#009688"}
               onChange={(e) => setForm({ ...form, color: e.target.value })}
               className="w-14 p-1 h-10"
             />
@@ -684,7 +686,7 @@ function PackageForm({
               variant="outline"
               size="sm"
               className="h-10 rounded-xl text-xs"
-              onClick={() => setForm({ ...form, color: "#009688" })}
+              onClick={() => setForm({ ...form, color: null })}
             >
               استعادة الافتراضي
             </Button>
