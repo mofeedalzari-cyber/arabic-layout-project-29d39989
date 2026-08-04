@@ -470,6 +470,20 @@ function SalesPage() {
           </Select>
         )}
 
+        <Select value={packageFilter} onValueChange={setPackageFilter}>
+          <SelectTrigger className="w-[160px] rounded-xl">
+            <SelectValue placeholder="الباقة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الباقات</SelectItem>
+            {packageOptions.map((p) => (
+              <SelectItem key={p} value={p}>
+                {p}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
           <SelectTrigger className="w-[130px] rounded-xl">
             <SelectValue placeholder="السجلات" />
@@ -494,6 +508,78 @@ function SalesPage() {
           </Button>
         )}
       </div>
+
+      {/* فلترة المباع من تاريخ إلى تاريخ */}
+      <div className="mt-3 flex flex-wrap items-end gap-2 shrink-0">
+        <div className="flex flex-col gap-1">
+          <Label className="text-[11px] text-muted-foreground">من تاريخ</Label>
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="h-10 w-[150px] rounded-xl"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label className="text-[11px] text-muted-foreground">إلى تاريخ</Label>
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="h-10 w-[150px] rounded-xl"
+          />
+        </div>
+        <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={() => setMonthRange(0)}>
+          هذا الشهر
+        </Button>
+        <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={() => setMonthRange(-1)}>
+          الشهر الماضي
+        </Button>
+        {(dateFrom || dateTo) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-10 gap-1 text-muted-foreground"
+            onClick={() => {
+              setDateFrom("");
+              setDateTo("");
+            }}
+          >
+            <X className="h-3.5 w-3.5" /> مسح التاريخ
+          </Button>
+        )}
+      </div>
+
+      {/* إحصائية المباع لكل باقة خلال الفترة */}
+      {packageSummary.length > 0 && (
+        <Card className="card-elegant mt-4 border-0 p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="text-sm font-bold">المباع لكل باقة خلال الفترة</div>
+            <div className="text-xs text-muted-foreground">
+              الإجمالي: <b className="text-foreground">{summaryTotals.count}</b> كرت —{" "}
+              <b className="text-foreground">{fmtMoney(summaryTotals.total)}</b>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {packageSummary.map((r) => (
+              <div
+                key={`${r.network}-${r.pkg}`}
+                className="rounded-xl border border-border/50 bg-muted/30 p-3"
+              >
+                <div className="truncate text-sm font-semibold">{r.pkg}</div>
+                <div className="truncate text-[11px] text-muted-foreground">{r.network}</div>
+                <div className="mt-2 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    عدد المباع: <b className="text-foreground">{r.count}</b>
+                  </span>
+                  <span className="font-bold text-primary">{fmtMoney(r.total)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
 
       <Card className="card-elegant relative mt-4 flex w-full flex-col border-0">
         {/* Page (main) handles vertical scrolling; this container only scrolls
