@@ -19,22 +19,35 @@ const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
  * the characters inside each token untouched (reversing characters would
  * break Arabic letter shaping/joining).
  */
+/**
+ * The embedded Cairo subset has no glyph for the Saudi Riyal sign (U+FDFC) or
+ * for zero-width/soft markers, so those render as tofu boxes ("أحرف غريبة").
+ * Normalize them before shaping.
+ */
+export function sanitizePdfText(value: string): string {
+  return value
+    .replace(/\uFDFC/g, "ر.س")
+    .replace(/[\u200B\u200C\u200D\u200E\u200F\u061C\u2060\uFEFF\u00AD]/g, "")
+    .replace(/\u00A0/g, " ");
+}
+
 export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
-  const value = String(input);
+  let value = String(input);
+  const keepOrder = value.includes("\u00A0");
+  value = sanitizePdfText(value);
   if (!ARABIC_CHAR.test(value)) return value;
   // Names are passed with non-breaking spaces to preserve their Arabic word
   // order. Do not split/reverse those names; otherwise "ماجد حميد احمد الحائط"
   // becomes visually reversed in the generated PDF.
-  if (value.includes("\u00A0")) {
-    return value.replace(/\u200B/g, "");
-  }
+  if (keepOrder) return value;
 
   // Split on regular spaces only. Reversing at whitespace — never inside a
   // token — keeps Arabic letter shaping/joining intact for ordinary labels.
   const parts = value.split(/( +)/);
   return parts.reverse().join("");
 }
+
 
 function rtlText(input: string | number | null | undefined): string {
   return ar(input);
