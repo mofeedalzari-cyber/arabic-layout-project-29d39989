@@ -820,6 +820,7 @@ export type Database = {
           remaining: number
         }[]
       }
+      admin_delete_user_orders: { Args: { _ids: string[] }; Returns: number }
       admin_list_cards: {
         Args: {
           _agent_id?: string
@@ -939,6 +940,7 @@ export type Database = {
         Args: { _customer_id: string; _delete_cards?: boolean }
         Returns: undefined
       }
+      delete_my_orders: { Args: { _ids: string[] }; Returns: number }
       delete_sale:
         | { Args: { _sale_id: string }; Returns: undefined }
         | {
