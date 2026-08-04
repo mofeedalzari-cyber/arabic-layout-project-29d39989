@@ -316,25 +316,25 @@ function PackagesPage() {
             >
               {/* Header: icon + name + price pill */}
               <div className="flex items-center justify-between gap-3">
-                <div className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 bg-white/20">
-                  <Layers className="h-5 w-5 text-white" />
+                <div className={`h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 ${pc ? "bg-white/20" : "bg-primary/10"}`}>
+                  <Layers className={`h-5 w-5 ${pc ? "text-white" : "text-primary"}`} />
                 </div>
                 <div className="flex-1 min-w-0 text-right">
-                  <div className="text-base font-extrabold truncate text-white">باقة {p.name}</div>
-                  <div className="text-[11px] text-white/80 truncate">{net?.name ?? "—"}</div>
+                  <div className={`text-base font-extrabold truncate ${pc ? "text-white" : "text-foreground"}`}>باقة {p.name}</div>
+                  <div className={`text-[11px] truncate ${pc ? "text-white/80" : "text-muted-foreground"}`}>{net?.name ?? "—"}</div>
                 </div>
-                <div className="rounded-full bg-white/20 text-white text-xs font-bold px-3 py-1.5 whitespace-nowrap">
+                <div className={`rounded-full text-xs font-bold px-3 py-1.5 whitespace-nowrap ${pc ? "bg-white/20 text-white" : "bg-muted text-foreground"}`}>
                   {fmtMoney(Number(p.price))}
                 </div>
               </div>
 
               {/* Available now */}
-              <div className="rounded-2xl bg-white/15 px-4 py-3 flex items-center justify-between">
-                <div className="text-sm text-white/85 flex items-center gap-2">
-                  <Archive className="h-4 w-4" />
+              <div className={`rounded-2xl px-4 py-3 flex items-center justify-between ${pc ? "bg-white/15" : "bg-muted"}`}>
+                <div className={`text-sm flex items-center gap-2 ${pc ? "text-white/85" : "text-muted-foreground"}`}>
+                  <Archive className={`h-4 w-4 ${pc ? "" : "text-primary"}`} />
                   المتاح الآن
                 </div>
-                <div className="text-2xl font-extrabold text-white">{c.avail}</div>
+                <div className={`text-2xl font-extrabold ${pc ? "text-white" : "text-foreground"}`}>{c.avail}</div>
               </div>
 
               {/* Three feature tiles */}
@@ -343,26 +343,28 @@ function PackagesPage() {
                   icon={<CalendarCheck className="h-4 w-4" />}
                   value={p.validity ?? "—"}
                   label="الصلاحية"
+                  colored={!!pc}
                 />
                 <FeatureTile
                   icon={<Clock className="h-4 w-4" />}
                   value={p.allowed_time ?? "—"}
                   label="الساعات"
+                  colored={!!pc}
                 />
                 <FeatureTile
                   icon={<RefreshCw className="h-4 w-4" />}
                   value={p.data_size ?? "—"}
                   label="الحجم"
+                  colored={!!pc}
                 />
               </div>
 
               {/* ID chip */}
               <div className="flex">
-                <span className="inline-flex items-center rounded-full bg-white/15 text-white/80 text-[11px] font-medium px-3 py-1">
+                <span className={`inline-flex items-center rounded-full text-[11px] font-medium px-3 py-1 ${pc ? "bg-white/15 text-white/80" : "bg-muted text-muted-foreground"}`}>
                   ID: {shortId}
                 </span>
               </div>
-
 
               {/* Actions */}
               {canManage ? (
@@ -370,7 +372,7 @@ function PackagesPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white"
+                    className={`flex-1 rounded-xl h-11 font-semibold ${pc ? "bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white" : "bg-muted border-border text-foreground hover:bg-muted/80"}`}
                     onClick={() => {
                       setEditing(p);
                       setOpen(true);
@@ -382,7 +384,7 @@ function PackagesPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white"
+                    className={`rounded-xl h-11 ${pc ? "bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white" : "bg-muted border-border text-foreground hover:bg-muted/80"}`}
                     onClick={() => {
                       if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name });
                     }}
@@ -394,7 +396,7 @@ function PackagesPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant="outline"
-                    className="rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white h-11 font-semibold"
+                    className={`rounded-xl h-11 font-semibold ${pc ? "bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white" : "bg-muted border-border text-foreground hover:bg-muted/80"}`}
                     onClick={() => {
                       setRequestPkg(p);
                       setReqQty(10);
@@ -408,14 +410,13 @@ function PackagesPage() {
                   <Button
                     asChild
                     variant="outline"
-                    className="rounded-xl bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white h-11 font-semibold"
+                    className={`rounded-xl h-11 font-semibold ${pc ? "bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white" : "bg-muted border-border text-foreground hover:bg-muted/80"}`}
                   >
                     <Link to="/app/cabin">
                       <LayoutGrid className="h-4 w-4 ml-1.5" />
                       كبينة البيع
                     </Link>
                   </Button>
-
                 </div>
               )}
             </Card>
