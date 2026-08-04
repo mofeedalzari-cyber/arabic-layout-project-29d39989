@@ -406,7 +406,16 @@ function SalesPage() {
           variant="outline"
           size="sm"
           onClick={() =>
-            printSalesPdf({ sales: filtered, isAdmin, agentFilter, agentOptions, displayName })
+            printSalesPdf({
+              sales: filtered,
+              isAdmin,
+              agentFilter,
+              agentOptions,
+              displayName,
+              packageSummary,
+              dateFrom,
+              dateTo,
+            })
           }
           className="gap-1"
           disabled={filtered.length === 0}
@@ -805,8 +814,12 @@ async function printSalesPdf(args: {
   agentFilter: string;
   agentOptions: { username: string; name: string }[];
   displayName: (u?: string | null, id?: string | null) => string;
+  packageSummary: { pkg: string; network: string; count: number; total: number }[];
+  dateFrom?: string;
+  dateTo?: string;
 }) {
-  const { sales, isAdmin, agentFilter, agentOptions, displayName } = args;
+  const { sales, isAdmin, agentFilter, agentOptions, displayName, packageSummary, dateFrom, dateTo } =
+    args;
   const { exportToPDF } = await import("@/lib/dashboard-export");
 
   // Replace internal spaces with non-breaking spaces so multi-word Arabic
@@ -825,7 +838,24 @@ async function printSalesPdf(args: {
     { label: "المندوب", value: nb(agentLabel) },
     { label: "عدد العمليات", value: sales.length },
     { label: "إجمالي القيمة", value: fmtMoney(total) },
+    ...(dateFrom || dateTo
+      ? [{ label: "الفترة", value: nb(`${dateFrom || "البداية"} → ${dateTo || "الآن"}`) }]
+      : []),
   ];
+
+  const pkgSection = {
+    title: "المباع لكل باقة خلال الفترة",
+    cols: ["الباقة", "الشبكة", "عدد المباع", "الإجمالي"],
+    rows: [
+      ...packageSummary.map((r) => [nb(r.pkg), nb(r.network), r.count, fmtMoney(r.total)]),
+      [
+        nb("الإجمالي"),
+        "—",
+        packageSummary.reduce((a, r) => a + r.count, 0),
+        fmtMoney(packageSummary.reduce((a, r) => a + r.total, 0)),
+      ],
+    ],
+  };
 
   const cols = isAdmin
     ? ["رقم العملية", "الباقة", "الشبكة", "المندوب", "الزبون", "الكرت", "التاريخ", "السعر"]
@@ -848,7 +878,10 @@ async function printSalesPdf(args: {
   });
 
   const title = `تقرير_المبيعات_${agentLabel}`;
-  await exportToPDF(title, summary, [{ title: "جميع المبيعات", cols, rows }], {
+  const sections = packageSummary.length
+    ? [pkgSection, { title: "جميع المبيعات", cols, rows }]
+    : [{ title: "جميع المبيعات", cols, rows }];
+  await exportToPDF(title, summary, sections, {
     reportName: `تقرير المبيعات — ${agentLabel}`,
   });
 }
