@@ -65,7 +65,7 @@ function StorePage() {
 
   return (
     <div dir="rtl" className="space-y-4">
-      <PageHeader title="المتجر" subtitle="اختر الباقة واشترِ كرتك مباشرة" />
+      <PageHeader title="المتجر" description="اختر الباقة واشترِ كرتك مباشرة" />
 
       {isLoading ? (
         <div className="text-center text-muted-foreground py-10">جارٍ التحميل…</div>
