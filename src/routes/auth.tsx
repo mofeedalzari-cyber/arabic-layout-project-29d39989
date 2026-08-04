@@ -309,7 +309,7 @@ function AuthPage() {
                   inputMode="tel"
                   autoComplete="tel"
                 />
-                {accountType === "user" ? null : accountType === "network" ? (
+                {accountType === "network" ? (
                   <SoftInput
                     dir="rtl"
                     value={regNet}
