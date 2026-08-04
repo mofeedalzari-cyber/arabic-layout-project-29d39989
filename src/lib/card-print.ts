@@ -1,3 +1,5 @@
+import { sanitizePdfText } from "./pdfmake-report";
+
 export interface CardTemplate {
   image: string; // data URL
   // نسبة موقع رمز الدخول من صورة القالب (%)
@@ -274,10 +276,11 @@ export async function printAssignedCards(opts: {
   const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
   const ar = (v: any): string => {
     if (v == null) return "";
-    const s = String(v);
+    const s = sanitizePdfText(String(v));
     if (!ARABIC_CHAR.test(s)) return s;
     return s.split(/(\s+)/).reverse().join("");
   };
+
 
   const header = [
     { text: ar("#"), style: "th", alignment: "center" },

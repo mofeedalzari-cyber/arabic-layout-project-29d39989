@@ -19,22 +19,35 @@ const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
  * the characters inside each token untouched (reversing characters would
  * break Arabic letter shaping/joining).
  */
+/**
+ * The embedded Cairo subset has no glyph for the Saudi Riyal sign (U+FDFC) or
+ * for zero-width/soft markers, so those render as tofu boxes ("أحرف غريبة").
+ * Normalize them before shaping.
+ */
+export function sanitizePdfText(value: string): string {
+  return value
+    .replace(/\uFDFC/g, "ر.س")
+    .replace(/[\u200B\u200C\u200D\u200E\u200F\u061C\u2060\uFEFF\u00AD]/g, "")
+    .replace(/\u00A0/g, " ");
+}
+
 export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
-  const value = String(input);
+  let value = String(input);
+  const keepOrder = value.includes("\u00A0");
+  value = sanitizePdfText(value);
   if (!ARABIC_CHAR.test(value)) return value;
   // Names are passed with non-breaking spaces to preserve their Arabic word
   // order. Do not split/reverse those names; otherwise "ماجد حميد احمد الحائط"
   // becomes visually reversed in the generated PDF.
-  if (value.includes("\u00A0")) {
-    return value.replace(/\u200B/g, "");
-  }
+  if (keepOrder) return value;
 
   // Split on regular spaces only. Reversing at whitespace — never inside a
   // token — keeps Arabic letter shaping/joining intact for ordinary labels.
   const parts = value.split(/( +)/);
   return parts.reverse().join("");
 }
+
 
 function rtlText(input: string | number | null | undefined): string {
   return ar(input);
@@ -319,9 +332,10 @@ function tableSection(sec: PdfTableSection, dense = false): any {
     idx > 0 && NARROW_HEADERS.has(String(sec.cols[idx - 1] ?? "").trim());
   const narrowWidthFor = (idx: number) => {
     const h = String(sec.cols[idx - 1] ?? "").trim();
-    if (h === "السعر") return dense ? 34 : 44;
+    if (h === "السعر") return dense ? 38 : 48;
     if (h === "التاريخ") return dense ? 74 : 92;
-    return dense ? 42 : 54;
+    if (h === "رقم العملية") return dense ? 62 : 78;
+    return dense ? 44 : 56;
   };
   const widths: (string | number)[] = [
     dense ? 12 : 18,
@@ -335,14 +349,29 @@ function tableSection(sec: PdfTableSection, dense = false): any {
   const cellSize = dense ? 7 : 9.5;
   const narrowCellSize = dense ? 6.5 : 8.5;
 
-  // Insert zero-width spaces inside long tokens so any cell can wrap without clipping.
-  // Also allow non-breaking-space-joined names to break between words so long agent
-  // names wrap inside their column instead of overflowing.
+  // Break long non-Arabic tokens (transaction ids, card numbers) with real line
+  // breaks. Zero-width spaces were used before, but the embedded Cairo subset
+  // has no glyph for U+200B so they printed as tofu boxes inside the values.
   const wrapLongToken = (s: string, every = 6) => {
-    const str = String(s ?? "").replace(/\u00A0/g, "\u00A0\u200B");
-    if (str.length <= every + 2) return str;
-    return str.replace(new RegExp(`(\\S{${every}})`, "g"), "$1\u200B");
+    const str = sanitizePdfText(String(s ?? ""));
+    if (ARABIC_CHAR.test(str)) return str;
+    return str
+      .split(/( +)/)
+      .map((tok) => {
+        if (!tok.trim() || tok.length <= every + 2) return tok;
+        // Prefer breaking at separators, then hard-chunk anything still too long.
+        return tok
+          .split(/(?<=[-_/])/)
+          .map((part) =>
+            part.length > every + 2
+              ? (part.match(new RegExp(`.{1,${every + 2}}`, "g")) || [part]).join("\n")
+              : part,
+          )
+          .join("\n");
+      })
+      .join("");
   };
+
 
   const header = cols
     .slice()
