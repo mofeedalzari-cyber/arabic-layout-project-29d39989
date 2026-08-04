@@ -5,11 +5,12 @@ import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { openWhatsApp } from "@/lib/wa-open";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Inbox, Check, X, MessageCircle } from "lucide-react";
+import { Inbox, Check, X, MessageCircle, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/app/user-orders")({ component: UserOrdersPage });
 
