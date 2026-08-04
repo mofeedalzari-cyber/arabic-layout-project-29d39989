@@ -376,3 +376,18 @@
     transform: translateY(0);
   }
 }
+
+/* Package cards with no color: neutralize the white-on-gradient styling */
+.pkg-plain {
+  background: var(--card);
+  color: var(--foreground);
+}
+.pkg-plain [class*="text-white"] {
+  color: var(--foreground) !important;
+}
+.pkg-plain [class*="bg-white/"] {
+  background-color: var(--muted) !important;
+}
+.pkg-plain [class*="border-white/"] {
+  border-color: var(--border) !important;
+}
