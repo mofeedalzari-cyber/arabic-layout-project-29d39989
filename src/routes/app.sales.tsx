@@ -97,6 +97,9 @@ function SalesPage() {
   const [customerFilter, setCustomerFilter] = useState<string>("all");
   const [agentFilter, setAgentFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [packageFilter, setPackageFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [toEdit, setToEdit] = useState<SaleRow | null>(null);
   const [editBuyer, setEditBuyer] = useState("");
   const [editPrice, setEditPrice] = useState("");
@@ -110,15 +113,18 @@ function SalesPage() {
   const { display: displayName } = useUserNames();
 
   const { data: sales, isLoading } = useQuery({
-    queryKey: ["sales"],
+    queryKey: ["sales", dateFrom, dateTo],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("sales")
         .select(
           "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_number, is_external, customers ( name ), cards ( username, password )",
         )
         .order("sold_at", { ascending: false })
-        .limit(500);
+        .limit(dateFrom || dateTo ? 5000 : 500);
+      if (dateFrom) query = query.gte("sold_at", `${dateFrom}T00:00:00`);
+      if (dateTo) query = query.lte("sold_at", `${dateTo}T23:59:59.999`);
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map((s: any) => ({
         ...s,
@@ -128,6 +134,7 @@ function SalesPage() {
       })) as SaleRow[];
     },
   });
+
 
   const customerOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -152,11 +159,18 @@ function SalesPage() {
     return Array.from(map, ([u, name]) => ({ username: u, name }));
   }, [sales, displayName]);
 
+  const packageOptions = useMemo(() => {
+    const set = new Set<string>();
+    (sales ?? []).forEach((s) => s.package_name && set.add(s.package_name));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "ar"));
+  }, [sales]);
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return (sales ?? []).filter((r) => {
       if (customerFilter !== "all" && r.customer_id !== customerFilter) return false;
       if (agentFilter !== "all" && agentKey(r) !== agentFilter) return false;
+      if (packageFilter !== "all" && r.package_name !== packageFilter) return false;
       if (statusFilter === "customer" && !r.customer_id) return false;
       if (statusFilter === "direct" && r.customer_id) return false;
       if (!s) return true;
@@ -171,8 +185,33 @@ function SalesPage() {
         displayName(r.agent_username, r.agent_id).toLowerCase().includes(s)
       );
     });
-  }, [sales, q, customerFilter, agentFilter, statusFilter, displayName]);
+  }, [sales, q, customerFilter, agentFilter, packageFilter, statusFilter, displayName]);
 
+  // ملخص المباع لكل باقة داخل الفترة المحددة
+  const packageSummary = useMemo(() => {
+    const map = new Map<string, { pkg: string; network: string; count: number; total: number }>();
+    filtered.forEach((r) => {
+      const key = `${r.network_name}||${r.package_name}`;
+      const cur = map.get(key) ?? {
+        pkg: r.package_name,
+        network: r.network_name,
+        count: 0,
+        total: 0,
+      };
+      cur.count += 1;
+      cur.total += Number(r.price) || 0;
+      map.set(key, cur);
+    });
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }, [filtered]);
+
+  const summaryTotals = useMemo(
+    () => ({
+      count: packageSummary.reduce((s, r) => s + r.count, 0),
+      total: packageSummary.reduce((s, r) => s + r.total, 0),
+    }),
+    [packageSummary],
+  );
 
   const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
   const someSelected = selected.size > 0;
@@ -181,7 +220,11 @@ function SalesPage() {
   const activeFilters =
     (customerFilter !== "all" ? 1 : 0) +
     (agentFilter !== "all" ? 1 : 0) +
+    (packageFilter !== "all" ? 1 : 0) +
+    (dateFrom ? 1 : 0) +
+    (dateTo ? 1 : 0) +
     (statusFilter !== "all" ? 1 : 0);
+
 
   // The page-level scroller (app shell <main>) handles vertical scrolling
   const getPageScroller = (): HTMLElement | null => {
@@ -237,7 +280,21 @@ function SalesPage() {
     setCustomerFilter("all");
     setAgentFilter("all");
     setStatusFilter("all");
+    setPackageFilter("all");
+    setDateFrom("");
+    setDateTo("");
   }
+
+  function setMonthRange(offset: number) {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+    const iso = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    setDateFrom(iso(start));
+    setDateTo(iso(end));
+  }
+
 
   function toggleAll() {
     if (allSelected) setSelected(new Set());
@@ -413,6 +470,20 @@ function SalesPage() {
           </Select>
         )}
 
+        <Select value={packageFilter} onValueChange={setPackageFilter}>
+          <SelectTrigger className="w-[160px] rounded-xl">
+            <SelectValue placeholder="الباقة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الباقات</SelectItem>
+            {packageOptions.map((p) => (
+              <SelectItem key={p} value={p}>
+                {p}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
           <SelectTrigger className="w-[130px] rounded-xl">
             <SelectValue placeholder="السجلات" />
@@ -437,6 +508,78 @@ function SalesPage() {
           </Button>
         )}
       </div>
+
+      {/* فلترة المباع من تاريخ إلى تاريخ */}
+      <div className="mt-3 flex flex-wrap items-end gap-2 shrink-0">
+        <div className="flex flex-col gap-1">
+          <Label className="text-[11px] text-muted-foreground">من تاريخ</Label>
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="h-10 w-[150px] rounded-xl"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label className="text-[11px] text-muted-foreground">إلى تاريخ</Label>
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="h-10 w-[150px] rounded-xl"
+          />
+        </div>
+        <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={() => setMonthRange(0)}>
+          هذا الشهر
+        </Button>
+        <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={() => setMonthRange(-1)}>
+          الشهر الماضي
+        </Button>
+        {(dateFrom || dateTo) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-10 gap-1 text-muted-foreground"
+            onClick={() => {
+              setDateFrom("");
+              setDateTo("");
+            }}
+          >
+            <X className="h-3.5 w-3.5" /> مسح التاريخ
+          </Button>
+        )}
+      </div>
+
+      {/* إحصائية المباع لكل باقة خلال الفترة */}
+      {packageSummary.length > 0 && (
+        <Card className="card-elegant mt-4 border-0 p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="text-sm font-bold">المباع لكل باقة خلال الفترة</div>
+            <div className="text-xs text-muted-foreground">
+              الإجمالي: <b className="text-foreground">{summaryTotals.count}</b> كرت —{" "}
+              <b className="text-foreground">{fmtMoney(summaryTotals.total)}</b>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {packageSummary.map((r) => (
+              <div
+                key={`${r.network}-${r.pkg}`}
+                className="rounded-xl border border-border/50 bg-muted/30 p-3"
+              >
+                <div className="truncate text-sm font-semibold">{r.pkg}</div>
+                <div className="truncate text-[11px] text-muted-foreground">{r.network}</div>
+                <div className="mt-2 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    عدد المباع: <b className="text-foreground">{r.count}</b>
+                  </span>
+                  <span className="font-bold text-primary">{fmtMoney(r.total)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
 
       <Card className="card-elegant relative mt-4 flex w-full flex-col border-0">
         {/* Page (main) handles vertical scrolling; this container only scrolls
