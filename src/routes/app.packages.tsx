@@ -776,17 +776,18 @@ function FeatureTile({
   icon,
   value,
   label,
+  colored = true,
 }: {
   icon: React.ReactNode;
   value: string;
   label: string;
+  colored?: boolean;
 }) {
   return (
-    <div className="rounded-2xl bg-white/15 border border-white/25 px-2 py-2.5 text-center">
-      <div className="flex items-center justify-center text-white mb-1">{icon}</div>
-      <div className="text-sm font-extrabold text-white leading-tight truncate">{value}</div>
-      <div className="text-[10px] text-white/75 mt-0.5">{label}</div>
+    <div className={`rounded-2xl px-2 py-2.5 text-center ${colored ? "bg-white/15 border border-white/25" : "bg-muted border border-border"}`}>
+      <div className={`flex items-center justify-center mb-1 ${colored ? "text-white" : "text-primary"}`}>{icon}</div>
+      <div className={`text-sm font-extrabold leading-tight truncate ${colored ? "text-white" : "text-foreground"}`}>{value}</div>
+      <div className={`text-[10px] mt-0.5 ${colored ? "text-white/75" : "text-muted-foreground"}`}>{label}</div>
     </div>
   );
-
 }
