@@ -37,6 +37,9 @@ function UserOrdersPage() {
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [reason, setReason] = useState<Record<string, string>>({});
+  const [selected, setSelected] = useState<string[]>([]);
+  const [delBusy, setDelBusy] = useState(false);
+
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["admin-user-orders"],
