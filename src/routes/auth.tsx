@@ -46,7 +46,7 @@ function AuthPage() {
   }, [loading, user, navigate]);
 
   useEffect(() => {
-    if (mode === "register" && accountType === "agent") {
+    if (mode === "register" && (accountType === "agent" || accountType === "user")) {
       (supabase.rpc as any)("list_active_networks").then(({ data }: any) => {
         setNetworks((data as { id: string; name: string }[]) ?? []);
       });
