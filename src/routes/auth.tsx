@@ -119,7 +119,7 @@ function AuthPage() {
     const p = passwordSchema.safeParse(regP);
     if (!regName.trim()) return toast.error("أدخل الاسم الرباعي");
     if (!ph.success) return toast.error(ph.error.issues[0].message);
-    if (accountType !== "user" && !regNet.trim())
+    if (!regNet.trim())
       return toast.error(accountType === "network" ? "أدخل اسم الشبكة" : "اختر الشبكة");
     if (!p.success) return toast.error(p.error.issues[0].message);
     if (regP !== regP2) return toast.error("كلمة المرور غير متطابقة");
