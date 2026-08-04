@@ -159,11 +159,18 @@ function SalesPage() {
     return Array.from(map, ([u, name]) => ({ username: u, name }));
   }, [sales, displayName]);
 
+  const packageOptions = useMemo(() => {
+    const set = new Set<string>();
+    (sales ?? []).forEach((s) => s.package_name && set.add(s.package_name));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "ar"));
+  }, [sales]);
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return (sales ?? []).filter((r) => {
       if (customerFilter !== "all" && r.customer_id !== customerFilter) return false;
       if (agentFilter !== "all" && agentKey(r) !== agentFilter) return false;
+      if (packageFilter !== "all" && r.package_name !== packageFilter) return false;
       if (statusFilter === "customer" && !r.customer_id) return false;
       if (statusFilter === "direct" && r.customer_id) return false;
       if (!s) return true;
@@ -178,8 +185,33 @@ function SalesPage() {
         displayName(r.agent_username, r.agent_id).toLowerCase().includes(s)
       );
     });
-  }, [sales, q, customerFilter, agentFilter, statusFilter, displayName]);
+  }, [sales, q, customerFilter, agentFilter, packageFilter, statusFilter, displayName]);
 
+  // ملخص المباع لكل باقة داخل الفترة المحددة
+  const packageSummary = useMemo(() => {
+    const map = new Map<string, { pkg: string; network: string; count: number; total: number }>();
+    filtered.forEach((r) => {
+      const key = `${r.network_name}||${r.package_name}`;
+      const cur = map.get(key) ?? {
+        pkg: r.package_name,
+        network: r.network_name,
+        count: 0,
+        total: 0,
+      };
+      cur.count += 1;
+      cur.total += Number(r.price) || 0;
+      map.set(key, cur);
+    });
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }, [filtered]);
+
+  const summaryTotals = useMemo(
+    () => ({
+      count: packageSummary.reduce((s, r) => s + r.count, 0),
+      total: packageSummary.reduce((s, r) => s + r.total, 0),
+    }),
+    [packageSummary],
+  );
 
   const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
   const someSelected = selected.size > 0;
@@ -188,7 +220,11 @@ function SalesPage() {
   const activeFilters =
     (customerFilter !== "all" ? 1 : 0) +
     (agentFilter !== "all" ? 1 : 0) +
+    (packageFilter !== "all" ? 1 : 0) +
+    (dateFrom ? 1 : 0) +
+    (dateTo ? 1 : 0) +
     (statusFilter !== "all" ? 1 : 0);
+
 
   // The page-level scroller (app shell <main>) handles vertical scrolling
   const getPageScroller = (): HTMLElement | null => {
