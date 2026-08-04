@@ -97,6 +97,9 @@ function SalesPage() {
   const [customerFilter, setCustomerFilter] = useState<string>("all");
   const [agentFilter, setAgentFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [packageFilter, setPackageFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [toEdit, setToEdit] = useState<SaleRow | null>(null);
   const [editBuyer, setEditBuyer] = useState("");
   const [editPrice, setEditPrice] = useState("");
@@ -110,15 +113,18 @@ function SalesPage() {
   const { display: displayName } = useUserNames();
 
   const { data: sales, isLoading } = useQuery({
-    queryKey: ["sales"],
+    queryKey: ["sales", dateFrom, dateTo],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("sales")
         .select(
           "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_number, is_external, customers ( name ), cards ( username, password )",
         )
         .order("sold_at", { ascending: false })
-        .limit(500);
+        .limit(dateFrom || dateTo ? 5000 : 500);
+      if (dateFrom) query = query.gte("sold_at", `${dateFrom}T00:00:00`);
+      if (dateTo) query = query.lte("sold_at", `${dateTo}T23:59:59.999`);
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []).map((s: any) => ({
         ...s,
@@ -128,6 +134,7 @@ function SalesPage() {
       })) as SaleRow[];
     },
   });
+
 
   const customerOptions = useMemo(() => {
     const map = new Map<string, string>();
