@@ -22,6 +22,7 @@ import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppPaymentsRouteImport } from './routes/app.payments'
 import { Route as AppPackagesRouteImport } from './routes/app.packages'
 import { Route as AppNetworksRouteImport } from './routes/app.networks'
+import { Route as AppMyOrdersRouteImport } from './routes/app.my-orders'
 import { Route as AppMikrotiksRouteImport } from './routes/app.mikrotiks'
 import { Route as AppManageCardsRouteImport } from './routes/app.manage-cards'
 import { Route as AppLogsRouteImport } from './routes/app.logs'
@@ -99,6 +100,11 @@ const AppNetworksRoute = AppNetworksRouteImport.update({
   path: '/networks',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMyOrdersRoute = AppMyOrdersRouteImport.update({
+  id: '/my-orders',
+  path: '/my-orders',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMikrotiksRoute = AppMikrotiksRouteImport.update({
   id: '/mikrotiks',
   path: '/mikrotiks',
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/app/logs': typeof AppLogsRoute
   '/app/manage-cards': typeof AppManageCardsRoute
   '/app/mikrotiks': typeof AppMikrotiksRoute
+  '/app/my-orders': typeof AppMyOrdersRoute
   '/app/networks': typeof AppNetworksRouteWithChildren
   '/app/packages': typeof AppPackagesRoute
   '/app/payments': typeof AppPaymentsRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/app/logs': typeof AppLogsRoute
   '/app/manage-cards': typeof AppManageCardsRoute
   '/app/mikrotiks': typeof AppMikrotiksRoute
+  '/app/my-orders': typeof AppMyOrdersRoute
   '/app/packages': typeof AppPackagesRoute
   '/app/payments': typeof AppPaymentsRoute
   '/app/requests': typeof AppRequestsRoute
@@ -219,6 +227,7 @@ export interface FileRoutesById {
   '/app/logs': typeof AppLogsRoute
   '/app/manage-cards': typeof AppManageCardsRoute
   '/app/mikrotiks': typeof AppMikrotiksRoute
+  '/app/my-orders': typeof AppMyOrdersRoute
   '/app/networks': typeof AppNetworksRouteWithChildren
   '/app/packages': typeof AppPackagesRoute
   '/app/payments': typeof AppPaymentsRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/app/logs'
     | '/app/manage-cards'
     | '/app/mikrotiks'
+    | '/app/my-orders'
     | '/app/networks'
     | '/app/packages'
     | '/app/payments'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/app/logs'
     | '/app/manage-cards'
     | '/app/mikrotiks'
+    | '/app/my-orders'
     | '/app/packages'
     | '/app/payments'
     | '/app/requests'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/app/logs'
     | '/app/manage-cards'
     | '/app/mikrotiks'
+    | '/app/my-orders'
     | '/app/networks'
     | '/app/packages'
     | '/app/payments'
@@ -410,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppNetworksRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/my-orders': {
+      id: '/app/my-orders'
+      path: '/my-orders'
+      fullPath: '/app/my-orders'
+      preLoaderRoute: typeof AppMyOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/mikrotiks': {
       id: '/app/mikrotiks'
       path: '/mikrotiks'
@@ -514,6 +533,7 @@ interface AppRouteChildren {
   AppLogsRoute: typeof AppLogsRoute
   AppManageCardsRoute: typeof AppManageCardsRoute
   AppMikrotiksRoute: typeof AppMikrotiksRoute
+  AppMyOrdersRoute: typeof AppMyOrdersRoute
   AppNetworksRoute: typeof AppNetworksRouteWithChildren
   AppPackagesRoute: typeof AppPackagesRoute
   AppPaymentsRoute: typeof AppPaymentsRoute
@@ -536,6 +556,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLogsRoute: AppLogsRoute,
   AppManageCardsRoute: AppManageCardsRoute,
   AppMikrotiksRoute: AppMikrotiksRoute,
+  AppMyOrdersRoute: AppMyOrdersRoute,
   AppNetworksRoute: AppNetworksRouteWithChildren,
   AppPackagesRoute: AppPackagesRoute,
   AppPaymentsRoute: AppPaymentsRoute,
