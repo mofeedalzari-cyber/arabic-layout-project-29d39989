@@ -30,7 +30,7 @@ function AppLayout() {
 
   // حساب المستخدم: يُحصر في المتجر وصفحة التغذية والإعدادات
   useEffect(() => {
-    const allowed = ["/app/store", "/app/topup", "/app/settings"];
+    const allowed = ["/app/store", "/app/my-orders", "/app/settings"];
     if (!loading && user && role === "user" && !allowed.includes(loc.pathname)) {
       navigate({ to: "/app/store", replace: true });
     }
