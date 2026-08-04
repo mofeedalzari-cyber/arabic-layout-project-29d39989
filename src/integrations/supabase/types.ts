@@ -671,55 +671,70 @@ export type Database = {
       }
       user_orders: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           bank_account: string | null
           bank_ref: string | null
           card_id: string | null
           card_password: string | null
           card_username: string | null
           created_at: string
+          customer_name: string | null
           id: string
           network_id: string
           network_name: string
+          note: string | null
           package_id: string
           package_name: string
           paid_at: string | null
           price: number
+          reject_reason: string | null
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           bank_account?: string | null
           bank_ref?: string | null
           card_id?: string | null
           card_password?: string | null
           card_username?: string | null
           created_at?: string
+          customer_name?: string | null
           id?: string
           network_id: string
           network_name: string
+          note?: string | null
           package_id: string
           package_name: string
           paid_at?: string | null
           price: number
+          reject_reason?: string | null
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           bank_account?: string | null
           bank_ref?: string | null
           card_id?: string | null
           card_password?: string | null
           card_username?: string | null
           created_at?: string
+          customer_name?: string | null
           id?: string
           network_id?: string
           network_name?: string
+          note?: string | null
           package_id?: string
           package_name?: string
           paid_at?: string | null
           price?: number
+          reject_reason?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -854,6 +869,27 @@ export type Database = {
           remaining: number
         }[]
       }
+      admin_user_orders: {
+        Args: { _status?: string }
+        Returns: {
+          approved_at: string
+          available: number
+          created_at: string
+          customer_name: string
+          id: string
+          network_id: string
+          network_name: string
+          note: string
+          package_id: string
+          package_name: string
+          phone: string
+          price: number
+          reject_reason: string
+          status: string
+          user_id: string
+          username: string
+        }[]
+      }
       admin_wipe_database: { Args: never; Returns: Json }
       agent_cabin: {
         Args: never
@@ -882,6 +918,13 @@ export type Database = {
       approve_join_request: {
         Args: { _request_id: string }
         Returns: undefined
+      }
+      approve_user_order: {
+        Args: { _order_id: string }
+        Returns: {
+          card_password: string
+          card_username: string
+        }[]
       }
       bulk_upload_cards: {
         Args: { _entries: Json; _package_id: string }
@@ -916,6 +959,22 @@ export type Database = {
         Returns: {
           id: string
           name: string
+        }[]
+      }
+      my_orders: {
+        Args: never
+        Returns: {
+          approved_at: string
+          card_password: string
+          card_username: string
+          created_at: string
+          customer_name: string
+          id: string
+          network_name: string
+          package_name: string
+          price: number
+          reject_reason: string
+          status: string
         }[]
       }
       package_counts: {
@@ -959,6 +1018,10 @@ export type Database = {
       }
       reject_join_request: {
         Args: { _reason?: string; _request_id: string }
+        Returns: undefined
+      }
+      reject_user_order: {
+        Args: { _order_id: string; _reason?: string }
         Returns: undefined
       }
       request_cards: {
@@ -1152,6 +1215,10 @@ export type Database = {
           package_name: string
           price: number
         }[]
+      }
+      user_request_card: {
+        Args: { _customer_name: string; _note?: string; _package_id: string }
+        Returns: string
       }
       user_store: {
         Args: never
