@@ -1,12 +1,23 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { fmtMoney } from "@/lib/format";
+import { openWhatsApp } from "@/lib/wa-open";
 import { toast } from "sonner";
-import { PackageOpen, Wifi, MessageCircle, ShoppingCart, Clock } from "lucide-react";
+import { PackageOpen, Wifi, MessageCircle, Clock } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/app/store")({ component: StorePage });
@@ -28,7 +39,11 @@ interface StoreRow {
 
 function StorePage() {
   const navigate = useNavigate();
-  const [busy, setBusy] = useState<string | null>(null);
+  const { profile } = useAuth();
+  const [target, setTarget] = useState<StoreRow | null>(null);
+  const [name, setName] = useState("");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["user-store"],
@@ -39,33 +54,48 @@ function StorePage() {
     },
   });
 
-  async function buy(row: StoreRow) {
-    setBusy(row.package_id);
-    const { data, error } = await (supabase.rpc as any)("user_create_order", {
-      _package_id: row.package_id,
-    });
-    setBusy(null);
-    if (error) {
-      const m = String(error.message ?? "");
-      if (m.includes("NO_CARDS_AVAILABLE")) return toast.error("لا توجد كروت متاحة لهذه الباقة");
-      return toast.error("تعذر إنشاء الطلب");
-    }
-    navigate({ to: "/app/topup", search: { order: String(data) } });
+  function openRequest(row: StoreRow) {
+    setTarget(row);
+    setName(profile?.full_name ?? "");
+    setNote("");
   }
 
-  function whatsapp(row: StoreRow) {
-    const digits = (row.admin_phone ?? "").replace(/\D/g, "");
-    if (!digits) return toast.error("لا يوجد رقم واتساب للمدير");
-    const text = `مرحبًا، أريد طلب كرت من باقة «${row.package_name}» — شبكة ${row.network_name} بسعر ${row.price}`;
-    window.open(
-      `https://wa.me/${digits.startsWith("00") ? digits.slice(2) : digits}?text=${encodeURIComponent(text)}`,
-      "_blank",
-    );
+  async function submit() {
+    if (!target) return;
+    const customer = name.trim();
+    if (customer.length < 2) return toast.error("اكتب اسمك أو اسم الزبون");
+    setBusy(true);
+    const { error } = await (supabase.rpc as any)("user_request_card", {
+      _package_id: target.package_id,
+      _customer_name: customer,
+      _note: note.trim() || null,
+    });
+    setBusy(false);
+    if (error) {
+      console.error(error);
+      return toast.error("تعذر إرسال الطلب");
+    }
+
+    const digits = (target.admin_phone ?? "").replace(/\D/g, "");
+    const text =
+      `طلب كرت جديد\n` +
+      `الاسم: ${customer}\n` +
+      `الباقة: ${target.package_name}\n` +
+      `الشبكة: ${target.network_name}\n` +
+      `السعر: ${fmtMoney(Number(target.price))}` +
+      (note.trim() ? `\nملاحظة: ${note.trim()}` : "") +
+      `\nيرجى الموافقة على الطلب لإظهار الكرت في حسابي.`;
+
+    setTarget(null);
+    toast.success("تم إرسال الطلب، بانتظار موافقة مدير الشبكة");
+    if (digits) void openWhatsApp(digits, text);
+    else toast.error("لا يوجد رقم واتساب للمدير");
+    navigate({ to: "/app/my-orders" });
   }
 
   return (
     <div dir="rtl" className="space-y-4">
-      <PageHeader title="المتجر" description="اختر الباقة واشترِ كرتك مباشرة" />
+      <PageHeader title="المتجر" description="اختر الباقة وأرسل طلب الكرت لمدير الشبكة" />
 
       {isLoading ? (
         <div className="text-center text-muted-foreground py-10">جارٍ التحميل…</div>
@@ -111,29 +141,53 @@ function StorePage() {
                   <Badge>{r.available > 0 ? `متاح ${r.available}` : "غير متاح"}</Badge>
                 </div>
 
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    className="flex-1 rounded-xl bg-[#22a06b] hover:bg-[#1c8a5b] text-white"
-                    disabled={r.available <= 0 || busy === r.package_id}
-                    onClick={() => void buy(r)}
-                  >
-                    <ShoppingCart className="h-4 w-4 ml-1" />
-                    {busy === r.package_id ? "…" : "شراء الآن"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="rounded-xl"
-                    onClick={() => whatsapp(r)}
-                    aria-label="طلب عبر واتساب"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Button
+                  className="w-full mt-4 rounded-xl bg-[#22a06b] hover:bg-[#1c8a5b] text-white"
+                  onClick={() => openRequest(r)}
+                >
+                  <MessageCircle className="h-4 w-4 ml-1" />
+                  طلب الكرت
+                </Button>
               </Card>
             );
           })}
         </div>
       )}
+
+      <Dialog open={!!target} onOpenChange={(o) => !o && setTarget(null)}>
+        <DialogContent dir="rtl" className="text-right">
+          <DialogHeader>
+            <DialogTitle>طلب كرت — {target?.package_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label>الاسم</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="اسمك أو اسم الزبون"
+                className="text-right"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>ملاحظة (اختياري)</Label>
+              <Input
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="text-right"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              سيتم إرسال رسالة واتساب لمدير الشبكة، ولن يظهر رقم الكرت إلا بعد موافقته.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => void submit()} disabled={busy} className="w-full">
+              {busy ? "جارٍ الإرسال…" : "إرسال الطلب عبر واتساب"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
