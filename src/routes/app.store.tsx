@@ -105,53 +105,75 @@ function StorePage() {
           <p className="text-muted-foreground">لا توجد باقات متاحة حاليًا</p>
         </Card>
       ) : (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {rows.map((r) => {
             const c = r.color && r.color !== "none" ? r.color : null;
+            const noStock = r.available === 0;
             return (
               <Card
                 key={r.package_id}
-                className="p-4 rounded-2xl border-0 shadow-md text-right"
-                style={
-                  c
-                    ? { background: `linear-gradient(135deg, ${c} 0%, ${c}cc 100%)`, color: "#fff" }
-                    : undefined
-                }
+                className={`card-elegant border-0 overflow-hidden p-0 ${c ? "text-white" : "pkg-plain"}`}
+                style={c ? { background: `linear-gradient(135deg, ${c}, ${c}c0)` } : undefined}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-2xl font-extrabold">{fmtMoney(Number(r.price))}</span>
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-bold truncate">{r.package_name}</h3>
-                    <p className="text-xs opacity-80 flex items-center gap-1 justify-end">
-                      <span className="truncate">{r.network_name}</span>
-                      <Wifi className="h-3.5 w-3.5" />
-                    </p>
+                <div className="p-5 relative">
+                  <Wifi
+                    className={`absolute top-3 left-3 h-5 w-5 ${c ? "text-white/40" : "text-muted-foreground/40"}`}
+                  />
+                  <div className={`text-[11px] mb-1 ${c ? "text-white/80" : "text-muted-foreground"}`}>
+                    {r.network_name}
+                  </div>
+                  <div className={`text-sm mb-1 ${c ? "text-white" : "text-foreground"}`}>
+                    {r.package_name}
+                  </div>
+                  <div className={`text-2xl font-extrabold ${c ? "text-white" : "text-foreground"}`}>
+                    {fmtMoney(Number(r.price))}
+                  </div>
+                  <div
+                    className={`mt-3 flex flex-wrap gap-1.5 text-[11px] ${c ? "text-white/90" : "text-muted-foreground"}`}
+                  >
+                    {r.data_size && (
+                      <span className={`px-2 py-0.5 rounded-full ${c ? "bg-white/20" : "bg-muted"}`}>
+                        {r.data_size}
+                      </span>
+                    )}
+                    {r.speed && (
+                      <span className={`px-2 py-0.5 rounded-full ${c ? "bg-white/20" : "bg-muted"}`}>
+                        {r.speed}
+                      </span>
+                    )}
+                    {r.validity && (
+                      <span className={`px-2 py-0.5 rounded-full ${c ? "bg-white/20" : "bg-muted"}`}>
+                        <Clock className="h-3 w-3 inline ml-1" />
+                        {r.validity}
+                      </span>
+                    )}
                   </div>
                 </div>
-
-                <div className="flex flex-wrap gap-2 justify-end mt-3 text-[11px] opacity-90">
-                  {r.data_size && <Badge>{r.data_size}</Badge>}
-                  {r.speed && <Badge>{r.speed}</Badge>}
-                  {r.validity && (
-                    <Badge>
-                      <Clock className="h-3 w-3 inline ml-1" />
-                      {r.validity}
-                    </Badge>
-                  )}
-                  <Badge>{r.available > 0 ? `متاح ${r.available}` : "غير متاح"}</Badge>
+                <div className={`p-4 ${c ? "bg-black/10" : "bg-muted/40"}`}>
+                  <div
+                    className={`rounded-lg py-1.5 text-center text-xs mb-3 ${c ? "bg-white/15" : "bg-muted"}`}
+                  >
+                    <div className={`font-bold text-lg ${c ? "text-white" : "text-foreground"}`}>
+                      {r.available}
+                    </div>
+                    <div className={`text-[10px] ${c ? "text-white/75" : "text-muted-foreground"}`}>
+                      متاحة الآن
+                    </div>
+                  </div>
+                  <Button
+                    disabled={noStock}
+                    onClick={() => openRequest(r)}
+                    className={`w-full rounded-xl border-0 font-semibold h-10 ${c ? "bg-white text-foreground hover:bg-white/90" : "gradient-primary-bg text-primary-foreground hover:opacity-90"}`}
+                  >
+                    <MessageCircle className="h-4 w-4 ml-1" />
+                    {noStock ? "لا كروت" : "طلب كرت"}
+                  </Button>
                 </div>
-
-                <Button
-                  className="w-full mt-4 rounded-xl bg-[#22a06b] hover:bg-[#1c8a5b] text-white"
-                  onClick={() => openRequest(r)}
-                >
-                  <MessageCircle className="h-4 w-4 ml-1" />
-                  طلب الكرت
-                </Button>
               </Card>
             );
           })}
         </div>
+
       )}
 
       <Dialog open={!!target} onOpenChange={(o) => !o && setTarget(null)}>

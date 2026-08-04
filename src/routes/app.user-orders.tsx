@@ -49,7 +49,7 @@ function UserOrdersPage() {
 
   async function approve(r: Row) {
     setBusy(r.id);
-    const { data, error } = await (supabase.rpc as any)("approve_user_order", { _order_id: r.id });
+    const { error } = await (supabase.rpc as any)("approve_user_order", { _order_id: r.id });
     setBusy(null);
     if (error) {
       const m = String(error.message ?? "");
@@ -58,16 +58,8 @@ function UserOrdersPage() {
     }
     void qc.invalidateQueries({ queryKey: ["admin-user-orders"] });
     toast.success("تمت الموافقة وظهر الكرت في حساب المستخدم");
-    const card = Array.isArray(data) ? data[0] : data;
-    const digits = (r.phone ?? "").replace(/\D/g, "");
-    if (digits && card?.card_username) {
-      void openWhatsApp(
-        digits,
-        `تمت الموافقة على طلبك\nالباقة: ${r.package_name}\nرقم الكرت: ${card.card_username}` +
-          (card.card_password ? `\nكلمة المرور: ${card.card_password}` : ""),
-      );
-    }
   }
+
 
   async function reject(r: Row) {
     setBusy(r.id);
