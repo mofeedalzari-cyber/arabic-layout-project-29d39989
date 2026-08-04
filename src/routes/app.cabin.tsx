@@ -272,55 +272,55 @@ function CabinPage() {
                 }
               >
                 <div className="p-5 relative">
-                  <Wifi className="absolute top-3 left-3 h-5 w-5 text-white/40" />
-                  <div className="text-white/80 text-[11px] mb-1">{r.network_name}</div>
-                  <div className="text-white text-sm mb-1">{r.package_name}</div>
-                  <div className="text-white text-2xl font-extrabold">
+                  <Wifi className={`absolute top-3 left-3 h-5 w-5 ${r.color ? "text-white/40" : "text-muted-foreground/40"}`} />
+                  <div className={`text-[11px] mb-1 ${r.color ? "text-white/80" : "text-muted-foreground"}`}>{r.network_name}</div>
+                  <div className={`text-sm mb-1 ${r.color ? "text-white" : "text-foreground"}`}>{r.package_name}</div>
+                  <div className={`text-2xl font-extrabold ${r.color ? "text-white" : "text-foreground"}`}>
                     {fmtMoney(Number(r.price))}
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] text-white/90">
+                  <div className={`mt-3 flex flex-wrap gap-1.5 text-[11px] ${r.color ? "text-white/90" : "text-muted-foreground"}`}>
                     {r.data_size && (
-                      <span className="bg-white/20 px-2 py-0.5 rounded-full">{r.data_size}</span>
+                      <span className={`px-2 py-0.5 rounded-full ${r.color ? "bg-white/20" : "bg-muted"}`}>{r.data_size}</span>
                     )}
                     {r.speed && (
-                      <span className="bg-white/20 px-2 py-0.5 rounded-full">{r.speed}</span>
+                      <span className={`px-2 py-0.5 rounded-full ${r.color ? "bg-white/20" : "bg-muted"}`}>{r.speed}</span>
                     )}
                     {r.validity && (
-                      <span className="bg-white/20 px-2 py-0.5 rounded-full">{r.validity}</span>
+                      <span className={`px-2 py-0.5 rounded-full ${r.color ? "bg-white/20" : "bg-muted"}`}>{r.validity}</span>
                     )}
                   </div>
                 </div>
-                <div className="p-4 bg-black/10">
+                <div className={`p-4 ${r.color ? "bg-black/10" : "bg-muted/40"}`}>
                   <div className="grid grid-cols-2 gap-2 text-center text-xs mb-3">
                     <button
                       type="button"
                       onClick={() => setDetailsPkg(r)}
-                      className="rounded-lg bg-white/15 py-1.5 hover:bg-white/25 transition"
+                      className={`rounded-lg py-1.5 transition ${r.color ? "bg-white/15 hover:bg-white/25" : "bg-muted hover:bg-muted/70"}`}
                     >
-                      <div className="font-bold text-white text-lg">{r.available}</div>
-                      <div className="text-[10px] text-white/75">متاحة الآن</div>
+                      <div className={`font-bold text-lg ${r.color ? "text-white" : "text-foreground"}`}>{r.available}</div>
+                      <div className={`text-[10px] ${r.color ? "text-white/75" : "text-muted-foreground"}`}>متاحة الآن</div>
                     </button>
                     <button
                       type="button"
                       onClick={() => setDetailsPkg(r)}
-                      className="rounded-lg bg-white/15 py-1.5 hover:bg-white/25 transition"
+                      className={`rounded-lg py-1.5 transition ${r.color ? "bg-white/15 hover:bg-white/25" : "bg-muted hover:bg-muted/70"}`}
                     >
-                      <div className="font-bold text-white text-lg">{r.sold_count}</div>
-                      <div className="text-[10px] text-white/75">مباع</div>
+                      <div className={`font-bold text-lg ${r.color ? "text-white" : "text-foreground"}`}>{r.sold_count}</div>
+                      <div className={`text-[10px] ${r.color ? "text-white/75" : "text-muted-foreground"}`}>مباع</div>
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       onClick={() => setDetailsPkg(r)}
-                      className="w-full rounded-xl font-semibold h-10 bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white"
+                      className={`w-full rounded-xl font-semibold h-10 ${r.color ? "bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white" : "bg-muted border-border text-foreground hover:bg-muted/80"}`}
                     >
                       التفاصيل
                     </Button>
                     <Button
                       disabled={noStock}
                       onClick={() => setConfirmPkg(r)}
-                      className="w-full rounded-xl border-0 font-semibold h-10 bg-white text-foreground hover:bg-white/90"
+                      className={`w-full rounded-xl border-0 font-semibold h-10 ${r.color ? "bg-white text-foreground hover:bg-white/90" : "gradient-primary-bg text-primary-foreground hover:opacity-90"}`}
                     >
                       {noStock ? "لا كروت" : "بيع كرت"}
                     </Button>
