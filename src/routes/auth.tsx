@@ -46,7 +46,7 @@ function AuthPage() {
   }, [loading, user, navigate]);
 
   useEffect(() => {
-    if (mode === "register" && accountType === "agent") {
+    if (mode === "register" && (accountType === "agent" || accountType === "user")) {
       (supabase.rpc as any)("list_active_networks").then(({ data }: any) => {
         setNetworks((data as { id: string; name: string }[]) ?? []);
       });
@@ -119,7 +119,7 @@ function AuthPage() {
     const p = passwordSchema.safeParse(regP);
     if (!regName.trim()) return toast.error("أدخل الاسم الرباعي");
     if (!ph.success) return toast.error(ph.error.issues[0].message);
-    if (accountType !== "user" && !regNet.trim())
+    if (!regNet.trim())
       return toast.error(accountType === "network" ? "أدخل اسم الشبكة" : "اختر الشبكة");
     if (!p.success) return toast.error(p.error.issues[0].message);
     if (regP !== regP2) return toast.error("كلمة المرور غير متطابقة");
@@ -309,7 +309,7 @@ function AuthPage() {
                   inputMode="tel"
                   autoComplete="tel"
                 />
-                {accountType === "user" ? null : accountType === "network" ? (
+                {accountType === "network" ? (
                   <SoftInput
                     dir="rtl"
                     value={regNet}
