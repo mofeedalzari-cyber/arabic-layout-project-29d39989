@@ -280,7 +280,21 @@ function SalesPage() {
     setCustomerFilter("all");
     setAgentFilter("all");
     setStatusFilter("all");
+    setPackageFilter("all");
+    setDateFrom("");
+    setDateTo("");
   }
+
+  function setMonthRange(offset: number) {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+    const iso = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    setDateFrom(iso(start));
+    setDateTo(iso(end));
+  }
+
 
   function toggleAll() {
     if (allSelected) setSelected(new Set());
