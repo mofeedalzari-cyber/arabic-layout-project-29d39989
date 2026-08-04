@@ -14,7 +14,6 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppUserOrdersRouteImport } from './routes/app.user-orders'
-import { Route as AppTopupRouteImport } from './routes/app.topup'
 import { Route as AppSuperadminRouteImport } from './routes/app.superadmin'
 import { Route as AppStoreRouteImport } from './routes/app.store'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
@@ -59,11 +58,6 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppUserOrdersRoute = AppUserOrdersRouteImport.update({
   id: '/user-orders',
   path: '/user-orders',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppTopupRoute = AppTopupRouteImport.update({
-  id: '/topup',
-  path: '/topup',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSuperadminRoute = AppSuperadminRouteImport.update({
@@ -189,7 +183,6 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AppSettingsRoute
   '/app/store': typeof AppStoreRoute
   '/app/superadmin': typeof AppSuperadminRoute
-  '/app/topup': typeof AppTopupRoute
   '/app/user-orders': typeof AppUserOrdersRoute
   '/app/': typeof AppIndexRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
@@ -215,7 +208,6 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AppSettingsRoute
   '/app/store': typeof AppStoreRoute
   '/app/superadmin': typeof AppSuperadminRoute
-  '/app/topup': typeof AppTopupRoute
   '/app/user-orders': typeof AppUserOrdersRoute
   '/app': typeof AppIndexRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
@@ -244,7 +236,6 @@ export interface FileRoutesById {
   '/app/settings': typeof AppSettingsRoute
   '/app/store': typeof AppStoreRoute
   '/app/superadmin': typeof AppSuperadminRoute
-  '/app/topup': typeof AppTopupRoute
   '/app/user-orders': typeof AppUserOrdersRoute
   '/app/': typeof AppIndexRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
@@ -274,7 +265,6 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/store'
     | '/app/superadmin'
-    | '/app/topup'
     | '/app/user-orders'
     | '/app/'
     | '/app/networks/$id'
@@ -300,7 +290,6 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/store'
     | '/app/superadmin'
-    | '/app/topup'
     | '/app/user-orders'
     | '/app'
     | '/app/networks/$id'
@@ -328,7 +317,6 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/store'
     | '/app/superadmin'
-    | '/app/topup'
     | '/app/user-orders'
     | '/app/'
     | '/app/networks/$id'
@@ -376,13 +364,6 @@ declare module '@tanstack/react-router' {
       path: '/user-orders'
       fullPath: '/app/user-orders'
       preLoaderRoute: typeof AppUserOrdersRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/topup': {
-      id: '/app/topup'
-      path: '/topup'
-      fullPath: '/app/topup'
-      preLoaderRoute: typeof AppTopupRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/superadmin': {
@@ -561,7 +542,6 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppStoreRoute: typeof AppStoreRoute
   AppSuperadminRoute: typeof AppSuperadminRoute
-  AppTopupRoute: typeof AppTopupRoute
   AppUserOrdersRoute: typeof AppUserOrdersRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -585,7 +565,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppStoreRoute: AppStoreRoute,
   AppSuperadminRoute: AppSuperadminRoute,
-  AppTopupRoute: AppTopupRoute,
   AppUserOrdersRoute: AppUserOrdersRoute,
   AppIndexRoute: AppIndexRoute,
 }
