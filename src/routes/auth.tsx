@@ -28,7 +28,7 @@ const phoneSchema = z
   .regex(/^[0-9+\-\s]+$/, "أرقام فقط");
 const passwordSchema = z.string().min(6, "6 أحرف على الأقل").max(72);
 
-type AccountType = "agent" | "network";
+type AccountType = "agent" | "network" | "user";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -119,7 +119,8 @@ function AuthPage() {
     const p = passwordSchema.safeParse(regP);
     if (!regName.trim()) return toast.error("أدخل الاسم الرباعي");
     if (!ph.success) return toast.error(ph.error.issues[0].message);
-    if (accountType === "network" && !regNet.trim()) return toast.error("أدخل اسم الشبكة");
+    if (accountType !== "user" && !regNet.trim())
+      return toast.error(accountType === "network" ? "أدخل اسم الشبكة" : "اختر الشبكة");
     if (!p.success) return toast.error(p.error.issues[0].message);
     if (regP !== regP2) return toast.error("كلمة المرور غير متطابقة");
     // username derived from phone (backend-safe)
@@ -145,13 +146,22 @@ function AuthPage() {
         return toast.error("رقم الجوال مستخدم من قبل");
       return toast.error(error.message);
     }
-    toast.success("تم إنشاء الحساب! سيتم تفعيله من قبل المدير قبل البدء.");
+    toast.success(
+      accountType === "user"
+        ? "تم إنشاء الحساب! يمكنك تسجيل الدخول والشراء فورًا."
+        : "تم إنشاء الحساب! سيتم تفعيله من قبل المدير قبل البدء.",
+    );
     setMode("login");
     setLoginPhone(ph.data);
     setLoginP("");
   }
 
-  const typeLabel = accountType === "agent" ? "مندوب توزيع" : "وكيل / مدير شبكة";
+  const typeLabel =
+    accountType === "agent"
+      ? "مندوب توزيع"
+      : accountType === "network"
+        ? "وكيل / مدير شبكة"
+        : "مستخدم";
 
   return (
     <div
@@ -278,7 +288,9 @@ function AuthPage() {
               <p className="text-gray-600 text-sm text-right mb-5">
                 {accountType === "network"
                   ? "أدخل بياناتك واسم شبكتك للبدء."
-                  : "أدخل بياناتك للبدء."}
+                  : accountType === "user"
+                    ? "أدخل بياناتك وابدأ الشراء فورًا بدون موافقة المدير."
+                    : "أدخل بياناتك للبدء."}
               </p>
 
               <form onSubmit={handleRegister} className="space-y-3">
@@ -297,7 +309,7 @@ function AuthPage() {
                   inputMode="tel"
                   autoComplete="tel"
                 />
-                {accountType === "network" ? (
+                {accountType === "user" ? null : accountType === "network" ? (
                   <SoftInput
                     dir="rtl"
                     value={regNet}
@@ -404,6 +416,17 @@ function AuthPage() {
               desc="إدارة الشبكة ومتابعة مبيعات المناديب"
               onClick={() => {
                 setAccountType("network");
+                setMode("register");
+                setSheetOpen(false);
+              }}
+            />
+            <TypeRow
+              icon={<UserIcon className="h-6 w-6 text-white" />}
+              iconBg="bg-[#c6dd00]"
+              title="مستخدم"
+              desc="شراء الكروت مباشرة وتغذية الحساب عبر بنك القطيبي"
+              onClick={() => {
+                setAccountType("user");
                 setMode("register");
                 setSheetOpen(false);
               }}

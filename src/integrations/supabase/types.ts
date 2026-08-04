@@ -669,6 +669,85 @@ export type Database = {
           },
         ]
       }
+      user_orders: {
+        Row: {
+          bank_account: string | null
+          bank_ref: string | null
+          card_id: string | null
+          card_password: string | null
+          card_username: string | null
+          created_at: string
+          id: string
+          network_id: string
+          network_name: string
+          package_id: string
+          package_name: string
+          paid_at: string | null
+          price: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bank_account?: string | null
+          bank_ref?: string | null
+          card_id?: string | null
+          card_password?: string | null
+          card_username?: string | null
+          created_at?: string
+          id?: string
+          network_id: string
+          network_name: string
+          package_id: string
+          package_name: string
+          paid_at?: string | null
+          price: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bank_account?: string | null
+          bank_ref?: string | null
+          card_id?: string | null
+          card_password?: string | null
+          card_username?: string | null
+          created_at?: string
+          id?: string
+          network_id?: string
+          network_name?: string
+          package_id?: string
+          package_name?: string
+          paid_at?: string | null
+          price?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_orders_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_orders_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "networks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_orders_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1058,10 +1137,43 @@ export type Database = {
         Args: { _currency?: string; _name?: string; _network_id: string }
         Returns: undefined
       }
+      user_create_order: { Args: { _package_id: string }; Returns: string }
+      user_fulfill_order: {
+        Args: {
+          _bank_account: string
+          _bank_ref: string
+          _order_id: string
+          _user_id: string
+        }
+        Returns: {
+          card_password: string
+          card_username: string
+          network_name: string
+          package_name: string
+          price: number
+        }[]
+      }
+      user_store: {
+        Args: never
+        Returns: {
+          admin_phone: string
+          available: number
+          color: string
+          currency: string
+          data_size: string
+          network_id: string
+          network_name: string
+          package_id: string
+          package_name: string
+          price: number
+          speed: string
+          validity: string
+        }[]
+      }
       username_from_phone: { Args: { _phone: string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "agent" | "superadmin"
+      app_role: "admin" | "agent" | "superadmin" | "user"
       card_status: "AVAILABLE" | "ASSIGNED" | "SOLD"
     }
     CompositeTypes: {
@@ -1190,7 +1302,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "agent", "superadmin"],
+      app_role: ["admin", "agent", "superadmin", "user"],
       card_status: ["AVAILABLE", "ASSIGNED", "SOLD"],
     },
   },

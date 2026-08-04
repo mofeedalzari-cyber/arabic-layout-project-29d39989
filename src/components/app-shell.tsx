@@ -42,6 +42,7 @@ interface NavItem {
   adminOnly?: boolean;
   agentOnly?: boolean;
   superOnly?: boolean;
+  userOnly?: boolean;
 }
 
 const NAV: NavItem[] = [
@@ -49,6 +50,8 @@ const NAV: NavItem[] = [
   { to: "/app/superadmin", label: "إدارة التطبيق", icon: ShieldCheck, superOnly: true },
   { to: "/app/networks", label: "الشبكات", icon: Wifi, adminOnly: true },
   { to: "/app/cabin", label: "كبينة البيع", icon: Store, agentOnly: true },
+  { to: "/app/store", label: "المتجر", icon: Store, userOnly: true },
+  { to: "/app/topup", label: "تغذية الحساب", icon: CreditCard, userOnly: true },
   { to: "/app/customers", label: "الزبائن", icon: Users, agentOnly: true },
   { to: "/app/packages", label: "الباقات", icon: Package },
   { to: "/app/requests", label: "الطلبات", icon: Inbox },
@@ -69,12 +72,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   // مدير التطبيق: لا يظهر له سوى صفحة الإدارة العامة
   const items = isSuperadmin
     ? NAV.filter((n) => n.to === "/app/superadmin")
-    : NAV.filter((n) => {
-        if (n.superOnly) return false;
-        if (n.adminOnly) return role === "admin";
-        if (n.agentOnly) return role === "agent";
-        return true;
-      });
+    : role === "user"
+      ? NAV.filter((n) => n.userOnly || n.to === "/app/settings")
+      : NAV.filter((n) => {
+          if (n.superOnly || n.userOnly) return false;
+          if (n.adminOnly) return role === "admin";
+          if (n.agentOnly) return role === "agent";
+          return true;
+        });
 
 
   const [dark, setDark] = useState(false);

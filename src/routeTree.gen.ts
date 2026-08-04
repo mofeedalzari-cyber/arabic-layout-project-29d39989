@@ -9,32 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppRouteImport } from './routes/app'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
-import { Route as AppAgentAccountsRouteImport } from './routes/app.agent-accounts'
-import { Route as AppAgentsRouteImport } from './routes/app.agents'
-import { Route as AppCabinRouteImport } from './routes/app.cabin'
-import { Route as AppCardsRouteImport } from './routes/app.cards'
-import { Route as AppCustomersRouteImport } from './routes/app.customers'
-import { Route as AppJoinRequestsRouteImport } from './routes/app.join-requests'
-import { Route as AppLogsRouteImport } from './routes/app.logs'
-import { Route as AppManageCardsRouteImport } from './routes/app.manage-cards'
-import { Route as AppMikrotiksRouteImport } from './routes/app.mikrotiks'
-import { Route as AppNetworksRouteImport } from './routes/app.networks'
-import { Route as AppPackagesRouteImport } from './routes/app.packages'
-import { Route as AppPaymentsRouteImport } from './routes/app.payments'
-import { Route as AppRequestsRouteImport } from './routes/app.requests'
-import { Route as AppSalesRouteImport } from './routes/app.sales'
-import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppTopupRouteImport } from './routes/app.topup'
 import { Route as AppSuperadminRouteImport } from './routes/app.superadmin'
+import { Route as AppStoreRouteImport } from './routes/app.store'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppSalesRouteImport } from './routes/app.sales'
+import { Route as AppRequestsRouteImport } from './routes/app.requests'
+import { Route as AppPaymentsRouteImport } from './routes/app.payments'
+import { Route as AppPackagesRouteImport } from './routes/app.packages'
+import { Route as AppNetworksRouteImport } from './routes/app.networks'
+import { Route as AppMikrotiksRouteImport } from './routes/app.mikrotiks'
+import { Route as AppManageCardsRouteImport } from './routes/app.manage-cards'
+import { Route as AppLogsRouteImport } from './routes/app.logs'
+import { Route as AppJoinRequestsRouteImport } from './routes/app.join-requests'
+import { Route as AppCustomersRouteImport } from './routes/app.customers'
+import { Route as AppCardsRouteImport } from './routes/app.cards'
+import { Route as AppCabinRouteImport } from './routes/app.cabin'
+import { Route as AppAgentsRouteImport } from './routes/app.agents'
+import { Route as AppAgentAccountsRouteImport } from './routes/app.agent-accounts'
 import { Route as AppNetworksIndexRouteImport } from './routes/app.networks.index'
 import { Route as AppNetworksIdRouteImport } from './routes/app.networks.$id'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -42,9 +44,9 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -52,74 +54,19 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAgentAccountsRoute = AppAgentAccountsRouteImport.update({
-  id: '/agent-accounts',
-  path: '/agent-accounts',
+const AppTopupRoute = AppTopupRouteImport.update({
+  id: '/topup',
+  path: '/topup',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAgentsRoute = AppAgentsRouteImport.update({
-  id: '/agents',
-  path: '/agents',
+const AppSuperadminRoute = AppSuperadminRouteImport.update({
+  id: '/superadmin',
+  path: '/superadmin',
   getParentRoute: () => AppRoute,
 } as any)
-const AppCabinRoute = AppCabinRouteImport.update({
-  id: '/cabin',
-  path: '/cabin',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCardsRoute = AppCardsRouteImport.update({
-  id: '/cards',
-  path: '/cards',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCustomersRoute = AppCustomersRouteImport.update({
-  id: '/customers',
-  path: '/customers',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppJoinRequestsRoute = AppJoinRequestsRouteImport.update({
-  id: '/join-requests',
-  path: '/join-requests',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLogsRoute = AppLogsRouteImport.update({
-  id: '/logs',
-  path: '/logs',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppManageCardsRoute = AppManageCardsRouteImport.update({
-  id: '/manage-cards',
-  path: '/manage-cards',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMikrotiksRoute = AppMikrotiksRouteImport.update({
-  id: '/mikrotiks',
-  path: '/mikrotiks',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppNetworksRoute = AppNetworksRouteImport.update({
-  id: '/networks',
-  path: '/networks',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPackagesRoute = AppPackagesRouteImport.update({
-  id: '/packages',
-  path: '/packages',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPaymentsRoute = AppPaymentsRouteImport.update({
-  id: '/payments',
-  path: '/payments',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppRequestsRoute = AppRequestsRouteImport.update({
-  id: '/requests',
-  path: '/requests',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSalesRoute = AppSalesRouteImport.update({
-  id: '/sales',
-  path: '/sales',
+const AppStoreRoute = AppStoreRouteImport.update({
+  id: '/store',
+  path: '/store',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -127,9 +74,74 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
-const AppSuperadminRoute = AppSuperadminRouteImport.update({
-  id: '/superadmin',
-  path: '/superadmin',
+const AppSalesRoute = AppSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRequestsRoute = AppRequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPaymentsRoute = AppPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPackagesRoute = AppPackagesRouteImport.update({
+  id: '/packages',
+  path: '/packages',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNetworksRoute = AppNetworksRouteImport.update({
+  id: '/networks',
+  path: '/networks',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMikrotiksRoute = AppMikrotiksRouteImport.update({
+  id: '/mikrotiks',
+  path: '/mikrotiks',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppManageCardsRoute = AppManageCardsRouteImport.update({
+  id: '/manage-cards',
+  path: '/manage-cards',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLogsRoute = AppLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJoinRequestsRoute = AppJoinRequestsRouteImport.update({
+  id: '/join-requests',
+  path: '/join-requests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCustomersRoute = AppCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCardsRoute = AppCardsRouteImport.update({
+  id: '/cards',
+  path: '/cards',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCabinRoute = AppCabinRouteImport.update({
+  id: '/cabin',
+  path: '/cabin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAgentsRoute = AppAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAgentAccountsRoute = AppAgentAccountsRouteImport.update({
+  id: '/agent-accounts',
+  path: '/agent-accounts',
   getParentRoute: () => AppRoute,
 } as any)
 const AppNetworksIndexRoute = AppNetworksIndexRouteImport.update({
@@ -162,7 +174,9 @@ export interface FileRoutesByFullPath {
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/store': typeof AppStoreRoute
   '/app/superadmin': typeof AppSuperadminRoute
+  '/app/topup': typeof AppTopupRoute
   '/app/': typeof AppIndexRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
   '/app/networks/': typeof AppNetworksIndexRoute
@@ -184,7 +198,9 @@ export interface FileRoutesByTo {
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/store': typeof AppStoreRoute
   '/app/superadmin': typeof AppSuperadminRoute
+  '/app/topup': typeof AppTopupRoute
   '/app': typeof AppIndexRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
   '/app/networks': typeof AppNetworksIndexRoute
@@ -209,7 +225,9 @@ export interface FileRoutesById {
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/store': typeof AppStoreRoute
   '/app/superadmin': typeof AppSuperadminRoute
+  '/app/topup': typeof AppTopupRoute
   '/app/': typeof AppIndexRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
   '/app/networks/': typeof AppNetworksIndexRoute
@@ -235,7 +253,9 @@ export interface FileRouteTypes {
     | '/app/requests'
     | '/app/sales'
     | '/app/settings'
+    | '/app/store'
     | '/app/superadmin'
+    | '/app/topup'
     | '/app/'
     | '/app/networks/$id'
     | '/app/networks/'
@@ -257,7 +277,9 @@ export interface FileRouteTypes {
     | '/app/requests'
     | '/app/sales'
     | '/app/settings'
+    | '/app/store'
     | '/app/superadmin'
+    | '/app/topup'
     | '/app'
     | '/app/networks/$id'
     | '/app/networks'
@@ -281,7 +303,9 @@ export interface FileRouteTypes {
     | '/app/requests'
     | '/app/sales'
     | '/app/settings'
+    | '/app/store'
     | '/app/superadmin'
+    | '/app/topup'
     | '/app/'
     | '/app/networks/$id'
     | '/app/networks/'
@@ -295,11 +319,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -309,11 +333,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -323,102 +347,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/agent-accounts': {
-      id: '/app/agent-accounts'
-      path: '/agent-accounts'
-      fullPath: '/app/agent-accounts'
-      preLoaderRoute: typeof AppAgentAccountsRouteImport
+    '/app/topup': {
+      id: '/app/topup'
+      path: '/topup'
+      fullPath: '/app/topup'
+      preLoaderRoute: typeof AppTopupRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/agents': {
-      id: '/app/agents'
-      path: '/agents'
-      fullPath: '/app/agents'
-      preLoaderRoute: typeof AppAgentsRouteImport
+    '/app/superadmin': {
+      id: '/app/superadmin'
+      path: '/superadmin'
+      fullPath: '/app/superadmin'
+      preLoaderRoute: typeof AppSuperadminRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/cabin': {
-      id: '/app/cabin'
-      path: '/cabin'
-      fullPath: '/app/cabin'
-      preLoaderRoute: typeof AppCabinRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/cards': {
-      id: '/app/cards'
-      path: '/cards'
-      fullPath: '/app/cards'
-      preLoaderRoute: typeof AppCardsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/customers': {
-      id: '/app/customers'
-      path: '/customers'
-      fullPath: '/app/customers'
-      preLoaderRoute: typeof AppCustomersRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/join-requests': {
-      id: '/app/join-requests'
-      path: '/join-requests'
-      fullPath: '/app/join-requests'
-      preLoaderRoute: typeof AppJoinRequestsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/logs': {
-      id: '/app/logs'
-      path: '/logs'
-      fullPath: '/app/logs'
-      preLoaderRoute: typeof AppLogsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/manage-cards': {
-      id: '/app/manage-cards'
-      path: '/manage-cards'
-      fullPath: '/app/manage-cards'
-      preLoaderRoute: typeof AppManageCardsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/mikrotiks': {
-      id: '/app/mikrotiks'
-      path: '/mikrotiks'
-      fullPath: '/app/mikrotiks'
-      preLoaderRoute: typeof AppMikrotiksRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/networks': {
-      id: '/app/networks'
-      path: '/networks'
-      fullPath: '/app/networks'
-      preLoaderRoute: typeof AppNetworksRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/packages': {
-      id: '/app/packages'
-      path: '/packages'
-      fullPath: '/app/packages'
-      preLoaderRoute: typeof AppPackagesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/payments': {
-      id: '/app/payments'
-      path: '/payments'
-      fullPath: '/app/payments'
-      preLoaderRoute: typeof AppPaymentsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/requests': {
-      id: '/app/requests'
-      path: '/requests'
-      fullPath: '/app/requests'
-      preLoaderRoute: typeof AppRequestsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/sales': {
-      id: '/app/sales'
-      path: '/sales'
-      fullPath: '/app/sales'
-      preLoaderRoute: typeof AppSalesRouteImport
+    '/app/store': {
+      id: '/app/store'
+      path: '/store'
+      fullPath: '/app/store'
+      preLoaderRoute: typeof AppStoreRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/settings': {
@@ -428,11 +375,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/superadmin': {
-      id: '/app/superadmin'
-      path: '/superadmin'
-      fullPath: '/app/superadmin'
-      preLoaderRoute: typeof AppSuperadminRouteImport
+    '/app/sales': {
+      id: '/app/sales'
+      path: '/sales'
+      fullPath: '/app/sales'
+      preLoaderRoute: typeof AppSalesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/requests': {
+      id: '/app/requests'
+      path: '/requests'
+      fullPath: '/app/requests'
+      preLoaderRoute: typeof AppRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/payments': {
+      id: '/app/payments'
+      path: '/payments'
+      fullPath: '/app/payments'
+      preLoaderRoute: typeof AppPaymentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/packages': {
+      id: '/app/packages'
+      path: '/packages'
+      fullPath: '/app/packages'
+      preLoaderRoute: typeof AppPackagesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/networks': {
+      id: '/app/networks'
+      path: '/networks'
+      fullPath: '/app/networks'
+      preLoaderRoute: typeof AppNetworksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mikrotiks': {
+      id: '/app/mikrotiks'
+      path: '/mikrotiks'
+      fullPath: '/app/mikrotiks'
+      preLoaderRoute: typeof AppMikrotiksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/manage-cards': {
+      id: '/app/manage-cards'
+      path: '/manage-cards'
+      fullPath: '/app/manage-cards'
+      preLoaderRoute: typeof AppManageCardsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/logs': {
+      id: '/app/logs'
+      path: '/logs'
+      fullPath: '/app/logs'
+      preLoaderRoute: typeof AppLogsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/join-requests': {
+      id: '/app/join-requests'
+      path: '/join-requests'
+      fullPath: '/app/join-requests'
+      preLoaderRoute: typeof AppJoinRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/customers': {
+      id: '/app/customers'
+      path: '/customers'
+      fullPath: '/app/customers'
+      preLoaderRoute: typeof AppCustomersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/cards': {
+      id: '/app/cards'
+      path: '/cards'
+      fullPath: '/app/cards'
+      preLoaderRoute: typeof AppCardsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/cabin': {
+      id: '/app/cabin'
+      path: '/cabin'
+      fullPath: '/app/cabin'
+      preLoaderRoute: typeof AppCabinRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/agents': {
+      id: '/app/agents'
+      path: '/agents'
+      fullPath: '/app/agents'
+      preLoaderRoute: typeof AppAgentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/agent-accounts': {
+      id: '/app/agent-accounts'
+      path: '/agent-accounts'
+      fullPath: '/app/agent-accounts'
+      preLoaderRoute: typeof AppAgentAccountsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/networks/': {
@@ -482,7 +520,9 @@ interface AppRouteChildren {
   AppRequestsRoute: typeof AppRequestsRoute
   AppSalesRoute: typeof AppSalesRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppStoreRoute: typeof AppStoreRoute
   AppSuperadminRoute: typeof AppSuperadminRoute
+  AppTopupRoute: typeof AppTopupRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -502,7 +542,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppRequestsRoute: AppRequestsRoute,
   AppSalesRoute: AppSalesRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppStoreRoute: AppStoreRoute,
   AppSuperadminRoute: AppSuperadminRoute,
+  AppTopupRoute: AppTopupRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
@@ -516,13 +558,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
