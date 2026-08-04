@@ -675,12 +675,25 @@ function PackageForm({
         <div>
           <Label className="text-xs">اللون</Label>
           <div className="flex items-center gap-2">
-            <Input
-              type="color"
-              value={form.color ?? "#009688"}
-              onChange={(e) => setForm({ ...form, color: e.target.value })}
-              className="w-14 p-1 h-10"
-            />
+            <div
+              className="relative w-14 h-10 rounded-lg border border-border overflow-hidden shrink-0 cursor-pointer"
+              onClick={() => document.getElementById("pkg-color-picker")?.click()}
+            >
+              {form.color ? (
+                <div className="w-full h-full" style={{ background: form.color }} />
+              ) : (
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                  <span className="text-[10px] text-muted-foreground text-center leading-tight">بدون<br/>لون</span>
+                </div>
+              )}
+              <input
+                id="pkg-color-picker"
+                type="color"
+                value={form.color ?? "#e2e8f0"}
+                onChange={(e) => setForm({ ...form, color: e.target.value })}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </div>
             <Button
               type="button"
               variant="outline"
@@ -688,10 +701,19 @@ function PackageForm({
               className="h-10 rounded-xl text-xs"
               onClick={() => setForm({ ...form, color: null })}
             >
-              استعادة الافتراضي
+              بدون لون
             </Button>
           </div>
           <div className="flex flex-wrap gap-1.5 mt-2">
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, color: null })}
+              className={`w-6 h-6 rounded-full border-2 shadow ring-1 ring-border flex items-center justify-center ${form.color === null ? "ring-2 ring-primary border-primary" : "border-white bg-muted"}`}
+              aria-label="بدون لون"
+              title="بدون لون"
+            >
+              <span className="text-[10px] text-muted-foreground">×</span>
+            </button>
             {[
               "#009688",
               "#0ea5e9",
@@ -708,7 +730,7 @@ function PackageForm({
                 key={c}
                 type="button"
                 onClick={() => setForm({ ...form, color: c })}
-                className="w-6 h-6 rounded-full border-2 border-white shadow ring-1 ring-border"
+                className={`w-6 h-6 rounded-full border-2 shadow ring-1 ring-border ${form.color === c ? "ring-2 ring-primary border-primary" : "border-white"}`}
                 style={{ background: c }}
                 aria-label={c}
               />
