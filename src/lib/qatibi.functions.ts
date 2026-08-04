@@ -47,9 +47,9 @@ export const qatibiPayAndReveal = createServerFn({ method: "POST" })
       return { ok: false, error: "المبلغ غير مطابق لسعر الباقة" };
     }
 
+    let bankRef: string | null = null;
     if (order.status !== "PAID") {
       let bankOk = false;
-      let bankRefFromBank: string | null = null;
       try {
         const res = await fetch(apiUrl, {
           method: "POST",
@@ -79,7 +79,7 @@ export const qatibiPayAndReveal = createServerFn({ method: "POST" })
           };
         }
         bankOk = body?.success === true || body?.status === "success" || body?.ok === true;
-        bankRefFromBank = body?.reference ?? body?.transaction_id ?? body?.txn ?? null;
+        bankRef = body?.reference ?? body?.transaction_id ?? body?.txn ?? null;
         if (!bankOk) {
           return { ok: false, error: body?.message ?? "بيانات الدفع غير صحيحة" };
         }
@@ -87,7 +87,6 @@ export const qatibiPayAndReveal = createServerFn({ method: "POST" })
         console.error("[qatibi] request error", e);
         return { ok: false, error: "تعذر الاتصال ببنك القطيبي" };
       }
-      var bankRef = bankRefFromBank;
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -95,7 +94,7 @@ export const qatibiPayAndReveal = createServerFn({ method: "POST" })
       _order_id: data.orderId,
       _user_id: context.userId,
       _bank_account: data.account,
-      _bank_ref: typeof bankRef === "string" ? bankRef : null,
+      _bank_ref: bankRef,
     });
     if (error) {
       console.error("[qatibi] fulfill error", error);
