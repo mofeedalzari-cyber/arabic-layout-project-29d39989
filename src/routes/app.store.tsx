@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { fmtMoney } from "@/lib/format";
-import { openWhatsApp } from "@/lib/wa-open";
+import { shareReceiptToWhatsApp } from "@/lib/wa-share";
 import { toast } from "sonner";
 import { PackageOpen, Wifi, MessageCircle, Clock } from "lucide-react";
 import { useState } from "react";
