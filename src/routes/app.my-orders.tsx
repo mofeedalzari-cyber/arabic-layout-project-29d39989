@@ -9,6 +9,8 @@ import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Copy, CheckCircle2, Clock, XCircle, Inbox, Trash2 } from "lucide-react";
+import { ReceiptLink } from "@/components/receipt-link";
+
 
 export const Route = createFileRoute("/app/my-orders")({ component: MyOrdersPage });
 
@@ -24,6 +26,8 @@ interface OrderRow {
   card_password: string | null;
   created_at: string;
   approved_at: string | null;
+  receipt_path: string | null;
+
 }
 
 function MyOrdersPage() {
