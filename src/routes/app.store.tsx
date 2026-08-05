@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { fmtMoney } from "@/lib/format";
-import { openWhatsApp } from "@/lib/wa-open";
+import { shareReceiptToWhatsApp } from "@/lib/wa-share";
 import { toast } from "sonner";
 import { PackageOpen, Wifi, MessageCircle, Clock } from "lucide-react";
 import { useState } from "react";
@@ -99,6 +99,14 @@ function StorePage() {
     }
 
     const digits = (target.admin_phone ?? "").replace(/\D/g, "");
+
+    // Temporary link to the uploaded receipt (7 days) so the admin can open it
+    // from the WhatsApp message on any platform.
+    const signed = await supabase.storage
+      .from("order-receipts")
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
+    const link = signed.data?.signedUrl ?? null;
+
     const text =
       `طلب كرت جديد\n` +
       `الاسم: ${customer}\n` +
@@ -106,14 +114,18 @@ function StorePage() {
       `الشبكة: ${target.network_name}\n` +
       `السعر: ${fmtMoney(Number(target.price))}` +
       (note.trim() ? `\nملاحظة: ${note.trim()}` : "") +
-      `\nتم رفع صورة إيصال الدفع في التطبيق.` +
+      `\nصورة إيصال الدفع مرفقة.` +
+      (link ? `\nرابط الإيصال: ${link}` : "") +
       `\nيرجى الموافقة على الطلب لإظهار الكرت في حسابي.`;
 
+    const fileToSend = receipt;
     setTarget(null);
     setReceipt(null);
     toast.success("تم إرسال الطلب، بانتظار موافقة مدير الشبكة");
-    if (digits) void openWhatsApp(digits, text);
-    else toast.error("لا يوجد رقم واتساب للمدير");
+    if (digits || fileToSend) {
+      void shareReceiptToWhatsApp(digits, text, fileToSend, fileToSend?.name ?? "receipt.jpg");
+    }
+    if (!digits) toast.error("لا يوجد رقم واتساب للمدير");
     navigate({ to: "/app/my-orders" });
   }
 
