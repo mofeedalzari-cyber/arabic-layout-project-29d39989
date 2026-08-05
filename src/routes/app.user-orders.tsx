@@ -11,6 +11,8 @@ import { openWhatsApp } from "@/lib/wa-open";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Inbox, Check, X, MessageCircle, Trash2 } from "lucide-react";
+import { ReceiptLink } from "@/components/receipt-link";
+
 
 export const Route = createFileRoute("/app/user-orders")({ component: UserOrdersPage });
 
@@ -31,6 +33,8 @@ interface Row {
   available: number;
   created_at: string;
   approved_at: string | null;
+  receipt_path: string | null;
+
 }
 
 function UserOrdersPage() {
@@ -154,6 +158,14 @@ function UserOrdersPage() {
                 {fmtArabicDateTime(r.created_at)} — متاح {r.available}
                 {r.note ? ` — ${r.note}` : ""}
               </div>
+
+              {r.receipt_path && (
+                <div className="flex justify-end">
+                  <ReceiptLink path={r.receipt_path} />
+                </div>
+              )}
+
+
 
               {r.status === "PENDING" ? (
                 <div className="space-y-2">

@@ -9,6 +9,8 @@ import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Copy, CheckCircle2, Clock, XCircle, Inbox, Trash2 } from "lucide-react";
+import { ReceiptLink } from "@/components/receipt-link";
+
 
 export const Route = createFileRoute("/app/my-orders")({ component: MyOrdersPage });
 
@@ -24,6 +26,8 @@ interface OrderRow {
   card_password: string | null;
   created_at: string;
   approved_at: string | null;
+  receipt_path: string | null;
+
 }
 
 function MyOrdersPage() {
@@ -123,6 +127,14 @@ function MyOrdersPage() {
                 {o.customer_name ? `الاسم: ${o.customer_name} — ` : ""}
                 {fmtArabicDateTime(o.created_at)}
               </div>
+
+              {o.receipt_path && (
+                <div className="flex justify-end">
+                  <ReceiptLink path={o.receipt_path} />
+                </div>
+              )}
+
+
 
               {o.status === "PENDING" && (
                 <div className="flex items-center gap-1 text-amber-600 text-sm font-bold justify-end">

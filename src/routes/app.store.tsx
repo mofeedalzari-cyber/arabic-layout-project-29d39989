@@ -43,6 +43,7 @@ function StorePage() {
   const [target, setTarget] = useState<StoreRow | null>(null);
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
+  const [receipt, setReceipt] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
   const { data: rows = [], isLoading } = useQuery({
@@ -58,17 +59,38 @@ function StorePage() {
     setTarget(row);
     setName(profile?.full_name ?? "");
     setNote("");
+    setReceipt(null);
   }
 
   async function submit() {
     if (!target) return;
     const customer = name.trim();
     if (customer.length < 2) return toast.error("اكتب اسمك أو اسم الزبون");
+    if (!receipt) return toast.error("ارفع صورة إيصال الدفع");
     setBusy(true);
+
+    const { data: auth } = await supabase.auth.getUser();
+    const uid = auth.user?.id;
+    if (!uid) {
+      setBusy(false);
+      return toast.error("انتهت الجلسة، أعد تسجيل الدخول");
+    }
+    const ext = (receipt.name.split(".").pop() ?? "jpg").toLowerCase();
+    const path = `${uid}/${Date.now()}.${ext}`;
+    const up = await supabase.storage
+      .from("order-receipts")
+      .upload(path, receipt, { contentType: receipt.type || "image/jpeg" });
+    if (up.error) {
+      setBusy(false);
+      console.error(up.error);
+      return toast.error("تعذر رفع صورة الإيصال");
+    }
+
     const { error } = await (supabase.rpc as any)("user_request_card", {
       _package_id: target.package_id,
       _customer_name: customer,
       _note: note.trim() || null,
+      _receipt_path: path,
     });
     setBusy(false);
     if (error) {
@@ -84,14 +106,17 @@ function StorePage() {
       `الشبكة: ${target.network_name}\n` +
       `السعر: ${fmtMoney(Number(target.price))}` +
       (note.trim() ? `\nملاحظة: ${note.trim()}` : "") +
+      `\nتم رفع صورة إيصال الدفع في التطبيق.` +
       `\nيرجى الموافقة على الطلب لإظهار الكرت في حسابي.`;
 
     setTarget(null);
+    setReceipt(null);
     toast.success("تم إرسال الطلب، بانتظار موافقة مدير الشبكة");
     if (digits) void openWhatsApp(digits, text);
     else toast.error("لا يوجد رقم واتساب للمدير");
     navigate({ to: "/app/my-orders" });
   }
+
 
   return (
     <div dir="rtl" className="space-y-4">
@@ -199,14 +224,31 @@ function StorePage() {
                 className="text-right"
               />
             </div>
+            <div className="space-y-1">
+              <Label>صورة إيصال الدفع (إلزامي)</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setReceipt(e.target.files?.[0] ?? null)}
+                className="text-right file:ml-0 file:mr-2"
+              />
+              {receipt && (
+                <p className="text-xs text-muted-foreground truncate">{receipt.name}</p>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
               سيتم إرسال رسالة واتساب لمدير الشبكة، ولن يظهر رقم الكرت إلا بعد موافقته.
             </p>
           </div>
           <DialogFooter>
-            <Button onClick={() => void submit()} disabled={busy} className="w-full">
+            <Button
+              onClick={() => void submit()}
+              disabled={busy || !receipt}
+              className="w-full"
+            >
               {busy ? "جارٍ الإرسال…" : "إرسال الطلب عبر واتساب"}
             </Button>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
