@@ -159,6 +159,14 @@ function UserOrdersPage() {
                 {r.note ? ` — ${r.note}` : ""}
               </div>
 
+              {r.receipt_path && (
+                <div className="flex justify-end">
+                  <ReceiptLink path={r.receipt_path} />
+                </div>
+              )}
+
+
+
               {r.status === "PENDING" ? (
                 <div className="space-y-2">
                   <div className="flex gap-2">

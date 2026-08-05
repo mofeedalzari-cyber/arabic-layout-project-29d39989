@@ -128,6 +128,14 @@ function MyOrdersPage() {
                 {fmtArabicDateTime(o.created_at)}
               </div>
 
+              {o.receipt_path && (
+                <div className="flex justify-end">
+                  <ReceiptLink path={o.receipt_path} />
+                </div>
+              )}
+
+
+
               {o.status === "PENDING" && (
                 <div className="flex items-center gap-1 text-amber-600 text-sm font-bold justify-end">
                   <span>بانتظار موافقة مدير الشبكة</span>
