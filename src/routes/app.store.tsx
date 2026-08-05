@@ -224,14 +224,31 @@ function StorePage() {
                 className="text-right"
               />
             </div>
+            <div className="space-y-1">
+              <Label>صورة إيصال الدفع (إلزامي)</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setReceipt(e.target.files?.[0] ?? null)}
+                className="text-right file:ml-0 file:mr-2"
+              />
+              {receipt && (
+                <p className="text-xs text-muted-foreground truncate">{receipt.name}</p>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
               سيتم إرسال رسالة واتساب لمدير الشبكة، ولن يظهر رقم الكرت إلا بعد موافقته.
             </p>
           </div>
           <DialogFooter>
-            <Button onClick={() => void submit()} disabled={busy} className="w-full">
+            <Button
+              onClick={() => void submit()}
+              disabled={busy || !receipt}
+              className="w-full"
+            >
               {busy ? "جارٍ الإرسال…" : "إرسال الطلب عبر واتساب"}
             </Button>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
