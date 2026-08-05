@@ -688,6 +688,7 @@ export type Database = {
           package_name: string
           paid_at: string | null
           price: number
+          receipt_path: string | null
           reject_reason: string | null
           status: string
           updated_at: string
@@ -711,6 +712,7 @@ export type Database = {
           package_name: string
           paid_at?: string | null
           price: number
+          receipt_path?: string | null
           reject_reason?: string | null
           status?: string
           updated_at?: string
@@ -734,6 +736,7 @@ export type Database = {
           package_name?: string
           paid_at?: string | null
           price?: number
+          receipt_path?: string | null
           reject_reason?: string | null
           status?: string
           updated_at?: string
@@ -885,6 +888,7 @@ export type Database = {
           package_name: string
           phone: string
           price: number
+          receipt_path: string
           reject_reason: string
           status: string
           user_id: string
@@ -975,6 +979,7 @@ export type Database = {
           network_name: string
           package_name: string
           price: number
+          receipt_path: string
           reject_reason: string
           status: string
         }[]
@@ -1219,7 +1224,12 @@ export type Database = {
         }[]
       }
       user_request_card: {
-        Args: { _customer_name: string; _note?: string; _package_id: string }
+        Args: {
+          _customer_name: string
+          _note?: string
+          _package_id: string
+          _receipt_path?: string
+        }
         Returns: string
       }
       user_store: {
