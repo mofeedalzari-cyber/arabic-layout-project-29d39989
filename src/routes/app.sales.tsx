@@ -834,14 +834,17 @@ async function printSalesPdf(args: {
 
   const total = sales.reduce((sum, s) => sum + Number(s.price || 0), 0);
 
+  // Summary cells are wide, so keep normal spaces here: NBSP-joined text is
+  // treated as a single token by the PDF renderer and ends up reversed.
   const summary = [
-    { label: "المندوب", value: nb(agentLabel) },
+    { label: "المندوب", value: agentLabel },
     { label: "عدد العمليات", value: sales.length },
     { label: "إجمالي القيمة", value: fmtMoney(total) },
     ...(dateFrom || dateTo
-      ? [{ label: "الفترة", value: nb(`${dateFrom || "البداية"} → ${dateTo || "الآن"}`) }]
+      ? [{ label: "الفترة", value: `${dateFrom || "البداية"} → ${dateTo || "الآن"}` }]
       : []),
   ];
+
 
   const pkgSection = {
     title: "المباع لكل باقة خلال الفترة",
