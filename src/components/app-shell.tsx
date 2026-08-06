@@ -31,6 +31,7 @@ import {
   UserPlus,
   HandCoins,
   ShieldCheck,
+  KeyRound,
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
@@ -48,6 +49,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: "/app", label: "الرئيسية", icon: LayoutDashboard },
   { to: "/app/superadmin", label: "إدارة التطبيق", icon: ShieldCheck, superOnly: true },
+  { to: "/app/password-resets", label: "استعادة كلمة المرور", icon: KeyRound, superOnly: true },
   { to: "/app/networks", label: "الشبكات", icon: Wifi, adminOnly: true },
   { to: "/app/cabin", label: "كبينة البيع", icon: Store, agentOnly: true },
   { to: "/app/customers", label: "الزبائن", icon: Users, agentOnly: true },
@@ -69,7 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   useRealtimeSync();
   // مدير التطبيق: لا يظهر له سوى صفحة الإدارة العامة
   const items = isSuperadmin
-    ? NAV.filter((n) => n.to === "/app/superadmin")
+    ? NAV.filter((n) => n.superOnly)
     : NAV.filter((n) => {
         if (n.superOnly) return false;
         if (n.adminOnly) return role === "admin";

@@ -18,6 +18,7 @@ import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppSalesRouteImport } from './routes/app.sales'
 import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppPaymentsRouteImport } from './routes/app.payments'
+import { Route as AppPasswordResetsRouteImport } from './routes/app.password-resets'
 import { Route as AppPackagesRouteImport } from './routes/app.packages'
 import { Route as AppNetworksRouteImport } from './routes/app.networks'
 import { Route as AppMikrotiksRouteImport } from './routes/app.mikrotiks'
@@ -75,6 +76,11 @@ const AppRequestsRoute = AppRequestsRouteImport.update({
 const AppPaymentsRoute = AppPaymentsRouteImport.update({
   id: '/payments',
   path: '/payments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPasswordResetsRoute = AppPasswordResetsRouteImport.update({
+  id: '/password-resets',
+  path: '/password-resets',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPackagesRoute = AppPackagesRouteImport.update({
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/app/mikrotiks': typeof AppMikrotiksRoute
   '/app/networks': typeof AppNetworksRouteWithChildren
   '/app/packages': typeof AppPackagesRoute
+  '/app/password-resets': typeof AppPasswordResetsRoute
   '/app/payments': typeof AppPaymentsRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/app/manage-cards': typeof AppManageCardsRoute
   '/app/mikrotiks': typeof AppMikrotiksRoute
   '/app/packages': typeof AppPackagesRoute
+  '/app/password-resets': typeof AppPasswordResetsRoute
   '/app/payments': typeof AppPaymentsRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/app/mikrotiks': typeof AppMikrotiksRoute
   '/app/networks': typeof AppNetworksRouteWithChildren
   '/app/packages': typeof AppPackagesRoute
+  '/app/password-resets': typeof AppPasswordResetsRoute
   '/app/payments': typeof AppPaymentsRoute
   '/app/requests': typeof AppRequestsRoute
   '/app/sales': typeof AppSalesRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/app/mikrotiks'
     | '/app/networks'
     | '/app/packages'
+    | '/app/password-resets'
     | '/app/payments'
     | '/app/requests'
     | '/app/sales'
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/app/manage-cards'
     | '/app/mikrotiks'
     | '/app/packages'
+    | '/app/password-resets'
     | '/app/payments'
     | '/app/requests'
     | '/app/sales'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/app/mikrotiks'
     | '/app/networks'
     | '/app/packages'
+    | '/app/password-resets'
     | '/app/payments'
     | '/app/requests'
     | '/app/sales'
@@ -356,6 +368,13 @@ declare module '@tanstack/react-router' {
       path: '/payments'
       fullPath: '/app/payments'
       preLoaderRoute: typeof AppPaymentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/password-resets': {
+      id: '/app/password-resets'
+      path: '/password-resets'
+      fullPath: '/app/password-resets'
+      preLoaderRoute: typeof AppPasswordResetsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/packages': {
@@ -478,6 +497,7 @@ interface AppRouteChildren {
   AppMikrotiksRoute: typeof AppMikrotiksRoute
   AppNetworksRoute: typeof AppNetworksRouteWithChildren
   AppPackagesRoute: typeof AppPackagesRoute
+  AppPasswordResetsRoute: typeof AppPasswordResetsRoute
   AppPaymentsRoute: typeof AppPaymentsRoute
   AppRequestsRoute: typeof AppRequestsRoute
   AppSalesRoute: typeof AppSalesRoute
@@ -498,6 +518,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMikrotiksRoute: AppMikrotiksRoute,
   AppNetworksRoute: AppNetworksRouteWithChildren,
   AppPackagesRoute: AppPackagesRoute,
+  AppPasswordResetsRoute: AppPasswordResetsRoute,
   AppPaymentsRoute: AppPaymentsRoute,
   AppRequestsRoute: AppRequestsRoute,
   AppSalesRoute: AppSalesRoute,
