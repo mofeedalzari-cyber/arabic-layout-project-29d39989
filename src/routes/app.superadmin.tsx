@@ -343,8 +343,13 @@ function SuperAdminPageInner() {
                     <Th>مناديب</Th>
                     <Th>باقات</Th>
                     <Th>كروت</Th>
+                    <Th>متاح</Th>
+                    <Th>مسحوب</Th>
                     <Th>مباع</Th>
                     <Th>قيمة المبيعات</Th>
+                    <Th>المسدد</Th>
+                    <Th>المتبقي</Th>
+
                     <Th>الحالة</Th>
                     <Th>الإنشاء</Th>
                     <Th>إجراءات</Th>
