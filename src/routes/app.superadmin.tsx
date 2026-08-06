@@ -229,9 +229,27 @@ function SuperAdminPageInner() {
         </TabsList>
 
         <TabsContent value="networks" className="mt-3 space-y-3">
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="بحث باسم الشبكة..."
+                className="pr-9"
+                value={networksSearch}
+                onChange={(e) => setNetworksSearch(e.target.value)}
+              />
+            </div>
+          </div>
           {/* بطاقات الشبكات — عرض مناسب للجوال */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {(networks.data ?? []).map((n: any) => (
+            {(networks.data ?? [])
+              .filter((n: any) => {
+                const q = networksSearch.trim();
+                if (!q) return true;
+                return (n.name ?? "").toLowerCase().includes(q.toLowerCase());
+              })
+              .map((n: any) => (
+
               <Card key={n.id} className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
