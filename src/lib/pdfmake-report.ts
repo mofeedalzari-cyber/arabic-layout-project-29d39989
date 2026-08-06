@@ -1,8 +1,8 @@
 // pdfmake-report.ts
 // Helper for generating Arabic (RTL) PDF reports using pdfmake.
-// pdfmake + Amiri/fontkit shape Arabic glyphs, but browser/pdfkit rendering in
-// this build visually reverses Arabic word order. We compensate at word level
-// only, never character level, so letters stay connected and words read right.
+// pdfmake + Cairo/fontkit shape Arabic glyphs, but browser/pdfkit rendering in
+// this build places whitespace-separated RTL tokens in reverse visual order.
+// Compensate at word level only; never reverse characters inside a word.
 
 import type { TDocumentDefinitions, TFontDictionary } from "pdfmake/interfaces";
 
@@ -12,13 +12,6 @@ import type { TDocumentDefinitions, TFontDictionary } from "pdfmake/interfaces";
 
 const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
 
-/**
- * pdfmake in this build renders Arabic tokens in left-to-right order even
- * with `direction: "rtl"` set on the text node. We reverse whitespace-
- * separated tokens so the final output reads right-to-left, while leaving
- * the characters inside each token untouched (reversing characters would
- * break Arabic letter shaping/joining).
- */
 /**
  * The embedded Cairo subset has no glyph for the Saudi Riyal sign (U+FDFC) or
  * for zero-width/soft markers, so those render as tofu boxes ("أحرف غريبة").
@@ -33,15 +26,18 @@ export function sanitizePdfText(value: string): string {
 
 export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
-  let value = String(input);
+  const raw = String(input);
   // Non-breaking spaces mark text that must not wrap (multi-word names in
   // narrow cells).
-  const keepNoWrap = value.includes("\u00A0");
-  value = sanitizePdfText(value);
+  const keepNoWrap = raw.includes("\u00A0");
+  const value = sanitizePdfText(raw).trim();
   if (!ARABIC_CHAR.test(value)) return value;
-  // The PDF renderer already lays Arabic tokens out right-to-left, so no
-  // word-order compensation is applied — names keep their logical order.
-  return keepNoWrap ? value.replace(/ /g, "\u00A0") : value;
+
+  // pdfmake reverses the visual placement of Arabic tokens. Supplying the
+  // tokens in reverse logical order makes the final PDF read correctly:
+  // "ماجد حميد احمد الحائط" is rendered visually in that same order.
+  const separator = keepNoWrap ? "\u00A0" : " ";
+  return value.split(/\s+/).reverse().join(separator);
 }
 
 
