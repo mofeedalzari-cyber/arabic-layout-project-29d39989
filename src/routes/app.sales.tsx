@@ -823,8 +823,7 @@ async function printSalesPdf(args: {
   const { exportToPDF } = await import("@/lib/dashboard-export");
 
   // Replace internal spaces with non-breaking spaces so multi-word Arabic
-  // names never wrap inside a narrow cell (wrapping breaks the RTL
-  // token-reversal used by the PDF renderer and scrambles word order).
+  // names stay on one line and retain their logical order in narrow cells.
   const nb = (s: string | null | undefined) => String(s ?? "").replace(/ /g, "\u00A0");
 
   const agentLabel =
@@ -834,8 +833,7 @@ async function printSalesPdf(args: {
 
   const total = sales.reduce((sum, s) => sum + Number(s.price || 0), 0);
 
-  // Summary cells are wide, so keep normal spaces here: NBSP-joined text is
-  // treated as a single token by the PDF renderer and ends up reversed.
+  // Summary cells are wide, so regular spaces are sufficient here.
   const summary = [
     { label: "المندوب", value: agentLabel },
     { label: "عدد العمليات", value: sales.length },

@@ -27,17 +27,20 @@ export function sanitizePdfText(value: string): string {
 export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
   const raw = String(input);
-  // Non-breaking spaces mark text that must not wrap (multi-word names in
-  // narrow cells).
+  // Non-breaking spaces mark multi-word names that must stay on one line.
+  // pdfmake treats an NBSP-joined name as one RTL run and already preserves
+  // its logical word order, so reversing that run would turn
+  // "عبداللطيف محمد مرعي" into "مرعي محمد عبداللطيف".
   const keepNoWrap = raw.includes("\u00A0");
   const value = sanitizePdfText(raw).trim();
   if (!ARABIC_CHAR.test(value)) return value;
 
+  if (keepNoWrap) return value.split(/\s+/).join("\u00A0");
+
   // pdfmake reverses the visual placement of Arabic tokens. Supplying the
   // tokens in reverse logical order makes the final PDF read correctly:
   // "ماجد حميد احمد الحائط" is rendered visually in that same order.
-  const separator = keepNoWrap ? "\u00A0" : " ";
-  return value.split(/\s+/).reverse().join(separator);
+  return value.split(/\s+/).reverse().join(" ");
 }
 
 
