@@ -1137,6 +1137,10 @@ export type Database = {
         Args: { _network_id: string }
         Returns: Json
       }
+      superadmin_delete_reset_requests: {
+        Args: { _ids: string[] }
+        Returns: number
+      }
       superadmin_networks: {
         Args: never
         Returns: {
