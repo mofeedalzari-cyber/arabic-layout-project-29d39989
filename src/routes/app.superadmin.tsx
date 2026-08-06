@@ -431,10 +431,11 @@ function SuperAdminPageInner() {
 
                     <tr>
                       <Td colSpan={11} className="text-center text-muted-foreground py-8">
-                        لا توجد شبكات
+                        {networksSearch.trim() ? "لا توجد نتائج مطابقة" : "لا توجد شبكات"}
                       </Td>
                     </tr>
                   )}
+
                 </tbody>
               </table>
             </div>
