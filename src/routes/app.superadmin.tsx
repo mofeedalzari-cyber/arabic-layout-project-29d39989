@@ -370,8 +370,15 @@ function SuperAdminPageInner() {
                         <Td>{n.agents_count}</Td>
                         <Td>{n.packages_count}</Td>
                         <Td>{n.cards_count}</Td>
+                        <Td>{n.available_count ?? 0}</Td>
+                        <Td>{n.assigned_count ?? 0}</Td>
                         <Td>{n.sold_count}</Td>
                         <Td>{fmtMoney(Number(n.sold_value ?? 0))}</Td>
+                        <Td className="text-success">{fmtMoney(Number(n.paid_value ?? 0))}</Td>
+                        <Td className="text-destructive">
+                          {fmtMoney(Number(n.remaining_value ?? 0))}
+                        </Td>
+
                         <Td>
                           {n.is_active ? (
                             <Badge>نشطة</Badge>
