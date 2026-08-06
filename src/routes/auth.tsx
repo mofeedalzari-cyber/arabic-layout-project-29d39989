@@ -17,7 +17,29 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ChevronLeft, User as UserIcon } from "lucide-react";
 import logo from "@/assets/wifi-store-logo.png";
 
-export const Route = createFileRoute("/auth")({ component: AuthPage });
+const SITE_URL = "https://arabic-layout-project.lovable.app";
+
+export const Route = createFileRoute("/auth")({
+  component: AuthPage,
+  head: () => ({
+    meta: [
+      { title: "تسجيل الدخول — كرتي لإدارة كروت الإنترنت" },
+      {
+        name: "description",
+        content:
+          "سجّل الدخول إلى كرتي برقم الهاتف وكلمة المرور لإدارة شبكات الإنترنت والباقات والكروت ومتابعة مبيعات المناديب.",
+      },
+      { property: "og:title", content: "تسجيل الدخول — كرتي لإدارة كروت الإنترنت" },
+      {
+        property: "og:description",
+        content: "دخول المديرين والمناديب إلى منصة كرتي لإدارة وبيع كروت الإنترنت.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: `${SITE_URL}/auth` },
+    ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/auth` }],
+  }),
+});
 
 const APP_NAME = "كرتي";
 const phoneSchema = z
