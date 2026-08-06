@@ -31,6 +31,7 @@ import {
   UserPlus,
   HandCoins,
   ShieldCheck,
+  KeyRound,
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
