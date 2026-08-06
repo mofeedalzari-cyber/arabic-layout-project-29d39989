@@ -142,7 +142,10 @@ function SuperAdminPageInner() {
     search?: string;
   }>({});
   const [agentsNetFilter, setAgentsNetFilter] = useState<string>("");
+  const [agentsSearch, setAgentsSearch] = useState<string>("");
+  const [networksSearch, setNetworksSearch] = useState<string>("");
   const [packagesNetFilter, setPackagesNetFilter] = useState<string>("");
+
   const cards = useQuery({
     queryKey: ["sa-cards", cardsFilter],
     queryFn: async () => {
@@ -226,9 +229,27 @@ function SuperAdminPageInner() {
         </TabsList>
 
         <TabsContent value="networks" className="mt-3 space-y-3">
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="بحث باسم الشبكة..."
+                className="pr-9"
+                value={networksSearch}
+                onChange={(e) => setNetworksSearch(e.target.value)}
+              />
+            </div>
+          </div>
           {/* بطاقات الشبكات — عرض مناسب للجوال */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {(networks.data ?? []).map((n: any) => (
+            {(networks.data ?? [])
+              .filter((n: any) => {
+                const q = networksSearch.trim();
+                if (!q) return true;
+                return (n.name ?? "").toLowerCase().includes(q.toLowerCase());
+              })
+              .map((n: any) => (
+
               <Card key={n.id} className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -281,10 +302,17 @@ function SuperAdminPageInner() {
                 </div>
               </Card>
             ))}
-            {networks.data?.length === 0 && (
-              <Card className="p-8 text-center text-muted-foreground">لا توجد شبكات</Card>
+            {networks.data?.filter((n: any) => {
+              const q = networksSearch.trim();
+              if (!q) return true;
+              return (n.name ?? "").toLowerCase().includes(q.toLowerCase());
+            }).length === 0 && (
+              <Card className="p-8 text-center text-muted-foreground">
+                {networksSearch.trim() ? "لا توجد نتائج مطابقة" : "لا توجد شبكات"}
+              </Card>
             )}
           </div>
+
 
           <Card className="overflow-hidden hidden lg:block">
 
@@ -306,96 +334,108 @@ function SuperAdminPageInner() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(networks.data ?? []).map((n: any) => (
-                    <tr key={n.id} className="border-t">
-                      <Td className="font-semibold">{n.name}</Td>
-                      <Td>{cleanPhoneLike(n.owner_username) || "—"}</Td>
-                      <Td dir="ltr">{displayPhone(n.owner_phone, n.owner_username)}</Td>
-                      <Td>{n.agents_count}</Td>
-                      <Td>{n.packages_count}</Td>
-                      <Td>{n.cards_count}</Td>
-                      <Td>{n.sold_count}</Td>
-                      <Td>{fmtMoney(Number(n.sold_value ?? 0))}</Td>
-                      <Td>
-                        {n.is_active ? (
-                          <Badge>نشطة</Badge>
-                        ) : (
-                          <Badge variant="secondary">موقوفة</Badge>
-                        )}
-                      </Td>
-                      <Td className="whitespace-nowrap text-xs">
-                        {fmtArabicDateTime(n.created_at)}
-                      </Td>
-                      <Td>
-                        <div className="flex gap-1 flex-wrap">
-                          {n.owner_id ? (
-                            <ResetPasswordButton userId={n.owner_id} label={`مدير ${n.name}`} />
-                          ) : null}
-                          <Button
-                            size="sm"
-                            variant={n.is_active ? "destructive" : "default"}
-                            disabled={toggleNet.isPending}
-                            onClick={() => {
-                              const msg = n.is_active
-                                ? `إيقاف شبكة "${n.name}"؟ لن يتمكن مستخدموها من الدخول.`
-                                : `إعادة تفعيل شبكة "${n.name}"؟`;
-                              if (window.confirm(msg))
-                                toggleNet.mutate({ id: n.id, active: !n.is_active });
-                            }}
-                          >
-                            {n.is_active ? (
-                              <>
-                                <PowerOff className="h-4 w-4 ml-1" />
-                                إيقاف
-                              </>
-                            ) : (
-                              <>
-                                <Power className="h-4 w-4 ml-1" />
-                                تفعيل
-                              </>
-                            )}
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                disabled={deleteNet.isPending}
-                              >
-                                <Trash2 className="h-4 w-4 ml-1" />
-                                حذف
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent dir="rtl">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>حذف نهائي لشبكة "{n.name}"؟</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  سيتم حذف جميع المناديب والباقات والكروت والطلبات والمبيعات
-                                  المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                <AlertDialogAction
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  onClick={() => deleteNet.mutate(n.id)}
+                  {(networks.data ?? [])
+                    .filter((n: any) => {
+                      const q = networksSearch.trim();
+                      if (!q) return true;
+                      return (n.name ?? "").toLowerCase().includes(q.toLowerCase());
+                    })
+                    .map((n: any) => (
+                      <tr key={n.id} className="border-t">
+                        <Td className="font-semibold">{n.name}</Td>
+                        <Td>{cleanPhoneLike(n.owner_username) || "—"}</Td>
+                        <Td dir="ltr">{displayPhone(n.owner_phone, n.owner_username)}</Td>
+                        <Td>{n.agents_count}</Td>
+                        <Td>{n.packages_count}</Td>
+                        <Td>{n.cards_count}</Td>
+                        <Td>{n.sold_count}</Td>
+                        <Td>{fmtMoney(Number(n.sold_value ?? 0))}</Td>
+                        <Td>
+                          {n.is_active ? (
+                            <Badge>نشطة</Badge>
+                          ) : (
+                            <Badge variant="secondary">موقوفة</Badge>
+                          )}
+                        </Td>
+                        <Td className="whitespace-nowrap text-xs">
+                          {fmtArabicDateTime(n.created_at)}
+                        </Td>
+                        <Td>
+                          <div className="flex gap-1 flex-wrap">
+                            {n.owner_id ? (
+                              <ResetPasswordButton userId={n.owner_id} label={`مدير ${n.name}`} />
+                            ) : null}
+                            <Button
+                              size="sm"
+                              variant={n.is_active ? "destructive" : "default"}
+                              disabled={toggleNet.isPending}
+                              onClick={() => {
+                                const msg = n.is_active
+                                  ? `إيقاف شبكة "${n.name}"؟ لن يتمكن مستخدموها من الدخول.`
+                                  : `إعادة تفعيل شبكة "${n.name}"؟`;
+                                if (window.confirm(msg))
+                                  toggleNet.mutate({ id: n.id, active: !n.is_active });
+                              }}
+                            >
+                              {n.is_active ? (
+                                <>
+                                  <PowerOff className="h-4 w-4 ml-1" />
+                                  إيقاف
+                                </>
+                              ) : (
+                                <>
+                                  <Power className="h-4 w-4 ml-1" />
+                                  تفعيل
+                                </>
+                              )}
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  disabled={deleteNet.isPending}
                                 >
-                                  نعم، حذف نهائي
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </Td>
-                    </tr>
-                  ))}
-                  {networks.data?.length === 0 && (
+                                  <Trash2 className="h-4 w-4 ml-1" />
+                                  حذف
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent dir="rtl">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>حذف نهائي لشبكة "{n.name}"؟</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    سيتم حذف جميع المناديب والباقات والكروت والطلبات والمبيعات
+                                    المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => deleteNet.mutate(n.id)}
+                                  >
+                                    نعم، حذف نهائي
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </Td>
+                      </tr>
+                    ))}
+                  {networks.data?.filter((n: any) => {
+                    const q = networksSearch.trim();
+                    if (!q) return true;
+                    return (n.name ?? "").toLowerCase().includes(q.toLowerCase());
+                  }).length === 0 && (
+
                     <tr>
                       <Td colSpan={11} className="text-center text-muted-foreground py-8">
-                        لا توجد شبكات
+                        {networksSearch.trim() ? "لا توجد نتائج مطابقة" : "لا توجد شبكات"}
                       </Td>
                     </tr>
                   )}
+
                 </tbody>
               </table>
             </div>
@@ -404,6 +444,15 @@ function SuperAdminPageInner() {
 
         <TabsContent value="agents" className="mt-3 space-y-3">
           <div className="flex flex-wrap gap-2 items-center">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="بحث باسم المندوب أو الهاتف..."
+                className="pr-9"
+                value={agentsSearch}
+                onChange={(e) => setAgentsSearch(e.target.value)}
+              />
+            </div>
             <select
               className="h-10 rounded-md border bg-background px-3 text-sm"
               value={agentsNetFilter}
@@ -417,6 +466,7 @@ function SuperAdminPageInner() {
               ))}
             </select>
           </div>
+
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table dir="rtl" className="w-full text-sm border-collapse border">
@@ -440,7 +490,21 @@ function SuperAdminPageInner() {
                 </thead>
                 <tbody>
                   {(agents.data ?? [])
-                    .filter((a: any) => !agentsNetFilter || a.network_id === agentsNetFilter)
+                    .filter((a: any) => {
+                      const netOk = !agentsNetFilter || a.network_id === agentsNetFilter;
+                      const q = agentsSearch.trim();
+                      if (!netOk) return false;
+                      if (!q) return true;
+                      const hay = [
+                        a.full_name ?? "",
+                        a.username ?? "",
+                        a.phone ?? "",
+                        a.network_name ?? "",
+                      ]
+                        .join(" ")
+                        .toLowerCase();
+                      return hay.includes(q.toLowerCase());
+                    })
                     .map((a: any) => (
                       <tr key={a.id} className="border-t">
                         <Td>{a.full_name ?? "—"}</Td>
@@ -478,16 +542,29 @@ function SuperAdminPageInner() {
                         </Td>
                       </tr>
                     ))}
-                  {agents.data?.length === 0 && (
+                  {agents.data?.filter((a: any) => {
+                    const netOk = !agentsNetFilter || a.network_id === agentsNetFilter;
+                    const q = agentsSearch.trim();
+                    if (!netOk) return false;
+                    if (!q) return true;
+                    const hay = [
+                      a.full_name ?? "",
+                      a.username ?? "",
+                      a.phone ?? "",
+                      a.network_name ?? "",
+                    ]
+                      .join(" ")
+                      .toLowerCase();
+                    return hay.includes(q.toLowerCase());
+                  }).length === 0 && (
                     <tr>
                       <Td colSpan={12} className="text-center text-muted-foreground py-8">
-                        لا يوجد مناديب
+                        {agentsSearch.trim() ? "لا توجد نتائج مطابقة" : "لا يوجد مناديب"}
                       </Td>
-
                     </tr>
                   )}
-
                 </tbody>
+
               </table>
             </div>
           </Card>
