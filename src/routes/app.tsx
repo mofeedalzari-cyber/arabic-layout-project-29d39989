@@ -28,13 +28,8 @@ function AppLayout() {
   }, [loading, user, isSuperadmin, loc.pathname, navigate]);
 
 
-  // حساب المستخدم: يُحصر في المتجر وصفحة التغذية والإعدادات
-  useEffect(() => {
-    const allowed = ["/app/store", "/app/my-orders", "/app/settings"];
-    if (!loading && user && role === "user" && !allowed.includes(loc.pathname)) {
-      navigate({ to: "/app/store", replace: true });
-    }
-  }, [loading, user, role, loc.pathname, navigate]);
+
+
 
   if (loading || !user) {
     return (
