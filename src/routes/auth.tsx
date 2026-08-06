@@ -28,7 +28,7 @@ const phoneSchema = z
   .regex(/^[0-9+\-\s]+$/, "أرقام فقط");
 const passwordSchema = z.string().min(6, "6 أحرف على الأقل").max(72);
 
-type AccountType = "agent" | "network" | "user";
+type AccountType = "agent" | "network";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ function AuthPage() {
   }, [loading, user, navigate]);
 
   useEffect(() => {
-    if (mode === "register" && (accountType === "agent" || accountType === "user")) {
+    if (mode === "register" && accountType === "agent") {
       (supabase.rpc as any)("list_active_networks").then(({ data }: any) => {
         setNetworks((data as { id: string; name: string }[]) ?? []);
       });
@@ -147,21 +147,16 @@ function AuthPage() {
       return toast.error(error.message);
     }
     toast.success(
-      accountType === "user"
-        ? "تم إنشاء الحساب! يمكنك تسجيل الدخول والشراء فورًا."
-        : "تم إنشاء الحساب! سيتم تفعيله من قبل المدير قبل البدء.",
+      accountType === "network"
+        ? "تم إنشاء الحساب! سيتم تفعيله بعد موافقة مدير التطبيق."
+        : "تم إنشاء الحساب! سيتم تفعيله من قبل مدير الشبكة قبل البدء.",
     );
     setMode("login");
     setLoginPhone(ph.data);
     setLoginP("");
   }
 
-  const typeLabel =
-    accountType === "agent"
-      ? "مندوب توزيع"
-      : accountType === "network"
-        ? "وكيل / مدير شبكة"
-        : "مستخدم";
+  const typeLabel = accountType === "agent" ? "مندوب توزيع" : "وكيل / مدير شبكة";
 
   return (
     <div
@@ -287,10 +282,8 @@ function AuthPage() {
               </div>
               <p className="text-gray-600 text-sm text-right mb-5">
                 {accountType === "network"
-                  ? "أدخل بياناتك واسم شبكتك للبدء."
-                  : accountType === "user"
-                    ? "أدخل بياناتك وابدأ الشراء فورًا بدون موافقة المدير."
-                    : "أدخل بياناتك للبدء."}
+                  ? "أدخل بياناتك واسم شبكتك — يتم تفعيل الحساب بعد موافقة مدير التطبيق."
+                  : "أدخل بياناتك للبدء."}
               </p>
 
               <form onSubmit={handleRegister} className="space-y-3">
@@ -416,17 +409,6 @@ function AuthPage() {
               desc="إدارة الشبكة ومتابعة مبيعات المناديب"
               onClick={() => {
                 setAccountType("network");
-                setMode("register");
-                setSheetOpen(false);
-              }}
-            />
-            <TypeRow
-              icon={<UserIcon className="h-6 w-6 text-white" />}
-              iconBg="bg-[#c6dd00]"
-              title="مستخدم"
-              desc="شراء الكروت مباشرة وتغذية الحساب عبر بنك القطيبي"
-              onClick={() => {
-                setAccountType("user");
                 setMode("register");
                 setSheetOpen(false);
               }}
