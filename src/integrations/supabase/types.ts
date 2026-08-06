@@ -1145,6 +1145,8 @@ export type Database = {
         Args: never
         Returns: {
           agents_count: number
+          assigned_count: number
+          available_count: number
           cards_count: number
           created_at: string
           currency: string
@@ -1155,6 +1157,9 @@ export type Database = {
           owner_phone: string
           owner_username: string
           packages_count: number
+          paid_value: number
+          remaining_value: number
+          requests_value: number
           sold_count: number
           sold_value: number
         }[]
