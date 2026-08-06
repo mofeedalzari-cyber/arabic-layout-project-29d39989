@@ -104,9 +104,15 @@ function NetworksPage() {
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("networks").insert(form);
+        const { data: me } = await supabase.auth.getUser();
+        const uid = me.user?.id;
+        if (!uid) throw new Error("يجب تسجيل الدخول");
+        const { error } = await supabase
+          .from("networks")
+          .insert({ ...form, owner_id: uid, created_by: uid });
         if (error) throw error;
       }
+
     },
     onSuccess: () => {
       toast.success(editing ? "تم التحديث" : "تم إنشاء الشبكة");
