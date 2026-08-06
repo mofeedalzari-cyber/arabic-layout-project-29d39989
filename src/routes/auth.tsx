@@ -17,7 +17,29 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ChevronLeft, User as UserIcon } from "lucide-react";
 import logo from "@/assets/wifi-store-logo.png";
 
-export const Route = createFileRoute("/auth")({ component: AuthPage });
+const SITE_URL = "https://arabic-layout-project.lovable.app";
+
+export const Route = createFileRoute("/auth")({
+  component: AuthPage,
+  head: () => ({
+    meta: [
+      { title: "تسجيل الدخول — كرتي لإدارة كروت الإنترنت" },
+      {
+        name: "description",
+        content:
+          "سجّل الدخول إلى كرتي برقم الهاتف وكلمة المرور لإدارة شبكات الإنترنت والباقات والكروت ومتابعة مبيعات المناديب.",
+      },
+      { property: "og:title", content: "تسجيل الدخول — كرتي لإدارة كروت الإنترنت" },
+      {
+        property: "og:description",
+        content: "دخول المديرين والمناديب إلى منصة كرتي لإدارة وبيع كروت الإنترنت.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: `${SITE_URL}/auth` },
+    ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/auth` }],
+  }),
+});
 
 const APP_NAME = "كرتي";
 const phoneSchema = z
@@ -195,6 +217,7 @@ function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowPwd((v) => !v)}
+                    aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                   >
                     {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -337,6 +360,7 @@ function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowPwd((v) => !v)}
+                    aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                   >
                     {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -355,6 +379,7 @@ function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowPwd2((v) => !v)}
+                    aria-label={showPwd2 ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                   >
                     {showPwd2 ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -376,7 +401,7 @@ function AuthPage() {
                   onClick={() => setMode("login")}
                   className="text-teal-700 font-semibold underline underline-offset-4"
                 >
-                  اضغط هنا لتسجيل الدخول
+                  سجل الدخول من هنا
                 </button>
               </p>
             </div>
@@ -474,8 +499,16 @@ function AuthPage() {
 function BrandHeader({ subtitle }: { subtitle: string }) {
   return (
     <div className="flex flex-col items-center text-center mb-5">
-      <img src={logo} alt={APP_NAME} width={96} height={96} className="h-20 w-20 object-contain" />
-      <h1 className="text-3xl font-extrabold tracking-tight mt-1 text-gray-900">{APP_NAME}</h1>
+      <img
+        src={logo}
+        alt="شعار تطبيق كرتي"
+        width={96}
+        height={96}
+        className="h-20 w-20 object-contain"
+      />
+      <h1 className="text-3xl font-extrabold tracking-tight mt-1 text-gray-900">
+        {APP_NAME} — نظام إدارة وبيع كروت الإنترنت
+      </h1>
       <p className="text-gray-600 mt-2 text-base">{subtitle}</p>
     </div>
   );

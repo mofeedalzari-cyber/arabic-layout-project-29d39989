@@ -54,7 +54,25 @@ import { AgentStats } from "./app.agents";
 
 import { PackagesChart, AgentsChart } from "@/components/dashboard-charts";
 
-export const Route = createFileRoute("/app/")({ component: DashboardPage });
+export const Route = createFileRoute("/app/")({
+  component: DashboardPage,
+  head: () => ({
+    meta: [
+      { title: "لوحة التحكم — كرتي" },
+      {
+        name: "description",
+        content:
+          "لوحة تحكم كرتي: ملخص الشبكة والمبيعات والباقات وأرصدة المناديب في مكان واحد لإدارة كروت الإنترنت.",
+      },
+      { name: "robots", content: "noindex, nofollow" },
+      { property: "og:title", content: "لوحة التحكم — كرتي" },
+      {
+        property: "og:description",
+        content: "ملخص الشبكة والمبيعات وأرصدة المناديب داخل منصة كرتي.",
+      },
+    ],
+  }),
+});
 
 function DashboardPage() {
   const { role, profile } = useAuth();

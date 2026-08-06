@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /app/
+
+Sitemap: https://arabic-layout-project.lovable.app/sitemap.xml
