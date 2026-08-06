@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { fmtMoney, displayPhone, fmtArabicDateTime, cleanPhoneLike } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -969,6 +970,7 @@ function ResetPasswordButton({
 
 function ResetRequestsPanel() {
   const qc = useQueryClient();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const q = useQuery({
     queryKey: ["sa-reset-requests"],
     queryFn: async () => {
@@ -992,12 +994,62 @@ function ResetRequestsPanel() {
     onError: (e: any) => toast.error(e.message ?? "فشل"),
   });
 
+  const del = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await (supabase.rpc as any)("superadmin_delete_reset_requests", {
+        _ids: ids,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم حذف الطلبات المحددة");
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["sa-reset-requests"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "فشل الحذف"),
+  });
+
+  const rows = q.data ?? [];
+  const allSelected = rows.length > 0 && rows.every((r: any) => selected.has(r.id));
+  const toggle = (id: string) =>
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  const toggleAll = () =>
+    setSelected(allSelected ? new Set() : new Set(rows.map((r: any) => r.id)));
+
   return (
     <Card className="overflow-hidden">
+      {rows.length > 0 && (
+        <div className="flex items-center justify-between gap-2 p-3 border-b">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+            تحديد الكل ({rows.length})
+          </label>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive border-destructive/40"
+            disabled={selected.size === 0 || del.isPending}
+            onClick={() => {
+              if (confirm(`حذف ${selected.size} طلب استعادة؟`)) del.mutate(Array.from(selected));
+            }}
+          >
+            <Trash2 className="h-4 w-4 ml-1" />
+            حذف المحدد ({selected.size})
+          </Button>
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table dir="rtl" className="w-full text-sm border-collapse border">
           <thead className="bg-muted/50">
             <tr>
+              <Th>
+                <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+              </Th>
               <Th>رقم الجوال</Th>
               <Th>المستخدم المطابق</Th>
               <Th>الاسم</Th>
@@ -1009,11 +1061,16 @@ function ResetRequestsPanel() {
             </tr>
           </thead>
           <tbody>
-            {(q.data ?? []).map((r: any) => (
+
+            {rows.map((r: any) => (
               <tr key={r.id} className="border-t">
+                <Td>
+                  <Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggle(r.id)} />
+                </Td>
                 <Td dir="ltr" className="font-mono">
                   {r.phone}
                 </Td>
+
                 <Td>{cleanPhoneLike(r.matched_username) || "—"}</Td>
                 <Td>{r.matched_full_name ?? "—"}</Td>
                 <Td>{r.matched_network_name ?? "—"}</Td>
@@ -1060,7 +1117,8 @@ function ResetRequestsPanel() {
             ))}
             {q.data?.length === 0 && (
               <tr>
-                <Td colSpan={8} className="text-center text-muted-foreground py-8">
+                <Td colSpan={9} className="text-center text-muted-foreground py-8">
+
                   لا توجد طلبات
                 </Td>
               </tr>
