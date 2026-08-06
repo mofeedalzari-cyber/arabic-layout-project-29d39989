@@ -42,8 +42,8 @@ interface NavItem {
   adminOnly?: boolean;
   agentOnly?: boolean;
   superOnly?: boolean;
-  userOnly?: boolean;
 }
+
 
 const NAV: NavItem[] = [
   { to: "/app", label: "الرئيسية", icon: LayoutDashboard },
