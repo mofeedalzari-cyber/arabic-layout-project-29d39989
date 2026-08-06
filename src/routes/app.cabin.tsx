@@ -477,7 +477,14 @@ function CabinPage() {
                           }
                         />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent
+                        side="bottom"
+                        align="start"
+                        sideOffset={6}
+                        collisionPadding={{ top: 64, bottom: 16, left: 8, right: 8 }}
+                        className="max-h-[40vh] overflow-y-auto"
+                      >
+
                         {(customers ?? []).map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             <span className="flex items-center gap-2">
