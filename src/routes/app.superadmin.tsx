@@ -142,7 +142,10 @@ function SuperAdminPageInner() {
     search?: string;
   }>({});
   const [agentsNetFilter, setAgentsNetFilter] = useState<string>("");
+  const [agentsSearch, setAgentsSearch] = useState<string>("");
+  const [networksSearch, setNetworksSearch] = useState<string>("");
   const [packagesNetFilter, setPackagesNetFilter] = useState<string>("");
+
   const cards = useQuery({
     queryKey: ["sa-cards", cardsFilter],
     queryFn: async () => {
