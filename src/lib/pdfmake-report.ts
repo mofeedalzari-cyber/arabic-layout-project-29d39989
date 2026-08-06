@@ -34,19 +34,20 @@ export function sanitizePdfText(value: string): string {
 export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
   let value = String(input);
-  const keepOrder = value.includes("\u00A0");
+  // Non-breaking spaces mark text that must not wrap (multi-word names in
+  // narrow cells). They still need the same word-order compensation as any
+  // other Arabic text, so we reverse tokens and re-join with NBSP.
+  const keepNoWrap = value.includes("\u00A0");
   value = sanitizePdfText(value);
   if (!ARABIC_CHAR.test(value)) return value;
-  // Names are passed with non-breaking spaces to preserve their Arabic word
-  // order. Do not split/reverse those names; otherwise "ماجد حميد احمد الحائط"
-  // becomes visually reversed in the generated PDF.
-  if (keepOrder) return value;
 
   // Split on regular spaces only. Reversing at whitespace — never inside a
-  // token — keeps Arabic letter shaping/joining intact for ordinary labels.
+  // token — keeps Arabic letter shaping/joining intact.
   const parts = value.split(/( +)/);
-  return parts.reverse().join("");
+  const out = parts.reverse().join("");
+  return keepNoWrap ? out.replace(/ /g, "\u00A0") : out;
 }
+
 
 
 function rtlText(input: string | number | null | undefined): string {
