@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import "@tanstack/react-start";
+import { createMiddleware } from "@tanstack/react-start";
+void createMiddleware;
 
 const BASE_URL = "https://arabic-layout-project.lovable.app";
 
