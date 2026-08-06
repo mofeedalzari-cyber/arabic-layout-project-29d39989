@@ -120,95 +120,49 @@ function CardsPageInner() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  async function extractPdfCards(f: File): Promise<string> {
-    const pdfjs: any = await import("pdfjs-dist");
-    const workerMod: any = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
-    pdfjs.GlobalWorkerOptions.workerSrc = workerMod.default;
-
-    const buf = await f.arrayBuffer();
-    const pdf = await pdfjs.getDocument({ data: buf }).promise;
-    let allText = "";
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      allText += content.items.map((it: any) => it.str).join(" ") + "\n";
-    }
-
-    // Collect all numeric tokens, preserving order.
-    const tokens = allText.match(/\d{3,20}/g) ?? [];
-    const usernames: string[] = [];
-    const passwords: string[] = [];
-    for (const t of tokens) {
-      if (t.length >= 8) usernames.push(t);
-      else passwords.push(t);
-    }
-
-    // Deduplicate usernames while keeping order.
-    const seen = new Set<string>();
-    const uniqueUsers = usernames.filter((u) => (seen.has(u) ? false : (seen.add(u), true)));
-
-    if (mode === "user_only") {
-      return uniqueUsers.join("\n");
-    }
-
-    // Strategy A: inline pairs — long digits directly followed (within 1-20 non-digits) by short digits.
-    const inlineRe = /(\d{8,20})\D{1,20}?(\d{3,7})(?!\d)/g;
-    const inlinePairs = new Map<string, string>();
-    let m: RegExpExecArray | null;
-    while ((m = inlineRe.exec(allText)) !== null) {
-      if (!inlinePairs.has(m[1])) inlinePairs.set(m[1], m[2]);
-    }
-
-    // If we have a password for most usernames inline, use that.
-    if (inlinePairs.size >= Math.floor(uniqueUsers.length * 0.6)) {
-      return uniqueUsers
-        .map((u) => (inlinePairs.has(u) ? `${u}|${inlinePairs.get(u)}` : u))
-        .join("\n");
-    }
-
-    // Strategy B: two-column layout — all usernames listed, then all passwords listed.
-    // Pair by order when counts match.
-    if (passwords.length >= uniqueUsers.length) {
-      return uniqueUsers.map((u, i) => `${u}|${passwords[i]}`).join("\n");
-    }
-
-    // Fallback: usernames only.
-    return uniqueUsers.join("\n");
-  }
-
   async function handleFile(f: File) {
     const name = f.name.toLowerCase();
-    if (name.endsWith(".pdf")) {
+    if (name.endsWith(".pdf") || f.type === "application/pdf") {
+      const tid = toast.loading("جارٍ قراءة ملف PDF...");
       try {
-        const parsed = await extractPdfCards(f);
-        if (!parsed) throw new Error("no cards");
-        setRawText(parsed);
-        toast.success(`تم استخراج ${parsed.split("\n").length} كرت من الملف`);
-      } catch (e) {
-        toast.error("تعذّر قراءة ملف PDF");
+        const { extractPdfText, pdfTextToCardLines } = await import("@/lib/pdf-extract");
+        const text = await extractPdfText(f);
+        const lines = pdfTextToCardLines(text, mode);
+        if (!lines.trim()) throw new Error("لم يتم العثور على أرقام كروت في الملف");
+        setRawText(lines);
+        toast.success(`تم استخراج ${lines.split("\n").length} كرت من الملف`, { id: tid });
+      } catch (e: any) {
+        toast.error(e?.message ? `تعذّر قراءة ملف PDF: ${e.message}` : "تعذّر قراءة ملف PDF", {
+          id: tid,
+        });
       }
       return;
     }
-    const text = await f.text();
-    if (name.endsWith(".json")) {
-      try {
-        const arr = JSON.parse(text);
-        if (Array.isArray(arr)) {
-          setRawText(
-            arr
-              .map((x) =>
-                typeof x === "string" ? x : `${x.username}${x.password ? "|" + x.password : ""}`,
-              )
-              .join("\n"),
-          );
-          return;
+    try {
+      const text = await f.text();
+      if (name.endsWith(".json")) {
+        try {
+          const arr = JSON.parse(text);
+          if (Array.isArray(arr)) {
+            setRawText(
+              arr
+                .map((x) =>
+                  typeof x === "string" ? x : `${x.username}${x.password ? "|" + x.password : ""}`,
+                )
+                .join("\n"),
+            );
+            return;
+          }
+        } catch {
+          /**/
         }
-      } catch {
-        /**/
       }
+      setRawText(text);
+    } catch {
+      toast.error("تعذّر قراءة الملف");
     }
-    setRawText(text);
   }
+
 
   return (
     <>
