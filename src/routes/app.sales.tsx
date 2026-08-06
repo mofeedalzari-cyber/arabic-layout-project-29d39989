@@ -822,8 +822,8 @@ async function printSalesPdf(args: {
     args;
   const { exportToPDF } = await import("@/lib/dashboard-export");
 
-  // Replace internal spaces with non-breaking spaces so multi-word Arabic
-  // names stay on one line and retain their logical order in narrow cells.
+  // Keep NBSP only for compact labels. Person names must retain regular spaces
+  // so the shared PDF RTL shaper can reverse their words correctly.
   const nb = (s: string | null | undefined) => String(s ?? "").replace(/ /g, "\u00A0");
 
   const agentLabel =
@@ -870,12 +870,12 @@ async function printSalesPdf(args: {
       : "—";
     const base = [s.transaction_no, s.package_name, s.network_name];
     const tail = [
-      nb(s.customer_name ?? s.buyer_name ?? "—"),
+      s.customer_name ?? s.buyer_name ?? "—",
       card,
       fmtArabicDateTimePdf(s.sold_at),
       fmtMoney(Number(s.price)),
     ];
-    return isAdmin ? [...base, nb(displayName(s.agent_username, s.agent_id)), ...tail] : [...base, ...tail];
+    return isAdmin ? [...base, displayName(s.agent_username, s.agent_id), ...tail] : [...base, ...tail];
   });
 
   const title = `تقرير_المبيعات_${agentLabel}`;
