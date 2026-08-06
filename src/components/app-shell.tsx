@@ -53,7 +53,6 @@ const NAV: NavItem[] = [
   { to: "/app/customers", label: "الزبائن", icon: Users, agentOnly: true },
   { to: "/app/packages", label: "الباقات", icon: Package },
   { to: "/app/requests", label: "الطلبات", icon: Inbox },
-  { to: "/app/user-orders", label: "طلبات المستخدمين", icon: Inbox, adminOnly: true },
   { to: "/app/join-requests", label: "طلبات الانضمام", icon: UserPlus, adminOnly: true },
   { to: "/app/sales", label: "المبيعات", icon: Receipt },
   { to: "/app/cards", label: "رفع الكروت", icon: Upload, adminOnly: true },
