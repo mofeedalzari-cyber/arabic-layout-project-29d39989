@@ -27,9 +27,8 @@ function PasswordResetsPage() {
     <div dir="rtl" className="space-y-4">
       <PageHeader
         title="استعادة كلمة المرور"
-        subtitle="طلبات استعادة كلمة المرور من المديرين والمناديب"
-        icon={<KeyRound className="h-5 w-5" />}
-        actions={<RefreshButton queryKeys={[["sa-reset-requests"]]} />}
+        description="طلبات استعادة كلمة المرور من المديرين والمناديب"
+        action={<RefreshButton />}
       />
       <ResetRequestsPanel />
     </div>
