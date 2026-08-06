@@ -92,13 +92,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "viewport",
         content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover",
       },
-      { title: "كرتي — إدارة وبيع" },
+      { title: "كرتي — إدارة وبيع كروت الإنترنت" },
       {
         name: "description",
         content: "منصة احترافية لإدارة وبيع كروت الإنترنت للمديرين والمناديب.",
       },
       { name: "theme-color", content: "#009688" },
-      { property: "og:title", content: "كرتي" },
+      { property: "og:site_name", content: "كرتي" },
+      { property: "og:title", content: "كرتي — إدارة وبيع كروت الإنترنت" },
       { property: "og:description", content: "منصة احترافية لإدارة وبيع كروت الإنترنت." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -107,6 +108,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "manifest", href: "/manifest.webmanifest" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "كرتي",
+              url: "https://arabic-layout-project.lovable.app",
+              description: "منصة احترافية لإدارة وبيع كروت الإنترنت للمديرين والمناديب.",
+            },
+            {
+              "@type": "WebSite",
+              name: "كرتي",
+              url: "https://arabic-layout-project.lovable.app",
+              inLanguage: "ar",
+              description: "منصة إدارة الشبكات والباقات والكروت ومتابعة مبيعات المناديب.",
+            },
+          ],
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,
