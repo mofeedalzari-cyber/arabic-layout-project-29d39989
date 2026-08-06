@@ -481,7 +481,7 @@ function CabinPage() {
                         side="bottom"
                         align="start"
                         sideOffset={6}
-                        avoidCollisions={false}
+                        collisionPadding={{ top: 64, bottom: 16, left: 8, right: 8 }}
                         className="max-h-[40vh] overflow-y-auto"
                       >
 
