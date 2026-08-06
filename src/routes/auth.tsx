@@ -217,6 +217,7 @@ function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowPwd((v) => !v)}
+                    aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                   >
                     {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -359,6 +360,7 @@ function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowPwd((v) => !v)}
+                    aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                   >
                     {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -377,6 +379,7 @@ function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowPwd2((v) => !v)}
+                    aria-label={showPwd2 ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                   >
                     {showPwd2 ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -398,7 +401,7 @@ function AuthPage() {
                   onClick={() => setMode("login")}
                   className="text-teal-700 font-semibold underline underline-offset-4"
                 >
-                  اضغط هنا لتسجيل الدخول
+                  سجل الدخول من هنا
                 </button>
               </p>
             </div>
