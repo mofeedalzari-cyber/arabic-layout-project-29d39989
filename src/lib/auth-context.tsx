@@ -99,7 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
     throw lastErr;
   };
-  };
 
 
   useEffect(() => {
