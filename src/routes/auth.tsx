@@ -496,8 +496,16 @@ function AuthPage() {
 function BrandHeader({ subtitle }: { subtitle: string }) {
   return (
     <div className="flex flex-col items-center text-center mb-5">
-      <img src={logo} alt={APP_NAME} width={96} height={96} className="h-20 w-20 object-contain" />
-      <h1 className="text-3xl font-extrabold tracking-tight mt-1 text-gray-900">{APP_NAME}</h1>
+      <img
+        src={logo}
+        alt="شعار تطبيق كرتي"
+        width={96}
+        height={96}
+        className="h-20 w-20 object-contain"
+      />
+      <h1 className="text-3xl font-extrabold tracking-tight mt-1 text-gray-900">
+        {APP_NAME} — نظام إدارة وبيع كروت الإنترنت
+      </h1>
       <p className="text-gray-600 mt-2 text-base">{subtitle}</p>
     </div>
   );
