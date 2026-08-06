@@ -1,0 +1,1 @@
+CREATE POLICY "networks owner insert" ON public.networks FOR INSERT TO authenticated WITH CHECK (owner_id = auth.uid());
