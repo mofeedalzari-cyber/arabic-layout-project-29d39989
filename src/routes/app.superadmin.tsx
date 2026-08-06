@@ -1117,7 +1117,8 @@ function ResetRequestsPanel() {
             ))}
             {q.data?.length === 0 && (
               <tr>
-                <Td colSpan={8} className="text-center text-muted-foreground py-8">
+                <Td colSpan={9} className="text-center text-muted-foreground py-8">
+
                   لا توجد طلبات
                 </Td>
               </tr>
