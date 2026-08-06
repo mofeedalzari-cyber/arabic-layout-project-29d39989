@@ -302,10 +302,17 @@ function SuperAdminPageInner() {
                 </div>
               </Card>
             ))}
-            {networks.data?.length === 0 && (
-              <Card className="p-8 text-center text-muted-foreground">لا توجد شبكات</Card>
+            {networks.data?.filter((n: any) => {
+              const q = networksSearch.trim();
+              if (!q) return true;
+              return (n.name ?? "").toLowerCase().includes(q.toLowerCase());
+            }).length === 0 && (
+              <Card className="p-8 text-center text-muted-foreground">
+                {networksSearch.trim() ? "لا توجد نتائج مطابقة" : "لا توجد شبكات"}
+              </Card>
             )}
           </div>
+
 
           <Card className="overflow-hidden hidden lg:block">
 
