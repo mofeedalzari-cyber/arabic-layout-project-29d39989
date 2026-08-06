@@ -444,6 +444,15 @@ function SuperAdminPageInner() {
 
         <TabsContent value="agents" className="mt-3 space-y-3">
           <div className="flex flex-wrap gap-2 items-center">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="بحث باسم المندوب أو الهاتف..."
+                className="pr-9"
+                value={agentsSearch}
+                onChange={(e) => setAgentsSearch(e.target.value)}
+              />
+            </div>
             <select
               className="h-10 rounded-md border bg-background px-3 text-sm"
               value={agentsNetFilter}
@@ -457,6 +466,7 @@ function SuperAdminPageInner() {
               ))}
             </select>
           </div>
+
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table dir="rtl" className="w-full text-sm border-collapse border">
