@@ -490,7 +490,21 @@ function SuperAdminPageInner() {
                 </thead>
                 <tbody>
                   {(agents.data ?? [])
-                    .filter((a: any) => !agentsNetFilter || a.network_id === agentsNetFilter)
+                    .filter((a: any) => {
+                      const netOk = !agentsNetFilter || a.network_id === agentsNetFilter;
+                      const q = agentsSearch.trim();
+                      if (!netOk) return false;
+                      if (!q) return true;
+                      const hay = [
+                        a.full_name ?? "",
+                        a.username ?? "",
+                        a.phone ?? "",
+                        a.network_name ?? "",
+                      ]
+                        .join(" ")
+                        .toLowerCase();
+                      return hay.includes(q.toLowerCase());
+                    })
                     .map((a: any) => (
                       <tr key={a.id} className="border-t">
                         <Td>{a.full_name ?? "—"}</Td>
@@ -528,16 +542,29 @@ function SuperAdminPageInner() {
                         </Td>
                       </tr>
                     ))}
-                  {agents.data?.length === 0 && (
+                  {agents.data?.filter((a: any) => {
+                    const netOk = !agentsNetFilter || a.network_id === agentsNetFilter;
+                    const q = agentsSearch.trim();
+                    if (!netOk) return false;
+                    if (!q) return true;
+                    const hay = [
+                      a.full_name ?? "",
+                      a.username ?? "",
+                      a.phone ?? "",
+                      a.network_name ?? "",
+                    ]
+                      .join(" ")
+                      .toLowerCase();
+                    return hay.includes(q.toLowerCase());
+                  }).length === 0 && (
                     <tr>
                       <Td colSpan={12} className="text-center text-muted-foreground py-8">
-                        لا يوجد مناديب
+                        {agentsSearch.trim() ? "لا توجد نتائج مطابقة" : "لا يوجد مناديب"}
                       </Td>
-
                     </tr>
                   )}
-
                 </tbody>
+
               </table>
             </div>
           </Card>
