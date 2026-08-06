@@ -1062,11 +1062,15 @@ function ResetRequestsPanel() {
           </thead>
           <tbody>
 
-            {(q.data ?? []).map((r: any) => (
+            {rows.map((r: any) => (
               <tr key={r.id} className="border-t">
+                <Td>
+                  <Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggle(r.id)} />
+                </Td>
                 <Td dir="ltr" className="font-mono">
                   {r.phone}
                 </Td>
+
                 <Td>{cleanPhoneLike(r.matched_username) || "—"}</Td>
                 <Td>{r.matched_full_name ?? "—"}</Td>
                 <Td>{r.matched_network_name ?? "—"}</Td>
