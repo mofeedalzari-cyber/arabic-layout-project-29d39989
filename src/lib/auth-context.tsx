@@ -36,6 +36,7 @@ export const usernameToEmail = (u: string) =>
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const hydrationId = useRef(0);
+  const hydratedToken = useRef<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -63,9 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       e.retryable = true;
       throw e;
     }
-    setProfile(prof as Profile | null);
     const has = (name: string) => !!roles?.find((x) => x.role === name);
-    setIsSuperadmin(has("superadmin"));
     // Effective role: prefer admin/agent so superadmin users get the same UI
     // as a network admin. isSuperadmin exposes the extra capability separately.
     const r = has("admin")
@@ -77,8 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           : has("user")
             ? "user"
             : null;
-    setRole((r as Role | null) ?? null);
-    setProfileError(null);
+    return {
+      profile: prof as Profile,
+      role: (r as Role | null) ?? null,
+      isSuperadmin: has("superadmin"),
+    };
   };
 
   // Retries transient failures (flaky mobile networks / cold start) instead of
@@ -87,8 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let lastErr: unknown = null;
     for (let i = 0; i < attempts; i++) {
       try {
-        await loadProfileOnce(uid);
-        return;
+        return await loadProfileOnce(uid);
       } catch (e) {
         lastErr = e;
         await new Promise((r) => setTimeout(r, Math.min(600 * 2 ** i, 4000)));
@@ -112,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(nextSession?.user ?? null);
 
       if (!nextSession?.user) {
+        hydratedToken.current = null;
         setProfile(null);
         setRole(null);
         setIsSuperadmin(false);
@@ -126,8 +128,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setProfileError(null);
       try {
-        await loadProfile(nextSession.user.id);
+        const account = await loadProfile(nextSession.user.id);
+        if (!mounted || requestId !== hydrationId.current) return;
+        setProfile(account.profile);
+        setRole(account.role);
+        setIsSuperadmin(account.isSuperadmin);
+        setProfileError(null);
+        hydratedToken.current = nextSession.access_token;
       } catch (error) {
+        if (!mounted || requestId !== hydrationId.current) return;
         console.error("[auth] profile hydration failed", error);
       } finally {
         if (mounted && requestId === hydrationId.current) setLoading(false);
@@ -135,8 +144,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     // Listener first to avoid missing initial event
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       if (!mounted) return;
+      // getSession below owns the initial hydration. Refresh events keep the
+      // same account data and must not start competing profile requests.
+      if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
+      if (s?.access_token && s.access_token === hydratedToken.current) return;
       // Supabase advises deferring queries made from this callback to avoid
       // contending with the auth client's internal event lock.
       setTimeout(() => void hydrateSession(s), 0);
@@ -153,14 +166,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })();
 
-    // Long safety net only (10s) — protects against a truly hung getSession call.
-    const failsafe = setTimeout(() => {
-      if (mounted) setLoading(false);
-    }, 10000);
-
     return () => {
       mounted = false;
-      clearTimeout(failsafe);
       sub.subscription.unsubscribe();
     };
   }, []);
@@ -201,7 +208,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       refresh: async () => {
-        if (user) await loadProfile(user.id);
+        if (!user) return;
+        setLoading(true);
+        setProfileError(null);
+        try {
+          const account = await loadProfile(user.id);
+          setProfile(account.profile);
+          setRole(account.role);
+          setIsSuperadmin(account.isSuperadmin);
+          setProfileError(null);
+        } finally {
+          setLoading(false);
+        }
       },
     }),
     [user, session, profile, role, isSuperadmin, loading, profileError],
