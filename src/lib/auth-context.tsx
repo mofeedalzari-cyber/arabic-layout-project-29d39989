@@ -54,6 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     if (profErr) throw profErr;
     if (rolesErr) throw rolesErr;
+    // Right after sign-up the session token can reach PostgREST before the
+    // signup trigger's rows are visible -> empty result with no error.
+    // Treat that as retryable instead of rendering the "load failed" screen.
+    if (!prof || !roles || roles.length === 0) {
+      const e: any = new Error("PROFILE_NOT_READY");
+      e.retryable = true;
+      throw e;
+    }
     setProfile(prof as Profile | null);
     const has = (name: string) => !!roles?.find((x) => x.role === name);
     setIsSuperadmin(has("superadmin"));
