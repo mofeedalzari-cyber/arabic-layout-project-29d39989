@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,6 +35,7 @@ export const usernameToEmail = (u: string) =>
     .replace(/[^a-z0-9._-]/g, "")}@wificards.local`;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const hydrationId = useRef(0);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -103,42 +104,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    // Listener first to avoid missing initial event
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
-      if (!mounted) return;
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) {
-        setTimeout(() => {
-          loadProfile(s.user.id).catch(console.error);
-        }, 0);
-      } else {
+
+    const hydrateSession = async (nextSession: Session | null) => {
+      const requestId = ++hydrationId.current;
+
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (!nextSession?.user) {
         setProfile(null);
         setRole(null);
         setIsSuperadmin(false);
+        setProfileError(null);
+        if (mounted && requestId === hydrationId.current) setLoading(false);
+        return;
       }
+
+      // Keep the account gate in its loading state until both the profile and
+      // role are available. Previously loading ended after getSession(), so the
+      // app rendered the failure screen while these successful queries ran.
+      setLoading(true);
+      setProfileError(null);
+      try {
+        await loadProfile(nextSession.user.id);
+      } catch (error) {
+        console.error("[auth] profile hydration failed", error);
+      } finally {
+        if (mounted && requestId === hydrationId.current) setLoading(false);
+      }
+    };
+
+    // Listener first to avoid missing initial event
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => {
+      if (!mounted) return;
+      // Supabase advises deferring queries made from this callback to avoid
+      // contending with the auth client's internal event lock.
+      setTimeout(() => void hydrateSession(s), 0);
     });
 
     (async () => {
       try {
         const { data } = await supabase.auth.getSession();
         if (!mounted) return;
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
-        if (data.session?.user) {
-          try {
-            await loadProfile(data.session.user.id);
-          } catch (e) {
-            console.error(e);
-          }
-        }
+        await hydrateSession(data.session);
       } catch (e) {
         console.error("[auth] getSession failed", e);
-      } finally {
-        // Only release the loading gate AFTER getSession resolves.
-        // Do NOT use a short failsafe here — it can flip loading=false while
-        // user is still null and cause the AppLayout effect to redirect to /auth
-        // (looks like: the app "freezes then goes back to login").
         if (mounted) setLoading(false);
       }
     })();
