@@ -272,14 +272,15 @@ export async function printAssignedCards(opts: {
   if (typeof pdfMake.addFonts === "function") pdfMake.addFonts(FONTS);
   else pdfMake.fonts = { ...(pdfMake.fonts || {}), ...FONTS };
 
-  // reshape helper (نفس ar() في pdfmake-report): يعكس ترتيب الكلمات فقط
+  // reshape helper (نفس ar() في pdfmake-report): لا نعكس ترتيب الكلمات
   const ARABIC_CHAR = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
   const ar = (v: any): string => {
     if (v == null) return "";
     const s = sanitizePdfText(String(v));
     if (!ARABIC_CHAR.test(s)) return s;
-    return s.split(/(\s+)/).reverse().join("");
+    return s;
   };
+
 
 
   const header = [
