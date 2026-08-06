@@ -267,16 +267,33 @@ function SuperAdminPageInner() {
                     <Badge variant="secondary">موقوفة</Badge>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-center">
+                <div className="grid grid-cols-3 gap-2 text-center">
                   <MiniStat label="مناديب" value={n.agents_count ?? 0} />
                   <MiniStat label="باقات" value={n.packages_count ?? 0} />
                   <MiniStat label="كروت" value={n.cards_count ?? 0} />
+                  <MiniStat label="متاح" value={n.available_count ?? 0} />
+                  <MiniStat label="مسحوب" value={n.assigned_count ?? 0} />
                   <MiniStat label="مباع" value={n.sold_count ?? 0} />
                 </div>
-                <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
-                  <div className="text-[11px] text-muted-foreground">قيمة المبيعات</div>
-                  <div className="font-bold">{fmtMoney(Number(n.sold_value ?? 0))}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
+                    <div className="text-[11px] text-muted-foreground">قيمة المبيعات</div>
+                    <div className="font-bold">{fmtMoney(Number(n.sold_value ?? 0))}</div>
+                  </div>
+                  <div className="rounded-xl bg-success/5 border border-success/20 p-3 text-center">
+                    <div className="text-[11px] text-muted-foreground">المسدد</div>
+                    <div className="font-bold text-success">
+                      {fmtMoney(Number(n.paid_value ?? 0))}
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-destructive/5 border border-destructive/20 p-3 text-center">
+                    <div className="text-[11px] text-muted-foreground">المتبقي</div>
+                    <div className="font-bold text-destructive">
+                      {fmtMoney(Number(n.remaining_value ?? 0))}
+                    </div>
+                  </div>
                 </div>
+
                 <Button className="w-full" onClick={() => setDetailNetId(n.id)}>
                   <BarChart3 className="h-4 w-4 ml-1" />
                   تفاصيل وإدارة الشبكة
