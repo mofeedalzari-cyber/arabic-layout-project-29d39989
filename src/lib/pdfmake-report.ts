@@ -35,18 +35,15 @@ export function ar(input: string | number | null | undefined): string {
   if (input == null) return "";
   let value = String(input);
   // Non-breaking spaces mark text that must not wrap (multi-word names in
-  // narrow cells). They still need the same word-order compensation as any
-  // other Arabic text, so we reverse tokens and re-join with NBSP.
+  // narrow cells).
   const keepNoWrap = value.includes("\u00A0");
   value = sanitizePdfText(value);
   if (!ARABIC_CHAR.test(value)) return value;
-
-  // Split on regular spaces only. Reversing at whitespace — never inside a
-  // token — keeps Arabic letter shaping/joining intact.
-  const parts = value.split(/( +)/);
-  const out = parts.reverse().join("");
-  return keepNoWrap ? out.replace(/ /g, "\u00A0") : out;
+  // The PDF renderer already lays Arabic tokens out right-to-left, so no
+  // word-order compensation is applied — names keep their logical order.
+  return keepNoWrap ? value.replace(/ /g, "\u00A0") : value;
 }
+
 
 
 
