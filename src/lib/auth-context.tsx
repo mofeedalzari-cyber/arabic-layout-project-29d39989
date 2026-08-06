@@ -54,6 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     if (profErr) throw profErr;
     if (rolesErr) throw rolesErr;
+    // Right after sign-up the session token can reach PostgREST before the
+    // signup trigger's rows are visible -> empty result with no error.
+    // Treat that as retryable instead of rendering the "load failed" screen.
+    if (!prof || !roles || roles.length === 0) {
+      const e: any = new Error("PROFILE_NOT_READY");
+      e.retryable = true;
+      throw e;
+    }
     setProfile(prof as Profile | null);
     const has = (name: string) => !!roles?.find((x) => x.role === name);
     setIsSuperadmin(has("superadmin"));
@@ -74,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Retries transient failures (flaky mobile networks / cold start) instead of
   // silently leaving profile=null, which used to render an endless "loading" UI.
-  const loadProfile = async (uid: string, attempts = 3) => {
+  const loadProfile = async (uid: string, attempts = 5) => {
     let lastErr: unknown = null;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -82,11 +90,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       } catch (e) {
         lastErr = e;
-        await new Promise((r) => setTimeout(r, 800 * 2 ** i));
+        await new Promise((r) => setTimeout(r, Math.min(600 * 2 ** i, 4000)));
       }
     }
+    const msg = (lastErr as any)?.message ? String((lastErr as any).message) : "";
     setProfileError(
-      (lastErr as any)?.message ? String((lastErr as any).message) : "تعذر تحميل بيانات الحساب",
+      msg && msg !== "PROFILE_NOT_READY" ? msg : "تعذر تحميل بيانات الحساب، أعد المحاولة.",
     );
     throw lastErr;
   };
