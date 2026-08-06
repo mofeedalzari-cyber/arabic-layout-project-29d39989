@@ -70,14 +70,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   // مدير التطبيق: لا يظهر له سوى صفحة الإدارة العامة
   const items = isSuperadmin
     ? NAV.filter((n) => n.to === "/app/superadmin")
-    : role === "user"
-      ? NAV.filter((n) => n.userOnly || n.to === "/app/settings")
-      : NAV.filter((n) => {
-          if (n.superOnly || n.userOnly) return false;
-          if (n.adminOnly) return role === "admin";
-          if (n.agentOnly) return role === "agent";
-          return true;
-        });
+    : NAV.filter((n) => {
+        if (n.superOnly) return false;
+        if (n.adminOnly) return role === "admin";
+        if (n.agentOnly) return role === "agent";
+        return true;
+      });
 
 
   const [dark, setDark] = useState(false);
