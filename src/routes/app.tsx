@@ -97,7 +97,7 @@ function AppLayout() {
           >
             تحديث الحالة
           </Button>
-          <Button variant="outline" className="rounded-xl" onClick={signOut}>
+          <Button variant="outline" className="rounded-xl w-full" onClick={signOut}>
             تسجيل الخروج
           </Button>
         </div>
