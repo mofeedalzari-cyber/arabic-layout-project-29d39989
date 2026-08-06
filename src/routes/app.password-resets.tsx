@@ -1,5 +1,4 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { KeyRound } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { PageHeader } from "@/components/app-shell";
 import { RefreshButton } from "@/components/refresh-button";
