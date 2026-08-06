@@ -95,10 +95,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await new Promise((r) => setTimeout(r, Math.min(600 * 2 ** i, 4000)));
       }
     }
-    const msg = (lastErr as any)?.message ? String((lastErr as any).message) : "";
-    setProfileError(
-      msg && msg !== "PROFILE_NOT_READY" ? msg : "تعذر تحميل بيانات الحساب، أعد المحاولة.",
-    );
     throw lastErr;
   };
 
@@ -138,6 +134,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         if (!mounted || requestId !== hydrationId.current) return;
         console.error("[auth] profile hydration failed", error);
+        const message = error instanceof Error ? error.message : "";
+        setProfileError(
+          message && message !== "PROFILE_NOT_READY"
+            ? message
+            : "تعذر تحميل بيانات الحساب، أعد المحاولة.",
+        );
       } finally {
         if (mounted && requestId === hydrationId.current) setLoading(false);
       }
@@ -217,6 +219,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRole(account.role);
           setIsSuperadmin(account.isSuperadmin);
           setProfileError(null);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "";
+          setProfileError(
+            message && message !== "PROFILE_NOT_READY"
+              ? message
+              : "تعذر تحميل بيانات الحساب، أعد المحاولة.",
+          );
+          throw error;
         } finally {
           setLoading(false);
         }
