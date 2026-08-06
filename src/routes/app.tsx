@@ -74,18 +74,29 @@ function AppLayout() {
   }
 
 
-  // Inactive agent gate
-  if (role === "agent" && profile && !profile.is_active) {
+  // Inactive account gate (agent = network admin approval, admin = app admin approval)
+  if ((role === "agent" || role === "admin") && profile && !profile.is_active) {
+    const isAdmin = role === "admin";
     return (
       <div className="min-h-dvh flex items-center justify-center bg-background px-4" dir="rtl">
         <div className="max-w-md text-center card-elegant p-8 fade-in">
           <div className="mx-auto rounded-2xl bg-warning/15 p-3 w-fit mb-4">
             <ShieldAlert className="h-8 w-8 text-warning" />
           </div>
-          <h2 className="text-xl font-bold mb-2">في انتظار التفعيل</h2>
+          <h2 className="text-xl font-bold mb-2">
+            {isAdmin ? "بانتظار الموافقة من إدارة التطبيق" : "في انتظار التفعيل"}
+          </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            حسابك قيد المراجعة. يرجى التواصل مع مدير النظام لتفعيله قبل البدء بالبيع.
+            {isAdmin
+              ? "تم إنشاء حساب مدير الشبكة بنجاح، وهو الآن قيد المراجعة. سيتم تفعيل الحساب والشبكة بعد موافقة إدارة التطبيق."
+              : "حسابك قيد المراجعة. يرجى التواصل مع مدير النظام لتفعيله قبل البدء بالبيع."}
           </p>
+          <Button
+            className="rounded-xl mb-2 w-full"
+            onClick={() => void refresh().catch(() => {})}
+          >
+            تحديث الحالة
+          </Button>
           <Button variant="outline" className="rounded-xl" onClick={signOut}>
             تسجيل الخروج
           </Button>
