@@ -32,6 +32,7 @@ import {
   TypeCard,
   TypeRow,
   AuthFooter,
+  AuthCopyright,
 } from "@/components/auth/auth-parts";
 
 export const Route = createFileRoute("/auth")({

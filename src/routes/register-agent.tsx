@@ -18,6 +18,7 @@ import {
   TypeCard,
   NetworkSelect,
   AuthFooter,
+  AuthCopyright,
   BackToLogin,
 } from "@/components/auth/auth-parts";
 
