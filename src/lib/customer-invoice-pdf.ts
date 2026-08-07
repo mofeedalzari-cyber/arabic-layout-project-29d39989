@@ -170,10 +170,12 @@ function cell(text: string, opts: any = {}): any {
 export type InvoiceItem = {
   packageName: string;
   networkName?: string;
+  cardNumber?: string | null;
   unit?: string; // e.g. "حبة"
   qty: number;
   price: number;
 };
+
 
 export type CustomerInvoiceInput = {
   networkName: string;
