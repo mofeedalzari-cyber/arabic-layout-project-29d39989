@@ -17,6 +17,7 @@ import {
   PasswordInput,
   TypeCard,
   AuthFooter,
+  AuthCopyright,
   BackToLogin,
 } from "@/components/auth/auth-parts";
 
@@ -177,6 +178,7 @@ function NetworkRegisterPage() {
           </form>
         </div>
         <AuthFooter />
+        <AuthCopyright />
       </AuthCard>
     </AuthShell>
   );

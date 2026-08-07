@@ -18,6 +18,7 @@ import {
   TypeCard,
   NetworkSelect,
   AuthFooter,
+  AuthCopyright,
   BackToLogin,
 } from "@/components/auth/auth-parts";
 
@@ -185,6 +186,7 @@ function AgentRegisterPage() {
           </form>
         </div>
         <AuthFooter />
+        <AuthCopyright />
       </AuthCard>
     </AuthShell>
   );

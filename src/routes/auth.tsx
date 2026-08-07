@@ -32,6 +32,7 @@ import {
   TypeCard,
   TypeRow,
   AuthFooter,
+  AuthCopyright,
 } from "@/components/auth/auth-parts";
 
 export const Route = createFileRoute("/auth")({
@@ -255,6 +256,7 @@ function AuthPage() {
         </div>
 
         <AuthFooter />
+        <AuthCopyright />
       </AuthCard>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

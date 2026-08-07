@@ -1,10 +1,9 @@
 import { Input } from "@/components/ui/input";
 import { Link } from "@tanstack/react-router";
-import { Eye, EyeOff, ChevronRight } from "lucide-react";
+import { Eye, EyeOff, ChevronRight, Heart } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import logo from "@/assets/wifi-store-logo.png";
-import { PageFooter } from "@/components/page-footer";
 
 export const APP_NAME = "كرتي";
 export const SITE_URL = "https://arabic-layout-project.lovable.app";
@@ -31,7 +30,6 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col justify-center px-3 sm:px-4 py-4 sm:py-6 md:py-8">
         {children}
       </div>
-      <PageFooter />
     </div>
   );
 }
@@ -229,6 +227,24 @@ export function AuthFooter() {
           <FacebookIcon />
         </SocialBtn>
       </div>
+    </div>
+  );
+}
+
+export function AuthCopyright() {
+  return (
+    <div className="pt-4 text-center">
+      <p className="text-[10px] leading-relaxed text-muted-foreground">
+        جميع الحقوق محفوظة © 2026 •
+      </p>
+      <p className="text-[10px] leading-relaxed text-muted-foreground mt-0.5">
+        برمجة وتصميم{" "}
+        <Heart
+          className="inline h-2.5 w-2.5 text-red-500 align-text-bottom mx-0.5"
+          fill="currentColor"
+        />{" "}
+        <span className="font-semibold text-foreground">مفيد الزري</span>
+      </p>
     </div>
   );
 }
