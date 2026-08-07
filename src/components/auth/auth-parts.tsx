@@ -231,6 +231,24 @@ export function AuthFooter() {
   );
 }
 
+export function AuthCopyright() {
+  return (
+    <div className="pt-4 text-center">
+      <p className="text-[10px] leading-relaxed text-muted-foreground">
+        جميع الحقوق محفوظة © 2026 •
+      </p>
+      <p className="text-[10px] leading-relaxed text-muted-foreground mt-0.5">
+        برمجة وتصميم{" "}
+        <Heart
+          className="inline h-2.5 w-2.5 text-red-500 align-text-bottom mx-0.5"
+          fill="currentColor"
+        />{" "}
+        <span className="font-semibold text-foreground">مفيد الزري</span>
+      </p>
+    </div>
+  );
+}
+
 export function BackToLogin() {
   return (
     <p className="text-center text-sm text-gray-800">
