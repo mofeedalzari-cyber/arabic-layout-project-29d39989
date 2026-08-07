@@ -301,7 +301,10 @@ function AuthPage() {
               </form>
             </div>
           ) : (
-            <div className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] p-5 sm:p-7 pb-6 sm:pb-8">
+            <div
+              className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] p-6 sm:p-8 flex flex-col"
+              style={{ minHeight: "calc(100dvh - 48px)" }}
+            >
               <BrandHeader subtitle="أنشئ حسابك وابدأ إدارة أعمالك فوراً." />
 
               <div className="flex items-start justify-between gap-3 mb-1">
@@ -321,101 +324,117 @@ function AuthPage() {
                   : "أدخل بياناتك للبدء."}
               </p>
 
-              <form onSubmit={handleRegister} className="space-y-2.5 sm:space-y-3">
-                <SoftInput
-                  dir="rtl"
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  placeholder="الاسم الرباعي"
-                  autoComplete="name"
-                />
-                <SoftInput
-                  dir="rtl"
-                  value={regPhone}
-                  onChange={(e) => setRegPhone(e.target.value)}
-                  placeholder="رقم الجوال"
-                  inputMode="tel"
-                  autoComplete="tel"
-                />
-                {accountType === "network" ? (
-                  <SoftInput
-                    dir="rtl"
-                    value={regNet}
-                    onChange={(e) => setRegNet(e.target.value)}
-                    placeholder="اسم شبكتك"
-                  />
-                ) : (
-                  <select
-                    dir="rtl"
-                    value={regNet}
-                    onChange={(e) => setRegNet(e.target.value)}
-                    className="w-full h-12 sm:h-14 rounded-2xl bg-gray-100 border-0 text-right text-sm sm:text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 px-4"
-                  >
-                    <option value="">اختر الشبكة التي تتبع لها</option>
-                    {networks.map((n) => (
-                      <option key={n.id} value={n.name}>
-                        {n.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <div className="relative">
-                  <SoftInput
-                    dir="rtl"
-                    type={showPwd ? "text" : "password"}
-                    value={regP}
-                    onChange={(e) => setRegP(e.target.value)}
-                    placeholder="كلمة المرور"
-                    autoComplete="new-password"
-                    className="pl-11"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPwd((v) => !v)}
-                    aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                  >
-                    {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-                <div className="relative">
-                  <SoftInput
-                    dir="rtl"
-                    type={showPwd2 ? "text" : "password"}
-                    value={regP2}
-                    onChange={(e) => setRegP2(e.target.value)}
-                    placeholder="تأكيد كلمة المرور"
-                    autoComplete="new-password"
-                    className="pl-11"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPwd2((v) => !v)}
-                    aria-label={showPwd2 ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                  >
-                    {showPwd2 ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
+              <form onSubmit={handleRegister} className="flex-1 flex flex-col gap-3">
+                <div className="space-y-3 overflow-y-auto">
+                  <FieldGroup label="الاسم الرباعي">
+                    <SoftInput
+                      dir="rtl"
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
+                      placeholder="أدخل الاسم الرباعي"
+                      autoComplete="name"
+                    />
+                  </FieldGroup>
+                  <FieldGroup label="رقم الجوال">
+                    <SoftInput
+                      dir="rtl"
+                      value={regPhone}
+                      onChange={(e) => setRegPhone(e.target.value)}
+                      placeholder="أدخل رقم الجوال"
+                      inputMode="tel"
+                      autoComplete="tel"
+                    />
+                  </FieldGroup>
+                  {accountType === "network" ? (
+                    <FieldGroup label="اسم الشبكة">
+                      <SoftInput
+                        dir="rtl"
+                        value={regNet}
+                        onChange={(e) => setRegNet(e.target.value)}
+                        placeholder="أدخل اسم شبكتك"
+                      />
+                    </FieldGroup>
+                  ) : (
+                    <FieldGroup label="الشبكة التابعة لها">
+                      <select
+                        dir="rtl"
+                        value={regNet}
+                        onChange={(e) => setRegNet(e.target.value)}
+                        className="w-full h-14 rounded-2xl bg-gray-100 border-0 text-right text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 px-4"
+                      >
+                        <option value="">اختر الشبكة التي تتبع لها</option>
+                        {networks.map((n) => (
+                          <option key={n.id} value={n.name}>
+                            {n.name}
+                          </option>
+                        ))}
+                      </select>
+                    </FieldGroup>
+                  )}
+                  <FieldGroup label="كلمة المرور">
+                    <div className="relative">
+                      <SoftInput
+                        dir="rtl"
+                        type={showPwd ? "text" : "password"}
+                        value={regP}
+                        onChange={(e) => setRegP(e.target.value)}
+                        placeholder="أدخل كلمة المرور"
+                        autoComplete="new-password"
+                        className="pl-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPwd((v) => !v)}
+                        aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition p-1"
+                      >
+                        {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </FieldGroup>
+                  <FieldGroup label="تأكيد كلمة المرور">
+                    <div className="relative">
+                      <SoftInput
+                        dir="rtl"
+                        type={showPwd2 ? "text" : "password"}
+                        value={regP2}
+                        onChange={(e) => setRegP2(e.target.value)}
+                        placeholder="أعد إدخال كلمة المرور"
+                        autoComplete="new-password"
+                        className="pl-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPwd2((v) => !v)}
+                        aria-label={showPwd2 ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition p-1"
+                      >
+                        {showPwd2 ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </FieldGroup>
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={busy}
-                  className="w-full h-12 sm:h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] text-white text-base sm:text-lg font-bold shadow-none mt-2"
-                >
-                  {busy ? "…" : "إنشاء الحساب"}
-                </Button>
+                <div className="mt-auto space-y-4 pt-2">
+                  <Button
+                    type="submit"
+                    disabled={busy}
+                    className="w-full h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] text-white text-lg font-bold shadow-none"
+                  >
+                    {busy ? "…" : "إنشاء الحساب"}
+                  </Button>
+
+                  <p className="text-center text-sm text-gray-700">
+                    لديك حساب بالفعل ؟{" "}
+                    <button
+                      onClick={() => setMode("login")}
+                      className="text-teal-700 font-semibold underline underline-offset-4"
+                    >
+                      سجل الدخول من هنا
+                    </button>
+                  </p>
+                </div>
               </form>
-
-              <p className="mt-4 text-center text-sm text-gray-700">
-                لديك حساب بالفعل ؟{" "}
-                <button
-                  onClick={() => setMode("login")}
-                  className="text-teal-700 font-semibold underline underline-offset-4"
-                >
-                  سجل الدخول من هنا
-                </button>
-              </p>
             </div>
           )}
         </div>
