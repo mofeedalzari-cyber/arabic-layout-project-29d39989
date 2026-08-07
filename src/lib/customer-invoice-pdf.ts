@@ -426,33 +426,41 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
 
   const signatures = {
     columns: [
-      {
-        width: "*",
-        stack: [
-          { text: " ", margin: [0, 0, 0, 2] },
-          { text: ar("مدير بيع الكروت"), direction: "rtl", alignment: "center", bold: true },
-        ],
-      },
+      // Far left: network manager
       {
         width: "*",
         stack: [
           {
-            text: ar(input.adminName || ""),
+            text: ar(input.networkAdminName || ""),
             direction: "rtl",
-            alignment: "center",
+            alignment: "left",
             margin: [0, 0, 0, 2],
           },
           {
             text: ar(`مدير ${input.networkName}`),
             direction: "rtl",
-            alignment: "center",
+            alignment: "left",
             bold: true,
           },
+        ],
+      },
+      // Far right: sales agent
+      {
+        width: "*",
+        stack: [
+          {
+            text: ar(input.agentName || input.adminName || ""),
+            direction: "rtl",
+            alignment: "right",
+            margin: [0, 0, 0, 2],
+          },
+          { text: ar("مندوب بيع الكروت"), direction: "rtl", alignment: "right", bold: true },
         ],
       },
     ],
     margin: [0, 10, 0, 0],
   };
+
 
   const doc: TDocumentDefinitions = {
     pageSize: "A4",
