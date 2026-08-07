@@ -209,16 +209,25 @@ export function AuthFooter() {
         <span className="text-[#0f766e] font-bold">مفيد الزري</span>
       </p>
       <div className="flex items-center justify-center gap-4">
-        <SocialBtn href="https://wa.me/967778492884" label="واتساب">
+        <SocialBtn
+          href="https://wa.me/967778492884"
+          label="واتساب"
+          colorClass="text-[#25D366]"
+        >
           <WhatsAppIcon />
         </SocialBtn>
         <SocialBtn
           href="https://www.tiktok.com/@mufeed_saleh_ali_alzree?_r=1&_t=ZS-98C0Jv2XQOa"
           label="تيك توك"
+          colorClass="text-black"
         >
           <TikTokIcon />
         </SocialBtn>
-        <SocialBtn href="https://www.facebook.com/share/1BanCjCw8T/" label="فيسبوك">
+        <SocialBtn
+          href="https://www.facebook.com/share/1BanCjCw8T/"
+          label="فيسبوك"
+          colorClass="text-[#1877F2]"
+        >
           <FacebookIcon />
         </SocialBtn>
       </div>
