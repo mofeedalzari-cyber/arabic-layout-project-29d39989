@@ -45,7 +45,7 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { fmtMoney } from "@/lib/format";
