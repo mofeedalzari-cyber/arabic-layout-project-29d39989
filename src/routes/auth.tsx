@@ -189,10 +189,13 @@ function AuthPage() {
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      <div className="flex-1 flex flex-col justify-center px-4 py-3 sm:py-6">
+      <div className="flex-1 flex flex-col justify-center px-4 py-6">
         <div className="w-full max-w-md mx-auto">
           {mode === "login" ? (
-            <div className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_10px_40px_-12px_rgba(16,24,40,0.15)] p-5 sm:p-7">
+            <div
+              className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_10px_40px_-12px_rgba(16,24,40,0.15)] p-5 sm:p-7 flex flex-col justify-center"
+              style={{ minHeight: "calc(100dvh - 48px)" }}
+            >
               <BrandHeader subtitle="قم بتسجيل الدخول" />
 
               <form onSubmit={handleLogin} className="space-y-3 mt-2">
