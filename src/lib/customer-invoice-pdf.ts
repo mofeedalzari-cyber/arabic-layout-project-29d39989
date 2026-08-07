@@ -254,19 +254,26 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
   };
 
   const titleBox = {
-    table: {
-      widths: [160],
-      body: [[cell("فاتورة بيع آجـــل", { bold: true, fontSize: 13, margin: [6, 4, 6, 4] })]],
-    },
-    layout: {
-      hLineColor: () => LINE,
-      vLineColor: () => LINE,
-      hLineWidth: () => 1,
-      vLineWidth: () => 1,
-    },
-    alignment: "center",
+    columns: [
+      { width: "*", text: "" },
+      {
+        width: "auto",
+        table: {
+          widths: [180],
+          body: [[cell("فاتورة بيع آجـــل", { bold: true, fontSize: 13, margin: [6, 4, 6, 4] })]],
+        },
+        layout: {
+          hLineColor: () => LINE,
+          vLineColor: () => LINE,
+          hLineWidth: () => 1,
+          vLineWidth: () => 1,
+        },
+      },
+      { width: "*", text: "" },
+    ],
     margin: [0, 0, 0, 10],
   };
+
 
   const metaRow = {
     columns: [
