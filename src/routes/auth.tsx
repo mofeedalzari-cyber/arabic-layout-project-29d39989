@@ -255,7 +255,7 @@ function AuthPage() {
               desc="بيع الكروت والتوزيع الميداني"
               onClick={() => {
                 setSheetOpen(false);
-                navigate({ to: "/auth/register-agent" });
+                navigate({ to: "/register-agent" });
               }}
             />
             <TypeRow
@@ -265,7 +265,7 @@ function AuthPage() {
               desc="إدارة الشبكة ومتابعة مبيعات المناديب"
               onClick={() => {
                 setSheetOpen(false);
-                navigate({ to: "/auth/register-network" });
+                navigate({ to: "/register-network" });
               }}
             />
           </div>

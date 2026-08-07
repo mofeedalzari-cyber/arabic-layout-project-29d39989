@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterNetworkRouteImport } from './routes/register-network'
+import { Route as RegisterAgentRouteImport } from './routes/register-agent'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +37,16 @@ import { Route as AppAgentAccountsRouteImport } from './routes/app.agent-account
 import { Route as AppNetworksIndexRouteImport } from './routes/app.networks.index'
 import { Route as AppNetworksIdRouteImport } from './routes/app.networks.$id'
 
+const RegisterNetworkRoute = RegisterNetworkRouteImport.update({
+  id: '/register-network',
+  path: '/register-network',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterAgentRoute = RegisterAgentRouteImport.update({
+  id: '/register-agent',
+  path: '/register-agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -165,6 +177,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/register-agent': typeof RegisterAgentRoute
+  '/register-network': typeof RegisterNetworkRoute
   '/app/agent-accounts': typeof AppAgentAccountsRoute
   '/app/agents': typeof AppAgentsRoute
   '/app/cabin': typeof AppCabinRoute
@@ -191,6 +205,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/register-agent': typeof RegisterAgentRoute
+  '/register-network': typeof RegisterNetworkRoute
   '/app/agent-accounts': typeof AppAgentAccountsRoute
   '/app/agents': typeof AppAgentsRoute
   '/app/cabin': typeof AppCabinRoute
@@ -218,6 +234,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/register-agent': typeof RegisterAgentRoute
+  '/register-network': typeof RegisterNetworkRoute
   '/app/agent-accounts': typeof AppAgentAccountsRoute
   '/app/agents': typeof AppAgentsRoute
   '/app/cabin': typeof AppCabinRoute
@@ -247,6 +265,8 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/register-agent'
+    | '/register-network'
     | '/app/agent-accounts'
     | '/app/agents'
     | '/app/cabin'
@@ -273,6 +293,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/register-agent'
+    | '/register-network'
     | '/app/agent-accounts'
     | '/app/agents'
     | '/app/cabin'
@@ -299,6 +321,8 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/auth'
+    | '/register-agent'
+    | '/register-network'
     | '/app/agent-accounts'
     | '/app/agents'
     | '/app/cabin'
@@ -327,10 +351,26 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  RegisterAgentRoute: typeof RegisterAgentRoute
+  RegisterNetworkRoute: typeof RegisterNetworkRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register-network': {
+      id: '/register-network'
+      path: '/register-network'
+      fullPath: '/register-network'
+      preLoaderRoute: typeof RegisterNetworkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register-agent': {
+      id: '/register-agent'
+      path: '/register-agent'
+      fullPath: '/register-agent'
+      preLoaderRoute: typeof RegisterAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -583,6 +623,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  RegisterAgentRoute: RegisterAgentRoute,
+  RegisterNetworkRoute: RegisterNetworkRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
