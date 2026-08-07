@@ -554,7 +554,7 @@ function SoftInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <Input
       {...rest}
-      className={`h-14 rounded-2xl bg-gray-100 border-0 text-right text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 ${className}`}
+      className={`h-12 sm:h-14 rounded-2xl bg-gray-100 border-0 text-right text-sm sm:text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 ${className}`}
     />
   );
 }
@@ -577,7 +577,7 @@ function SocialBtn({
       rel="noopener noreferrer"
       aria-label={label}
       title={label}
-      className="h-12 w-12 rounded-full bg-white border border-gray-200 shadow-sm text-gray-800 flex items-center justify-center transition-transform hover:scale-105 hover:shadow-md active:scale-95"
+      className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white border border-gray-200 shadow-sm text-gray-800 flex items-center justify-center transition-transform hover:scale-105 hover:shadow-md active:scale-95"
       style={{ color }}
     >
       {children}
