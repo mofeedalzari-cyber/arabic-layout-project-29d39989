@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Eye, EyeOff, ChevronLeft, User as UserIcon } from "lucide-react";
+import { Eye, EyeOff, ChevronLeft, Bike, Share2, User as UserIcon } from "lucide-react";
 import logo from "@/assets/wifi-store-logo.png";
 
 const SITE_URL = "https://arabic-layout-project.lovable.app";
@@ -193,58 +193,50 @@ function AuthPage() {
         <div className="w-full max-w-md mx-auto">
           {mode === "login" ? (
             <div
-              className="bg-white rounded-[28px] sm:rounded-[32px] shadow-[0_12px_40px_-16px_rgba(16,24,40,0.12)] p-5 sm:p-7 flex flex-col"
+              className="bg-white rounded-[26px] shadow-[0_10px_36px_-18px_rgba(16,24,40,0.18)] border border-gray-100 px-5 sm:px-6 py-6 flex flex-col"
               style={{ minHeight: "calc(100dvh - 40px)" }}
             >
-              <div className="text-center mb-5 sm:mb-6">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">قم بتسجيل الدخول.</h2>
-              </div>
+              <div className="flex-1 flex flex-col justify-center">
+                <h2 className="text-center text-[22px] sm:text-2xl font-bold text-gray-900 mb-5">
+                  قم بتسجيل الدخول.
+                </h2>
 
-              <form onSubmit={handleLogin} className="flex-1 flex flex-col gap-5">
-                <div className="grid grid-cols-2 gap-3">
-                  <TypeCard
-                    active={accountType === "agent"}
-                    onClick={() => setAccountType("agent")}
-                    icon={<UserIcon className="h-6 w-6" />}
-                    label={
-                      <>
-                        مندوب
-                        <br />
-                        توزيع
-                      </>
-                    }
-                  />
-                  <TypeCard
-                    active={accountType === "network"}
-                    onClick={() => setAccountType("network")}
-                    icon={<UserIcon className="h-6 w-6" />}
-                    label={
-                      <>
-                        وكيل / مدير
-                        <br />
-                        شبكة
-                      </>
-                    }
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <div className="relative">
-                    <SoftInput
-                      dir="rtl"
-                      value={loginPhone}
-                      onChange={(e) => setLoginPhone(e.target.value)}
-                      placeholder="رقم الجوال"
-                      inputMode="tel"
-                      autoComplete="tel"
-                      className="pr-12"
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <TypeCard
+                      active={accountType === "agent"}
+                      onClick={() => setAccountType("agent")}
+                      icon={<Bike className="h-6 w-6" />}
+                      label={
+                        <>
+                          مندوب
+                          <br />
+                          توزيع
+                        </>
+                      }
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.94 12.94 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.94 12.94 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                      </svg>
-                    </span>
+                    <TypeCard
+                      active={accountType === "network"}
+                      onClick={() => setAccountType("network")}
+                      icon={<Share2 className="h-6 w-6" />}
+                      label={
+                        <>
+                          وكيل / مدير
+                          <br />
+                          شبكة
+                        </>
+                      }
+                    />
                   </div>
+
+                  <SoftInput
+                    dir="rtl"
+                    value={loginPhone}
+                    onChange={(e) => setLoginPhone(e.target.value)}
+                    placeholder="رقم الجوال"
+                    inputMode="tel"
+                    autoComplete="tel"
+                  />
 
                   <div className="relative">
                     <SoftInput
@@ -260,7 +252,7 @@ function AuthPage() {
                       type="button"
                       onClick={() => setShowPwd((v) => !v)}
                       aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition p-1"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 p-1"
                     >
                       {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -273,200 +265,221 @@ function AuthPage() {
                         setForgotPhone(loginPhone);
                         setForgotOpen(true);
                       }}
-                      className="text-[#22a06b] text-sm font-semibold hover:underline"
+                      className="text-[#0f766e] text-sm font-bold"
                     >
                       هل نسيت كلمة المرور؟
                     </button>
                   </div>
-                </div>
 
-                <div className="mt-auto space-y-5 pt-2">
                   <Button
                     type="submit"
                     disabled={busy}
-                    className="w-full h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] active:scale-[0.99] text-white text-lg font-bold shadow-[0_10px_24px_-10px_rgba(34,160,107,0.55)] transition"
+                    className="w-full h-14 rounded-2xl bg-[#12a05f] hover:bg-[#0e8b52] active:scale-[0.99] text-white text-lg font-bold shadow-none transition"
                   >
                     {busy ? "…" : "تسجيل الدخول"}
                   </Button>
 
-                  <p className="text-center text-sm text-gray-700">
+                  <p className="text-center text-sm text-gray-800">
                     لا تملك حساب ؟{" "}
                     <button
                       type="button"
                       onClick={() => setMode("register")}
-                      className="text-[#22a06b] font-semibold underline underline-offset-4"
+                      className="text-[#0f766e] font-bold underline underline-offset-4"
                     >
                       انقر هنا لإنشاء حساب
                     </button>
                   </p>
+                </form>
+              </div>
 
-                  <div className="pt-4 border-t border-gray-100">
-                    <p className="text-center text-xs text-gray-500 mb-3">
-                      بحاجة لمساعدة؟ تواصل مع خدمة العملاء
-                    </p>
-                    <div className="flex items-center justify-center gap-4">
-                      <SocialBtn href="https://wa.me/967778492884" label="واتساب" color="#25D366">
-                        <WhatsAppIcon />
-                      </SocialBtn>
-                      <SocialBtn
-                        href="https://www.tiktok.com/@mufeed_saleh_ali_alzree?_r=1&_t=ZS-98C0Jv2XQOa"
-                        label="تيك توك"
-                        color="#111111"
-                      >
-                        <TikTokIcon />
-                      </SocialBtn>
-                      <SocialBtn
-                        href="https://www.facebook.com/share/1BanCjCw8T/"
-                        label="فيسبوك"
-                        color="#1877F2"
-                      >
-                        <FacebookIcon />
-                      </SocialBtn>
-                    </div>
-
-                    <p className="mt-4 text-center text-[11px] leading-relaxed text-gray-600">
-                      جميع الحقوق محفوظة © • برمجة وتصميم 💚{" "}
-                      <span className="text-[#22a06b] font-bold">مفيد الزري</span>
-                    </p>
-                  </div>
+              <div className="pt-6">
+                <div className="flex items-center justify-center gap-4">
+                  <SocialBtn href="https://wa.me/967778492884" label="واتساب">
+                    <WhatsAppIcon />
+                  </SocialBtn>
+                  <SocialBtn
+                    href="https://www.tiktok.com/@mufeed_saleh_ali_alzree?_r=1&_t=ZS-98C0Jv2XQOa"
+                    label="تيك توك"
+                  >
+                    <TikTokIcon />
+                  </SocialBtn>
+                  <SocialBtn href="https://www.facebook.com/share/1BanCjCw8T/" label="فيسبوك">
+                    <FacebookIcon />
+                  </SocialBtn>
                 </div>
-              </form>
+                <p className="mt-3 text-center text-[11px] leading-relaxed text-gray-500">
+                  جميع الحقوق محفوظة © • برمجة وتصميم 💚{" "}
+                  <span className="text-[#0f766e] font-bold">مفيد الزري</span>
+                </p>
+              </div>
             </div>
           ) : (
             <div
-              className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] p-6 sm:p-8 flex flex-col"
-              style={{ minHeight: "calc(100dvh - 48px)" }}
+              className="bg-white rounded-[26px] shadow-[0_10px_36px_-18px_rgba(16,24,40,0.18)] border border-gray-100 px-5 sm:px-6 py-6 flex flex-col"
+              style={{ minHeight: "calc(100dvh - 40px)" }}
             >
-              <BrandHeader subtitle="أنشئ حسابك وابدأ إدارة أعمالك فوراً." />
-
-              <div className="flex items-start justify-between gap-3 mb-1">
-                <button
-                  onClick={() => setSheetOpen(true)}
-                  className="text-teal-700 font-semibold text-sm hover:underline shrink-0 mt-1"
-                >
-                  تغيير النوع
-                </button>
-                <h2 className="text-xl sm:text-2xl font-bold leading-tight text-right">
-                  إنشاء حساب {typeLabel}
+              <div className="flex-1 flex flex-col justify-center">
+                <h2 className="text-center text-[22px] sm:text-2xl font-bold text-gray-900 mb-1">
+                  إنشاء حساب جديد.
                 </h2>
-              </div>
-              <p className="text-gray-600 text-xs sm:text-sm text-right mb-4">
-                {accountType === "network"
-                  ? "أدخل بياناتك واسم شبكتك — يتم تفعيل الحساب بعد موافقة مدير التطبيق."
-                  : "أدخل بياناتك للبدء."}
-              </p>
+                <p className="text-center text-xs text-gray-500 mb-5">
+                  {accountType === "network"
+                    ? "يتم تفعيل الحساب بعد موافقة مدير التطبيق."
+                    : "يتم تفعيل الحساب بعد موافقة مدير الشبكة."}
+                </p>
 
-              <form onSubmit={handleRegister} className="flex-1 flex flex-col gap-3">
-                <div className="space-y-3 overflow-y-auto">
-                  <FieldGroup label="الاسم الرباعي">
-                    <SoftInput
-                      dir="rtl"
-                      value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
-                      placeholder="أدخل الاسم الرباعي"
-                      autoComplete="name"
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <TypeCard
+                      active={accountType === "agent"}
+                      onClick={() => {
+                        setAccountType("agent");
+                        setRegNet("");
+                      }}
+                      icon={<Bike className="h-6 w-6" />}
+                      label={
+                        <>
+                          مندوب
+                          <br />
+                          توزيع
+                        </>
+                      }
                     />
-                  </FieldGroup>
-                  <FieldGroup label="رقم الجوال">
-                    <SoftInput
-                      dir="rtl"
-                      value={regPhone}
-                      onChange={(e) => setRegPhone(e.target.value)}
-                      placeholder="أدخل رقم الجوال"
-                      inputMode="tel"
-                      autoComplete="tel"
+                    <TypeCard
+                      active={accountType === "network"}
+                      onClick={() => {
+                        setAccountType("network");
+                        setRegNet("");
+                      }}
+                      icon={<Share2 className="h-6 w-6" />}
+                      label={
+                        <>
+                          وكيل / مدير
+                          <br />
+                          شبكة
+                        </>
+                      }
                     />
-                  </FieldGroup>
+                  </div>
+
+                  <SoftInput
+                    dir="rtl"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    placeholder="الاسم الرباعي"
+                    autoComplete="name"
+                  />
+                  <SoftInput
+                    dir="rtl"
+                    value={regPhone}
+                    onChange={(e) => setRegPhone(e.target.value)}
+                    placeholder="رقم الجوال"
+                    inputMode="tel"
+                    autoComplete="tel"
+                  />
                   {accountType === "network" ? (
-                    <FieldGroup label="اسم الشبكة">
-                      <SoftInput
-                        dir="rtl"
-                        value={regNet}
-                        onChange={(e) => setRegNet(e.target.value)}
-                        placeholder="أدخل اسم شبكتك"
-                      />
-                    </FieldGroup>
+                    <SoftInput
+                      dir="rtl"
+                      value={regNet}
+                      onChange={(e) => setRegNet(e.target.value)}
+                      placeholder="اسم شبكتك"
+                    />
                   ) : (
-                    <FieldGroup label="الشبكة التابعة لها">
-                      <select
-                        dir="rtl"
-                        value={regNet}
-                        onChange={(e) => setRegNet(e.target.value)}
-                        className="w-full h-14 rounded-2xl bg-gray-100 border-0 text-right text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 px-4"
-                      >
-                        <option value="">اختر الشبكة التي تتبع لها</option>
-                        {networks.map((n) => (
-                          <option key={n.id} value={n.name}>
-                            {n.name}
-                          </option>
-                        ))}
-                      </select>
-                    </FieldGroup>
+                    <select
+                      dir="rtl"
+                      value={regNet}
+                      onChange={(e) => setRegNet(e.target.value)}
+                      className="w-full h-14 rounded-2xl bg-[#eceeed] border-0 text-right text-base text-gray-700 focus-visible:ring-2 focus-visible:ring-[#0f766e] px-4"
+                    >
+                      <option value="">اختر الشبكة التي تتبع لها</option>
+                      {networks.map((n) => (
+                        <option key={n.id} value={n.name}>
+                          {n.name}
+                        </option>
+                      ))}
+                    </select>
                   )}
-                  <FieldGroup label="كلمة المرور">
-                    <div className="relative">
-                      <SoftInput
-                        dir="rtl"
-                        type={showPwd ? "text" : "password"}
-                        value={regP}
-                        onChange={(e) => setRegP(e.target.value)}
-                        placeholder="أدخل كلمة المرور"
-                        autoComplete="new-password"
-                        className="pl-12"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPwd((v) => !v)}
-                        aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition p-1"
-                      >
-                        {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                  </FieldGroup>
-                  <FieldGroup label="تأكيد كلمة المرور">
-                    <div className="relative">
-                      <SoftInput
-                        dir="rtl"
-                        type={showPwd2 ? "text" : "password"}
-                        value={regP2}
-                        onChange={(e) => setRegP2(e.target.value)}
-                        placeholder="أعد إدخال كلمة المرور"
-                        autoComplete="new-password"
-                        className="pl-12"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPwd2((v) => !v)}
-                        aria-label={showPwd2 ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition p-1"
-                      >
-                        {showPwd2 ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                  </FieldGroup>
-                </div>
 
-                <div className="mt-auto space-y-4 pt-2">
+                  <div className="relative">
+                    <SoftInput
+                      dir="rtl"
+                      type={showPwd ? "text" : "password"}
+                      value={regP}
+                      onChange={(e) => setRegP(e.target.value)}
+                      placeholder="كلمة المرور"
+                      autoComplete="new-password"
+                      className="pl-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd((v) => !v)}
+                      aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 p-1"
+                    >
+                      {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <SoftInput
+                      dir="rtl"
+                      type={showPwd2 ? "text" : "password"}
+                      value={regP2}
+                      onChange={(e) => setRegP2(e.target.value)}
+                      placeholder="تأكيد كلمة المرور"
+                      autoComplete="new-password"
+                      className="pl-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd2((v) => !v)}
+                      aria-label={showPwd2 ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 p-1"
+                    >
+                      {showPwd2 ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+
                   <Button
                     type="submit"
                     disabled={busy}
-                    className="w-full h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] text-white text-lg font-bold shadow-none"
+                    className="w-full h-14 rounded-2xl bg-[#12a05f] hover:bg-[#0e8b52] active:scale-[0.99] text-white text-lg font-bold shadow-none transition"
                   >
                     {busy ? "…" : "إنشاء الحساب"}
                   </Button>
 
-                  <p className="text-center text-sm text-gray-700">
+                  <p className="text-center text-sm text-gray-800">
                     لديك حساب بالفعل ؟{" "}
                     <button
+                      type="button"
                       onClick={() => setMode("login")}
-                      className="text-teal-700 font-semibold underline underline-offset-4"
+                      className="text-[#0f766e] font-bold underline underline-offset-4"
                     >
                       سجل الدخول من هنا
                     </button>
                   </p>
+                </form>
+              </div>
+
+              <div className="pt-6">
+                <div className="flex items-center justify-center gap-4">
+                  <SocialBtn href="https://wa.me/967778492884" label="واتساب">
+                    <WhatsAppIcon />
+                  </SocialBtn>
+                  <SocialBtn
+                    href="https://www.tiktok.com/@mufeed_saleh_ali_alzree?_r=1&_t=ZS-98C0Jv2XQOa"
+                    label="تيك توك"
+                  >
+                    <TikTokIcon />
+                  </SocialBtn>
+                  <SocialBtn href="https://www.facebook.com/share/1BanCjCw8T/" label="فيسبوك">
+                    <FacebookIcon />
+                  </SocialBtn>
                 </div>
-              </form>
+                <p className="mt-3 text-center text-[11px] leading-relaxed text-gray-500">
+                  جميع الحقوق محفوظة © • برمجة وتصميم 💚{" "}
+                  <span className="text-[#0f766e] font-bold">مفيد الزري</span>
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -592,19 +605,19 @@ function TypeCard({
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-2 rounded-[22px] p-3 h-[116px] sm:h-[128px] transition-all duration-200 ${
+      className={`flex flex-col items-center justify-center gap-2 rounded-[20px] p-3 h-[116px] transition-all duration-200 border-2 ${
         active
-          ? "bg-[#22a06b] shadow-[0_8px_20px_-8px_rgba(34,160,107,0.5)]"
-          : "bg-[#eef2f0]"
+          ? "border-[#0f766e] bg-gradient-to-b from-[#e6f5f2] to-[#cfeae5] shadow-[0_0_0_4px_rgba(15,118,110,0.08)]"
+          : "border-transparent bg-[#eceeed]"
       }`}
     >
       <div
-        className={`h-11 w-11 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition ${active ? "bg-white/20 text-white" : "bg-[#d5ddd9] text-[#5c6b62]"}`}
+        className={`h-12 w-12 rounded-full flex items-center justify-center transition ${active ? "bg-[#0f766e] text-white" : "bg-[#d9dddb] text-white"}`}
       >
         {icon}
       </div>
       <div
-        className={`text-sm sm:text-base font-bold leading-tight ${active ? "text-white" : "text-gray-700"}`}
+        className={`text-base font-bold leading-tight text-center ${active ? "text-[#0b4f4a]" : "text-gray-700"}`}
       >
         {label}
       </div>
@@ -634,7 +647,7 @@ function SoftInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <Input
       {...rest}
-      className={`h-14 rounded-2xl bg-gray-100 border-0 text-right text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 px-4 ${className}`}
+      className={`h-14 rounded-2xl bg-[#eceeed] border-0 text-right text-base text-gray-800 placeholder:text-gray-600 focus-visible:ring-2 focus-visible:ring-[#0f766e] px-4 ${className}`}
     />
   );
 }
@@ -642,12 +655,10 @@ function SoftInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
 function SocialBtn({
   href,
   label,
-  color,
   children,
 }: {
   href: string;
   label: string;
-  color: string;
   children: React.ReactNode;
 }) {
   return (
@@ -657,8 +668,7 @@ function SocialBtn({
       rel="noopener noreferrer"
       aria-label={label}
       title={label}
-      className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white border border-gray-200 shadow-sm text-gray-800 flex items-center justify-center transition-transform hover:scale-105 hover:shadow-md active:scale-95"
-      style={{ color }}
+      className="h-12 w-12 rounded-full bg-[#f1f3f2] text-[#9aa5a0] flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
     >
       {children}
     </a>
