@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Eye, EyeOff, ChevronLeft, Bike, Share2, User as UserIcon } from "lucide-react";
+import { Eye, EyeOff, ChevronRight, Bike, Share2, User as UserIcon } from "lucide-react";
 import logo from "@/assets/wifi-store-logo.png";
 
 const SITE_URL = "https://arabic-layout-project.lovable.app";
