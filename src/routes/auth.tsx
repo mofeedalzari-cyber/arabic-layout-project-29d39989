@@ -183,55 +183,88 @@ function AuthPage() {
   return (
     <div
       dir="rtl"
-      className="min-h-dvh h-dvh overflow-y-auto overscroll-contain bg-gradient-to-b from-[#eaf7ef] to-[#d7f0e2] flex flex-col overflow-x-hidden"
+      className="min-h-dvh h-dvh overflow-y-auto overscroll-contain bg-[#eaf7ef] flex flex-col overflow-x-hidden"
       style={{
         paddingTop: "env(safe-area-inset-top)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      <div className="flex-1 flex flex-col justify-center px-4 py-6">
+      <div className="flex-1 flex flex-col justify-center px-3 sm:px-4 py-4 sm:py-5">
         <div className="w-full max-w-md mx-auto">
           {mode === "login" ? (
             <div
-              className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_10px_40px_-12px_rgba(16,24,40,0.15)] p-6 sm:p-8 flex flex-col"
-              style={{ minHeight: "calc(100dvh - 48px)" }}
+              className="bg-white rounded-[28px] sm:rounded-[32px] shadow-[0_12px_40px_-16px_rgba(16,24,40,0.12)] p-5 sm:p-7 flex flex-col"
+              style={{ minHeight: "calc(100dvh - 40px)" }}
             >
-              <BrandHeader subtitle="قم بتسجيل الدخول" />
+              <div className="text-center mb-5 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">قم بتسجيل الدخول.</h2>
+              </div>
 
-              <form onSubmit={handleLogin} className="flex-1 flex flex-col gap-4">
+              <form onSubmit={handleLogin} className="flex-1 flex flex-col gap-5">
+                <div className="grid grid-cols-2 gap-3">
+                  <TypeCard
+                    active={accountType === "agent"}
+                    onClick={() => setAccountType("agent")}
+                    icon={<UserIcon className="h-6 w-6" />}
+                    label={
+                      <>
+                        مندوب
+                        <br />
+                        توزيع
+                      </>
+                    }
+                  />
+                  <TypeCard
+                    active={accountType === "network"}
+                    onClick={() => setAccountType("network")}
+                    icon={<UserIcon className="h-6 w-6" />}
+                    label={
+                      <>
+                        وكيل / مدير
+                        <br />
+                        شبكة
+                      </>
+                    }
+                  />
+                </div>
+
                 <div className="space-y-4">
-                  <FieldGroup label="رقم الجوال">
+                  <div className="relative">
                     <SoftInput
                       dir="rtl"
                       value={loginPhone}
                       onChange={(e) => setLoginPhone(e.target.value)}
-                      placeholder="أدخل رقم الجوال"
+                      placeholder="رقم الجوال"
                       inputMode="tel"
                       autoComplete="tel"
+                      className="pr-12"
                     />
-                  </FieldGroup>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.94 12.94 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.94 12.94 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                      </svg>
+                    </span>
+                  </div>
 
-                  <FieldGroup label="كلمة المرور">
-                    <div className="relative">
-                      <SoftInput
-                        dir="rtl"
-                        type={showPwd ? "text" : "password"}
-                        value={loginP}
-                        onChange={(e) => setLoginP(e.target.value)}
-                        placeholder="أدخل كلمة المرور"
-                        autoComplete="current-password"
-                        className="pl-12"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPwd((v) => !v)}
-                        aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition p-1"
-                      >
-                        {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                  </FieldGroup>
+                  <div className="relative">
+                    <SoftInput
+                      dir="rtl"
+                      type={showPwd ? "text" : "password"}
+                      value={loginP}
+                      onChange={(e) => setLoginP(e.target.value)}
+                      placeholder="كلمة المرور"
+                      autoComplete="current-password"
+                      className="pl-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd((v) => !v)}
+                      aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition p-1"
+                    >
+                      {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
 
                   <div className="text-start">
                     <button
@@ -240,37 +273,36 @@ function AuthPage() {
                         setForgotPhone(loginPhone);
                         setForgotOpen(true);
                       }}
-                      className="text-teal-700 text-sm font-semibold hover:underline"
+                      className="text-[#22a06b] text-sm font-semibold hover:underline"
                     >
                       هل نسيت كلمة المرور؟
                     </button>
                   </div>
                 </div>
 
-                <div className="mt-auto space-y-5">
+                <div className="mt-auto space-y-5 pt-2">
                   <Button
                     type="submit"
                     disabled={busy}
-                    className="w-full h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] active:scale-[0.99] text-white text-lg font-bold shadow-[0_8px_20px_-8px_rgba(34,160,107,0.6)] transition"
+                    className="w-full h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] active:scale-[0.99] text-white text-lg font-bold shadow-[0_10px_24px_-10px_rgba(34,160,107,0.55)] transition"
                   >
                     {busy ? "…" : "تسجيل الدخول"}
                   </Button>
 
                   <p className="text-center text-sm text-gray-700">
-                    لا تملك حساب؟{" "}
+                    لا تملك حساب ؟{" "}
                     <button
-                      onClick={() => setSheetOpen(true)}
-                      className="text-teal-700 font-semibold underline underline-offset-4"
+                      type="button"
+                      onClick={() => setMode("register")}
+                      className="text-[#22a06b] font-semibold underline underline-offset-4"
                     >
-                      إنشاء حساب
+                      انقر هنا لإنشاء حساب
                     </button>
                   </p>
 
-                  <div className="pt-5 border-t border-gray-100">
-                    <p className="text-center text-sm text-gray-700 mb-3">
-                      بحاجة لمساعدة؟
-                      <br />
-                      <span className="text-gray-500 text-xs">تواصل مع خدمة العملاء</span>
+                  <div className="pt-4 border-t border-gray-100">
+                    <p className="text-center text-xs text-gray-500 mb-3">
+                      بحاجة لمساعدة؟ تواصل مع خدمة العملاء
                     </p>
                     <div className="flex items-center justify-center gap-4">
                       <SocialBtn href="https://wa.me/967778492884" label="واتساب" color="#25D366">
@@ -292,7 +324,7 @@ function AuthPage() {
                       </SocialBtn>
                     </div>
 
-                    <p className="mt-5 text-center text-xs leading-relaxed text-gray-600">
+                    <p className="mt-4 text-center text-[11px] leading-relaxed text-gray-600">
                       جميع الحقوق محفوظة © • برمجة وتصميم 💚{" "}
                       <span className="text-[#22a06b] font-bold">مفيد الزري</span>
                     </p>
