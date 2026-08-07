@@ -592,19 +592,19 @@ function TypeCard({
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-2 rounded-2xl p-4 h-32 transition ${
+      className={`flex flex-col items-center justify-center gap-2 rounded-[22px] p-3 h-[116px] sm:h-[128px] transition-all duration-200 ${
         active
-          ? "bg-teal-50 border-2 border-teal-600 shadow-[0_0_0_4px_rgba(13,148,136,0.08)]"
-          : "bg-gray-100 border-2 border-transparent"
+          ? "bg-[#22a06b] shadow-[0_8px_20px_-8px_rgba(34,160,107,0.5)]"
+          : "bg-[#eef2f0]"
       }`}
     >
       <div
-        className={`h-12 w-12 rounded-full flex items-center justify-center ${active ? "bg-teal-700 text-white" : "bg-gray-300 text-gray-500"}`}
+        className={`h-11 w-11 sm:h-12 sm:w-12 rounded-full flex items-center justify-center transition ${active ? "bg-white/20 text-white" : "bg-[#d5ddd9] text-[#5c6b62]"}`}
       >
         {icon}
       </div>
       <div
-        className={`text-sm font-bold leading-tight ${active ? "text-gray-900" : "text-gray-600"}`}
+        className={`text-sm sm:text-base font-bold leading-tight ${active ? "text-white" : "text-gray-700"}`}
       >
         {label}
       </div>
