@@ -125,15 +125,45 @@ function AuthPage() {
       setBusy(false);
       return toast.error("رقم الجوال غير صحيح");
     }
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: signIn, error } = await supabase.auth.signInWithPassword({
       email: usernameToEmail(loginName),
       password: p.data,
     });
+    if (error || !signIn.user) {
+      setBusy(false);
+      return toast.error("رقم الجوال أو كلمة المرور غير صحيحة");
+    }
+
+    // The selected account type must match the real role of the account.
+    const { data: roles, error: rolesErr } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", signIn.user.id);
+    if (rolesErr) {
+      setBusy(false);
+      return toast.error("تعذر التحقق من نوع الحساب، أعد المحاولة");
+    }
+    const has = (r: string) => !!roles?.some((x) => x.role === r);
+    const allowed = has("superadmin")
+      ? true
+      : accountType === "agent"
+        ? has("agent")
+        : has("admin");
+    if (!allowed) {
+      await supabase.auth.signOut({ scope: "local" });
+      setBusy(false);
+      return toast.error(
+        accountType === "agent"
+          ? "هذا الحساب ليس حساب مندوب توزيع، اختر «وكيل / مدير شبكة»"
+          : "هذا الحساب ليس حساب مدير شبكة، اختر «مندوب توزيع»",
+      );
+    }
+
     setBusy(false);
-    if (error) return toast.error("رقم الجوال أو كلمة المرور غير صحيحة");
     toast.success("تم تسجيل الدخول");
     navigate({ to: "/app" });
   }
+
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
