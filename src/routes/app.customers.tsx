@@ -489,24 +489,18 @@ function CustomersPage() {
       // Fallback to sales data
       if (!networkName) networkName = custSales[0]?.network_name || "";
 
-      // Group sales by package_name + price → qty
-      const map = new Map<
-        string,
-        { packageName: string; networkName: string; qty: number; price: number }
-      >();
-      for (const s of custSales) {
-        const key = `${s.package_name}||${Number(s.price)}`;
-        const cur = map.get(key);
-        if (cur) cur.qty += 1;
-        else
-          map.set(key, {
-            packageName: s.package_name,
-            networkName: s.network_name,
-            qty: 1,
-            price: Number(s.price) || 0,
-          });
-      }
-      const items = Array.from(map.values());
+      // One row per sale so the card number appears in the PDF
+      const items = custSales
+        .slice()
+        .sort((a, b) => String(a.sold_at).localeCompare(String(b.sold_at)))
+        .map((s) => ({
+          packageName: s.package_name,
+          networkName: s.network_name,
+          cardNumber: (s as any).card_username ?? (s as any).card_number ?? null,
+          qty: 1,
+          price: Number(s.price) || 0,
+        }));
+
       const total = custSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
 
       // Arabic date d/m/yyyy
