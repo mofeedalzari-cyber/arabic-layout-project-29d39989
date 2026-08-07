@@ -940,6 +940,7 @@ export type Database = {
         }[]
       }
       create_my_network: { Args: { _name: string }; Returns: string }
+      dashboard_breakdown: { Args: never; Returns: Json }
       delete_customer: {
         Args: { _customer_id: string; _delete_cards?: boolean }
         Returns: undefined
