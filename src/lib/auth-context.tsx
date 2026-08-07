@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureAuthStorageReady, clearNativeAuthStorage } from "@/lib/auth-persistence";
 
 export type Role = "admin" | "agent" | "superadmin" | "user";
 
@@ -159,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       try {
+        await ensureAuthStorageReady();
         const { data } = await supabase.auth.getSession();
         if (!mounted) return;
         await hydrateSession(data.session);
@@ -195,6 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         try {
           await supabase.auth.signOut({ scope: "local" });
+          await clearNativeAuthStorage();
         } catch (e) {
           console.error("[auth] signOut failed", e);
         }
