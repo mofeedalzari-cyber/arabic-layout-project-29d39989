@@ -243,6 +243,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           }}
         >
           <div className="mx-auto min-h-full max-w-6xl fade-in">{children}</div>
+          <PageFooter />
         </main>
 
         {/* Mobile bottom nav — يرتفع فوق أزرار النظام (Back / Home / Recents) */}
