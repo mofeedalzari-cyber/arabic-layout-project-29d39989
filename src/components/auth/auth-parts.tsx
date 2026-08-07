@@ -4,6 +4,7 @@ import { Eye, EyeOff, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import logo from "@/assets/wifi-store-logo.png";
+import { PageFooter } from "@/components/page-footer";
 
 export const APP_NAME = "كرتي";
 export const SITE_URL = "https://arabic-layout-project.lovable.app";
