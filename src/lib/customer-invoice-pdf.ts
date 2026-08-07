@@ -182,6 +182,8 @@ export type CustomerInvoiceInput = {
   networkRegion?: string; // e.g. "الجمهورية اليمنية - حيران"
   networkPhone?: string;
   adminName: string;
+  agentName?: string;
+  networkAdminName?: string;
   adminUsername?: string;
   customerName: string;
   items: InvoiceItem[];
