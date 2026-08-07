@@ -31,6 +31,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col justify-center px-3 sm:px-4 py-4 sm:py-6 md:py-8">
         {children}
       </div>
+      <PageFooter />
     </div>
   );
 }
