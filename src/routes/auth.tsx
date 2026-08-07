@@ -227,7 +227,7 @@ function AuthPage() {
             </Button>
 
             <p className="text-center text-sm text-gray-800">
-              لا تملك حساب ؈{" "}
+              لا تملك حساب ؟{" "}
               <button
                 type="button"
                 onClick={() => setSheetOpen(true)}
