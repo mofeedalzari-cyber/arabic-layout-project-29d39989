@@ -102,11 +102,11 @@ function PackagesPage() {
     },
   });
 
-  const { data: counts } = useQuery({
+  const { data: countsRaw } = useQuery({
     queryKey: ["packages-counts-all", networks?.map((n) => n.id).join(",") ?? ""],
     enabled: !!networks && networks.length > 0,
     queryFn: async () => {
-      const m = new Map<string, { avail: number; assigned: number; sold: number }>();
+      const m: Record<string, { avail: number; assigned: number; sold: number }> = {};
       if (!networks) return m;
       const results = await Promise.all(
         networks.map((n) => supabase.rpc("package_counts", { _network_id: n.id })),
@@ -114,16 +114,22 @@ function PackagesPage() {
       for (const r of results) {
         if (r.error || !r.data) continue;
         for (const row of r.data as any[]) {
-          m.set(row.package_id, {
+          m[row.package_id] = {
             avail: row.available ?? 0,
             assigned: row.assigned ?? 0,
             sold: row.sold ?? 0,
-          });
+          };
         }
       }
       return m;
     },
   });
+
+  const counts = useMemo(() => {
+    if (!countsRaw) return undefined;
+    if (countsRaw instanceof Map) return countsRaw as Map<string, any>;
+    return new Map(Object.entries(countsRaw as Record<string, any>));
+  }, [countsRaw]);
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
