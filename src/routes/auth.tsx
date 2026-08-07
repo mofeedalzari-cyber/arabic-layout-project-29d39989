@@ -193,103 +193,112 @@ function AuthPage() {
         <div className="w-full max-w-md mx-auto">
           {mode === "login" ? (
             <div
-              className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_10px_40px_-12px_rgba(16,24,40,0.15)] p-5 sm:p-7 flex flex-col justify-center"
+              className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_10px_40px_-12px_rgba(16,24,40,0.15)] p-6 sm:p-8 flex flex-col"
               style={{ minHeight: "calc(100dvh - 48px)" }}
             >
               <BrandHeader subtitle="قم بتسجيل الدخول" />
 
-              <form onSubmit={handleLogin} className="space-y-3 mt-2">
-                <SoftInput
-                  dir="rtl"
-                  value={loginPhone}
-                  onChange={(e) => setLoginPhone(e.target.value)}
-                  placeholder="رقم الجوال"
-                  inputMode="tel"
-                  autoComplete="tel"
-                />
-                <div className="relative">
-                  <SoftInput
-                    dir="rtl"
-                    type={showPwd ? "text" : "password"}
-                    value={loginP}
-                    onChange={(e) => setLoginP(e.target.value)}
-                    placeholder="كلمة المرور"
-                    autoComplete="current-password"
-                    className="pl-11"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPwd((v) => !v)}
-                    aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                  >
-                    {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
+              <form onSubmit={handleLogin} className="flex-1 flex flex-col gap-4">
+                <div className="space-y-4">
+                  <FieldGroup label="رقم الجوال">
+                    <SoftInput
+                      dir="rtl"
+                      value={loginPhone}
+                      onChange={(e) => setLoginPhone(e.target.value)}
+                      placeholder="أدخل رقم الجوال"
+                      inputMode="tel"
+                      autoComplete="tel"
+                    />
+                  </FieldGroup>
+
+                  <FieldGroup label="كلمة المرور">
+                    <div className="relative">
+                      <SoftInput
+                        dir="rtl"
+                        type={showPwd ? "text" : "password"}
+                        value={loginP}
+                        onChange={(e) => setLoginP(e.target.value)}
+                        placeholder="أدخل كلمة المرور"
+                        autoComplete="current-password"
+                        className="pl-12"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPwd((v) => !v)}
+                        aria-label={showPwd ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition p-1"
+                      >
+                        {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </FieldGroup>
+
+                  <div className="text-start">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotPhone(loginPhone);
+                        setForgotOpen(true);
+                      }}
+                      className="text-teal-700 text-sm font-semibold hover:underline"
+                    >
+                      هل نسيت كلمة المرور؟
+                    </button>
+                  </div>
                 </div>
 
-                <div className="text-left -mt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setForgotPhone(loginPhone);
-                      setForgotOpen(true);
-                    }}
-                    className="text-teal-700 text-sm font-medium hover:underline"
+                <div className="mt-auto space-y-5">
+                  <Button
+                    type="submit"
+                    disabled={busy}
+                    className="w-full h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] active:scale-[0.99] text-white text-lg font-bold shadow-[0_8px_20px_-8px_rgba(34,160,107,0.6)] transition"
                   >
-                    هل نسيت كلمة المرور؟
-                  </button>
-                </div>
+                    {busy ? "…" : "تسجيل الدخول"}
+                  </Button>
 
-                <Button
-                  type="submit"
-                  disabled={busy}
-                  className="w-full h-12 sm:h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] active:scale-[0.99] text-white text-base sm:text-lg font-bold shadow-[0_8px_20px_-8px_rgba(34,160,107,0.6)] transition"
-                >
-                  {busy ? "…" : "تسجيل الدخول"}
-                </Button>
+                  <p className="text-center text-sm text-gray-700">
+                    لا تملك حساب؟{" "}
+                    <button
+                      onClick={() => setSheetOpen(true)}
+                      className="text-teal-700 font-semibold underline underline-offset-4"
+                    >
+                      إنشاء حساب
+                    </button>
+                  </p>
+
+                  <div className="pt-5 border-t border-gray-100">
+                    <p className="text-center text-sm text-gray-700 mb-3">
+                      بحاجة لمساعدة؟
+                      <br />
+                      <span className="text-gray-500 text-xs">تواصل مع خدمة العملاء</span>
+                    </p>
+                    <div className="flex items-center justify-center gap-4">
+                      <SocialBtn href="https://wa.me/967778492884" label="واتساب" color="#25D366">
+                        <WhatsAppIcon />
+                      </SocialBtn>
+                      <SocialBtn
+                        href="https://www.tiktok.com/@mufeed_saleh_ali_alzree?_r=1&_t=ZS-98C0Jv2XQOa"
+                        label="تيك توك"
+                        color="#111111"
+                      >
+                        <TikTokIcon />
+                      </SocialBtn>
+                      <SocialBtn
+                        href="https://www.facebook.com/share/1BanCjCw8T/"
+                        label="فيسبوك"
+                        color="#1877F2"
+                      >
+                        <FacebookIcon />
+                      </SocialBtn>
+                    </div>
+
+                    <p className="mt-5 text-center text-xs leading-relaxed text-gray-600">
+                      جميع الحقوق محفوظة © • برمجة وتصميم 💚{" "}
+                      <span className="text-[#22a06b] font-bold">مفيد الزري</span>
+                    </p>
+                  </div>
+                </div>
               </form>
-
-              <p className="mt-4 text-center text-sm text-gray-700">
-                لا تملك حساب؟{" "}
-                <button
-                  onClick={() => setSheetOpen(true)}
-                  className="text-teal-700 font-semibold underline underline-offset-4"
-                >
-                  إنشاء حساب
-                </button>
-              </p>
-
-              <div className="mt-5 pt-4 border-t border-gray-100">
-                <p className="text-center text-sm text-gray-700 mb-2">
-                  بحاجة لمساعدة؟
-                  <br />
-                  <span className="text-gray-500 text-xs">تواصل مع خدمة العملاء</span>
-                </p>
-                <div className="flex items-center justify-center gap-3">
-                  <SocialBtn href="https://wa.me/967778492884" label="واتساب" color="#25D366">
-                    <WhatsAppIcon />
-                  </SocialBtn>
-                  <SocialBtn
-                    href="https://www.tiktok.com/@mufeed_saleh_ali_alzree?_r=1&_t=ZS-98C0Jv2XQOa"
-                    label="تيك توك"
-                    color="#111111"
-                  >
-                    <TikTokIcon />
-                  </SocialBtn>
-                  <SocialBtn
-                    href="https://www.facebook.com/share/1BanCjCw8T/"
-                    label="فيسبوك"
-                    color="#1877F2"
-                  >
-                    <FacebookIcon />
-                  </SocialBtn>
-                </div>
-
-                <p className="mt-4 text-center text-xs leading-relaxed text-gray-600">
-                  جميع الحقوق محفوظة © • برمجة وتصميم 💚{" "}
-                  <span className="text-[#22a06b] font-bold">مفيد الزري</span>
-                </p>
-              </div>
             </div>
           ) : (
             <div className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] p-5 sm:p-7 pb-6 sm:pb-8">
