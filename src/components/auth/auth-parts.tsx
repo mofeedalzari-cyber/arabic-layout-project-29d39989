@@ -203,7 +203,7 @@ export function AuthFooter() {
   return (
     <div className="pt-6">
       <p className="mb-3 text-center text-[11px] leading-relaxed text-gray-500">
-        جميع الحقوق محفوظة © • برمجة وتصميم 💚{" "}
+        جميع الحقوق محفوظة © • برمجة وتصميم ❤️{" "}
         <span className="text-[#0f766e] font-bold">مفيد الزري</span>
       </p>
       <div className="flex items-center justify-center gap-4">
