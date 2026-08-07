@@ -66,4 +66,24 @@ export async function clearLocalDB(): Promise<void> {
   }
 }
 
-export const LOCAL_CACHE_KEY = "app.local-cache.v1";
+export const LOCAL_CACHE_KEY = "app.local-cache.v2";
+
+/** تحويل Map/Set إلى نص مع الحفاظ على نوعها. */
+export function serializeCache(client: unknown): string {
+  return JSON.stringify(client, (_k, v) => {
+    if (v instanceof Map) return { __t: "Map", v: Array.from(v.entries()) };
+    if (v instanceof Set) return { __t: "Set", v: Array.from(v.values()) };
+    return v;
+  });
+}
+
+/** استرجاع Map/Set من النص المخزَّن. */
+export function deserializeCache(raw: string): any {
+  return JSON.parse(raw, (_k, v) => {
+    if (v && typeof v === "object" && Array.isArray((v as any).v)) {
+      if ((v as any).__t === "Map") return new Map((v as any).v);
+      if ((v as any).__t === "Set") return new Set((v as any).v);
+    }
+    return v;
+  });
+}

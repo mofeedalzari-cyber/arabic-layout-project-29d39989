@@ -41,7 +41,7 @@ export const getRouter = () => {
   if (typeof window !== "undefined") {
     void (async () => {
       try {
-        const [{ persistQueryClient }, { createAsyncStoragePersister }, { localDB, LOCAL_CACHE_KEY }, { initAutoSync }] =
+        const [{ persistQueryClient }, { createAsyncStoragePersister }, { localDB, LOCAL_CACHE_KEY, serializeCache, deserializeCache }, { initAutoSync }] =
           await Promise.all([
             import("@tanstack/react-query-persist-client"),
             import("@tanstack/query-async-storage-persister"),
@@ -52,6 +52,8 @@ export const getRouter = () => {
           storage: localDB,
           key: LOCAL_CACHE_KEY,
           throttleTime: 1000,
+          serialize: serializeCache,
+          deserialize: deserializeCache,
         });
         await persistQueryClient({
           queryClient,
