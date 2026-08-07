@@ -748,14 +748,14 @@ function TypeRow({
       onClick={onClick}
       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 text-right"
     >
-      <ChevronLeft className="h-5 w-5 text-gray-400 shrink-0" />
-      <div className="flex-1">
-        <div className="text-xl font-bold text-gray-900">{title}</div>
-        <div className="text-sm text-gray-600 mt-0.5">{desc}</div>
-      </div>
       <div className={`h-14 w-14 rounded-full ${iconBg} flex items-center justify-center shrink-0`}>
         {icon}
       </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-xl font-bold text-gray-900">{title}</div>
+        <div className="text-sm text-gray-600 mt-0.5">{desc}</div>
+      </div>
+      <ChevronRight className="h-5 w-5 text-gray-400 shrink-0" />
     </button>
   );
 }
