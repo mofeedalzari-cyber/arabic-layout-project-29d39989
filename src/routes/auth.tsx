@@ -171,7 +171,7 @@ function AuthPage() {
     <AuthShell>
       <AuthCard>
         <div className="flex-1 flex flex-col justify-center">
-          <BrandHeader subtitle="تسجيل الدخول إلى حسابك" />
+          <BrandHeader />
 
           <h2 className="text-center text-[22px] sm:text-2xl font-bold text-gray-900 mb-5">
             قم بتسجيل الدخول.

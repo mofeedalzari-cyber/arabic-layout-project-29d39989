@@ -42,7 +42,7 @@ export function AuthCard({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function BrandHeader({ subtitle }: { subtitle: string }) {
+export function BrandHeader({ subtitle }: { subtitle?: string }) {
   return (
     <div className="flex flex-col items-center text-center mb-4 sm:mb-5">
       <img
@@ -55,7 +55,9 @@ export function BrandHeader({ subtitle }: { subtitle: string }) {
       <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight mt-1 text-gray-900 leading-tight">
         {APP_NAME} — نظام إدارة وبيع كروت
       </h1>
-      <p className="text-gray-600 mt-1.5 sm:mt-2 text-sm sm:text-base">{subtitle}</p>
+      {subtitle && (
+        <p className="text-gray-600 mt-1.5 sm:mt-2 text-sm sm:text-base">{subtitle}</p>
+      )}
     </div>
   );
 }
