@@ -180,10 +180,12 @@ export function SocialBtn({
   href,
   label,
   children,
+  colorClass,
 }: {
   href: string;
   label: string;
   children: React.ReactNode;
+  colorClass?: string;
 }) {
   return (
     <a
@@ -192,7 +194,7 @@ export function SocialBtn({
       rel="noopener noreferrer"
       aria-label={label}
       title={label}
-      className="h-12 w-12 rounded-full bg-[#f1f3f2] text-[#9aa5a0] flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+      className={`h-12 w-12 rounded-full bg-[#f1f3f2] flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${colorClass ?? "text-[#9aa5a0]"}`}
     >
       {children}
     </a>
