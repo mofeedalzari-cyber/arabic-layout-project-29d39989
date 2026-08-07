@@ -533,9 +533,11 @@ function CustomersPage() {
           items: items.map((it) => ({
             packageName: it.packageName,
             networkName: it.networkName,
+            cardNumber: it.cardNumber,
             qty: it.qty,
             price: it.price,
           })) as any,
+
           currency,
           dateStr,
         },
