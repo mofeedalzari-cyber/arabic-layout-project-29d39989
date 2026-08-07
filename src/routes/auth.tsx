@@ -655,12 +655,10 @@ function SoftInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
 function SocialBtn({
   href,
   label,
-  color,
   children,
 }: {
   href: string;
   label: string;
-  color: string;
   children: React.ReactNode;
 }) {
   return (
@@ -670,8 +668,7 @@ function SocialBtn({
       rel="noopener noreferrer"
       aria-label={label}
       title={label}
-      className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white border border-gray-200 shadow-sm text-gray-800 flex items-center justify-center transition-transform hover:scale-105 hover:shadow-md active:scale-95"
-      style={{ color }}
+      className="h-12 w-12 rounded-full bg-[#f1f3f2] text-[#9aa5a0] flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
     >
       {children}
     </a>
