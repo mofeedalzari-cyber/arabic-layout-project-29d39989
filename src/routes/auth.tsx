@@ -183,19 +183,19 @@ function AuthPage() {
   return (
     <div
       dir="rtl"
-      className="h-dvh overflow-y-auto overscroll-contain bg-gradient-to-b from-[#eaf7ef] to-[#d7f0e2] flex flex-col overflow-x-hidden"
+      className="min-h-dvh h-dvh overflow-y-auto overscroll-contain bg-gradient-to-b from-[#eaf7ef] to-[#d7f0e2] flex flex-col overflow-x-hidden"
       style={{
-        paddingTop: "max(1rem, env(safe-area-inset-top))",
-        paddingBottom: "calc(env(safe-area-inset-bottom) + 24px)",
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      <div className="flex-1 flex items-start justify-center px-4 py-4">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex flex-col justify-center px-4 py-3 sm:py-6">
+        <div className="w-full max-w-md mx-auto">
           {mode === "login" ? (
-            <div className="bg-white rounded-[28px] shadow-[0_10px_40px_-12px_rgba(16,24,40,0.15)] p-6 sm:p-7">
+            <div className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_10px_40px_-12px_rgba(16,24,40,0.15)] p-5 sm:p-7">
               <BrandHeader subtitle="قم بتسجيل الدخول" />
 
-              <form onSubmit={handleLogin} className="space-y-3.5 mt-2">
+              <form onSubmit={handleLogin} className="space-y-3 mt-2">
                 <SoftInput
                   dir="rtl"
                   value={loginPhone}
@@ -240,13 +240,13 @@ function AuthPage() {
                 <Button
                   type="submit"
                   disabled={busy}
-                  className="w-full h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] active:scale-[0.99] text-white text-lg font-bold shadow-[0_8px_20px_-8px_rgba(34,160,107,0.6)] transition"
+                  className="w-full h-12 sm:h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] active:scale-[0.99] text-white text-base sm:text-lg font-bold shadow-[0_8px_20px_-8px_rgba(34,160,107,0.6)] transition"
                 >
                   {busy ? "…" : "تسجيل الدخول"}
                 </Button>
               </form>
 
-              <p className="mt-5 text-center text-sm text-gray-700">
+              <p className="mt-4 text-center text-sm text-gray-700">
                 لا تملك حساب؟{" "}
                 <button
                   onClick={() => setSheetOpen(true)}
@@ -256,11 +256,11 @@ function AuthPage() {
                 </button>
               </p>
 
-              <div className="mt-6 pt-5 border-t border-gray-100">
-                <p className="text-center text-sm text-gray-700 mb-3">
+              <div className="mt-5 pt-4 border-t border-gray-100">
+                <p className="text-center text-sm text-gray-700 mb-2">
                   بحاجة لمساعدة؟
                   <br />
-                  <span className="text-gray-500">تواصل مع خدمة العملاء</span>
+                  <span className="text-gray-500 text-xs">تواصل مع خدمة العملاء</span>
                 </p>
                 <div className="flex items-center justify-center gap-3">
                   <SocialBtn href="https://wa.me/967778492884" label="واتساب" color="#25D366">
@@ -282,14 +282,14 @@ function AuthPage() {
                   </SocialBtn>
                 </div>
 
-                <p className="mt-5 text-center text-[13px] leading-relaxed text-gray-600">
+                <p className="mt-4 text-center text-xs leading-relaxed text-gray-600">
                   جميع الحقوق محفوظة © • برمجة وتصميم 💚{" "}
                   <span className="text-[#22a06b] font-bold">مفيد الزري</span>
                 </p>
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-[28px] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] p-6 pb-8">
+            <div className="bg-white rounded-[24px] sm:rounded-[28px] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] p-5 sm:p-7 pb-6 sm:pb-8">
               <BrandHeader subtitle="أنشئ حسابك وابدأ إدارة أعمالك فوراً." />
 
               <div className="flex items-start justify-between gap-3 mb-1">
@@ -299,17 +299,17 @@ function AuthPage() {
                 >
                   تغيير النوع
                 </button>
-                <h2 className="text-2xl font-bold leading-tight text-right">
+                <h2 className="text-xl sm:text-2xl font-bold leading-tight text-right">
                   إنشاء حساب {typeLabel}
                 </h2>
               </div>
-              <p className="text-gray-600 text-sm text-right mb-5">
+              <p className="text-gray-600 text-xs sm:text-sm text-right mb-4">
                 {accountType === "network"
                   ? "أدخل بياناتك واسم شبكتك — يتم تفعيل الحساب بعد موافقة مدير التطبيق."
                   : "أدخل بياناتك للبدء."}
               </p>
 
-              <form onSubmit={handleRegister} className="space-y-3">
+              <form onSubmit={handleRegister} className="space-y-2.5 sm:space-y-3">
                 <SoftInput
                   dir="rtl"
                   value={regName}
@@ -337,7 +337,7 @@ function AuthPage() {
                     dir="rtl"
                     value={regNet}
                     onChange={(e) => setRegNet(e.target.value)}
-                    className="w-full h-14 rounded-2xl bg-gray-100 border-0 text-right text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 px-4"
+                    className="w-full h-12 sm:h-14 rounded-2xl bg-gray-100 border-0 text-right text-sm sm:text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 px-4"
                   >
                     <option value="">اختر الشبكة التي تتبع لها</option>
                     {networks.map((n) => (
@@ -389,13 +389,13 @@ function AuthPage() {
                 <Button
                   type="submit"
                   disabled={busy}
-                  className="w-full h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] text-white text-lg font-bold shadow-none mt-2"
+                  className="w-full h-12 sm:h-14 rounded-2xl bg-[#22a06b] hover:bg-[#1c8a5b] text-white text-base sm:text-lg font-bold shadow-none mt-2"
                 >
                   {busy ? "…" : "إنشاء الحساب"}
                 </Button>
               </form>
 
-              <p className="mt-5 text-center text-sm text-gray-700">
+              <p className="mt-4 text-center text-sm text-gray-700">
                 لديك حساب بالفعل ؟{" "}
                 <button
                   onClick={() => setMode("login")}
@@ -498,18 +498,18 @@ function AuthPage() {
 
 function BrandHeader({ subtitle }: { subtitle: string }) {
   return (
-    <div className="flex flex-col items-center text-center mb-5">
+    <div className="flex flex-col items-center text-center mb-4 sm:mb-5">
       <img
         src={logo}
         alt="شعار تطبيق كرتي"
         width={96}
         height={96}
-        className="h-20 w-20 object-contain"
+        className="h-16 w-16 sm:h-20 sm:w-20 object-contain"
       />
-      <h1 className="text-3xl font-extrabold tracking-tight mt-1 text-gray-900">
+      <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight mt-1 text-gray-900 leading-tight">
         {APP_NAME} — نظام إدارة وبيع كروت الإنترنت
       </h1>
-      <p className="text-gray-600 mt-2 text-base">{subtitle}</p>
+      <p className="text-gray-600 mt-1.5 sm:mt-2 text-sm sm:text-base">{subtitle}</p>
     </div>
   );
 }
@@ -554,7 +554,7 @@ function SoftInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <Input
       {...rest}
-      className={`h-14 rounded-2xl bg-gray-100 border-0 text-right text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 ${className}`}
+      className={`h-12 sm:h-14 rounded-2xl bg-gray-100 border-0 text-right text-sm sm:text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 ${className}`}
     />
   );
 }
@@ -577,7 +577,7 @@ function SocialBtn({
       rel="noopener noreferrer"
       aria-label={label}
       title={label}
-      className="h-12 w-12 rounded-full bg-white border border-gray-200 shadow-sm text-gray-800 flex items-center justify-center transition-transform hover:scale-105 hover:shadow-md active:scale-95"
+      className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white border border-gray-200 shadow-sm text-gray-800 flex items-center justify-center transition-transform hover:scale-105 hover:shadow-md active:scale-95"
       style={{ color }}
     >
       {children}
