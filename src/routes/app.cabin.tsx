@@ -251,17 +251,17 @@ function CabinPage() {
 
       {isLoading ? (
         <div className="text-center py-16 text-muted-foreground">جارٍ التحميل...</div>
-      ) : (rows?.length ?? 0) === 0 ? (
+      ) : (rows?.filter((r) => r.available > 0).length ?? 0) === 0 ? (
         <div className="text-center py-16 space-y-3">
           <PackageOpen className="h-10 w-10 mx-auto text-muted-foreground" />
-          <div className="text-muted-foreground">لا توجد كروت في كبينتك بعد.</div>
+          <div className="text-muted-foreground">لا توجد كروت متاحة في كبينتك.</div>
           <div className="text-xs text-muted-foreground">
             اذهب إلى الشبكات واطلب كروت من المدير.
           </div>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rows!.map((r) => {
+          {rows!.filter((r) => r.available > 0).map((r) => {
             const noStock = r.available === 0;
             return (
               <Card
