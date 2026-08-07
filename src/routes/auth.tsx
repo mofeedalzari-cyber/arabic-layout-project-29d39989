@@ -561,12 +561,29 @@ function TypeCard({
   );
 }
 
+function FieldGroup({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-right text-sm font-semibold text-gray-700">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
 function SoftInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   const { className = "", ...rest } = props;
   return (
     <Input
       {...rest}
-      className={`h-12 sm:h-14 rounded-2xl bg-gray-100 border-0 text-right text-sm sm:text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 ${className}`}
+      className={`h-14 rounded-2xl bg-gray-100 border-0 text-right text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 px-4 ${className}`}
     />
   );
 }
