@@ -4,6 +4,7 @@ import { Eye, EyeOff, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import logo from "@/assets/wifi-store-logo.png";
+import { PageFooter } from "@/components/page-footer";
 
 export const APP_NAME = "كرتي";
 export const SITE_URL = "https://arabic-layout-project.lovable.app";
@@ -30,6 +31,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col justify-center px-3 sm:px-4 py-4 sm:py-6 md:py-8">
         {children}
       </div>
+      <PageFooter />
     </div>
   );
 }
@@ -204,10 +206,6 @@ export function SocialBtn({
 export function AuthFooter() {
   return (
     <div className="pt-6">
-      <p className="mb-3 text-center text-[11px] leading-relaxed text-gray-500">
-        جميع الحقوق محفوظة © • برمجة وتصميم ❤️{" "}
-        <span className="text-[#0f766e] font-bold">مفيد الزري</span>
-      </p>
       <div className="flex items-center justify-center gap-4">
         <SocialBtn
           href="https://wa.me/967778492884"

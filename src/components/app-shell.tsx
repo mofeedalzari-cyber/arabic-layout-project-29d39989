@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { PageFooter } from "@/components/page-footer";
 
 interface NavItem {
   to: string;
@@ -242,6 +243,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           }}
         >
           <div className="mx-auto min-h-full max-w-6xl fade-in">{children}</div>
+          <PageFooter />
         </main>
 
         {/* Mobile bottom nav — يرتفع فوق أزرار النظام (Back / Home / Recents) */}
