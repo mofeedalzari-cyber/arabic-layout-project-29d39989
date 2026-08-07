@@ -170,10 +170,12 @@ function cell(text: string, opts: any = {}): any {
 export type InvoiceItem = {
   packageName: string;
   networkName?: string;
+  cardNumber?: string | null;
   unit?: string; // e.g. "حبة"
   qty: number;
   price: number;
 };
+
 
 export type CustomerInvoiceInput = {
   networkName: string;
@@ -310,14 +312,15 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
   };
 
   // ---------- Items table (RTL): visual order right→left is
-  //   الصنف | الوحدة | الكمية | السعر | الإجمالي
+  //   الصنف | رقم الكرت | الوحدة | الكمية | السعر | الإجمالي
   // pdfmake renders LTR, so we reverse the array to place الصنف on the right.
   const headerRowCells = [
-    cell("الإجمالي", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
-    cell("السعر", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
-    cell("الكمية", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
-    cell("الوحدة", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
-    cell("الصنف", { bold: true, fontSize: 12, fillColor: "#f5f5f5" }),
+    cell("الإجمالي", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
+    cell("السعر", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
+    cell("الكمية", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
+    cell("الوحدة", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
+    cell("رقم الكرت", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
+    cell("الصنف", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
   ];
 
   const itemRows = input.items.map((i, idx) => {
@@ -331,13 +334,19 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
       cell(String(i.price), { fillColor: bg }),
       cell(String(i.qty), { color: RED, bold: true, fillColor: bg }),
       cell(i.unit || "حبة", { fillColor: bg }),
+      cell(i.cardNumber ? String(i.cardNumber) : "—", {
+        fillColor: bg,
+        fontSize: 10,
+        margin: [4, 6, 4, 6],
+      }),
       cell(i.packageName, { alignment: "right", fillColor: bg, margin: [8, 6, 8, 6] }),
     ];
   });
 
   const itemsTable = {
     table: {
-      widths: [80, 60, 60, 60, "*"],
+      widths: [62, 48, 42, 42, 95, "*"],
+
       body: [headerRowCells, ...itemRows],
     },
     layout: {
