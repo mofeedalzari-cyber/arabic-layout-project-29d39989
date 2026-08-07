@@ -35,31 +35,33 @@ export const getRouter = () => {
     },
   });
 
-  // 💾 تخزين محلي للبيانات الأساسية (packages, cards, networks) — يعمل بالمتصفح فقط
+  // 💾 قاعدة بيانات محلية مخفية (IndexedDB): يفتح التطبيق أول مرة بالإنترنت،
+  // ثم تُخزَّن كل بيانات الاستعلامات على الجهاز ويعمل التطبيق منها،
+  // مع مزامنة تلقائية خفية عند توفر الاتصال.
   if (typeof window !== "undefined") {
     void (async () => {
       try {
-        const [{ persistQueryClient }, { createSyncStoragePersister }] = await Promise.all([
-          import("@tanstack/react-query-persist-client"),
-          import("@tanstack/query-sync-storage-persister"),
-        ]);
-        const persister = createSyncStoragePersister({
-          storage: window.localStorage,
-          key: "app.query-cache.v1",
-          throttleTime: 1500,
+        const [{ persistQueryClient }, { createAsyncStoragePersister }, { localDB, LOCAL_CACHE_KEY }, { initAutoSync }] =
+          await Promise.all([
+            import("@tanstack/react-query-persist-client"),
+            import("@tanstack/query-async-storage-persister"),
+            import("./lib/local-db"),
+            import("./lib/auto-sync"),
+          ]);
+        const persister = createAsyncStoragePersister({
+          storage: localDB,
+          key: LOCAL_CACHE_KEY,
+          throttleTime: 1000,
         });
-        persistQueryClient({
+        await persistQueryClient({
           queryClient,
           persister,
-          maxAge: 24 * 60 * 60 * 1000, // 24h
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 أيام
           dehydrateOptions: {
-            shouldDehydrateQuery: (q) => {
-              // خزّن فقط البيانات الأساسية (لا نخزّن بيانات حسّاسة/شخصية)
-              const key = String(q.queryKey[0] ?? "");
-              return ["packages", "cards-available", "networks", "network"].includes(key);
-            },
+            shouldDehydrateQuery: (q) => q.state.status === "success",
           },
         });
+        initAutoSync(queryClient);
       } catch {
         // ignore persistence errors — app still works
       }
