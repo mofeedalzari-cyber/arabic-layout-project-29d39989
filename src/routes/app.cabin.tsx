@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -229,7 +230,8 @@ function CabinPage() {
     <>
       <PageHeader title="كبينة البيع" description="الكروت المُخصّصة لك — جاهزة للبيع" />
 
-      <div className="mb-3 flex justify-end">
+      <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+        <RefreshButton queryKeys={[["agent-cabin"], ["sales"], ["my-sales-stats"]]} />
         <Button
           variant="outline"
           size="sm"
@@ -249,17 +251,17 @@ function CabinPage() {
 
       {isLoading ? (
         <div className="text-center py-16 text-muted-foreground">جارٍ التحميل...</div>
-      ) : (rows?.length ?? 0) === 0 ? (
+      ) : (rows?.filter((r) => r.available > 0).length ?? 0) === 0 ? (
         <div className="text-center py-16 space-y-3">
           <PackageOpen className="h-10 w-10 mx-auto text-muted-foreground" />
-          <div className="text-muted-foreground">لا توجد كروت في كبينتك بعد.</div>
+          <div className="text-muted-foreground">لا توجد كروت متاحة في كبينتك.</div>
           <div className="text-xs text-muted-foreground">
             اذهب إلى الشبكات واطلب كروت من المدير.
           </div>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rows!.map((r) => {
+          {rows!.filter((r) => r.available > 0).map((r) => {
             const noStock = r.available === 0;
             return (
               <Card
