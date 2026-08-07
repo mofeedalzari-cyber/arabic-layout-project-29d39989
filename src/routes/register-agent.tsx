@@ -186,6 +186,7 @@ function AgentRegisterPage() {
           </form>
         </div>
         <AuthFooter />
+        <AuthCopyright />
       </AuthCard>
     </AuthShell>
   );

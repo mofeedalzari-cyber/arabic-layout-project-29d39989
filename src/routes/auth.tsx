@@ -256,6 +256,7 @@ function AuthPage() {
         </div>
 
         <AuthFooter />
+        <AuthCopyright />
       </AuthCard>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

@@ -178,6 +178,7 @@ function NetworkRegisterPage() {
           </form>
         </div>
         <AuthFooter />
+        <AuthCopyright />
       </AuthCard>
     </AuthShell>
   );
