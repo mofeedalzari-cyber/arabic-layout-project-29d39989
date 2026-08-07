@@ -143,167 +143,109 @@ function AdminDashboard() {
   );
 }
 
+type DashPkg = {
+  package_id: string;
+  pkg: string;
+  price: number;
+  total: number;
+  sold: number;
+  withdrawn: number;
+  remaining: number;
+  value: number;
+};
+type DashHolding = {
+  agent_id: string;
+  agent: string | null;
+  phone: string | null;
+  pkg: string | null;
+  price: number;
+  holding: number;
+};
+type DashAgent = {
+  id: string;
+  username: string;
+  full_name: string | null;
+  phone: string | null;
+  is_active: boolean;
+};
+type DashData = {
+  currency?: string;
+  network_name?: string;
+  packages: DashPkg[];
+  agent_holdings: DashHolding[];
+  agents: DashAgent[];
+  summary: {
+    total: number;
+    sold: number;
+    remaining: number;
+    salesValue: number;
+    debts: number;
+    collected: number;
+    settled: number;
+    agentsCount: number;
+  };
+};
+
 function AdminBreakdowns() {
-  const { data: networks } = useQuery({
-    queryKey: ["dash-networks"],
-    queryFn: async () => (await supabase.from("networks").select("id, name, currency")).data ?? [],
-  });
-  const { data: packages } = useQuery({
-    queryKey: ["dash-packages"],
-    queryFn: async () =>
-      (await supabase.from("packages").select("id, name, price, network_id")).data ?? [],
-  });
-  const { data: cards } = useQuery({
-    queryKey: ["dash-cards"],
-    queryFn: async () =>
-      (await supabase.from("cards").select("id, status, package_id, network_id, assigned_to"))
-        .data ?? [],
-  });
-  const { data: sales } = useQuery({
-    queryKey: ["dash-sales-all"],
+  // استعلام واحد مُجمَّع على السيرفر بدل تنزيل آلاف الكروت والمبيعات للجهاز
+  const { data } = useQuery({
+    queryKey: ["dash-breakdown"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("sales")
-        .select("agent_id, agent_username, package_id, network_id, price, card_id, is_external");
-      // الإحصائيات خاصة بالكروت المباعة من داخل التطبيق فقط
-      return (data ?? []).filter((s: any) => !s.is_external && s.card_id);
+      const { data, error } = await supabase.rpc("dashboard_breakdown" as any);
+      if (error) throw error;
+      return data as unknown as DashData;
     },
-  });
-  const { data: paymentsCollected } = useQuery({
-    queryKey: ["dash-payments-collected"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("card_requests")
-        .select("paid_amount")
-        .eq("status", "APPROVED");
-      return (data ?? []).reduce((s, r: any) => s + Number(r.paid_amount || 0), 0);
-    },
-  });
-  const { data: paymentsSettled } = useQuery({
-    queryKey: ["dash-payments-settled"],
-    queryFn: async () => {
-      const { data } = await supabase.from("request_payments").select("amount");
-      return (data ?? []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
-    },
-  });
-  const { data: agents } = useQuery({
-    queryKey: ["dash-agents"],
-    queryFn: async () => {
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "agent");
-      const ids = roles?.map((r) => r.user_id) ?? [];
-      if (!ids.length) return [];
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, username, full_name, phone, is_active")
-        .in("id", ids)
-        .order("full_name");
-      return data ?? [];
-    },
+    staleTime: 60_000,
   });
 
-  const netMap = useMemo(() => new Map(networks?.map((n) => [n.id, n]) ?? []), [networks]);
-  const pkgMap = useMemo(() => new Map(packages?.map((p) => [p.id, p]) ?? []), [packages]);
-  const agentMap = useMemo(() => new Map(agents?.map((a) => [a.id, a]) ?? []), [agents]);
+  const currency = data?.currency;
+  const agents = data?.agents ?? [];
 
-  const salesByPkg = useMemo(() => {
-    const m = new Map<
-      string,
-      {
-        network: string;
-        pkg: string;
-        total: number;
-        sold: number;
-        withdrawn: number;
-        remaining: number;
-        value: number;
-        currency?: string;
-      }
-    >();
-    (packages ?? []).forEach((p) => {
-      const net = netMap.get(p.network_id);
-      m.set(p.id, {
-        network: net?.name ?? "—",
-        pkg: p.name,
-        total: 0,
-        sold: 0,
-        withdrawn: 0,
-        remaining: 0,
-        value: 0,
-        currency: net?.currency,
-      });
-    });
-    (cards ?? []).forEach((c) => {
-      const row = m.get(c.package_id);
-      if (!row) return;
-      row.total++;
-      if (c.status === "SOLD") row.sold++;
-      else if (c.status === "ASSIGNED") row.withdrawn++;
-      else if (c.status === "AVAILABLE") row.remaining++;
-    });
-    (sales ?? []).forEach((s) => {
-      const row = m.get(s.package_id);
-      if (row) row.value += Number(s.price || 0);
-    });
-    return Array.from(m.values()).sort((a, b) => b.sold - a.sold);
-  }, [packages, cards, sales, netMap]);
+  const salesByPkg = useMemo(
+    () =>
+      (data?.packages ?? []).map((p) => ({
+        network: data?.network_name ?? "—",
+        pkg: p.pkg,
+        total: Number(p.total || 0),
+        sold: Number(p.sold || 0),
+        withdrawn: Number(p.withdrawn || 0),
+        remaining: Number(p.remaining || 0),
+        value: Number(p.value || 0),
+        currency,
+      })),
+    [data, currency],
+  );
 
   const summary = useMemo(() => {
-    const list = cards ?? [];
-    const total = list.length;
-    const sold = list.filter((c) => c.status === "SOLD").length;
-    const remaining = list.filter((c) => c.status === "AVAILABLE").length;
-    const salesValue = (sales ?? []).reduce((s, r) => s + Number(r.price || 0), 0);
-    const debts = list.reduce((s, c) => {
-      if (c.status !== "ASSIGNED") return s;
-      const p = pkgMap.get(c.package_id);
-      return s + (p ? Number(p.price) : 0);
-    }, 0);
+    const s = data?.summary;
     return {
-      total,
-      sold,
-      remaining,
-      salesValue,
-      debts,
-      collected: paymentsCollected ?? 0,
-      settled: paymentsSettled ?? 0,
-      agentsCount: agents?.length ?? 0,
+      total: Number(s?.total ?? 0),
+      sold: Number(s?.sold ?? 0),
+      remaining: Number(s?.remaining ?? 0),
+      salesValue: Number(s?.salesValue ?? 0),
+      debts: Number(s?.debts ?? 0),
+      collected: Number(s?.collected ?? 0),
+      settled: Number(s?.settled ?? 0),
+      agentsCount: Number(s?.agentsCount ?? 0),
     };
-  }, [cards, sales, pkgMap, agents, paymentsCollected, paymentsSettled]);
+  }, [data]);
 
-  const agentStats = useMemo(() => {
-    type Row = {
-      agentId: string;
-      agent: string;
-      phone: string;
-      pkg: string;
-      price: number;
-      currency?: string;
-      holding: number;
-    };
-    const m = new Map<string, Row>();
-    (cards ?? []).forEach((c) => {
-      if (c.status !== "ASSIGNED" || !c.assigned_to) return;
-      const key = `${c.assigned_to}::${c.package_id}`;
-      const pkg = pkgMap.get(c.package_id);
-      const net = netMap.get(c.network_id);
-      const ag = agentMap.get(c.assigned_to);
-      const cur = m.get(key) ?? {
-        agentId: c.assigned_to,
-        agent: ag?.full_name || displayPhone((ag as any)?.phone, ag?.username),
-        phone: displayPhone((ag as any)?.phone, ag?.username),
-        pkg: pkg?.name ?? "—",
-        price: pkg ? Number(pkg.price) : 0,
-        currency: net?.currency,
-        holding: 0,
-      };
-      cur.holding++;
-      m.set(key, cur);
-    });
-    return Array.from(m.values()).sort((a, b) => a.agent.localeCompare(b.agent));
-  }, [cards, pkgMap, netMap, agentMap]);
+  const agentStats = useMemo(
+    () =>
+      (data?.agent_holdings ?? [])
+        .map((h) => ({
+          agentId: h.agent_id,
+          agent: h.agent || displayPhone(h.phone, h.agent ?? "") || "—",
+          phone: displayPhone(h.phone, "") || "—",
+          pkg: h.pkg ?? "—",
+          price: Number(h.price || 0),
+          currency,
+          holding: Number(h.holding || 0),
+        }))
+        .sort((a, b) => a.agent.localeCompare(b.agent)),
+    [data, currency],
+  );
+
 
   const buildExportData = (): { summary: SummaryRow[]; sections: TableSection[] } => {
     const sumRows: SummaryRow[] = [
