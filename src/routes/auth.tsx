@@ -86,53 +86,68 @@ function AuthPage() {
     if (!p.success) return toast.error(p.error.issues[0].message);
 
     setBusy(true);
-    const digits = identifier.replace(/\D/g, "");
-    const loginName = digits
-      ? `u${digits}`.slice(0, 30)
-      : /^[a-zA-Z0-9._-]{3,30}$/.test(identifier)
-        ? identifier
-        : null;
-    if (!loginName) {
-      setBusy(false);
-      return toast.error("رقم الجوال غير صحيح");
-    }
+    try {
+      const digits = identifier.replace(/\D/g, "");
+      let loginName: string | null = null;
 
-    const { data: signIn, error } = await supabase.auth.signInWithPassword({
-      email: usernameToEmail(loginName),
-      password: p.data,
-    });
-    if (error || !signIn.user) {
-      setBusy(false);
-      return toast.error("رقم الجوال أو كلمة المرور غير صحيحة");
-    }
+      if (digits) {
+        const { data, error: lookupError } = await (supabase.rpc as any)(
+          "username_from_phone",
+          { _phone: digits },
+        );
+        if (lookupError) throw lookupError;
+        loginName = typeof data === "string" && data ? data : null;
+      } else if (/^[a-zA-Z0-9._-]{3,30}$/.test(identifier)) {
+        loginName = identifier;
+      }
 
-    const { data: roles, error: rolesErr } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", signIn.user.id);
-    if (rolesErr) {
-      setBusy(false);
-      return toast.error("تعذر التحقق من نوع الحساب، أعد المحاولة");
-    }
-    const has = (r: string) => !!roles?.some((x) => x.role === r);
-    const allowed = has("superadmin")
-      ? true
-      : accountType === "agent"
-        ? has("agent")
-        : has("admin");
-    if (!allowed) {
-      await supabase.auth.signOut({ scope: "local" });
-      setBusy(false);
-      return toast.error(
-        accountType === "agent"
-          ? "هذا الحساب ليس حساب مندوب توزيع، اختر «وكيل / مدير شبكة»"
-          : "هذا الحساب ليس حساب مدير شبكة، اختر «مندوب توزيع»",
-      );
-    }
+      if (!loginName) {
+        toast.error("رقم الجوال أو كلمة المرور غير صحيحة");
+        return;
+      }
 
-    setBusy(false);
-    toast.success("تم تسجيل الدخول");
-    navigate({ to: "/app" });
+      const { data: signIn, error } = await supabase.auth.signInWithPassword({
+        email: usernameToEmail(loginName),
+        password: p.data,
+      });
+      if (error || !signIn.user) {
+        toast.error("رقم الجوال أو كلمة المرور غير صحيحة");
+        return;
+      }
+
+      const { data: roles, error: rolesErr } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", signIn.user.id);
+      if (rolesErr) {
+        await supabase.auth.signOut({ scope: "local" });
+        toast.error("تعذر التحقق من نوع الحساب، أعد المحاولة");
+        return;
+      }
+      const has = (r: string) => !!roles?.some((x) => x.role === r);
+      const allowed = has("superadmin")
+        ? true
+        : accountType === "agent"
+          ? has("agent")
+          : has("admin");
+      if (!allowed) {
+        await supabase.auth.signOut({ scope: "local" });
+        toast.error(
+          accountType === "agent"
+            ? "هذا الحساب ليس حساب مندوب توزيع، اختر «وكيل / مدير شبكة»"
+            : "هذا الحساب ليس حساب مدير شبكة، اختر «مندوب توزيع»",
+        );
+        return;
+      }
+
+      toast.success("تم تسجيل الدخول");
+      navigate({ to: "/app" });
+    } catch (error) {
+      console.error("[auth] login failed", error);
+      toast.error("تعذر تسجيل الدخول، تحقق من الاتصال ثم أعد المحاولة");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleForgot(e: React.FormEvent) {
