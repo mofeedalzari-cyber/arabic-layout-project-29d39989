@@ -38,7 +38,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
 export function AuthCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-[26px] shadow-[0_10px_36px_-18px_rgba(16,24,40,0.18)] border border-gray-100 px-5 sm:px-6 py-6 flex flex-col min-h-[calc(100dvh-32px)] md:min-h-[560px] mb-3">
+    <div className="w-full max-w-md mx-auto bg-white rounded-[26px] shadow-[0_10px_36px_-18px_rgba(16,24,40,0.18)] border border-gray-100 px-5 sm:px-6 py-6 flex flex-col min-h-[480px] md:min-h-[560px] mb-3">
       {children}
     </div>
   );
