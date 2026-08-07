@@ -198,6 +198,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           await supabase.auth.signOut({ scope: "local" });
           await clearNativeAuthStorage();
+          const { clearLocalDB } = await import("@/lib/local-db");
+          await clearLocalDB();
         } catch (e) {
           console.error("[auth] signOut failed", e);
         }
