@@ -229,7 +229,8 @@ function CabinPage() {
     <>
       <PageHeader title="كبينة البيع" description="الكروت المُخصّصة لك — جاهزة للبيع" />
 
-      <div className="mb-3 flex justify-end">
+      <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+        <RefreshButton queryKeys={[["agent-cabin"], ["sales"], ["my-sales-stats"]]} />
         <Button
           variant="outline"
           size="sm"

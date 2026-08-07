@@ -211,8 +211,8 @@ function CardsPageInner() {
           </div>
         </div>
 
-        <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="mb-4">
-          <TabsList dir="rtl" className="rounded-xl">
+        <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="mb-4" dir="rtl">
+          <TabsList dir="rtl" className="rounded-xl flex-row">
             <TabsTrigger value="user_pass" className="rounded-lg">
               مستخدم | كلمة مرور
             </TabsTrigger>
@@ -220,11 +220,19 @@ function CardsPageInner() {
               مستخدم فقط
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="user_pass" className="text-xs text-muted-foreground mt-2">
-            كل سطر: <code className="bg-muted px-1.5 py-0.5 rounded">3852557443|1234</code> — يدعم
-            أيضًا الفواصل: <code>,</code> أو <code>tab</code>.
+          <TabsContent
+            value="user_pass"
+            dir="rtl"
+            className="text-xs text-muted-foreground mt-2 text-right"
+          >
+            كل سطر: <code className="bg-muted px-1.5 py-0.5 rounded" dir="ltr">3852557443|1234</code> — يدعم
+            أيضًا الفواصل: <code dir="ltr">,</code> أو <code dir="ltr">tab</code>.
           </TabsContent>
-          <TabsContent value="user_only" className="text-xs text-muted-foreground mt-2">
+          <TabsContent
+            value="user_only"
+            dir="rtl"
+            className="text-xs text-muted-foreground mt-2 text-right"
+          >
             كل سطر يمثل اسم مستخدم فقط.
           </TabsContent>
         </Tabs>

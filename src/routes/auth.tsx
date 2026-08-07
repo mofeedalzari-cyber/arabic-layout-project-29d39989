@@ -183,7 +183,7 @@ function AuthPage() {
   return (
     <div
       dir="rtl"
-      className="min-h-dvh bg-gradient-to-b from-[#eaf7ef] to-[#d7f0e2] flex flex-col overflow-x-hidden"
+      className="h-dvh overflow-y-auto overscroll-contain bg-gradient-to-b from-[#eaf7ef] to-[#d7f0e2] flex flex-col overflow-x-hidden"
       style={{
         paddingTop: "max(1rem, env(safe-area-inset-top))",
         paddingBottom: "calc(env(safe-area-inset-bottom) + 24px)",
