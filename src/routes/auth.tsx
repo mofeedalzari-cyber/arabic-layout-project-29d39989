@@ -647,7 +647,7 @@ function SoftInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <Input
       {...rest}
-      className={`h-14 rounded-2xl bg-gray-100 border-0 text-right text-base placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-teal-600 px-4 ${className}`}
+      className={`h-14 rounded-2xl bg-[#eceeed] border-0 text-right text-base text-gray-800 placeholder:text-gray-600 focus-visible:ring-2 focus-visible:ring-[#0f766e] px-4 ${className}`}
     />
   );
 }
