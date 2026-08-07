@@ -246,7 +246,6 @@ function AdminBreakdowns() {
     [data, currency],
   );
 
-
   const buildExportData = (): { summary: SummaryRow[]; sections: TableSection[] } => {
     const sumRows: SummaryRow[] = [
       { label: "إجمالي الكروت المُضافة", value: summary.total },
