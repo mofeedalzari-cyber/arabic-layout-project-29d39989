@@ -313,7 +313,7 @@ function AuthPage() {
                     لا تملك حساب ؟{" "}
                     <button
                       type="button"
-                      onClick={() => setMode("register")}
+                      onClick={() => setSheetOpen(true)}
                       className="text-[#0f766e] font-bold underline underline-offset-4"
                     >
                       انقر هنا لإنشاء حساب
