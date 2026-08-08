@@ -44,18 +44,69 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+// --- Security headers (OWASP hardening) ---------------------------------
+// Applied to every response. CSP is only attached to HTML documents so that
+// static assets / API JSON responses are not affected.
+const CSP = [
+  "default-src 'self'",
+  // Vite/TanStack inject inline bootstrap + JSON-LD scripts.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "media-src 'self' data: blob:",
+  "worker-src 'self' blob:",
+  "connect-src 'self' https: wss:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  // Clickjacking protection (modern replacement for X-Frame-Options);
+  // the Lovable editor preview needs to embed the app.
+  "frame-ancestors 'self' https://*.lovable.app https://*.lovable.dev https://lovable.dev",
+  "upgrade-insecure-requests",
+].join("; ");
+
+function withSecurityHeaders(response: Response): Response {
+  const headers = new Headers(response.headers);
+  const isHtml = (headers.get("content-type") ?? "").includes("text/html");
+
+  if (isHtml && !headers.has("content-security-policy")) {
+    headers.set("content-security-policy", CSP);
+  }
+  headers.set("x-content-type-options", "nosniff");
+  headers.set("referrer-policy", "strict-origin-when-cross-origin");
+  headers.set(
+    "permissions-policy",
+    "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=()",
+  );
+  headers.set("cross-origin-opener-policy", "same-origin");
+  headers.set("strict-transport-security", "max-age=31536000; includeSubDomains");
+  headers.set("x-permitted-cross-domain-policies", "none");
+  // Do not disclose server/runtime details.
+  headers.delete("server");
+  headers.delete("x-powered-by");
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
-      return new Response(renderErrorPage(), {
-        status: 500,
-        headers: { "content-type": "text/html; charset=utf-8" },
-      });
+      return withSecurityHeaders(
+        new Response(renderErrorPage(), {
+          status: 500,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        }),
+      );
     }
   },
 };
