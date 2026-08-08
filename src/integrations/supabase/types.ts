@@ -281,6 +281,30 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempts: number
+          first_attempt_at: string
+          last_attempt_at: string
+          locked_until: string | null
+          phone_key: string
+        }
+        Insert: {
+          attempts?: number
+          first_attempt_at?: string
+          last_attempt_at?: string
+          locked_until?: string | null
+          phone_key: string
+        }
+        Update: {
+          attempts?: number
+          first_attempt_at?: string
+          last_attempt_at?: string
+          locked_until?: string | null
+          phone_key?: string
+        }
+        Relationships: []
+      }
       logs: {
         Row: {
           action: string
@@ -967,6 +991,11 @@ export type Database = {
           id: string
           name: string
         }[]
+      }
+      login_guard_check: { Args: { _phone: string }; Returns: number }
+      login_guard_record: {
+        Args: { _ok: boolean; _phone: string }
+        Returns: number
       }
       my_orders: {
         Args: never
