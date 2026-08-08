@@ -81,14 +81,36 @@ function AuthPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    const identifier = loginPhone.trim();
+    const identifier = sanitizeText(loginPhone, 40);
     const p = passwordSchema.safeParse(loginP);
     if (!identifier) return toast.error("أدخل رقم الجوال");
     if (!p.success) return toast.error(p.error.issues[0].message);
 
     setBusy(true);
     try {
-      const digits = identifier.replace(/\D/g, "");
+      const digits = sanitizeDigits(identifier);
+
+      // Brute-force guard: server-side lockout after repeated failures.
+      if (digits) {
+        const { data: lock } = await (supabase.rpc as any)("login_guard_check", {
+          _phone: digits,
+        });
+        const secs = typeof lock === "number" ? lock : 0;
+        if (secs > 0) {
+          toast.error(
+            `تم إيقاف المحاولات مؤقتًا بسبب محاولات دخول خاطئة. أعد المحاولة بعد ${Math.ceil(secs / 60)} دقيقة`,
+          );
+          return;
+        }
+      }
+
+      const fail = async (message: string) => {
+        if (digits) {
+          await (supabase.rpc as any)("login_guard_record", { _phone: digits, _ok: false });
+        }
+        toast.error(message);
+      };
+
       let loginName: string | null = null;
 
       if (digits) {
@@ -103,7 +125,7 @@ function AuthPage() {
       }
 
       if (!loginName) {
-        toast.error("رقم الجوال أو كلمة المرور غير صحيحة");
+        await fail("رقم الجوال أو كلمة المرور غير صحيحة");
         return;
       }
 
@@ -112,7 +134,7 @@ function AuthPage() {
         password: p.data,
       });
       if (error || !signIn.user) {
-        toast.error("رقم الجوال أو كلمة المرور غير صحيحة");
+        await fail("رقم الجوال أو كلمة المرور غير صحيحة");
         return;
       }
 
@@ -141,9 +163,13 @@ function AuthPage() {
         return;
       }
 
+      if (digits) {
+        await (supabase.rpc as any)("login_guard_record", { _phone: digits, _ok: true });
+      }
       toast.success("تم تسجيل الدخول");
       navigate({ to: "/app" });
     } catch (error) {
+      // Never surface raw system/DB errors to the user.
       console.error("[auth] login failed", error);
       toast.error("تعذر تسجيل الدخول، تحقق من الاتصال ثم أعد المحاولة");
     } finally {
