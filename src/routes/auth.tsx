@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeText, sanitizeDigits } from "@/lib/sanitize";
 import { useAuth, usernameToEmail } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import {
