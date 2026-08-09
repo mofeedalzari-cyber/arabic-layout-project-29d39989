@@ -8,6 +8,8 @@ const config: CapacitorConfig = {
     url: "https://arabic-layout-project.onrender.com", // 🔑 يبقى كما هو
     androidScheme: "https",
     cleartext: false,
+    // صفحة محلية تُعرض بدل الشاشة السوداء / خطأ الشبكة عند انقطاع الإنترنت
+    errorPath: "offline.html",
     allowNavigation: [
       "arabic-layout-project.onrender.com",
       "*.onrender.com",
