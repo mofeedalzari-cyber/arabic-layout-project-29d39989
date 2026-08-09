@@ -3,7 +3,7 @@
  * - CacheFirst for hashed static assets.
  * - Skips non-GET and cross-origin (Supabase / API) requests.
  */
-const VERSION = 'karti-v3';
+const VERSION = 'karti-v4';
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const SHELL_URLS = [
@@ -18,11 +18,14 @@ const SHELL_URLS = [
   '/app/customers',
   '/app/payments',
   '/app/agents',
+  '/app/networks',
   '/app/requests',
   '/app/settings',
+  '/offline.html',
   '/manifest.webmanifest',
   '/favicon.ico',
 ];
+
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
