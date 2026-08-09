@@ -28,6 +28,31 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// ذاكرة محلية لبيانات الحساب حتى يفتح التطبيق بدون إنترنت
+const ACCOUNT_CACHE_PREFIX = "app.account.v1.";
+type CachedAccount = { profile: Profile; role: Role | null; isSuperadmin: boolean };
+
+const isOffline = () => typeof navigator !== "undefined" && navigator.onLine === false;
+
+function readAccountCache(uid: string): CachedAccount | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(ACCOUNT_CACHE_PREFIX + uid);
+    return raw ? (JSON.parse(raw) as CachedAccount) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeAccountCache(uid: string, account: CachedAccount) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(ACCOUNT_CACHE_PREFIX + uid, JSON.stringify(account));
+  } catch {
+    /* ignore */
+  }
+}
+
 // Convert username -> synthetic internal email
 export const usernameToEmail = (u: string) =>
   `${u
@@ -87,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Retries transient failures (flaky mobile networks / cold start) instead of
   // silently leaving profile=null, which used to render an endless "loading" UI.
   const loadProfile = async (uid: string, attempts = 5) => {
+    if (isOffline()) throw new Error("OFFLINE");
     let lastErr: unknown = null;
     for (let i = 0; i < attempts; i++) {
       try {
@@ -122,22 +148,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Keep the account gate in its loading state until both the profile and
       // role are available. Previously loading ended after getSession(), so the
       // app rendered the failure screen while these successful queries ran.
-      setLoading(true);
+      const uid = nextSession.user.id;
+      const cached = readAccountCache(uid);
+      if (cached) {
+        // نفتح التطبيق فوراً من البيانات المحفوظة (يعمل بدون إنترنت)
+        setProfile(cached.profile);
+        setRole(cached.role);
+        setIsSuperadmin(cached.isSuperadmin);
+        setProfileError(null);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       setProfileError(null);
       try {
-        const account = await loadProfile(nextSession.user.id);
+        const account = await loadProfile(uid);
         if (!mounted || requestId !== hydrationId.current) return;
         setProfile(account.profile);
         setRole(account.role);
         setIsSuperadmin(account.isSuperadmin);
         setProfileError(null);
+        writeAccountCache(uid, account);
         hydratedToken.current = nextSession.access_token;
       } catch (error) {
         if (!mounted || requestId !== hydrationId.current) return;
         console.error("[auth] profile hydration failed", error);
+        // بدون إنترنت أو فشل مؤقت: نكمل بالبيانات المحفوظة بدون شاشة خطأ
+        if (cached) {
+          if (mounted && requestId === hydrationId.current) setLoading(false);
+          return;
+        }
         const message = error instanceof Error ? error.message : "";
         setProfileError(
-          message && message !== "PROFILE_NOT_READY"
+          message && message !== "PROFILE_NOT_READY" && message !== "OFFLINE"
             ? message
             : "تعذر تحميل بيانات الحساب، أعد المحاولة.",
         );
@@ -170,8 +213,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })();
 
+    // عند عودة الإنترنت نُحدّث بيانات الحساب بهدوء
+    const onOnline = () => {
+      void (async () => {
+        const { data } = await supabase.auth.getSession();
+        if (mounted) await hydrateSession(data.session);
+      })();
+    };
+    if (typeof window !== "undefined") window.addEventListener("online", onOnline);
+
     return () => {
       mounted = false;
+      if (typeof window !== "undefined") window.removeEventListener("online", onOnline);
       sub.subscription.unsubscribe();
     };
   }, []);
@@ -207,7 +260,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (typeof window !== "undefined") {
           try {
             Object.keys(window.localStorage)
-              .filter((k) => k.startsWith("sb-") || k.includes("supabase"))
+              .filter(
+                (k) =>
+                  k.startsWith("sb-") ||
+                  k.includes("supabase") ||
+                  k.startsWith(ACCOUNT_CACHE_PREFIX),
+              )
               .forEach((k) => window.localStorage.removeItem(k));
           } catch {}
           // Hard reload to /auth so no cached protected state remains
@@ -224,6 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRole(account.role);
           setIsSuperadmin(account.isSuperadmin);
           setProfileError(null);
+          writeAccountCache(user.id, account);
         } catch (error) {
           const message = error instanceof Error ? error.message : "";
           setProfileError(
