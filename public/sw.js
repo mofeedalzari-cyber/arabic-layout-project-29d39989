@@ -3,7 +3,7 @@
  * - CacheFirst for hashed static assets.
  * - Skips non-GET and cross-origin (Supabase / API) requests.
  */
-const VERSION = 'karti-v3';
+const VERSION = 'karti-v4';
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const SHELL_URLS = [
@@ -18,11 +18,14 @@ const SHELL_URLS = [
   '/app/customers',
   '/app/payments',
   '/app/agents',
+  '/app/networks',
   '/app/requests',
   '/app/settings',
+  '/offline.html',
   '/manifest.webmanifest',
   '/favicon.ico',
 ];
+
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -68,14 +71,32 @@ self.addEventListener('fetch', (event) => {
   if (req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       (async () => {
+        const cache = await caches.open(SHELL_CACHE);
+        const fallback = async () =>
+          (await cache.match(req, { ignoreSearch: true })) ||
+          (await cache.match('/app')) ||
+          (await cache.match('/')) ||
+          (await cache.match('/offline.html'));
         try {
-          const fresh = await fetch(req);
-          const cache = await caches.open(SHELL_CACHE);
+          // مهلة قصيرة: إن كان الإنترنت ضعيفاً جداً نفتح النسخة المحفوظة فوراً
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 6000);
+          let fresh;
+          try {
+            fresh = await fetch(req, { signal: controller.signal });
+          } finally {
+            clearTimeout(timer);
+          }
+          if (!fresh || !fresh.ok) {
+            const cached = await fallback();
+            if (cached) return cached;
+          }
           cache.put(req, fresh.clone()).catch(() => {});
+          // نحفظ نسخة كقاعدة احتياطية عامة للتنقل داخل التطبيق
+          cache.put('/app', fresh.clone()).catch(() => {});
           return fresh;
         } catch {
-          const cache = await caches.open(SHELL_CACHE);
-          const cached = (await cache.match(req)) || (await cache.match('/')) || (await cache.match('/app'));
+          const cached = await fallback();
           if (cached) return cached;
           return new Response(
             '<!doctype html><meta charset="utf-8"><title>غير متصل</title><body style="font-family:system-ui;padding:24px;text-align:center" dir="rtl"><h1>لا يوجد اتصال</h1><p>سيتم استئناف العمل تلقائياً عند عودة الإنترنت.</p></body>',
@@ -84,6 +105,7 @@ self.addEventListener('fetch', (event) => {
         }
       })(),
     );
+
     return;
   }
 

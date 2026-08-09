@@ -48,9 +48,9 @@ export function registerServiceWorker(): void {
     return;
   }
 
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((err) => {
-      console.warn("[sw] registration failed:", err);
-    });
+  // نسجّل مباشرة (بدون انتظار load) حتى يتوفر التخزين المؤقت من أول زيارة
+  navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((err) => {
+    console.warn("[sw] registration failed:", err);
   });
+
 }
