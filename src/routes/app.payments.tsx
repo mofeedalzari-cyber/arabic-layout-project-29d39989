@@ -134,9 +134,8 @@ function PaymentsPageInner() {
   const [deleteRow, setDeleteRow] = useState<any | null>(null);
 
   const invalidateAll = () => {
-    qc.invalidateQueries({ queryKey: ["pay-debt"] });
-    qc.invalidateQueries({ queryKey: ["pay-history"] });
-    qc.invalidateQueries({ queryKey: ["card-requests"] });
+      for (const k of ["pay-debt", "pay-history", "card-requests", "requests", "payments", "request-payments", "agent-stats-full", "aa-paid-requests", "agent-cabin", "dash-breakdown"])
+        qc.invalidateQueries({ queryKey: [k] });
     refetchDebt();
     refetchHistory();
   };
@@ -228,8 +227,8 @@ function PaymentsPageInner() {
         adminName: profile?.full_name || profile?.username || "المدير",
       });
       setLastSettled({ applied: r.applied, remaining: r.remaining_debt, agentId });
-      qc.invalidateQueries({ queryKey: ["pay-debt"] });
-      qc.invalidateQueries({ queryKey: ["card-requests"] });
+      for (const k of ["pay-debt", "pay-history", "card-requests", "requests", "payments", "request-payments", "agent-stats-full", "aa-paid-requests", "agent-cabin", "dash-breakdown"])
+        qc.invalidateQueries({ queryKey: [k] });
       refetchDebt();
       setAmount("");
       setNote("");
