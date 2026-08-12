@@ -505,7 +505,7 @@ export function AgentStats({
         .eq("agent_id", agentId);
       if (fromDate) salesQ = salesQ.gte("sold_at", new Date(fromDate + "T00:00:00").toISOString());
       if (toDate) salesQ = salesQ.lte("sold_at", new Date(toDate + "T23:59:59.999").toISOString());
-      const [cardsRes, salesRes, reqRes] = await Promise.all([
+      const [cardsRes, salesRes, reqRes, settlementLogsRes] = await Promise.all([
         supabase
           .from("cards")
           .select(
@@ -518,14 +518,25 @@ export function AgentStats({
           .select("id, network_id, network_name, total_value, paid_amount, status")
           .eq("agent_id", agentId)
           .eq("status", "APPROVED"),
+        supabase
+          .from("logs")
+          .select("metadata")
+          .eq("action", "SETTLE_AGENT_DEBT")
+          .eq("entity", "profile")
+          .eq("entity_id", agentId),
       ]);
       if (cardsRes.error) throw cardsRes.error;
       if (salesRes.error) throw salesRes.error;
       if (reqRes.error) throw reqRes.error;
+      if (settlementLogsRes.error) throw settlementLogsRes.error;
 
       const cards = (cardsRes.data ?? []) as any[];
       const sales = salesRes.data ?? [];
       const requests = reqRes.data ?? [];
+      const historicalPaid = (settlementLogsRes.data ?? []).reduce(
+        (sum, row) => sum + Number((row.metadata as { applied?: number } | null)?.applied ?? 0),
+        0,
+      );
 
       const pkgMap = new Map<string, PkgRow>();
       for (const c of cards) {
@@ -611,11 +622,11 @@ export function AgentStats({
         { network_id: string; name: string; amount: number; paid: number }
       >();
       let totalDebt = 0;
-      let totalPaid = 0;
+      let currentPaid = 0;
       for (const r of requests) {
         const paid = Number(r.paid_amount ?? 0);
         const remaining = Math.max(0, Number(r.total_value ?? 0) - paid);
-        totalPaid += paid;
+        currentPaid += paid;
         const cur = debtByNet.get(r.network_id) ?? {
           network_id: r.network_id,
           name: r.network_name ?? "—",
@@ -626,6 +637,15 @@ export function AgentStats({
         cur.paid += paid;
         debtByNet.set(r.network_id, cur);
         totalDebt += remaining;
+      }
+
+      // Resetting the network balance intentionally clears paid_amount from active
+      // requests. Settlement logs remain immutable, so use them for the lifetime
+      // "total paid" metric while retaining current request payments as a fallback.
+      const totalPaid = Math.max(historicalPaid, currentPaid);
+      if (historicalPaid > currentPaid && debtByNet.size > 0) {
+        const firstNetwork = debtByNet.values().next().value;
+        if (firstNetwork) firstNetwork.paid += historicalPaid - currentPaid;
       }
 
       return {
