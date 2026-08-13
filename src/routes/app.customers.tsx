@@ -501,7 +501,27 @@ function CustomersPage() {
           price: Number(s.price) || 0,
         }));
 
-      const total = custSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+      const salesTotal = custSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+
+      // سجل التسديدات والمبالغ المضافة لهذا الزبون
+      const custLedger = (payments ?? [])
+        .filter((p) => p.customer_id === c.id)
+        .slice()
+        .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
+        .map((p) => {
+          const d = new Date(p.created_at);
+          return {
+            amount: Number(p.amount) || 0,
+            note: p.note || (Number(p.amount) < 0 ? "مبلغ مضاف" : "تسديد"),
+            dateStr: `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`,
+          };
+        });
+      const chargesTotal = custLedger
+        .filter((e) => e.amount < 0)
+        .reduce((a, e) => a + Math.abs(e.amount), 0);
+      const paidTotal = custLedger.filter((e) => e.amount > 0).reduce((a, e) => a + e.amount, 0);
+      const total = salesTotal + chargesTotal;
+      const balance = Math.max(total - paidTotal, 0);
 
       // Arabic date d/m/yyyy
       const now = new Date();
@@ -511,9 +531,10 @@ function CustomersPage() {
         `الأخ/  الكريم\n\n` +
         `${c.name}\n\n` +
         `التاريخ : ${dateStr}\n\n` +
-        `نود أن نبلغكم أنه  حسابكم  هو  مبلغ وقدره   ${fmtMoney(total)}.\n\n` +
+        `إجمالي المستحق : ${fmtMoney(total)}\n` +
+        `إجمالي المسدد : ${fmtMoney(paidTotal)}\n\n` +
         `*(فاتورة بيع آجـــل)*\n\n` +
-        `الرصيد عليكم ${fmtMoney(total)}.\n\n` +
+        `الرصيد عليكم ${fmtMoney(balance)}.\n\n` +
         `مع خالص التقدير والاحترام،\n\n` +
         `فريق ${networkName || "الشبكة"}`;
 
@@ -537,7 +558,7 @@ function CustomersPage() {
             qty: it.qty,
             price: it.price,
           })) as any,
-
+          ledger: custLedger,
           currency,
           dateStr,
         },
