@@ -95,6 +95,27 @@ function withSecurityHeaders(response: Response): Response {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const url = new URL(request.url);
+    if (
+      url.pathname === "/api/public/health" &&
+      (request.method === "GET" || request.method === "HEAD")
+    ) {
+      return withSecurityHeaders(
+        request.method === "HEAD"
+          ? new Response(null, {
+              status: 200,
+              headers: { "cache-control": "no-store" },
+            })
+          : Response.json(
+              { status: "ok" },
+              {
+                status: 200,
+                headers: { "cache-control": "no-store" },
+              },
+            ),
+      );
+    }
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
