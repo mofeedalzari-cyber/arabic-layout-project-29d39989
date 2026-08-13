@@ -121,6 +121,7 @@ function CustomersPage() {
   const [chargeQty, setChargeQty] = useState<string>("1");
   const [chargeCard, setChargeCard] = useState<string>("");
   const [chargeBusy, setChargeBusy] = useState(false);
+  const [sortMode, setSortMode] = useState<"newest" | "balance">("newest");
 
   async function handleAddCustomer() {
     const name = newName.trim();
@@ -297,8 +298,13 @@ function CustomersPage() {
           (c) => c.name.toLowerCase().includes(s) || (c.whatsapp ?? "").toLowerCase().includes(s),
         )
       : list;
+    if (sortMode === "newest") {
+      return filtered.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+    }
     return filtered.sort((a, b) => b.balance - a.balance);
-  }, [customers, statsByCustomer, paidByCustomer, chargesByCustomer, q]);
+  }, [customers, statsByCustomer, paidByCustomer, chargesByCustomer, q, sortMode]);
 
   const selectedSales = useMemo(
     () => (selected ? (sales ?? []).filter((s) => s.customer_id === selected.id) : []),
@@ -619,8 +625,8 @@ function CustomersPage() {
         />
       </div>
 
-      <div className="flex gap-2 mb-4 items-center">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex gap-2 mb-4 items-center flex-wrap">
+        <div className="relative flex-1 min-w-[140px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="بحث باسم أو رقم واتساب..."
@@ -629,6 +635,16 @@ function CustomersPage() {
             className="pr-9 rounded-xl"
           />
         </div>
+        <Select value={sortMode} onValueChange={(v) => setSortMode(v as any)}>
+          <SelectTrigger className="w-[150px] rounded-xl">
+            <ArrowUpDown className="h-4 w-4 ml-2 text-muted-foreground" />
+            <SelectValue placeholder="الترتيب" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">المضاف حديثاً</SelectItem>
+            <SelectItem value="balance">الرصيد</SelectItem>
+          </SelectContent>
+        </Select>
         <Button
           onClick={() => setAddOpen(true)}
           className="rounded-xl gradient-primary-bg text-white"
