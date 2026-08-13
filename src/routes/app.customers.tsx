@@ -377,45 +377,29 @@ function CustomersPage() {
       const cardNo = chargeCard.trim();
       const noteBase = chargeNote.trim();
 
-      if (pkg) {
-        // بيع خارجي: سجّله كعملية بيع حقيقية ليظهر في سجل المبيعات
-        const unitPrice = qty > 0 ? amount / qty : amount;
-        const { error } = await (supabase.rpc as any)("record_external_sale", {
-          _customer_id: chargeFor.id,
-          _package_id: pkg.id,
-          _quantity: qty,
-          _card_number: cardNo || null,
-          _unit_price: unitPrice,
-          _buyer_name: chargeFor.name,
-        });
-        if (error) {
-          toast.error("تعذر تسجيل البيع: " + error.message);
-          return;
-        }
-        toast.success(`تم تسجيل ${qty} عملية بيع خارجي`);
-      } else {
-        // مبلغ مضاف يدوي (بدون باقة) — يُسجَّل كقيد ديْن على الزبون فقط
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("network_id")
-          .eq("id", user.id)
-          .maybeSingle();
-        const parts: string[] = ["مبلغ مضاف"];
-        if (cardNo) parts.push(`رقم الكرت: ${cardNo}`);
-        if (noteBase) parts.push(noteBase);
-        const { error } = await supabase.from("customer_payments").insert({
-          customer_id: chargeFor.id,
-          agent_id: user.id,
-          network_id: prof?.network_id ?? null,
-          amount: -Math.abs(amount),
-          note: parts.join(" — "),
-        });
-        if (error) {
-          toast.error("تعذر إضافة المبلغ: " + error.message);
-          return;
-        }
-        toast.success(`تم إضافة ${fmtMoney(amount)}`);
+      // المبلغ المضاف يكون بين المندوب والزبون فقط — لا يُسجَّل كعملية بيع
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("network_id")
+        .eq("id", user.id)
+        .maybeSingle();
+      const parts: string[] = ["مبلغ مضاف"];
+      if (pkg) parts.push(`${pkg.name}${qty > 1 ? ` × ${qty}` : ""}`);
+      if (cardNo) parts.push(`رقم الكرت: ${cardNo}`);
+      if (noteBase) parts.push(noteBase);
+      const { error } = await supabase.from("customer_payments").insert({
+        customer_id: chargeFor.id,
+        agent_id: user.id,
+        network_id: prof?.network_id ?? null,
+        amount: -Math.abs(amount),
+        note: parts.join(" — "),
+      });
+      if (error) {
+        toast.error("تعذر إضافة المبلغ: " + error.message);
+        return;
       }
+      toast.success(`تم إضافة ${fmtMoney(amount)}`);
+
 
       setChargeFor(null);
       setChargeAmount("");
