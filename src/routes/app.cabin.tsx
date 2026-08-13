@@ -697,14 +697,23 @@ function PackageDetails({
   } = useQuery({
     queryKey: ["cabin-cards", pkg.package_id, agentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cards")
-        .select("id, username, status, assigned_at, sold_at")
-        .eq("package_id", pkg.package_id)
-        .or(`assigned_to.eq.${agentId},sold_to.eq.${agentId}`)
-        .order("sold_at", { ascending: false, nullsFirst: false });
+      // Credentials are only returned by the server for cards already sold.
+      const { data, error } = await (supabase.rpc as any)("agent_list_package_cards", {
+        _package_id: pkg.package_id,
+      });
       if (error) throw error;
-      return data ?? [];
+      const rows = (data ?? []) as {
+        id: string;
+        username: string | null;
+        status: string;
+        assigned_at: string | null;
+        sold_at: string | null;
+      }[];
+      return [...rows].sort(
+        (a, b) =>
+          (b.sold_at ? new Date(b.sold_at).getTime() : 0) -
+          (a.sold_at ? new Date(a.sold_at).getTime() : 0),
+      );
     },
   });
 
@@ -721,7 +730,7 @@ function PackageDetails({
     }
     if (!q || tab !== "sold") return list;
     const s = q.toLowerCase();
-    return list.filter((c) => c.username.toLowerCase().includes(s));
+    return list.filter((c) => (c.username ?? "").toLowerCase().includes(s));
   }, [cards, tab, q]);
 
   const available = (cards ?? []).filter((c) => c.status === "ASSIGNED").length;
@@ -785,9 +794,7 @@ function PackageDetails({
           <div className="flex gap-2 flex-wrap">
             {tab === "available" &&
               (() => {
-                const availableCodes = (cards ?? [])
-                  .filter((c) => c.status === "ASSIGNED")
-                  .map((c) => c.username);
+                const availableCount = (cards ?? []).filter((c) => c.status === "ASSIGNED").length;
 
                 const doPrint = async (autoPrint: boolean) => {
                   try {
@@ -798,23 +805,53 @@ function PackageDetails({
                       setTplOpen(true);
                       return;
                     }
-                    if (availableCodes.length === 0) {
+                    if (availableCount === 0) {
                       toast.error("لا توجد كروت متاحة");
                       return;
                     }
+
+                    // أرقام الكروت لا تُستخرج إلا بعد إتمام البيع
+                    toast.info(`جارٍ تحويل ${availableCount} كرت إلى مباع...`);
+                    const codes: string[] = [];
+                    let fail = 0;
+                    for (let i = 0; i < availableCount; i++) {
+                      try {
+                        const { data, error } = await supabase.rpc("sell_card", {
+                          _package_id: pkg.package_id,
+                        });
+                        if (error) {
+                          fail++;
+                          continue;
+                        }
+                        const sale: any = Array.isArray(data) ? data[0] : data;
+                        const code = sale?.card_password || sale?.card_username;
+                        if (code) codes.push(String(code));
+                      } catch (err) {
+                        console.error("[doPrint] sell_card failed:", err);
+                        fail++;
+                      }
+                    }
+                    qc.invalidateQueries({ queryKey: ["cabin-cards", pkg.package_id, agentId] });
+                    qc.invalidateQueries({ queryKey: ["agent-cabin"] });
+                    qc.invalidateQueries({ queryKey: ["sales"] });
+                    qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
+                    if (fail === 0) toast.success(`تم تحويل ${codes.length} كرت إلى مباع`);
+                    else toast.warning(`تم ${codes.length} — فشل ${fail}`);
+
+                    if (codes.length === 0) return;
 
                     // محاولة الطباعة مع حماية
                     try {
                       if (autoPrint) {
                         await printCardsPdf({
                           template: tpl,
-                          codes: availableCodes,
+                          codes,
                           title: `${pkg.network_name} — ${pkg.package_name}`,
                         });
                       } else {
                         await printCards({
                           template: tpl,
-                          codes: availableCodes,
+                          codes,
                           title: `${pkg.network_name} — ${pkg.package_name}`,
                           autoPrint: false,
                         });
@@ -824,37 +861,13 @@ function PackageDetails({
                       toast.error("فشلت الطباعة، يرجى المحاولة مجدداً");
                       return;
                     }
-
-                    if (autoPrint) {
-                      // تحويل جميع الكروت المتاحة إلى مباع
-                      toast.info(`جارٍ تحويل ${availableCodes.length} كرت إلى مباع...`);
-                      let ok = 0,
-                        fail = 0;
-                      for (let i = 0; i < availableCodes.length; i++) {
-                        try {
-                          const { error } = await supabase.rpc("sell_card", {
-                            _package_id: pkg.package_id,
-                          });
-                          if (error) fail++;
-                          else ok++;
-                        } catch (err) {
-                          console.error("[doPrint] sell_card failed:", err);
-                          fail++;
-                        }
-                      }
-                      qc.invalidateQueries({ queryKey: ["cabin-cards", pkg.package_id, agentId] });
-                      qc.invalidateQueries({ queryKey: ["agent-cabin"] });
-                      qc.invalidateQueries({ queryKey: ["sales"] });
-                      qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
-                      if (fail === 0) toast.success(`تم تحويل ${ok} كرت إلى مباع`);
-                      else toast.warning(`تم ${ok} — فشل ${fail}`);
-                    }
                   } catch (err) {
                     // حماية نهائية لمنع توقف التطبيق
                     console.error("[doPrint] CRITICAL error:", err);
                     toast.error("حدث خطأ غير متوقع، يرجى المحاولة مجدداً");
                   }
                 };
+
 
                 return (
                   <>
