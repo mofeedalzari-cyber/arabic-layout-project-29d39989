@@ -728,6 +728,7 @@ function CustomersPage() {
               <TableHead className="text-right">واتساب</TableHead>
               <TableHead className="text-right">عدد العمليات</TableHead>
               <TableHead className="text-right">إجمالي المبيعات</TableHead>
+              <TableHead className="text-right">مبالغ مضافة</TableHead>
               <TableHead className="text-right">المدفوع</TableHead>
               <TableHead className="text-right">الرصيد</TableHead>
               <TableHead className="text-right">آخر عملية</TableHead>
@@ -741,6 +742,7 @@ function CustomersPage() {
                 <TableCell className="font-mono text-xs">{displayPhone(c.whatsapp, "")}</TableCell>
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
+                <TableCell className="font-bold">{fmtMoney(c.charges)}</TableCell>
                 <TableCell className="text-success font-bold">{fmtMoney(c.paid)}</TableCell>
                 <TableCell
                   className={`font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}
@@ -842,13 +844,18 @@ function CustomersPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-4">
                   <div className="rounded-xl bg-muted/50 p-3 text-center">
-                    <div className="text-[11px] text-muted-foreground">عدد العمليات</div>
-                    <div className="font-bold text-lg">{selectedSales.length}</div>
+                    <div className="text-[11px] text-muted-foreground">إجمالي المبيعات</div>
+                    <div className="font-bold text-lg">{fmtMoney(selectedSalesTotal)}</div>
                   </div>
                   <div className="rounded-xl bg-primary/10 p-3 text-center">
-                    <div className="text-[11px] text-muted-foreground">إجمالي المبيعات</div>
-                    <div className="font-bold text-lg text-primary">{fmtMoney(selectedTotal)}</div>
+                    <div className="text-[11px] text-muted-foreground">مبالغ مضافة</div>
+                    <div className="font-bold text-lg text-primary">{fmtMoney(selectedCharges)}</div>
                   </div>
+                  <div className="rounded-xl bg-muted/50 p-3 text-center">
+                    <div className="text-[11px] text-muted-foreground">إجمالي المستحق</div>
+                    <div className="font-bold text-lg">{fmtMoney(selectedTotal)}</div>
+                  </div>
+
                   <div className="rounded-xl bg-success/10 p-3 text-center">
                     <div className="text-[11px] text-muted-foreground">المدفوع</div>
                     <div className="font-bold text-lg text-success">{fmtMoney(selectedPaid)}</div>
