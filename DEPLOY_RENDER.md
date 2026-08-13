@@ -27,6 +27,7 @@
 ## ملاحظات
 
 - خطة Render المجانية تنام بعد 15 دقيقة خمول (أول طلب بعدها بطيء ~30 ثانية).
-- Health check path: `/` (افتراضي).
+- Health check path: `/api/public/health` (خفيف ولا يحمّل واجهة التطبيق).
 - الـ`PORT` يوفّره Render تلقائيًا؛ Node server يقرأه من `process.env.PORT`.
 - لا تستخدم `npm install` في Render؛ استخدم Bun فقط مع `--frozen-lockfile` حتى لا يتم جلب إصدارات أحدث تكسر البناء.
+- أُضيف GitHub Actions باسم `Keep Render service awake` يستدعي مسار فحص الصحة كل 10 دقائق حتى لا تنام خدمة Render المجانية. يجب أن يكون Actions مفعّلًا للمستودع، ويمكن تشغيله أول مرة يدويًا من تبويب Actions.

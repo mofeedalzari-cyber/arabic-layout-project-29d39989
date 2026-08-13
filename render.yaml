@@ -13,6 +13,7 @@ services:
       export PATH="$BUN_INSTALL/bin:$PATH"
       bun install --frozen-lockfile && bun run build
     startCommand: node .output/server/index.mjs
+    healthCheckPath: /api/public/health
     envVars:
       - key: NODE_VERSION
         value: "20"
