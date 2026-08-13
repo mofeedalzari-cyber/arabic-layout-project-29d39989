@@ -2,8 +2,14 @@ name: Keep Render service awake
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    # GitHub's shortest reliable scheduled interval is five minutes.
+    # This stays comfortably below Render's free-service idle window.
+    - cron: "*/5 * * * *"
   workflow_dispatch:
+
+concurrency:
+  group: keep-render-awake
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -13,10 +19,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Ping the lightweight health endpoint
+      - name: Keep the service awake and verify the application
         run: |
+          set -euo pipefail
+
+          # The first request may need to wake a free Render instance.
           curl --fail --silent --show-error \
-            --retry 3 \
+            --retry 6 \
+            --retry-all-errors \
             --retry-delay 10 \
-            --max-time 90 \
+            --connect-timeout 20 \
+            --max-time 120 \
             "https://arabic-layout-project.onrender.com/api/public/health"
+
+          # Follow the home redirect and verify that the real HTML app responds.
+          curl --fail --silent --show-error --location \
+            --retry 3 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --connect-timeout 20 \
+            --max-time 90 \
+            --output /dev/null \
+            "https://arabic-layout-project.onrender.com/"

@@ -30,4 +30,4 @@
 - Health check path: `/api/public/health` (خفيف ولا يحمّل واجهة التطبيق).
 - الـ`PORT` يوفّره Render تلقائيًا؛ Node server يقرأه من `process.env.PORT`.
 - لا تستخدم `npm install` في Render؛ استخدم Bun فقط مع `--frozen-lockfile` حتى لا يتم جلب إصدارات أحدث تكسر البناء.
-- أُضيف GitHub Actions باسم `Keep Render service awake` يستدعي مسار فحص الصحة كل 10 دقائق حتى لا تنام خدمة Render المجانية. يجب أن يكون Actions مفعّلًا للمستودع، ويمكن تشغيله أول مرة يدويًا من تبويب Actions.
+- أُضيف GitHub Actions باسم `Keep Render service awake` يستدعي مسار فحص الصحة والصفحة الفعلية كل 5 دقائق حتى لا تنام خدمة Render المجانية. يجب رفع ملف `.github/workflows/keep-render-awake.yml` إلى GitHub، وتفعيل Actions للمستودع، ثم تشغيل المهمة أول مرة يدويًا من تبويب Actions. وجود الملف داخل Lovable وحده لا يشغّل المراقبة قبل رفع التغييرات إلى GitHub.
