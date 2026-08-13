@@ -177,6 +177,13 @@ export type InvoiceItem = {
 };
 
 
+/** Ledger entry: positive amount = تسديد, negative = مبلغ مضاف (رسوم/دين إضافي). */
+export type LedgerEntry = {
+  amount: number;
+  note?: string | null;
+  dateStr?: string;
+};
+
 export type CustomerInvoiceInput = {
   networkName: string;
   networkRegion?: string; // e.g. "الجمهورية اليمنية - حيران"
@@ -187,6 +194,8 @@ export type CustomerInvoiceInput = {
   adminUsername?: string;
   customerName: string;
   items: InvoiceItem[];
+  /** سجل التسديدات والمبالغ المضافة */
+  ledger?: LedgerEntry[];
   currency: string;
   dateStr: string;
 };
@@ -200,12 +209,23 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
 
   const invoiceNo = nextInvoiceNumber();
   const totalQty = input.items.reduce((a, i) => a + (Number(i.qty) || 0), 0);
-  const totalAmount = input.items.reduce(
+  const salesAmount = input.items.reduce(
     (a, i) => a + (Number(i.qty) || 0) * (Number(i.price) || 0),
     0,
   );
+  const ledger = input.ledger ?? [];
+  const charges = ledger
+    .filter((e) => Number(e.amount) < 0)
+    .map((e) => ({ ...e, amount: Math.abs(Number(e.amount) || 0) }));
+  const paidList = ledger.filter((e) => Number(e.amount) > 0);
+  const chargesTotal = charges.reduce((a, e) => a + e.amount, 0);
+  const paidTotal = paidList.reduce((a, e) => a + (Number(e.amount) || 0), 0);
+  const totalAmount = salesAmount + chargesTotal;
+  const balance = Math.max(totalAmount - paidTotal, 0);
   const amountInt = Math.floor(totalAmount);
+  const balanceInt = Math.floor(balance);
   const words = `${numberToArabicWords(amountInt)} ${currencyWord(input.currency)}`;
+  const balanceWords = `${numberToArabicWords(balanceInt)} ${currencyWord(input.currency)}`;
 
   // ---------- Header (two columns) ----------
   const headerRow = {
