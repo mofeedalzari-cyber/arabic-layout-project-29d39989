@@ -15,6 +15,18 @@ if (typeof globalThis.addEventListener === "function") {
   );
 }
 
+// Node-specific safety net for the nitro node-server preset (Render/VPS).
+if (typeof process !== "undefined" && typeof process.on === "function") {
+  process.on("uncaughtException", (err) => {
+    console.error("[error-capture] uncaughtException:", err);
+    record(err);
+  });
+  process.on("unhandledRejection", (reason) => {
+    console.error("[error-capture] unhandledRejection:", reason);
+    record(reason);
+  });
+}
+
 export function consumeLastCapturedError(): unknown {
   if (!lastCapturedError) return undefined;
   if (Date.now() - lastCapturedError.at > TTL_MS) {

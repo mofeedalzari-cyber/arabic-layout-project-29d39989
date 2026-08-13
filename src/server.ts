@@ -8,6 +8,7 @@ type ServerEntry = {
 };
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
+const startTime = Date.now();
 
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
@@ -93,6 +94,25 @@ function withSecurityHeaders(response: Response): Response {
   });
 }
 
+function getHealthPayload() {
+  const uptime = Math.floor((Date.now() - startTime) / 1000);
+  const mem =
+    typeof process !== "undefined" && process.memoryUsage
+      ? process.memoryUsage()
+      : undefined;
+  return {
+    status: "ok",
+    uptime,
+    memory: mem
+      ? {
+          rss: Math.round(mem.rss / 1024 / 1024),
+          heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
+          external: Math.round((mem.external ?? 0) / 1024 / 1024),
+        }
+      : null,
+  };
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const url = new URL(request.url);
@@ -100,20 +120,26 @@ export default {
       url.pathname === "/api/public/health" &&
       (request.method === "GET" || request.method === "HEAD")
     ) {
-      return withSecurityHeaders(
-        request.method === "HEAD"
-          ? new Response(null, {
-              status: 200,
-              headers: { "cache-control": "no-store" },
-            })
-          : Response.json(
-              { status: "ok" },
-              {
+      try {
+        const payload = getHealthPayload();
+        return withSecurityHeaders(
+          request.method === "HEAD"
+            ? new Response(null, {
                 status: 200,
                 headers: { "cache-control": "no-store" },
-              },
-            ),
-      );
+              })
+            : Response.json(payload, {
+                status: 200,
+                headers: { "cache-control": "no-store" },
+              }),
+        );
+      } catch (err) {
+        console.error("[server] health check error:", err);
+        return new Response('{"status":"error"}', {
+          status: 200,
+          headers: { "content-type": "application/json", "cache-control": "no-store" },
+        });
+      }
     }
 
     try {
