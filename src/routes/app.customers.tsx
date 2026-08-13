@@ -558,7 +558,7 @@ function CustomersPage() {
             qty: it.qty,
             price: it.price,
           })) as any,
-
+          ledger: custLedger,
           currency,
           dateStr,
         },
