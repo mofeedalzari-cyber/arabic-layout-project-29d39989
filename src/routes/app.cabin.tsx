@@ -697,14 +697,23 @@ function PackageDetails({
   } = useQuery({
     queryKey: ["cabin-cards", pkg.package_id, agentId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cards")
-        .select("id, username, status, assigned_at, sold_at")
-        .eq("package_id", pkg.package_id)
-        .or(`assigned_to.eq.${agentId},sold_to.eq.${agentId}`)
-        .order("sold_at", { ascending: false, nullsFirst: false });
+      // Credentials are only returned by the server for cards already sold.
+      const { data, error } = await (supabase.rpc as any)("agent_list_package_cards", {
+        _package_id: pkg.package_id,
+      });
       if (error) throw error;
-      return data ?? [];
+      const rows = (data ?? []) as {
+        id: string;
+        username: string | null;
+        status: string;
+        assigned_at: string | null;
+        sold_at: string | null;
+      }[];
+      return [...rows].sort(
+        (a, b) =>
+          (b.sold_at ? new Date(b.sold_at).getTime() : 0) -
+          (a.sold_at ? new Date(a.sold_at).getTime() : 0),
+      );
     },
   });
 
