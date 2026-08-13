@@ -11,8 +11,22 @@
  */
 
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 
-const SERVER = ".output/server/index.mjs";
+function findServerEntry() {
+  const candidates = [
+    ".output/server/index.mjs",
+    "dist/server/index.mjs",
+    ".output/index.mjs",
+    "dist/index.mjs",
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return ".output/server/index.mjs";
+}
+
+const SERVER = findServerEntry();
 const MAX_RESTARTS = 20;
 const RESTART_DELAY_MS = 2_000;
 
