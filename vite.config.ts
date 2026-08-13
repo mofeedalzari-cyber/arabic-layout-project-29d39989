@@ -10,16 +10,10 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // The wrapper overrides this back to cloudflare-module inside the Lovable sandbox,
 // so previews on Lovable stay on Workers. Node output goes to .output/server/index.mjs
 // with static assets in .output/public — served automatically by nitro's node server.
-// On Vercel we build with nitro's `vercel` preset (Build Output API in .vercel/output).
-const preset =
-  process.env["NITRO_PRESET"] ??
-  (process.env["VERCEL"] ? "vercel" : "node-server");
-
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     server: { entry: "server" },
   },
-  nitro: { preset },
+  nitro: { preset: "node-server" },
 });
-
