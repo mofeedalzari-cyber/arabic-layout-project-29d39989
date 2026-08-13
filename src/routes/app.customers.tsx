@@ -121,7 +121,6 @@ function CustomersPage() {
   const [chargeQty, setChargeQty] = useState<string>("1");
   const [chargeCard, setChargeCard] = useState<string>("");
   const [chargeBusy, setChargeBusy] = useState(false);
-  const [sortMode, setSortMode] = useState<"newest" | "balance">("newest");
 
   async function handleAddCustomer() {
     const name = newName.trim();
@@ -298,13 +297,8 @@ function CustomersPage() {
           (c) => c.name.toLowerCase().includes(s) || (c.whatsapp ?? "").toLowerCase().includes(s),
         )
       : list;
-    if (sortMode === "newest") {
-      return filtered.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      );
-    }
     return filtered.sort((a, b) => b.balance - a.balance);
-  }, [customers, statsByCustomer, paidByCustomer, chargesByCustomer, q, sortMode]);
+  }, [customers, statsByCustomer, paidByCustomer, chargesByCustomer, q]);
 
   const selectedSales = useMemo(
     () => (selected ? (sales ?? []).filter((s) => s.customer_id === selected.id) : []),
@@ -625,8 +619,8 @@ function CustomersPage() {
         />
       </div>
 
-      <div className="flex gap-2 mb-4 items-center flex-wrap">
-        <div className="relative flex-1 min-w-[140px] max-w-md">
+      <div className="flex gap-2 mb-4 items-center">
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="بحث باسم أو رقم واتساب..."
@@ -635,16 +629,6 @@ function CustomersPage() {
             className="pr-9 rounded-xl"
           />
         </div>
-        <Select value={sortMode} onValueChange={(v) => setSortMode(v as any)}>
-          <SelectTrigger className="w-[150px] rounded-xl">
-            <ArrowUpDown className="h-4 w-4 ml-2 text-muted-foreground" />
-            <SelectValue placeholder="الترتيب" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">المضاف حديثاً</SelectItem>
-            <SelectItem value="balance">الرصيد</SelectItem>
-          </SelectContent>
-        </Select>
         <Button
           onClick={() => setAddOpen(true)}
           className="rounded-xl gradient-primary-bg text-white"
@@ -744,7 +728,6 @@ function CustomersPage() {
               <TableHead className="text-right">واتساب</TableHead>
               <TableHead className="text-right">عدد العمليات</TableHead>
               <TableHead className="text-right">إجمالي المبيعات</TableHead>
-              <TableHead className="text-right">مبالغ مضافة</TableHead>
               <TableHead className="text-right">المدفوع</TableHead>
               <TableHead className="text-right">الرصيد</TableHead>
               <TableHead className="text-right">آخر عملية</TableHead>
@@ -758,7 +741,6 @@ function CustomersPage() {
                 <TableCell className="font-mono text-xs">{displayPhone(c.whatsapp, "")}</TableCell>
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
-                <TableCell className="font-bold">{fmtMoney(c.charges)}</TableCell>
                 <TableCell className="text-success font-bold">{fmtMoney(c.paid)}</TableCell>
                 <TableCell
                   className={`font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}
@@ -860,18 +842,13 @@ function CustomersPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-4">
                   <div className="rounded-xl bg-muted/50 p-3 text-center">
-                    <div className="text-[11px] text-muted-foreground">إجمالي المبيعات</div>
-                    <div className="font-bold text-lg">{fmtMoney(selectedSalesTotal)}</div>
+                    <div className="text-[11px] text-muted-foreground">عدد العمليات</div>
+                    <div className="font-bold text-lg">{selectedSales.length}</div>
                   </div>
                   <div className="rounded-xl bg-primary/10 p-3 text-center">
-                    <div className="text-[11px] text-muted-foreground">مبالغ مضافة</div>
-                    <div className="font-bold text-lg text-primary">{fmtMoney(selectedCharges)}</div>
+                    <div className="text-[11px] text-muted-foreground">إجمالي المبيعات</div>
+                    <div className="font-bold text-lg text-primary">{fmtMoney(selectedTotal)}</div>
                   </div>
-                  <div className="rounded-xl bg-muted/50 p-3 text-center">
-                    <div className="text-[11px] text-muted-foreground">إجمالي المستحق</div>
-                    <div className="font-bold text-lg">{fmtMoney(selectedTotal)}</div>
-                  </div>
-
                   <div className="rounded-xl bg-success/10 p-3 text-center">
                     <div className="text-[11px] text-muted-foreground">المدفوع</div>
                     <div className="font-bold text-lg text-success">{fmtMoney(selectedPaid)}</div>
