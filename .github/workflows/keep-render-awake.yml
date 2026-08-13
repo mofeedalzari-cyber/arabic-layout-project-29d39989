@@ -1,0 +1,22 @@
+name: Keep Render service awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping the lightweight health endpoint
+        run: |
+          curl --fail --silent --show-error \
+            --retry 3 \
+            --retry-delay 10 \
+            --max-time 90 \
+            "https://arabic-layout-project.onrender.com/api/public/health"
