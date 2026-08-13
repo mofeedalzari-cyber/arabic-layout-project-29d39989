@@ -32,6 +32,7 @@ import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppSalesRouteImport } from './routes/app.sales'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppSuperadminRouteImport } from './routes/app.superadmin'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AppNetworksIndexRouteImport } from './routes/app.networks.index'
 import { Route as AppNetworksIdRouteImport } from './routes/app.networks.$id'
 
@@ -150,6 +151,11 @@ const AppSuperadminRoute = AppSuperadminRouteImport.update({
   path: '/superadmin',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppNetworksIndexRoute = AppNetworksIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/app/settings': typeof AppSettingsRoute
   '/app/superadmin': typeof AppSuperadminRoute
   '/app/': typeof AppIndexRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
   '/app/networks/': typeof AppNetworksIndexRoute
 }
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/app/settings': typeof AppSettingsRoute
   '/app/superadmin': typeof AppSuperadminRoute
   '/app': typeof AppIndexRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
   '/app/networks': typeof AppNetworksIndexRoute
 }
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/app/settings': typeof AppSettingsRoute
   '/app/superadmin': typeof AppSuperadminRoute
   '/app/': typeof AppIndexRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/app/networks/$id': typeof AppNetworksIdRoute
   '/app/networks/': typeof AppNetworksIndexRoute
 }
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/superadmin'
     | '/app/'
+    | '/api/public/health'
     | '/app/networks/$id'
     | '/app/networks/'
   fileRoutesByTo: FileRoutesByTo
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/superadmin'
     | '/app'
+    | '/api/public/health'
     | '/app/networks/$id'
     | '/app/networks'
   id:
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/app/settings'
     | '/app/superadmin'
     | '/app/'
+    | '/api/public/health'
     | '/app/networks/$id'
     | '/app/networks/'
   fileRoutesById: FileRoutesById
@@ -329,6 +341,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   RegisterAgentRoute: typeof RegisterAgentRoute
   RegisterNetworkRoute: typeof RegisterNetworkRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -494,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSuperadminRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/networks/': {
       id: '/app/networks/'
       path: '/'
@@ -575,6 +595,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   RegisterAgentRoute: RegisterAgentRoute,
   RegisterNetworkRoute: RegisterNetworkRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
