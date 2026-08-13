@@ -730,7 +730,7 @@ function PackageDetails({
     }
     if (!q || tab !== "sold") return list;
     const s = q.toLowerCase();
-    return list.filter((c) => c.username.toLowerCase().includes(s));
+    return list.filter((c) => (c.username ?? "").toLowerCase().includes(s));
   }, [cards, tab, q]);
 
   const available = (cards ?? []).filter((c) => c.status === "ASSIGNED").length;
