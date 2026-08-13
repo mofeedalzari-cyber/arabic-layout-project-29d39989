@@ -742,6 +742,7 @@ function CustomersPage() {
                 <TableCell className="font-mono text-xs">{displayPhone(c.whatsapp, "")}</TableCell>
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
+                <TableCell className="font-bold">{fmtMoney(c.charges)}</TableCell>
                 <TableCell className="text-success font-bold">{fmtMoney(c.paid)}</TableCell>
                 <TableCell
                   className={`font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}
