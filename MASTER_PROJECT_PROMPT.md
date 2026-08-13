@@ -455,16 +455,16 @@ accordion, alert, alert-dialog, aspect-ratio, avatar, badge, breadcrumb, button,
 appId: "com.mofeed.karti"
 appName: "كرتي"
 webDir: ".output/public"
-server: { url: "https://arabic-layout-project.onrender.com", androidScheme: "https",
+server: { url: "https://arabic-layout-project-29d39989.onrender.com", androidScheme: "https",
           cleartext: false,
-          allowNavigation: ["arabic-layout-project.onrender.com","*.onrender.com","*.supabase.co","*.lovable.app"] }
+          allowNavigation: ["arabic-layout-project-29d39989.onrender.com","*.onrender.com","*.supabase.co","*.lovable.app"] }
 android: { allowMixedContent: false, backgroundColor: "#009688", webContentsDebuggingEnabled: false }
 plugins:
   SplashScreen: { launchShowDuration: 2000, launchAutoHide: false, backgroundColor: "#009688",
                   androidSplashResourceName: "splash", androidScaleType: "CENTER_CROP",
                   showSpinner: true, spinnerColor: "#ffffff", splashFullScreen: true, splashImmersive: true }
   StatusBar: { backgroundColor: "#009688", style: "LIGHT", overlaysWebView: true }
-  App: { launchUrl: "https://arabic-layout-project.onrender.com" }
+  App: { launchUrl: "https://arabic-layout-project-29d39989.onrender.com" }
 ```
 `src/lib/capacitor-native.ts` → `initCapacitorNative(router)`: ضبط StatusBar/SplashScreen، و**زر الرجوع**: يرجع في التاريخ، وفي الصفحة الرئيسية يخرج من التطبيق بعد ضغطتين.
 `scripts/ensure-capacitor-contacts.mjs` يضمن وجود إضافة جهات الاتصال قبل البناء (`bun run prepare:android`).

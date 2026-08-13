@@ -937,6 +937,16 @@ export type Database = {
           validity: string
         }[]
       }
+      agent_list_package_cards: {
+        Args: { _package_id: string }
+        Returns: {
+          assigned_at: string
+          id: string
+          sold_at: string
+          status: Database["public"]["Enums"]["card_status"]
+          username: string
+        }[]
+      }
       approve_card_request: {
         Args: { _request_id: string }
         Returns: {
