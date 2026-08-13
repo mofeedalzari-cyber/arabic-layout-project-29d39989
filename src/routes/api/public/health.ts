@@ -22,4 +22,4 @@ export const Route = createFileRoute("/api/public/health")({
         }),
     },
   },
-});
+} as Parameters<ReturnType<typeof createFileRoute>>[0]);
