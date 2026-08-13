@@ -567,6 +567,8 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
       itemsTable,
       totalsRow,
       wordsBox,
+      ...ledgerBlocks,
+      summaryBox,
       balanceBox,
       signatures,
     ] as any,
