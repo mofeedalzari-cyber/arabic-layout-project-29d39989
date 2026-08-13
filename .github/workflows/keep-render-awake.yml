@@ -1,14 +1,14 @@
-name: Keep Render service awake
+name: Monitor Render service
 
 on:
   schedule:
-    # GitHub's shortest reliable scheduled interval is five minutes.
-    # This stays comfortably below Render's free-service idle window.
-    - cron: "*/5 * * * *"
+    # Every 15 minutes is enough on a paid Render plan (no free-tier sleep).
+    # It also logs health metrics so crashes can be diagnosed from GitHub logs.
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 concurrency:
-  group: keep-render-awake
+  group: monitor-render-service
   cancel-in-progress: true
 
 permissions:
@@ -19,25 +19,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Keep the service awake and verify the application
+      - name: Verify service health and app response
         run: |
           set -euo pipefail
 
-          # The first request may need to wake a free Render instance.
+          echo "=== Health check ==="
           curl --fail --silent --show-error \
-            --retry 6 \
-            --retry-all-errors \
-            --retry-delay 10 \
-            --connect-timeout 20 \
-            --max-time 120 \
-            "https://arabic-layout-project.onrender.com/api/public/health"
-
-          # Follow the home redirect and verify that the real HTML app responds.
-          curl --fail --silent --show-error --location \
             --retry 3 \
             --retry-all-errors \
             --retry-delay 5 \
             --connect-timeout 20 \
-            --max-time 90 \
+            --max-time 60 \
+            "https://arabic-layout-project.onrender.com/api/public/health"
+          echo
+
+          echo "=== Home page check ==="
+          curl --fail --silent --show-error --location \
+            --retry 2 \
+            --retry-all-errors \
+            --retry-delay 5 \
+            --connect-timeout 20 \
+            --max-time 60 \
             --output /dev/null \
+            -w "HTTP %{http_code} | time_total=%{time_total}\n" \
             "https://arabic-layout-project.onrender.com/"
