@@ -1,14 +1,14 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.mofeed.karti", // ← غيرت المعرف
-  appName: "كرتي", // ← غيرت اسم التطبيق
-  webDir: ".output/public", // ← غيرت من "www" إلى ".output/public"
+  appId: "com.mofeed.karti",
+  appName: "كرتي",
+  // The APK must always have a local document to boot from. Pointing `server.url`
+  // at Render makes Android show its own ERR_FAILED page before our app can recover.
+  webDir: "www",
   server: {
-    url: "https://arabic-layout-project.onrender.com", // 🔑 يبقى كما هو
     androidScheme: "https",
     cleartext: false,
-    // صفحة محلية تُعرض بدل الشاشة السوداء / خطأ الشبكة عند انقطاع الإنترنت
     errorPath: "offline.html",
     allowNavigation: [
       "arabic-layout-project.onrender.com",
@@ -38,9 +38,6 @@ const config: CapacitorConfig = {
       backgroundColor: "#009688",
       style: "LIGHT",
       overlaysWebView: true,
-    },
-    App: {
-      launchUrl: "https://arabic-layout-project.onrender.com", // 🔑 يبقى كما هو
     },
   },
 };
