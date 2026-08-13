@@ -32,7 +32,7 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-/** Render page 1 of a PDF blob to a PNG Blob using pdfjs-dist. */
+/** Render all pages of a PDF blob stacked vertically into one PNG Blob. */
 async function pdfBlobToPngBlob(pdfBlob: Blob, scale = 2): Promise<Blob> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfjs: any = await import("pdfjs-dist");
@@ -42,17 +42,35 @@ async function pdfBlobToPngBlob(pdfBlob: Blob, scale = 2): Promise<Blob> {
 
   const buf = await pdfBlob.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: buf }).promise;
-  const page = await pdf.getPage(1);
-  const viewport = page.getViewport({ scale });
+
+  const pages: { page: any; viewport: any }[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    pages.push({ page, viewport: page.getViewport({ scale }) });
+  }
+
+  const width = Math.ceil(Math.max(...pages.map((p) => p.viewport.width)));
+  const height = Math.ceil(pages.reduce((a, p) => a + p.viewport.height, 0));
 
   const canvas = document.createElement("canvas");
-  canvas.width = Math.ceil(viewport.width);
-  canvas.height = Math.ceil(viewport.height);
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext("2d")!;
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, width, height);
 
-  await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+  let offset = 0;
+  for (const { page, viewport } of pages) {
+    const pageCanvas = document.createElement("canvas");
+    pageCanvas.width = Math.ceil(viewport.width);
+    pageCanvas.height = Math.ceil(viewport.height);
+    const pctx = pageCanvas.getContext("2d")!;
+    pctx.fillStyle = "#ffffff";
+    pctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+    await page.render({ canvasContext: pctx, viewport, canvas: pageCanvas }).promise;
+    ctx.drawImage(pageCanvas, 0, offset);
+    offset += pageCanvas.height;
+  }
 
   return await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/png", 0.95),
