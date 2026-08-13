@@ -423,12 +423,87 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
     margin: [0, 0, 0, 12],
   };
 
+  // ---------- Ledger tables (المبالغ المضافة / سجل التسديدات) ----------
+  const tableLayout = {
+    hLineColor: () => LINE,
+    vLineColor: () => LINE,
+    hLineWidth: () => 1,
+    vLineWidth: () => 1,
+  };
+
+  // RTL: visual right→left is البيان | التاريخ | المبلغ, so the array is reversed.
+  function ledgerTable(title: string, list: LedgerEntry[], total: number, color: string) {
+    return {
+      stack: [
+        {
+          text: ar(title),
+          direction: "rtl",
+          alignment: "right",
+          bold: true,
+          fontSize: 12,
+          margin: [2, 0, 2, 4],
+        },
+        {
+          table: {
+            widths: [90, 110, "*"],
+            body: [
+              [
+                cell("المبلغ", { bold: true, fillColor: "#f5f5f5" }),
+                cell("التاريخ", { bold: true, fillColor: "#f5f5f5" }),
+                cell("البيان", { bold: true, fillColor: "#f5f5f5" }),
+              ],
+              ...list.map((e, idx) => {
+                const bg = idx % 2 === 0 ? "#fafafa" : undefined;
+                return [
+                  cell(fmtMoney(Math.abs(Number(e.amount) || 0)), { bold: true, color, fillColor: bg }),
+                  cell(e.dateStr || "—", { fontSize: 10, fillColor: bg }),
+                  cell(e.note || "—", { alignment: "right", fillColor: bg, margin: [8, 6, 8, 6] }),
+                ];
+              }),
+              [
+                cell(fmtMoney(total), { bold: true, color, fillColor: "#f5f5f5" }),
+                cell("", { fillColor: "#f5f5f5" }),
+                cell("الإجمالي", { bold: true, alignment: "right", fillColor: "#f5f5f5" }),
+              ],
+            ],
+          },
+          layout: tableLayout,
+        },
+      ],
+      margin: [0, 0, 0, 10],
+    };
+  }
+
+  const ledgerBlocks: any[] = [];
+  if (charges.length)
+    ledgerBlocks.push(ledgerTable("المبالغ المضافة", charges, chargesTotal, RED));
+  if (paidList.length)
+    ledgerBlocks.push(ledgerTable("سجل التسديدات", paidList, paidTotal, "#166534"));
+
+  const summaryBox = {
+    table: {
+      widths: ["*", 100],
+      body: [
+        [
+          cell("إجمالي المستحق (مبيعات + مبالغ مضافة)", { bold: true, alignment: "right" }),
+          cell(fmtMoney(amountInt), { bold: true, color: BLUE }),
+        ],
+        [
+          cell("إجمالي المسدد", { bold: true, alignment: "right" }),
+          cell(fmtMoney(Math.floor(paidTotal)), { bold: true, color: "#166534" }),
+        ],
+      ],
+    },
+    layout: tableLayout,
+    margin: [0, 0, 0, 6],
+  };
+
   const balanceBox = {
     table: {
       widths: ["*"],
       body: [
         [
-          cell(`الرصيد عليكم ${fmtMoney(amountInt)}. ( ${words} )`, {
+          cell(`الرصيد عليكم ${fmtMoney(balanceInt)}. ( ${balanceWords} )`, {
             color: RED,
             bold: true,
             alignment: "center",
@@ -437,12 +512,7 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
         ],
       ],
     },
-    layout: {
-      hLineColor: () => LINE,
-      vLineColor: () => LINE,
-      hLineWidth: () => 1,
-      vLineWidth: () => 1,
-    },
+    layout: tableLayout,
     margin: [0, 0, 0, 20],
   };
 
