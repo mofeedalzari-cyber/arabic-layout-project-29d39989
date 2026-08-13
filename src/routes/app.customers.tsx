@@ -298,8 +298,13 @@ function CustomersPage() {
           (c) => c.name.toLowerCase().includes(s) || (c.whatsapp ?? "").toLowerCase().includes(s),
         )
       : list;
+    if (sortMode === "newest") {
+      return filtered.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+    }
     return filtered.sort((a, b) => b.balance - a.balance);
-  }, [customers, statsByCustomer, paidByCustomer, chargesByCustomer, q]);
+  }, [customers, statsByCustomer, paidByCustomer, chargesByCustomer, q, sortMode]);
 
   const selectedSales = useMemo(
     () => (selected ? (sales ?? []).filter((s) => s.customer_id === selected.id) : []),
