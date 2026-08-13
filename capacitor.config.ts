@@ -5,13 +5,13 @@ const config: CapacitorConfig = {
   appName: "كرتي", // ← غيرت اسم التطبيق
   webDir: ".output/public", // ← غيرت من "www" إلى ".output/public"
   server: {
-    url: "https://arabic-layout-project.onrender.com", // 🔑 يبقى كما هو
+    url: "https://arabic-layout-project-29d39989.onrender.com", // 🔑 يبقى كما هو
     androidScheme: "https",
     cleartext: false,
     // صفحة محلية تُعرض بدل الشاشة السوداء / خطأ الشبكة عند انقطاع الإنترنت
     errorPath: "offline.html",
     allowNavigation: [
-      "arabic-layout-project.onrender.com",
+      "arabic-layout-project-29d39989.onrender.com",
       "*.onrender.com",
       "*.supabase.co",
       "*.lovable.app",
@@ -40,7 +40,7 @@ const config: CapacitorConfig = {
       overlaysWebView: true,
     },
     App: {
-      launchUrl: "https://arabic-layout-project.onrender.com", // 🔑 يبقى كما هو
+      launchUrl: "https://arabic-layout-project-29d39989.onrender.com", // 🔑 يبقى كما هو
     },
   },
 };

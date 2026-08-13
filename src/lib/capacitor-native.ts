@@ -15,7 +15,7 @@ function isNative(): boolean {
 /**
  * Convert an incoming URL from a Deep Link to an in-app path.
  * Supports:
- *  - https://arabic-layout-project.onrender.com/app/cabin
+ *  - https://arabic-layout-project-29d39989.onrender.com/app/cabin
  *  - wificards://app/cabin
  */
 function urlToPath(rawUrl: string): string | null {

@@ -176,7 +176,7 @@ npx @capacitor/assets generate --android
 مثال: `wificards://app/cabin` سيفتح صفحة كبينة البيع مباشرة.
 
 ### 2) App Links (HTTPS)
-مثال: `https://arabic-layout-project.onrender.com/app/cabin`
+مثال: `https://arabic-layout-project-29d39989.onrender.com/app/cabin`
 
 **خطوة إضافية مطلوبة** — بعد `npx cap add android`، افتح الملف:
 `android/app/src/main/AndroidManifest.xml`
@@ -192,13 +192,13 @@ npx @capacitor/assets generate --android
     <data android:scheme="wificards" />
 </intent-filter>
 
-<!-- App Links: https://arabic-layout-project.onrender.com/... -->
+<!-- App Links: https://arabic-layout-project-29d39989.onrender.com/... -->
 <intent-filter android:autoVerify="true">
     <action android:name="android.intent.action.VIEW" />
     <category android:name="android.intent.category.DEFAULT" />
     <category android:name="android.intent.category.BROWSABLE" />
     <data android:scheme="https"
-          android:host="arabic-layout-project.onrender.com" />
+          android:host="arabic-layout-project-29d39989.onrender.com" />
 </intent-filter>
 ```
 
