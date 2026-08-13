@@ -121,6 +121,7 @@ function CustomersPage() {
   const [chargeQty, setChargeQty] = useState<string>("1");
   const [chargeCard, setChargeCard] = useState<string>("");
   const [chargeBusy, setChargeBusy] = useState(false);
+  const [sortMode, setSortMode] = useState<"newest" | "balance">("newest");
 
   async function handleAddCustomer() {
     const name = newName.trim();
