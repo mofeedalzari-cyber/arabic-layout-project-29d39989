@@ -12,6 +12,7 @@ services:
       curl -fsSL https://bun.sh/install | bash
       export BUN_INSTALL="$HOME/.bun"
       export PATH="$BUN_INSTALL/bin:$PATH"
+      export DEPLOY_TARGET=node
       bun install --frozen-lockfile && bun run build
     startCommand: node scripts/render-start.mjs
     healthCheckPath: /api/public/health
