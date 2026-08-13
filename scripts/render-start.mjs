@@ -55,7 +55,7 @@ function startServer() {
     process.exit(1);
   }
 
-  log("info", `Starting server (attempt ${restartCount})…`);
+  log("info", `Starting server (attempt ${restartCount}) from ${SERVER}…`);
 
   child = spawn(process.execPath, [SERVER], {
     stdio: ["ignore", "inherit", "inherit"],
