@@ -17,6 +17,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useUserNames } from "@/lib/use-user-names";
 import { displayPhone, fmtMoney, fmtArabicDateTime } from "@/lib/format";
+import { notifyRequestDecision } from "@/lib/push.functions";
 
 export const Route = createFileRoute("/app/requests")({ component: RequestsPage });
 
@@ -120,10 +121,21 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
       if (error) throw error;
       return Array.isArray(data) ? data[0] : data;
     },
-    onSuccess: (r: any) => {
+    onSuccess: (r: any, id: string) => {
       toast.success(
         `تم الاعتماد — ${r.approved} كرت${r.remaining ? ` (${r.remaining} غير متوفر)` : ""}`,
       );
+      const row = (rows ?? []).find((x: any) => x.id === id);
+      if (row?.agent_id) {
+        void notifyRequestDecision({
+          data: {
+            agentId: row.agent_id,
+            status: "APPROVED",
+            packageName: row.package_name ?? undefined,
+            quantity: Number(r.approved ?? row.quantity) || undefined,
+          },
+        }).catch(() => {});
+      }
       qc.invalidateQueries({ queryKey: ["card-requests"] });
       qc.invalidateQueries({ queryKey: ["agent-cabin"] });
     },
@@ -135,8 +147,19 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
       const { error } = await supabase.rpc("reject_card_request", { _request_id: id, _reason: r });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_d, vars: { id: string; r: string }) => {
       toast.success("تم الرفض");
+      const row = (rows ?? []).find((x: any) => x.id === vars.id);
+      if (row?.agent_id) {
+        void notifyRequestDecision({
+          data: {
+            agentId: row.agent_id,
+            status: "REJECTED",
+            packageName: row.package_name ?? undefined,
+            reason: vars.r || undefined,
+          },
+        }).catch(() => {});
+      }
       setRejectFor(null);
       setReason("");
       qc.invalidateQueries({ queryKey: ["card-requests"] });

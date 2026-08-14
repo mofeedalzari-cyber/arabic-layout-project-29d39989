@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { notifyNewCardRequest } from "@/lib/push.functions";
 import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,7 @@ type PkgForm = z.infer<typeof pkgSchema>;
 
 function PackagesPage() {
   const { id: networkId } = Route.useParams();
-  const { role, session, loading: authLoading } = useAuth();
+  const { role, session, profile, loading: authLoading } = useAuth();
   const isAdmin = role === "admin";
   const authReady = !authLoading && !!session;
   const qc = useQueryClient();
@@ -183,6 +184,15 @@ function PackagesPage() {
       return;
     }
     toast.success("تم إرسال الطلب — بانتظار موافقة المدير", { duration: 2000 });
+    void notifyNewCardRequest({
+      data: {
+        networkId,
+        agentName: profile?.full_name || profile?.username || undefined,
+        packageName: requestPkg.name ?? undefined,
+        quantity: reqQty,
+      },
+    }).catch(() => {});
+
     setRequestPkg(null);
     setReqQty(10);
     setReqNotes("");
