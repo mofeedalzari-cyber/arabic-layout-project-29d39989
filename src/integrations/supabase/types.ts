@@ -231,6 +231,33 @@ export type Database = {
           },
         ]
       }
+      device_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       join_requests: {
         Row: {
           agent_full_name: string | null
@@ -958,6 +985,12 @@ export type Database = {
           username: string
         }[]
       }
+      agent_push_tokens: {
+        Args: { _agent_id: string }
+        Returns: {
+          token: string
+        }[]
+      }
       approve_card_request: {
         Args: { _request_id: string }
         Returns: {
@@ -1035,6 +1068,12 @@ export type Database = {
           status: string
         }[]
       }
+      network_admin_push_tokens: {
+        Args: { _network_id: string }
+        Returns: {
+          token: string
+        }[]
+      }
       package_counts: {
         Args: { _network_id: string }
         Returns: {
@@ -1069,6 +1108,10 @@ export type Database = {
           paid_amount: number
           remaining: number
         }[]
+      }
+      register_device_token: {
+        Args: { _platform?: string; _token: string }
+        Returns: undefined
       }
       reject_card_request: {
         Args: { _reason?: string; _request_id: string }
