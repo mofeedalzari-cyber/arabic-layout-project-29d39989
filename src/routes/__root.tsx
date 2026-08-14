@@ -118,13 +118,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             {
               "@type": "Organization",
               name: "كرتي",
-              url: "https://arabic-layout-project.lovable.app",
+              url: import.meta.env.VITE_SITE_URL || "http://localhost:3000",
               description: "منصة احترافية لإدارة وبيع كروت الإنترنت للمديرين والمناديب.",
             },
             {
               "@type": "WebSite",
               name: "كرتي",
-              url: "https://arabic-layout-project.lovable.app",
+              url: import.meta.env.VITE_SITE_URL || "http://localhost:3000",
               inLanguage: "ar",
               description: "منصة إدارة الشبكات والباقات والكروت ومتابعة مبيعات المناديب.",
             },

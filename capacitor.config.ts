@@ -1,17 +1,24 @@
 import type { CapacitorConfig } from "@capacitor/cli";
+import { config as loadEnv } from "dotenv";
+
+// تحميل متغيرات .env لأن Capacitor CLI لا يحمّلها تلقائياً
+loadEnv();
+
+const appUrl = process.env['VITE_APP_URL'] || "http://localhost:3000";
+const appHostname = appUrl.startsWith("http") ? new URL(appUrl).hostname : appUrl;
 
 const config: CapacitorConfig = {
-  appId: "com.mofeed.karti", // ← غيرت المعرف
-  appName: "كرتي", // ← غيرت اسم التطبيق
-  webDir: ".output/public", // ← غيرت من "www" إلى ".output/public"
+  appId: "com.mofeed.karti",
+  appName: "كرتي",
+  webDir: ".output/public",
   server: {
-    url: "https://arabic-layout-project-29d39989.onrender.com", // 🔑 يبقى كما هو
+    url: appUrl,
     androidScheme: "https",
     cleartext: false,
     // صفحة محلية تُعرض بدل الشاشة السوداء / خطأ الشبكة عند انقطاع الإنترنت
     errorPath: "offline.html",
     allowNavigation: [
-      "arabic-layout-project-29d39989.onrender.com",
+      appHostname,
       "*.onrender.com",
       "*.supabase.co",
       "*.lovable.app",
@@ -40,7 +47,7 @@ const config: CapacitorConfig = {
       overlaysWebView: true,
     },
     App: {
-      launchUrl: "https://arabic-layout-project-29d39989.onrender.com", // 🔑 يبقى كما هو
+      launchUrl: appUrl,
     },
   },
 };
