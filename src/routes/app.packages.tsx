@@ -74,7 +74,7 @@ const pkgSchema = z.object({
 type PkgForm = z.infer<typeof pkgSchema>;
 
 function PackagesPage() {
-  const { role, isSuperadmin } = useAuth();
+  const { role, isSuperadmin, profile } = useAuth();
   const isAdmin = role === "admin";
   const canManage = isAdmin || isSuperadmin;
   const qc = useQueryClient();

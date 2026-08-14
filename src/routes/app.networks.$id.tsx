@@ -69,7 +69,7 @@ type PkgForm = z.infer<typeof pkgSchema>;
 
 function PackagesPage() {
   const { id: networkId } = Route.useParams();
-  const { role, session, loading: authLoading } = useAuth();
+  const { role, session, profile, loading: authLoading } = useAuth();
   const isAdmin = role === "admin";
   const authReady = !authLoading && !!session;
   const qc = useQueryClient();
@@ -186,7 +186,7 @@ function PackagesPage() {
     toast.success("تم إرسال الطلب — بانتظار موافقة المدير", { duration: 2000 });
     void notifyNewCardRequest({
       data: {
-        networkId: requestPkg.network_id,
+        networkId,
         agentName: profile?.full_name || profile?.username || undefined,
         packageName: requestPkg.name ?? undefined,
         quantity: reqQty,
