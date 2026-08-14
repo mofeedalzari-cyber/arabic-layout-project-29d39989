@@ -14,9 +14,8 @@ function isNative(): boolean {
 
 /**
  * Convert an incoming URL from a Deep Link to an in-app path.
- * Supports:
- *  - https://arabic-layout-project-29d39989.onrender.com/app/cabin
- *  - wificards://app/cabin
+ * Supports any configured production domain (set via VITE_APP_URL)
+ * and custom schemes such as wificards://app/cabin.
  */
 function urlToPath(rawUrl: string): string | null {
   try {

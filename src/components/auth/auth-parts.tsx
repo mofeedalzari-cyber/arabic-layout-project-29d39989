@@ -6,7 +6,7 @@ import { z } from "zod";
 import logo from "@/assets/wifi-store-logo.png";
 
 export const APP_NAME = "كرتي";
-export const SITE_URL = "https://arabic-layout-project.lovable.app";
+export const SITE_URL = import.meta.env.VITE_SITE_URL || "http://localhost:3000";
 
 export const phoneSchema = z
   .string()
