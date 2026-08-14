@@ -890,6 +890,17 @@ export type Database = {
         }[]
       }
       admin_unassign_cards: { Args: { _ids: string[] }; Returns: number }
+      admin_update_agent: {
+        Args: {
+          _agent_id: string
+          _full_name?: string
+          _password?: string
+          _phone?: string
+          _update_full_name?: boolean
+          _update_phone?: boolean
+        }
+        Returns: Json
+      }
       admin_update_request_payment: {
         Args: { _amount: number; _note: string; _payment_id: string }
         Returns: {
