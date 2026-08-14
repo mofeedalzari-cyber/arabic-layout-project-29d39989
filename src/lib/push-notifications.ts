@@ -32,6 +32,21 @@ export async function initPushNotifications(router?: Router<any, any>) {
     }
     if (perm.receive !== "granted") return;
 
+    // قناة إشعارات عالية الأهمية (تظهر أعلى الشاشة مع صوت واهتزاز)
+    try {
+      await PushNotifications.createChannel({
+        id: "karti_requests",
+        name: "طلبات وإشعارات كرتي",
+        description: "إشعارات طلبات سحب الكروت والموافقات",
+        importance: 5,
+        visibility: 1,
+        vibration: true,
+        sound: "default",
+      });
+    } catch {
+      /* ignore */
+    }
+
     PushNotifications.addListener("registration", (t) => {
       if (t?.value) void saveToken(t.value);
     });
