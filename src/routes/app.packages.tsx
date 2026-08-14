@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { notifyNewCardRequest } from "@/lib/push.functions";
 import { PageHeader } from "@/components/app-shell";
 import { RefreshButton } from "@/components/refresh-button";
 import { Card } from "@/components/ui/card";
@@ -243,6 +244,15 @@ function PackagesPage() {
       return;
     }
     toast.success("تم إرسال الطلب — بانتظار موافقة المدير", { duration: 2000 });
+    void notifyNewCardRequest({
+      data: {
+        networkId: requestPkg.network_id,
+        agentName: profile?.full_name || profile?.username || undefined,
+        packageName: requestPkg.name ?? undefined,
+        quantity: reqQty,
+      },
+    }).catch(() => {});
+
     setRequestPkg(null);
     setReqQty(10);
     setReqNotes("");
