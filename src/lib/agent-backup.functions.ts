@@ -21,7 +21,14 @@ export const backupMyAgentData = createServerFn({ method: "POST" })
       supabase.from("customers").select("*").eq("agent_id", userId),
       supabase.from("sales").select("*").eq("agent_id", userId),
       supabase.from("card_requests").select("*").eq("agent_id", userId),
-      supabase.from("cards").select("*").or(`assigned_to.eq.${userId},sold_to.eq.${userId}`),
+      // NOTE: never select the card "password" column here — credentials are only
+      // delivered through the audited sell flow / admin RPCs.
+      supabase
+        .from("cards")
+        .select(
+          "id, package_id, network_id, username, status, sold_to, sold_at, assigned_to, assigned_at, created_at",
+        )
+        .or(`assigned_to.eq.${userId},sold_to.eq.${userId}`),
       supabase.from("customer_payments").select("*").eq("agent_id", userId),
     ]);
 
