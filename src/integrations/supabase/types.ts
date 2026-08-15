@@ -1174,6 +1174,14 @@ export type Database = {
           remaining_debt: number
         }[]
       }
+      sold_card_credentials: {
+        Args: { _card_ids: string[] }
+        Returns: {
+          id: string
+          password: string
+          username: string
+        }[]
+      }
       submit_password_reset_request: {
         Args: { _note?: string; _phone: string }
         Returns: undefined
