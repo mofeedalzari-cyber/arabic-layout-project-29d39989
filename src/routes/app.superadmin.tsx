@@ -51,6 +51,7 @@ import {
   BarChart3,
   ArrowRight,
   Pencil,
+  Download,
 } from "lucide-react";
 
 import { RevealText } from "@/components/reveal-text";
@@ -798,11 +799,11 @@ function SuperAdminPageInner() {
                               : "")
                       }
                     >
-                      <Td dir="ltr" className="font-mono">
-                        {c.username}
+                      <Td dir="ltr">
+                        <RevealText username={c.username} />
                       </Td>
-                      <Td dir="ltr" className="font-mono">
-                        {c.password ?? "—"}
+                      <Td dir="ltr">
+                        <RevealText username={c.password ?? null} />
                       </Td>
                       <Td>
                         {c.status === "SOLD" ? (
@@ -1217,11 +1218,11 @@ function NetworkDetail({
                 <tbody>
                   {list.map((c: any) => (
                     <tr key={c.id} className="border-t">
-                      <Td dir="ltr" className="font-mono">
-                        {c.username}
+                      <Td dir="ltr">
+                        <RevealText username={c.username} />
                       </Td>
-                      <Td dir="ltr" className="font-mono">
-                        {c.password ?? "—"}
+                      <Td dir="ltr">
+                        <RevealText username={c.password ?? null} />
                       </Td>
                       <Td className="text-xs">
                         {c.status === "SOLD" ? "مباع" : c.status === "ASSIGNED" ? "مسحوب" : "متاح"}
