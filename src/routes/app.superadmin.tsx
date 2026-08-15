@@ -294,10 +294,13 @@ function SuperAdminPageInner() {
                   </div>
                 </div>
 
+                <NetworkBackupButton networkId={n.id} networkName={n.name} />
+
                 <Button className="w-full" onClick={() => setDetailNetId(n.id)}>
                   <BarChart3 className="h-4 w-4 ml-1" />
                   تفاصيل وإدارة الشبكة
                 </Button>
+
                 <div className="flex flex-wrap gap-1">
                   <EditNetworkButton network={n} />
                   {n.owner_id ? (
