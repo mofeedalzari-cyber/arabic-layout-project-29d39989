@@ -1068,6 +1068,7 @@ export type Database = {
           status: string
         }[]
       }
+      my_owned_network_id: { Args: never; Returns: string }
       network_admin_push_tokens: {
         Args: { _network_id: string }
         Returns: {
@@ -1134,6 +1135,16 @@ export type Database = {
         }
         Returns: string
       }
+      restore_create_agent: {
+        Args: { _full_name: string; _phone: string; _username: string }
+        Returns: string
+      }
+      restore_insert_rows: {
+        Args: { _rows: Json; _table: string }
+        Returns: number
+      }
+      restore_profile_index: { Args: never; Returns: Json }
+      restore_wipe_my_network: { Args: never; Returns: Json }
       sell_card: {
         Args: { _package_id: string }
         Returns: {
@@ -1309,6 +1320,10 @@ export type Database = {
       superadmin_update_network: {
         Args: { _currency?: string; _name?: string; _network_id: string }
         Returns: undefined
+      }
+      superadmin_update_user_phone: {
+        Args: { _phone: string; _user_id: string }
+        Returns: Json
       }
       user_create_order: { Args: { _package_id: string }; Returns: string }
       user_fulfill_order: {

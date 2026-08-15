@@ -3,14 +3,18 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * Restore a previously downloaded backup JSON into the caller's own network.
- * Wipes the current network's data (packages, cards, sales, requests, payments,
- * join requests) and re-inserts rows from the payload, remapping network_id
- * to the caller's network. Agent profiles referenced by restored records are
- * matched by username/phone, or recreated as inactive agents for this network.
+ *
+ * All privileged work runs through SECURITY DEFINER RPCs that verify the caller
+ * is an admin owning the target network:
+ *   - restore_profile_index()  -> current profiles + taken usernames
+ *   - restore_wipe_my_network() -> clears the network's existing data
+ *   - restore_create_agent()    -> recreates missing agents as inactive accounts
+ *   - restore_insert_rows()     -> inserts rows, forcing the caller's network_id
+ * No SUPABASE_SERVICE_ROLE_KEY is needed.
  */
 export const restoreMyNetwork = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { payload: any }) => data)
+  .inputValidator((data: { payload: any }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const payload = data?.payload;
@@ -19,17 +23,19 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       throw new Error("الملف لا يحتوي بيانات شبكة");
     }
 
-    const { data: network, error: nErr } = await supabase
-      .from("networks")
-      .select("*")
-      .eq("owner_id", userId)
-      .maybeSingle();
-    if (nErr) throw new Error(nErr.message);
-    if (!network) throw new Error("لا توجد شبكة مرتبطة بحسابك");
-    const networkId = network.id as string;
+    const rpc = supabase.rpc as any;
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const admin = supabaseAdmin as any;
+    const { data: index, error: idxErr } = await rpc("restore_profile_index");
+    if (idxErr) throw new Error(idxErr.message);
+    const netProfiles: any[] = index?.network_profiles ?? [];
+    const usedUsernames = new Set<string>(
+      (index?.usernames ?? []).map((u: any) => String(u)).filter(Boolean),
+    );
+
+    const { data: wiped, error: wipeErr } = await rpc("restore_wipe_my_network");
+    if (wipeErr) throw new Error(wipeErr.message);
+    const networkId = String(wiped?.network_id ?? "");
+    if (!networkId) throw new Error("لا توجد شبكة مرتبطة بحسابك");
 
     const genId = () =>
       (globalThis.crypto as any)?.randomUUID?.() ??
@@ -38,37 +44,13 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
         return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
       });
 
-    // Delete existing data in FK-safe order.
-    const { data: existingReqs } = await admin
-      .from("card_requests")
-      .select("id")
-      .eq("network_id", networkId);
-    const existingReqIds = (existingReqs ?? []).map((r: any) => r.id);
-    if (existingReqIds.length) {
-      await admin.from("request_payments").delete().in("request_id", existingReqIds);
-    }
-    await admin.from("sales").delete().eq("network_id", networkId);
-    await admin.from("card_requests").delete().eq("network_id", networkId);
-    await admin.from("cards").delete().eq("network_id", networkId);
-    await admin.from("packages").delete().eq("network_id", networkId);
-    await admin.from("join_requests").delete().eq("network_id", networkId);
-
-    // Fetch valid profile IDs belonging to this network (agents + owner).
-    const { data: netProfiles } = await admin
-      .from("profiles")
-      .select("id, username, full_name, phone")
-      .eq("network_id", networkId);
-    const allowedUserIds = new Set<string>([
-      userId,
-      ...(netProfiles ?? []).map((p: any) => p.id as string),
-    ]);
     const cleanPhone = (value: any) => String(value ?? "").replace(/\D/g, "");
 
-    // Current profile lookup, for remapping old agent IDs from backup.
+    const allowedUserIds = new Set<string>([userId, ...netProfiles.map((p) => String(p.id))]);
     const usernameToId = new Map<string, string>();
     const phoneToId = new Map<string, string>();
     const namePhoneToId = new Map<string, string>();
-    for (const p of netProfiles ?? []) {
+    for (const p of netProfiles) {
       if (p?.username) usernameToId.set(String(p.username), p.id);
       const phoneKey = cleanPhone(p?.phone);
       if (phoneKey) phoneToId.set(phoneKey, p.id);
@@ -76,8 +58,6 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
         namePhoneToId.set(`${String(p.full_name).trim()}::${phoneKey}`, p.id);
     }
 
-    // old profile id -> backup profile, so restored cards/sales can remain tied
-    // to the original agent even when the agent account was not yet in this network.
     const oldIdToProfile = new Map<string, any>();
     const backupProfiles = Array.isArray(payload.profiles) ? payload.profiles : [];
     for (const p of backupProfiles) {
@@ -100,16 +80,17 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       return null;
     };
 
-    const agentRefIds = new Set<string>();
-    const addAgentRef = (value: any) => {
-      if (value != null) agentRefIds.add(String(value));
-    };
     const packagesIn = Array.isArray(payload.packages) ? payload.packages : [];
     const cardsIn = Array.isArray(payload.cards) ? payload.cards : [];
     const reqsIn = Array.isArray(payload.card_requests) ? payload.card_requests : [];
     const salesIn = Array.isArray(payload.sales) ? payload.sales : [];
     const joinReqsIn = Array.isArray(payload.join_requests) ? payload.join_requests : [];
     const paymentsIn = Array.isArray(payload.request_payments) ? payload.request_payments : [];
+
+    const agentRefIds = new Set<string>();
+    const addAgentRef = (value: any) => {
+      if (value != null) agentRefIds.add(String(value));
+    };
     for (const c of cardsIn) {
       addAgentRef(c?.assigned_to);
       addAgentRef(c?.sold_to);
@@ -118,10 +99,6 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
     for (const s of salesIn) addAgentRef(s?.agent_id);
     for (const r of joinReqsIn) addAgentRef(r?.agent_id);
 
-    const { data: allProfiles } = await admin.from("profiles").select("username");
-    const usedUsernames = new Set<string>(
-      (allProfiles ?? []).map((p: any) => String(p.username)).filter(Boolean),
-    );
     const makeBaseUsername = (profile: any, oldId: string) => {
       const raw = String(profile?.username ?? "").trim();
       const safe = raw.replace(/[^a-zA-Z0-9._-]/g, "");
@@ -147,59 +124,26 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       const prof = oldIdToProfile.get(oldId);
       if (!prof) continue;
       const username = uniqueUsername(makeBaseUsername(prof, oldId));
-      const password = `${genId()}${genId()}`;
-      const { data: created, error: createErr } = await admin.auth.admin.createUser({
-        email: `${username}@karati.local`,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          username,
-          full_name: prof?.full_name ?? null,
-          phone: prof?.phone ?? null,
-          account_type: "agent",
-          network_name: network.name,
-        },
+      const { data: createdId, error: createErr } = await rpc("restore_create_agent", {
+        _username: username,
+        _full_name: prof?.full_name ?? null,
+        _phone: prof?.phone ?? null,
       });
       if (createErr) throw new Error(`profiles: ${createErr.message}`);
-      const createdId = created?.user?.id;
       if (!createdId) throw new Error("profiles: تعذر إنشاء حساب المندوب من النسخة");
-      const { error: profileErr } = await admin
-        .from("profiles")
-        .update({
-          username,
-          full_name: prof?.full_name ?? null,
-          phone: prof?.phone ?? null,
-          network_id: networkId,
-          is_active: false,
-        })
-        .eq("id", createdId);
-      if (profileErr) throw new Error(`profiles: ${profileErr.message}`);
-      const { error: roleErr } = await admin
-        .from("user_roles")
-        .upsert({ user_id: createdId, role: "agent" }, { onConflict: "user_id,role" });
-      if (roleErr) throw new Error(`user_roles: ${roleErr.message}`);
-      await admin
-        .from("join_requests")
-        .delete()
-        .eq("network_id", networkId)
-        .eq("agent_id", createdId);
+
       createdProfiles += 1;
-      allowedUserIds.add(createdId);
-      usernameToId.set(username, createdId);
+      allowedUserIds.add(String(createdId));
+      usernameToId.set(username, String(createdId));
       const phoneKey = cleanPhone(prof?.phone);
-      if (phoneKey) phoneToId.set(phoneKey, createdId);
+      if (phoneKey) phoneToId.set(phoneKey, String(createdId));
       if (prof?.full_name && phoneKey)
-        namePhoneToId.set(`${String(prof.full_name).trim()}::${phoneKey}`, createdId);
+        namePhoneToId.set(`${String(prof.full_name).trim()}::${phoneKey}`, String(createdId));
       oldIdToProfile.set(oldId, { ...prof, id: createdId, username });
     }
 
-    const remapUserId = (oldId: any): string | null => {
-      if (oldId == null) return null;
-      return findExistingProfileId(oldId);
-    };
+    const remapUserId = (oldId: any): string | null => findExistingProfileId(oldId);
 
-    // Remap user-reference fields to current profile IDs via username;
-    // set to null if the referenced user doesn't exist in the current network.
     const scrubUserRefs = (rows: any[], fields: string[]): any[] =>
       rows.map((r) => {
         const out = { ...r };
@@ -209,14 +153,13 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
         return out;
       });
 
-    const stats: Record<string, number> = {};
-    stats.profiles = createdProfiles;
+    const stats: Record<string, number> = { profiles: createdProfiles };
     async function ins(table: string, rows: any[]) {
       if (!rows.length) {
         stats[table] = 0;
         return;
       }
-      const { error } = await admin.from(table).insert(rows);
+      const { error } = await rpc("restore_insert_rows", { _table: table, _rows: rows });
       if (error) throw new Error(`${table}: ${error.message}`);
       stats[table] = rows.length;
     }
@@ -225,7 +168,6 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
     const pkgMap = new Map<string, string>();
     const cardMap = new Map<string, string>();
     const reqMap = new Map<string, string>();
-
     for (const p of packagesIn) if (p?.id) pkgMap.set(p.id, genId());
     for (const c of cardsIn) if (c?.id) cardMap.set(c.id, genId());
     for (const r of reqsIn) if (r?.id) reqMap.set(r.id, genId());
