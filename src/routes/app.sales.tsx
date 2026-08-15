@@ -118,7 +118,7 @@ function SalesPage() {
       let query = supabase
         .from("sales")
         .select(
-          "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_number, is_external, customers ( name ), cards ( username, password )",
+          "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_id, card_number, is_external, customers ( name ), cards ( username )",
         )
         .order("sold_at", { ascending: false })
         .limit(dateFrom || dateTo ? 5000 : 500);
@@ -126,14 +126,25 @@ function SalesPage() {
       if (dateTo) query = query.lte("sold_at", `${dateTo}T23:59:59.999`);
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []).map((s: any) => ({
+      const rows = data ?? [];
+      // كلمات سر الكروت تُجلب فقط عبر دالة آمنة (الكروت المبيعة وللمصرّح لهم)
+      const cardIds = rows.map((s: any) => s.card_id).filter(Boolean);
+      const credMap = new Map<string, string | null>();
+      if (cardIds.length) {
+        const { data: creds } = await supabase.rpc("sold_card_credentials", {
+          _card_ids: cardIds,
+        });
+        (creds ?? []).forEach((c: any) => credMap.set(c.id, c.password ?? null));
+      }
+      return rows.map((s: any) => ({
         ...s,
         customer_name: s.customers?.name ?? null,
         card_username: s.cards?.username ?? s.card_number ?? null,
-        card_password: s.cards?.password ?? null,
+        card_password: s.card_id ? (credMap.get(s.card_id) ?? null) : null,
       })) as SaleRow[];
     },
   });
+
 
 
   const customerOptions = useMemo(() => {
