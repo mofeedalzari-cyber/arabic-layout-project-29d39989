@@ -21,7 +21,13 @@ export function sanitizeText(value: unknown, maxLength = 500): string {
 /** Digits only — for phone numbers and card identifiers. */
 export function sanitizeDigits(value: unknown, maxLength = 20): string {
   if (typeof value !== "string") return "";
-  return value.replace(/\D/g, "").slice(0, maxLength);
+  // Android Arabic keyboards may enter Arabic-Indic (٠١٢٣) or Persian
+  // (۰۱۲۳) numerals. Normalize them before stripping non-digits so phone
+  // login behaves identically on the APK and in a desktop browser.
+  const normalized = value
+    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 0x06f0));
+  return normalized.replace(/\D/g, "").slice(0, maxLength);
 }
 
 /** Safe URL query value. */
