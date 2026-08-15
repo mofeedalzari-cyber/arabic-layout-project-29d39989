@@ -192,18 +192,28 @@ function CustomersPage() {
       const { data, error } = await supabase
         .from("sales")
         .select(
-          "id, transaction_no, package_name, network_name, price, sold_at, customer_id, buyer_name, card_number, is_external, cards ( username, password )",
+          "id, transaction_no, package_name, network_name, price, sold_at, customer_id, buyer_name, card_id, card_number, is_external, cards ( username )",
         )
         .eq("agent_id", user!.id)
         .order("sold_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []).map((s: any) => ({
+      const rows = data ?? [];
+      const cardIds = rows.map((s: any) => s.card_id).filter(Boolean);
+      const credMap = new Map<string, string | null>();
+      if (cardIds.length) {
+        const { data: creds } = await supabase.rpc("sold_card_credentials", {
+          _card_ids: cardIds,
+        });
+        (creds ?? []).forEach((c: any) => credMap.set(c.id, c.password ?? null));
+      }
+      return rows.map((s: any) => ({
         ...s,
         card_username: s.cards?.username ?? s.card_number ?? null,
-        card_password: s.cards?.password ?? null,
+        card_password: s.card_id ? (credMap.get(s.card_id) ?? null) : null,
       })) as Sale[];
     },
   });
+
 
   const { data: payments } = useQuery({
     queryKey: ["customer-payments", user?.id],
