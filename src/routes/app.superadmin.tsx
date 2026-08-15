@@ -51,9 +51,74 @@ import {
   BarChart3,
   ArrowRight,
   Pencil,
+  Download,
 } from "lucide-react";
 
+import { RevealText } from "@/components/reveal-text";
+import { superadminBackupNetwork } from "@/lib/superadmin-backup.functions";
+
 export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
+
+/** زر نسخة احتياطية لشبكة واحدة (لمدير التطبيق) */
+function NetworkBackupButton({
+  networkId,
+  networkName,
+}: {
+  networkId: string;
+  networkName: string;
+}) {
+  const backupFn = useServerFn(superadminBackupNetwork);
+  const backup = useMutation({
+    mutationFn: async () => await backupFn({ data: { networkId } }),
+    onSuccess: async (data: any) => {
+      const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+      const filename = `backup-${networkName || "network"}-${stamp}.json`;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      try {
+        const { saveBlobToDevice } = await import("@/lib/native-pdf");
+        const res = await saveBlobToDevice({
+          blob,
+          filename,
+          mimeType: "application/json",
+          dialogTitle: "حفظ النسخة الاحتياطية",
+        });
+        toast.success(
+          res.shared ? "تم تجهيز النسخة — اختر مكان الحفظ" : "تم حفظ النسخة في مجلد التنزيلات",
+        );
+      } catch (err: any) {
+        toast.error(`تعذر حفظ الملف: ${err?.message ?? ""}`);
+      }
+    },
+    onError: (e: Error) => toast.error(`فشل النسخ: ${e.message}`),
+  });
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline" size="sm" className="w-full">
+          <Download className="h-4 w-4 ml-1" />
+          نسخة احتياطية
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent dir="rtl">
+        <AlertDialogHeader>
+          <AlertDialogTitle>نسخة احتياطية للشبكة</AlertDialogTitle>
+          <AlertDialogDescription>
+            سيتم تنزيل ملف يحتوي كل بيانات شبكة «{networkName}»: الباقات، الكروت، المبيعات،
+            الطلبات، المناديب والزبائن.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogAction onClick={() => backup.mutate()} disabled={backup.isPending}>
+            {backup.isPending ? "جارٍ التجهيز..." : "تنزيل"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 
 function SuperAdminPage() {
   const { loading, isSuperadmin } = useAuth();
@@ -294,10 +359,13 @@ function SuperAdminPageInner() {
                   </div>
                 </div>
 
+                <NetworkBackupButton networkId={n.id} networkName={n.name} />
+
                 <Button className="w-full" onClick={() => setDetailNetId(n.id)}>
                   <BarChart3 className="h-4 w-4 ml-1" />
                   تفاصيل وإدارة الشبكة
                 </Button>
+
                 <div className="flex flex-wrap gap-1">
                   <EditNetworkButton network={n} />
                   {n.owner_id ? (
@@ -731,11 +799,11 @@ function SuperAdminPageInner() {
                               : "")
                       }
                     >
-                      <Td dir="ltr" className="font-mono">
-                        {c.username}
+                      <Td dir="ltr">
+                        <RevealText username={c.username} />
                       </Td>
-                      <Td dir="ltr" className="font-mono">
-                        {c.password ?? "—"}
+                      <Td dir="ltr">
+                        <RevealText username={c.password ?? null} />
                       </Td>
                       <Td>
                         {c.status === "SOLD" ? (
@@ -1123,6 +1191,9 @@ function NetworkDetail({
             />
           </>
         ) : null}
+        <div className="w-full sm:w-auto">
+          <NetworkBackupButton networkId={network.id} networkName={network.name} />
+        </div>
         <NetworkActions network={network} onDeleted={onBack} />
       </Card>
 
@@ -1150,11 +1221,11 @@ function NetworkDetail({
                 <tbody>
                   {list.map((c: any) => (
                     <tr key={c.id} className="border-t">
-                      <Td dir="ltr" className="font-mono">
-                        {c.username}
+                      <Td dir="ltr">
+                        <RevealText username={c.username} />
                       </Td>
-                      <Td dir="ltr" className="font-mono">
-                        {c.password ?? "—"}
+                      <Td dir="ltr">
+                        <RevealText username={c.password ?? null} />
                       </Td>
                       <Td className="text-xs">
                         {c.status === "SOLD" ? "مباع" : c.status === "ASSIGNED" ? "مسحوب" : "متاح"}
