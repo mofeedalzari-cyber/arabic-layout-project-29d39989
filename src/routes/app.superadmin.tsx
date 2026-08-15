@@ -1191,6 +1191,9 @@ function NetworkDetail({
             />
           </>
         ) : null}
+        <div className="w-full sm:w-auto">
+          <NetworkBackupButton networkId={network.id} networkName={network.name} />
+        </div>
         <NetworkActions network={network} onDeleted={onBack} />
       </Card>
 
