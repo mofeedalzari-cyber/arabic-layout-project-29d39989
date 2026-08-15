@@ -118,7 +118,7 @@ function SalesPage() {
       let query = supabase
         .from("sales")
         .select(
-          "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_id, card_number, is_external, customers ( name ), cards ( username )",
+          "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_id, card_number, is_external, customers ( name )",
         )
         .order("sold_at", { ascending: false })
         .limit(dateFrom || dateTo ? 5000 : 500);
@@ -139,7 +139,7 @@ function SalesPage() {
       return rows.map((s: any) => ({
         ...s,
         customer_name: s.customers?.name ?? null,
-        card_username: s.cards?.username ?? s.card_number ?? null,
+        card_username: s.card_number ?? null,
         card_password: s.card_id ? (credMap.get(s.card_id) ?? null) : null,
       })) as SaleRow[];
     },
