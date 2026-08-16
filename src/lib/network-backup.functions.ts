@@ -81,6 +81,28 @@ export const backupMyNetwork = createServerFn({ method: "POST" })
         result[t] = [];
         continue;
       }
+      if (t === "cards") {
+        // cards.password is column-revoked for direct SELECT; use the admin RPC
+        const { data, error } = await (supabase.rpc as any)("admin_list_cards", {
+          _network_id: networkId,
+          _limit: 1000000,
+        });
+        if (error) throw new Error(`${t}: ${error.message}`);
+        result[t] = (data ?? []).map((c: any) => ({
+          id: c.id,
+          package_id: c.package_id,
+          network_id: networkId,
+          username: c.username,
+          password: c.password,
+          status: c.status,
+          sold_to: c.sold_to,
+          sold_at: c.sold_at,
+          assigned_to: c.assigned_to,
+          assigned_at: c.assigned_at,
+          created_at: c.created_at,
+        }));
+        continue;
+      }
 
       const { data, error } = await (supabase as any)
         .from(t)
