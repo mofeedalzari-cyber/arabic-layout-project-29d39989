@@ -239,5 +239,50 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       .filter((r: any) => r.request_id && insertedReqIds.has(r.request_id));
     await ins("request_payments", scrubbedPayments);
 
+    // Customers (+ their payments) and MikroTik devices
+    const customersIn = Array.isArray(payload.customers) ? payload.customers : [];
+    const custPaymentsIn = Array.isArray(payload.customer_payments)
+      ? payload.customer_payments
+      : [];
+    const mikrotiksIn = Array.isArray(payload.mikrotiks) ? payload.mikrotiks : [];
+
+    const custMap = new Map<string, string>();
+    for (const c of customersIn) if (c?.id) custMap.set(String(c.id), genId());
+
+    const newCustomers = customersIn
+      .map((c: any) => ({
+        ...c,
+        id: custMap.get(String(c.id)) ?? genId(),
+        network_id: networkId,
+        agent_id: remapUserId(c.agent_id) ?? userId,
+      }))
+      .filter((c: any) => c.whatsapp);
+    await ins("customers", newCustomers);
+    const validCustIds = new Set<string>(newCustomers.map((c: any) => c.id));
+
+    await ins(
+      "customer_payments",
+      custPaymentsIn
+        .map((p: any) => ({
+          ...p,
+          id: genId(),
+          network_id: networkId,
+          customer_id: custMap.get(String(p.customer_id)) ?? p.customer_id,
+          agent_id: remapUserId(p.agent_id) ?? userId,
+        }))
+        .filter((p: any) => validCustIds.has(p.customer_id)),
+    );
+
+    await ins(
+      "mikrotiks",
+      mikrotiksIn.map((m: any) => ({
+        ...m,
+        id: genId(),
+        network_id: networkId,
+        created_by: remapUserId(m.created_by) ?? userId,
+      })),
+    );
+
     return { network_id: networkId, stats };
+
   });
