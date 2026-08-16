@@ -30,7 +30,11 @@ export const backupMyNetwork = createServerFn({ method: "POST" })
       "join_requests",
       "logs",
       "profiles",
+      "customers",
+      "customer_payments",
+      "mikrotiks",
     ] as const;
+
 
     const result: Record<string, any> = {
       exported_at: new Date().toISOString(),
