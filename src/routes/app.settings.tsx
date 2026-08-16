@@ -438,6 +438,10 @@ function BackupCard() {
               سيتم <span className="font-bold text-destructive">حذف كل البيانات الحالية</span> في
               شبكتك (الباقات، الكروت، المبيعات، الطلبات، المدفوعات) واستبدالها ببيانات الملف:
               <span className="block mt-1 font-mono text-xs">{pendingName}</span>
+              <span className="block mt-1 text-xs">
+                شبكة الملف: <span className="font-semibold">{pendingPayload?.network?.name ?? "غير معروفة"}</span>
+                {" — "}سيتم استيراد كل بياناتها إلى شبكتك الحالية.
+              </span>
               لا يمكن التراجع عن هذا الإجراء.
             </AlertDialogDescription>
           </AlertDialogHeader>
