@@ -23,7 +23,9 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       throw new Error("الملف لا يحتوي بيانات شبكة");
     }
 
-    const rpc = supabase.rpc as any;
+    // Bind to the client — a detached supabase.rpc loses `this` and throws
+    // "Cannot read properties of undefined (reading 'rest')".
+    const rpc = (supabase.rpc as any).bind(supabase) as any;
 
     const { data: index, error: idxErr } = await rpc("restore_profile_index");
     if (idxErr) throw new Error(idxErr.message);
