@@ -61,11 +61,27 @@ export const backupMyNetwork = createServerFn({ method: "POST" })
         }
         continue;
       }
+      if (t === "customer_payments") {
+        // may have a null network_id on older rows; fetch by customer ids
+        const ids = ((result["customers"] as any[]) ?? []).map((c: any) => c.id);
+        if (ids.length) {
+          const { data, error } = await supabase
+            .from("customer_payments")
+            .select("*")
+            .in("customer_id", ids);
+          if (error) throw new Error(`${t}: ${error.message}`);
+          result[t] = data ?? [];
+        } else {
+          result[t] = [];
+        }
+        continue;
+      }
       if (t === "logs") {
         // logs has no network_id column; skip or fetch actor-based? keep empty
         result[t] = [];
         continue;
       }
+
       const { data, error } = await (supabase as any)
         .from(t)
         .select("*")
