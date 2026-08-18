@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.prevent_profile_network_self_insert() FROM PUBLIC, anon, authenticated;
