@@ -150,9 +150,23 @@ function CustomersPage() {
     },
   });
 
+  const netAgents = useMemo(() => {
+    const map = new Map<string, { id: string; username: string; count: number; balance: number }>();
+    for (const c of netCustomers ?? []) {
+      const id = c.agent_id ?? "none";
+      const cur =
+        map.get(id) ?? { id, username: c.agent_username ?? "بدون مندوب", count: 0, balance: 0 };
+      cur.count += 1;
+      cur.balance += Number(c.balance) || 0;
+      map.set(id, cur);
+    }
+    return [...map.values()].sort((a, b) => a.username.localeCompare(b.username, "ar"));
+  }, [netCustomers]);
+
   const netRows = useMemo(() => {
     const s = netQ.trim().toLowerCase();
-    const list = netCustomers ?? [];
+    let list = netCustomers ?? [];
+    if (netAgentId !== "all") list = list.filter((c) => (c.agent_id ?? "none") === netAgentId);
     return s
       ? list.filter(
           (c) =>
@@ -161,15 +175,14 @@ function CustomersPage() {
             (c.agent_username ?? "").toLowerCase().includes(s),
         )
       : list;
-  }, [netCustomers, netQ]);
+  }, [netCustomers, netQ, netAgentId]);
 
   const netTotals = useMemo(() => {
-    const list = netCustomers ?? [];
     return {
-      count: list.length,
-      balance: list.reduce((a, c) => a + (Number(c.balance) || 0), 0),
+      count: netRows.length,
+      balance: netRows.reduce((a, c) => a + (Number(c.balance) || 0), 0),
     };
-  }, [netCustomers]);
+  }, [netRows]);
 
   async function handleAdminSettle() {
     if (!settleFor) return;
