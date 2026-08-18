@@ -82,6 +82,18 @@ function normalizeWa(v: string) {
 export const Route = createFileRoute("/app/customers")({ component: CustomersPage });
 
 type Customer = { id: string; name: string; whatsapp: string | null; created_at: string };
+type NetCustomer = {
+  id: string;
+  name: string;
+  whatsapp: string | null;
+  created_at: string;
+  agent_id: string | null;
+  agent_username: string | null;
+  sales_total: number;
+  charges: number;
+  paid: number;
+  balance: number;
+};
 type Sale = {
   id: string;
   transaction_no: string;
