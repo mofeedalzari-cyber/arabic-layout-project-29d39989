@@ -262,7 +262,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           }}
         >
           <div className="grid grid-cols-4 h-16">
-            {getBottomNavItems(items, loc.pathname)
+            {getBottomNavItems(role, isSuperadmin)
               .slice(0, 4)
               .map((it) => (
                 <BottomLink key={it.to} item={it} />
