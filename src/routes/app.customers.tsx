@@ -815,9 +815,10 @@ function CustomersPage() {
               <Users className="h-4 w-4 text-primary" />
               زبائن الشبكة
               <span className="text-[11px] text-muted-foreground font-normal">
-                ({netTotals.count}) — المبيعات: {fmtMoney(netTotals.sales)} • المسدد: {fmtMoney(netTotals.paid)} • المتبقي:{" "}
-                {fmtMoney(netTotals.balance)}
+                ({netTotals.count}) — مبيعات الزبائن: {fmtMoney(netTotals.sales)} • المسدد: {fmtMoney(netTotals.paid)} •
+                المتبقي: {fmtMoney(netTotals.balance)}
               </span>
+
             </div>
             <div className="relative flex-1 min-w-[180px] max-w-xs">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
