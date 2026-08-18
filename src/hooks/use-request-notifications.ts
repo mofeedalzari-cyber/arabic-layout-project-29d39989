@@ -120,6 +120,45 @@ export function useRequestNotifications() {
     };
   }, [role, networkId, navigate, qc]);
 
+  // Admin: طلبات انضمام مندوب جديد
+  useEffect(() => {
+    if (role !== "admin" || !networkId) return;
+
+    const channel = supabase
+      .channel(`admin-join-requests-${networkId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "join_requests",
+          filter: `network_id=eq.${networkId}`,
+        },
+        (payload: any) => {
+          const row = payload?.new;
+          const id = row?.id as string | undefined;
+          if (!id || seenAdmin.current.has(id)) return;
+          seenAdmin.current.add(id);
+
+          playTone("new");
+          void nativeVibrate();
+
+          toast.success("طلب انضمام جديد 👤", {
+            description: row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب",
+            duration: 2500,
+            action: { label: "عرض", onClick: () => navigate({ to: "/app/join-requests" }) },
+          });
+
+          qc.invalidateQueries({ queryKey: ["join-requests"] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [role, networkId, navigate, qc]);
+
   // Agent: قبول/رفض الطلب
   useEffect(() => {
     if (role !== "agent" || !userId) return;
