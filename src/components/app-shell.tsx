@@ -305,13 +305,14 @@ function NavLink({ item }: { item: NavItem }) {
   );
 }
 
-function getBottomNavItems(items: NavItem[], pathname: string): NavItem[] {
-  const base = items.filter((it) => !it.superOnly && !it.hideInBottomNav);
-  // استبدال الطلبات بالزبائن في القائمة السفلية
-  return base
-    .filter((it) => it.to !== "/app/requests")
-    .concat({ to: "/app/customers", label: "الزبائن", icon: Users })
-    .filter((it, idx, arr) => arr.findIndex((x) => x.to === it.to) === idx);
+function getBottomNavItems(_items: NavItem[], _pathname: string): NavItem[] {
+  const map = new Map<string, NavItem>(NAV.map((n) => [n.to, n]));
+  return [
+    map.get("/app"),
+    map.get("/app/cabin"),
+    map.get("/app/packages"),
+    map.get("/app/customers"),
+  ].filter((it): it is NavItem => !!it);
 }
 
 function BottomLink({ item }: { item: NavItem }) {
