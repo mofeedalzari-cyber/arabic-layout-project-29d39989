@@ -117,7 +117,7 @@ export function NotificationsButton() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64" dir="rtl">
+      <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel className="text-right">الإشعارات</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {items.map((it) => {
