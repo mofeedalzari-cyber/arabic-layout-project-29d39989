@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       card_requests: {
         Row: {
+          agent_full_name: string | null
           agent_id: string
           agent_username: string
           approved_quantity: number | null
@@ -38,6 +39,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agent_full_name?: string | null
           agent_id: string
           agent_username: string
           approved_quantity?: number | null
@@ -60,6 +62,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agent_full_name?: string | null
           agent_id?: string
           agent_username?: string
           approved_quantity?: number | null
@@ -639,6 +642,7 @@ export type Database = {
       }
       sales: {
         Row: {
+          agent_full_name: string | null
           agent_id: string | null
           agent_username: string
           buyer_name: string | null
@@ -656,6 +660,7 @@ export type Database = {
           transaction_no: string
         }
         Insert: {
+          agent_full_name?: string | null
           agent_id?: string | null
           agent_username: string
           buyer_name?: string | null
@@ -673,6 +678,7 @@ export type Database = {
           transaction_no?: string
         }
         Update: {
+          agent_full_name?: string | null
           agent_id?: string | null
           agent_username?: string
           buyer_name?: string | null
