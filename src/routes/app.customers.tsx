@@ -135,6 +135,7 @@ function CustomersPage() {
   const [chargeCard, setChargeCard] = useState<string>("");
   const [chargeBusy, setChargeBusy] = useState(false);
   const [netQ, setNetQ] = useState("");
+  const [netAgentId, setNetAgentId] = useState<string>("all");
   const [settleFor, setSettleFor] = useState<NetCustomer | null>(null);
   const [settleAmount, setSettleAmount] = useState("");
   const [settleNote, setSettleNote] = useState("");
@@ -150,9 +151,23 @@ function CustomersPage() {
     },
   });
 
+  const netAgents = useMemo(() => {
+    const map = new Map<string, { id: string; username: string; count: number; balance: number }>();
+    for (const c of netCustomers ?? []) {
+      const id = c.agent_id ?? "none";
+      const cur =
+        map.get(id) ?? { id, username: c.agent_username ?? "بدون مندوب", count: 0, balance: 0 };
+      cur.count += 1;
+      cur.balance += Number(c.balance) || 0;
+      map.set(id, cur);
+    }
+    return [...map.values()].sort((a, b) => a.username.localeCompare(b.username, "ar"));
+  }, [netCustomers]);
+
   const netRows = useMemo(() => {
     const s = netQ.trim().toLowerCase();
-    const list = netCustomers ?? [];
+    let list = netCustomers ?? [];
+    if (netAgentId !== "all") list = list.filter((c) => (c.agent_id ?? "none") === netAgentId);
     return s
       ? list.filter(
           (c) =>
@@ -161,15 +176,14 @@ function CustomersPage() {
             (c.agent_username ?? "").toLowerCase().includes(s),
         )
       : list;
-  }, [netCustomers, netQ]);
+  }, [netCustomers, netQ, netAgentId]);
 
   const netTotals = useMemo(() => {
-    const list = netCustomers ?? [];
     return {
-      count: list.length,
-      balance: list.reduce((a, c) => a + (Number(c.balance) || 0), 0),
+      count: netRows.length,
+      balance: netRows.reduce((a, c) => a + (Number(c.balance) || 0), 0),
     };
-  }, [netCustomers]);
+  }, [netRows]);
 
   async function handleAdminSettle() {
     if (!settleFor) return;
@@ -755,6 +769,27 @@ function CustomersPage() {
                 className="pr-9 rounded-xl h-9"
               />
             </div>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
+            <Button
+              size="sm"
+              variant={netAgentId === "all" ? "default" : "outline"}
+              className="rounded-full shrink-0 h-8"
+              onClick={() => setNetAgentId("all")}
+            >
+              كل المناديب ({netCustomers?.length ?? 0})
+            </Button>
+            {netAgents.map((a) => (
+              <Button
+                key={a.id}
+                size="sm"
+                variant={netAgentId === a.id ? "default" : "outline"}
+                className="rounded-full shrink-0 h-8"
+                onClick={() => setNetAgentId(a.id)}
+              >
+                {a.username} ({a.count})
+              </Button>
+            ))}
           </div>
           <div className="grid gap-2 max-h-[420px] overflow-y-auto">
             {netRows.map((c) => (
