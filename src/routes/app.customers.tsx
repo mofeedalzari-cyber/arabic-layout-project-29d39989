@@ -823,8 +823,9 @@ function CustomersPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold truncate">{c.name}</div>
                   <div className="text-[11px] text-muted-foreground">
-                    {displayPhone(c.whatsapp, "")} — المندوب: {c.agent_username ?? "—"}
+                    {displayPhone(c.whatsapp, "")} — المندوب: {agentProfileMap.get(c.agent_id ?? "")?.full_name || c.agent_username || "—"}
                   </div>
+
                 </div>
                 <div className="text-left">
                   <div className="text-primary font-bold text-sm">
