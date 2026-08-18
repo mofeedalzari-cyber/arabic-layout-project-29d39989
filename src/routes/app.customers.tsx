@@ -736,6 +736,120 @@ function CustomersPage() {
         </Button>
       </div>
 
+      {isAdmin && (
+        <Card className="card-elegant border-0 p-3 mb-4">
+          <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+            <div className="flex items-center gap-2 font-bold">
+              <Users className="h-4 w-4 text-primary" />
+              زبائن الشبكة
+              <span className="text-[11px] text-muted-foreground font-normal">
+                ({netTotals.count}) — إجمالي المتبقي: {fmtMoney(netTotals.balance)}
+              </span>
+            </div>
+            <div className="relative flex-1 min-w-[180px] max-w-xs">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="بحث بالاسم أو المندوب..."
+                value={netQ}
+                onChange={(e) => setNetQ(e.target.value)}
+                className="pr-9 rounded-xl h-9"
+              />
+            </div>
+          </div>
+          <div className="grid gap-2 max-h-[420px] overflow-y-auto">
+            {netRows.map((c) => (
+              <div
+                key={c.id}
+                className="rounded-xl border border-border/60 p-3 flex items-center gap-3 flex-wrap"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold truncate">{c.name}</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {displayPhone(c.whatsapp, "")} — المندوب: {c.agent_username ?? "—"}
+                  </div>
+                </div>
+                <div className="text-left">
+                  <div className="text-primary font-bold text-sm">
+                    {fmtMoney(Number(c.sales_total) + Number(c.charges))}
+                  </div>
+                  <div
+                    className={`text-[11px] font-bold ${
+                      Number(c.balance) > 0 ? "text-warning" : "text-success"
+                    }`}
+                  >
+                    المتبقي: {fmtMoney(Number(c.balance))}
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-success hover:bg-success/90 text-white"
+                  disabled={Number(c.balance) <= 0}
+                  onClick={() => {
+                    setSettleFor(c);
+                    setSettleAmount(String(Number(c.balance)));
+                    setSettleNote("");
+                  }}
+                >
+                  <Banknote className="h-4 w-4 ml-1" />
+                  تسديد للمدير
+                </Button>
+              </div>
+            ))}
+            {netRows.length === 0 && (
+              <div className="text-center text-sm text-muted-foreground py-6">لا يوجد زبائن</div>
+            )}
+          </div>
+        </Card>
+      )}
+
+      <Dialog open={!!settleFor} onOpenChange={(o) => !o && setSettleFor(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>تسديد الزبون للمدير</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-sm text-muted-foreground">
+              {settleFor?.name} — المندوب: {settleFor?.agent_username ?? "—"}
+              <br />
+              المتبقي: {fmtMoney(Number(settleFor?.balance ?? 0))}
+            </div>
+            <div>
+              <Label>المبلغ</Label>
+              <Input
+                inputMode="decimal"
+                value={settleAmount}
+                onChange={(e) => setSettleAmount(e.target.value)}
+                className="rounded-xl"
+              />
+            </div>
+            <div>
+              <Label>ملاحظة (اختياري)</Label>
+              <Input
+                value={settleNote}
+                onChange={(e) => setSettleNote(e.target.value)}
+                className="rounded-xl"
+              />
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              سيتم تصفير/تقليل رصيد الزبون وخصم نفس المبلغ من حساب المندوب.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSettleFor(null)}>
+              إلغاء
+            </Button>
+            <Button
+              className="bg-success hover:bg-success/90 text-white"
+              disabled={settleBusy}
+              onClick={handleAdminSettle}
+            >
+              {settleBusy ? "جاري..." : "تأكيد التسديد"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       {/* Mobile cards */}
       <div className="grid gap-2 lg:hidden">
         {rows.map((c) => (
