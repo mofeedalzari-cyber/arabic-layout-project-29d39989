@@ -180,6 +180,62 @@ export function useRequestNotifications() {
     };
   }, [role, networkId, navigate, qc]);
 
+  // Admin: عملية بيع جديدة
+  useEffect(() => {
+    if (role !== "admin" || !networkId) return;
+
+    const channel = supabase
+      .channel(`admin-sales-${networkId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "sales",
+          filter: `network_id=eq.${networkId}`,
+        },
+        (payload: any) => {
+          const row = payload?.new;
+          const id = row?.id as string | undefined;
+          if (!id || seenAdmin.current.has(id)) return;
+          seenAdmin.current.add(id);
+
+          const agent = cleanPhoneLike(row?.agent_username) || "مندوب";
+          const pkg = row?.package_name ?? "باقة";
+          const price = row?.price != null ? `${row.price} ﷼` : "";
+          const buyer = row?.buyer_name || "";
+          const desc = [pkg, price, buyer].filter(Boolean).join(" · ");
+
+          playTone("approve");
+          void nativeVibrate([80, 40, 80]);
+
+          void systemNotify({
+            title: `عملية بيع جديدة — ${agent}`,
+            body: desc,
+            path: `/app/sales?sale=${id}`,
+            tag: `sale-${id}`,
+          });
+
+          toast.success(`عملية بيع جديدة — ${agent}`, {
+            description: desc,
+            duration: 2500,
+            action: {
+              label: "الفاتورة",
+              onClick: () => navigate({ to: "/app/sales", search: { sale: id } }),
+            },
+          });
+
+          qc.invalidateQueries({ queryKey: ["sales"] });
+          qc.invalidateQueries({ queryKey: ["dash-sales-all"] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [role, networkId, navigate, qc]);
+
   // Agent: قبول/رفض الطلب
   useEffect(() => {
     if (role !== "agent" || !userId) return;

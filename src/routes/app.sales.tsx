@@ -49,6 +49,9 @@ import { toast } from "sonner";
 import { RevealText } from "@/components/reveal-text";
 
 export const Route = createFileRoute("/app/sales")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    sale: typeof search.sale === "string" ? search.sale : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "المبيعات — كرتي" },
@@ -103,6 +106,8 @@ function SalesPage() {
   const { role, user } = useAuth();
   const isAdmin = role === "admin";
   const qc = useQueryClient();
+  const { sale: saleParam } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [q, setQ] = useState("");
   const [customerFilter, setCustomerFilter] = useState<string>("all");
   const [agentFilter, setAgentFilter] = useState<string>("all");
@@ -154,6 +159,33 @@ function SalesPage() {
       })) as SaleRow[];
     },
   });
+
+  // فاتورة عملية بيع محددة (تُفتح عند الضغط على إشعار البيع: /app/sales?sale=<id>)
+  const { data: paramSale } = useQuery({
+    queryKey: ["sale-invoice", saleParam],
+    enabled: !!saleParam,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales")
+        .select(
+          "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_number, customers ( name )",
+        )
+        .eq("id", saleParam!)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      return {
+        ...(data as any),
+        customer_name: (data as any).customers?.name ?? null,
+        card_username: (data as any).card_number ?? null,
+        card_password: null,
+      } as SaleRow;
+    },
+  });
+  const invoiceSale = (sales ?? []).find((s) => s.id === saleParam) ?? paramSale ?? null;
+  const closeInvoice = () => navigate({ search: { sale: undefined } });
+
+
 
 
 
@@ -764,6 +796,45 @@ function SalesPage() {
           </div>
         )}
       </Card>
+
+      <Dialog open={!!saleParam} onOpenChange={(o) => !o && closeInvoice()}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-center">فاتورة عملية بيع</DialogTitle>
+          </DialogHeader>
+          {invoiceSale ? (
+            <div className="space-y-2 text-sm">
+              {[
+                ["رقم العملية", invoiceSale.transaction_no],
+                ["الباقة", invoiceSale.package_name],
+                ["الشبكة", invoiceSale.network_name],
+                ["المندوب", displayName(invoiceSale.agent_username, invoiceSale.agent_id)],
+                ["الزبون", invoiceSale.customer_name ?? invoiceSale.buyer_name ?? "—"],
+                ["رقم الكرت", invoiceSale.card_username ?? "—"],
+                ["التاريخ", fmtArabicDateTime(invoiceSale.sold_at)],
+              ].map(([k, v]) => (
+                <div key={k as string} className="flex justify-between gap-3 border-b pb-1.5">
+                  <span className="text-muted-foreground">{k}</span>
+                  <span className="font-medium">{v}</span>
+                </div>
+              ))}
+              <div className="flex justify-between gap-3 pt-1 text-base">
+                <span className="text-muted-foreground">المبلغ</span>
+                <span className="font-bold text-primary">
+                  {fmtMoney(Number(invoiceSale.price))}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="py-6 text-center text-muted-foreground">جاري تحميل الفاتورة...</div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={closeInvoice}>
+              إغلاق
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!toEdit} onOpenChange={(o) => !o && setToEdit(null)}>
         <DialogContent dir="rtl">

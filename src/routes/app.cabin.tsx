@@ -45,6 +45,7 @@ import { toast } from "sonner";
 import { RevealText } from "@/components/reveal-text";
 import { fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
+import { notifyNewSale } from "@/lib/push.functions";
 import { CardTemplateDialog } from "@/components/card-template-dialog";
 import { loadTemplate, printCards, printCardsPdf } from "@/lib/card-print";
 import { pickContact } from "@/lib/pick-contact";
@@ -222,6 +223,18 @@ function CabinPage() {
         .eq("id", sale.sale_id);
       sale.customer = selCustomer;
       sale.buyer_name = selCustomer.name;
+    }
+    if (profile?.network_id) {
+      void notifyNewSale({
+        data: {
+          networkId: profile.network_id,
+          saleId: sale?.sale_id ?? undefined,
+          agentName: profile?.full_name || profile?.username || undefined,
+          packageName: confirmPkg.package_name ?? undefined,
+          price: Number(confirmPkg.price) || undefined,
+          customerName: selCustomer?.name ?? undefined,
+        },
+      }).catch(() => {});
     }
     setSelling(false);
     setConfirmPkg(null);

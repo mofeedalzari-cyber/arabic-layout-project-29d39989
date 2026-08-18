@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { notifyNewCardRequest } from "@/lib/push.functions";
+import { notifyNewCardRequest, notifyNewSale } from "@/lib/push.functions";
 import { PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -228,8 +228,20 @@ function PackagesPage() {
       toast.error(key ? map[key] : error.message);
       return;
     }
+    const sale: any = Array.isArray(data) ? data[0] : data;
+    if (networkId) {
+      void notifyNewSale({
+        data: {
+          networkId,
+          saleId: sale?.sale_id ?? undefined,
+          agentName: profile?.full_name || profile?.username || undefined,
+          packageName: confirmPkg.name ?? undefined,
+          price: Number(confirmPkg.price) || undefined,
+        },
+      }).catch(() => {});
+    }
     setConfirmPkg(null);
-    setSaleResult(Array.isArray(data) ? data[0] : data);
+    setSaleResult(sale);
     qc.invalidateQueries({ queryKey: ["pkg-counts", networkId] });
     qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
     qc.invalidateQueries({ queryKey: ["sales"] });
