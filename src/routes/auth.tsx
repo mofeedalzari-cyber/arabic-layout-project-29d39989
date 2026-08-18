@@ -286,7 +286,26 @@ function AuthPage() {
               autoComplete="current-password"
             />
 
-            <div className="text-start">
+            <div className="flex items-center justify-between gap-3">
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => {
+                    const on = e.target.checked;
+                    setRemember(on);
+                    if (!on) {
+                      try {
+                        localStorage.removeItem(REMEMBER_KEY);
+                      } catch {
+                        /* ignore */
+                      }
+                    }
+                  }}
+                  className="h-4 w-4 accent-[#12a05f]"
+                />
+                تذكر بياناتي
+              </label>
               <button
                 type="button"
                 onClick={() => {
