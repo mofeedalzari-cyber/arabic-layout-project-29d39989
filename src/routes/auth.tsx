@@ -60,6 +60,8 @@ export const Route = createFileRoute("/auth")({
 
 type AccountType = "agent" | "network";
 
+const REMEMBER_KEY = "kary.login.remember";
+
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
