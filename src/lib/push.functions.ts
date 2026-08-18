@@ -22,9 +22,10 @@ export const notifyNewCardRequest = createServerFn({ method: "POST" })
     });
     if (error) return { sent: 0, failed: 0, skipped: "no-access" };
     const tokens = ((rows as { token: string }[] | null) ?? []).map((r) => r.token);
+    const agent = data.agentName || "مندوب";
     return sendFcmToTokens(tokens, {
-      title: `طلب سحب جديد — ${data.agentName || "مندوب"}`,
-      body: `${data.packageName || "باقة"} · الكمية: ${data.quantity ?? ""}`,
+      title: "طلب سحب جديد",
+      body: `${agent} · ${data.packageName || "باقة"} · الكمية: ${data.quantity ?? ""}`,
       path: "/app/requests",
       tag: "card-request",
     });
