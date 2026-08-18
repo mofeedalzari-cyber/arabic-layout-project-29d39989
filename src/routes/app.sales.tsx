@@ -378,6 +378,12 @@ function SalesPage() {
     qc.invalidateQueries({ queryKey: ["sales"] });
     qc.invalidateQueries({ queryKey: ["cards"] });
     qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
+    // حسابات الزبائن تعتمد على المبيعات — حدّثها أيضاً
+    qc.invalidateQueries({ queryKey: ["customer-sales"] });
+    qc.invalidateQueries({ queryKey: ["customer-payments"] });
+    qc.invalidateQueries({ queryKey: ["customers-page"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.refetchQueries({ type: "active" });
   }
 
   return (
