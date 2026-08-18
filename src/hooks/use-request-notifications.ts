@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { cleanPhoneLike } from "@/lib/format";
+import { ensureNotificationPermission, systemNotify } from "@/lib/system-notify";
 
 /**
  * تنبيهات صوتية + إشعارات فورية:
@@ -73,6 +74,12 @@ export function useRequestNotifications() {
   const seenAdmin = useRef<Set<string>>(new Set());
   const seenAgent = useRef<Map<string, string>>(new Map());
 
+  // طلب إذن الإشعارات مرة واحدة بعد تسجيل الدخول
+  useEffect(() => {
+    if (!userId) return;
+    void ensureNotificationPermission();
+  }, [userId]);
+
   // Admin: طلبات جديدة
   useEffect(() => {
     if (role !== "admin" || !networkId) return;
@@ -99,6 +106,13 @@ export function useRequestNotifications() {
 
           playTone("new");
           void nativeVibrate();
+
+          void systemNotify({
+            title: `طلب سحب جديد — ${agent}`,
+            body: `${pkg} · الكمية: ${qty}`,
+            path: "/app/requests",
+            tag: `req-${id}`,
+          });
 
           toast.success(`طلب سحب جديد — ${agent}`, {
             description: `${pkg} · الكمية: ${qty}`,
@@ -142,6 +156,13 @@ export function useRequestNotifications() {
 
           playTone("new");
           void nativeVibrate();
+
+          void systemNotify({
+            title: "طلب انضمام جديد",
+            body: row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب",
+            path: "/app/join-requests",
+            tag: `join-${id}`,
+          });
 
           toast.success("طلب انضمام جديد 👤", {
             description: row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب",
@@ -188,6 +209,12 @@ export function useRequestNotifications() {
           if (status === "APPROVED") {
             playTone("approve");
             void nativeVibrate([80, 40, 80]);
+            void systemNotify({
+              title: "تم قبول طلبك ✅",
+              body: `${pkg} · الكمية: ${qty}`,
+              path: "/app/cabin",
+              tag: `dec-${id}`,
+            });
             toast.success("تم قبول طلبك ✅", {
               description: `${pkg} · الكمية: ${qty}`,
               duration: 2500,
@@ -196,6 +223,12 @@ export function useRequestNotifications() {
           } else {
             playTone("reject");
             void nativeVibrate([200, 80, 200]);
+            void systemNotify({
+              title: "تم رفض طلبك ❌",
+              body: row?.reject_reason ? `السبب: ${row.reject_reason}` : `${pkg} · الكمية: ${qty}`,
+              path: "/app/requests",
+              tag: `dec-${id}`,
+            });
             toast.error("تم رفض طلبك ❌", {
               description: row?.reject_reason
                 ? `السبب: ${row.reject_reason}`

@@ -3,7 +3,7 @@
  * - CacheFirst for hashed static assets.
  * - Skips non-GET and cross-origin (Supabase / API) requests.
  */
-const VERSION = 'karti-v4';
+const VERSION = 'karti-v5';
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const SHELL_URLS = [
