@@ -172,6 +172,8 @@ export type InvoiceItem = {
   networkName?: string;
   cardNumber?: string | null;
   unit?: string; // e.g. "حبة"
+  /** تاريخ الشراء */
+  dateStr?: string | null;
   qty: number;
   price: number;
 };
@@ -341,13 +343,14 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
   };
 
   // ---------- Items table (RTL): visual order right→left is
-  //   الصنف | رقم الكرت | الوحدة | الكمية | السعر | الإجمالي
+  //   الصنف | رقم الكرت | تاريخ الشراء | الوحدة | الكمية | السعر | الإجمالي
   // pdfmake renders LTR, so we reverse the array to place الصنف on the right.
   const headerRowCells = [
     cell("الإجمالي", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
     cell("السعر", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
     cell("الكمية", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
     cell("الوحدة", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
+    cell("تاريخ الشراء", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
     cell("رقم الكرت", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
     cell("الصنف", { bold: true, fontSize: 11, fillColor: "#f5f5f5" }),
   ];
@@ -363,6 +366,11 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
       cell(String(i.price), { fillColor: bg }),
       cell(String(i.qty), { color: RED, bold: true, fillColor: bg }),
       cell(i.unit || "حبة", { fillColor: bg }),
+      cell(i.dateStr ? String(i.dateStr) : "—", {
+        fillColor: bg,
+        fontSize: 10,
+        margin: [2, 6, 2, 6],
+      }),
       cell(i.cardNumber ? String(i.cardNumber) : "—", {
         fillColor: bg,
         fontSize: 10,
@@ -374,7 +382,7 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
 
   const itemsTable = {
     table: {
-      widths: [62, 48, 42, 42, 95, "*"],
+      widths: [56, 40, 34, 34, 68, 82, "*"],
 
       body: [headerRowCells, ...itemRows],
     },

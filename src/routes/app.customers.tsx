@@ -666,13 +666,17 @@ function CustomersPage() {
       const items = custSales
         .slice()
         .sort((a, b) => String(a.sold_at).localeCompare(String(b.sold_at)))
-        .map((s) => ({
+        .map((s) => {
+          const sd = s.sold_at ? new Date(s.sold_at) : null;
+          return {
           packageName: s.package_name,
           networkName: s.network_name,
           cardNumber: (s as any).card_username ?? (s as any).card_number ?? null,
+          dateStr: sd ? `${sd.getDate()}/${sd.getMonth() + 1}/${sd.getFullYear()}` : null,
           qty: 1,
           price: Number(s.price) || 0,
-        }));
+          };
+        });
 
       const salesTotal = custSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
 
@@ -728,6 +732,7 @@ function CustomersPage() {
             packageName: it.packageName,
             networkName: it.networkName,
             cardNumber: it.cardNumber,
+            dateStr: it.dateStr,
             qty: it.qty,
             price: it.price,
           })) as any,
