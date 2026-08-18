@@ -414,10 +414,10 @@ function SalesPage() {
       <div className="flex flex-wrap items-center gap-2 mb-3 shrink-0">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
+          <Input aria-label="بحث برقم العملية / الاسم / الكرت..."
             placeholder="بحث برقم العملية / الاسم / الكرت..."
             value={q}
-            onChange={(e) = aria-label="بحث برقم العملية / الاسم / الكرت..."> setQ(e.target.value)}
+            onChange={(e) => setQ(e.target.value)}
             className="pr-9 rounded-xl"
           />
           {q && (
@@ -773,7 +773,7 @@ function SalesPage() {
           <div className="space-y-3">
             <div>
               <Label>اسم المشتري</Label>
-              <Input
+              <Input aria-label="اختياري"
                 value={editBuyer}
                 onChange={(e) => setEditBuyer(e.target.value)}
                 placeholder="اختياري"

@@ -307,11 +307,11 @@ function SuperAdminPageInner() {
           <div className="flex flex-wrap gap-2 items-center">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Input aria-label="بحث باسم الشبكة..."
                 placeholder="بحث باسم الشبكة..."
                 className="pr-9"
                 value={networksSearch}
-                onChange={(e) = aria-label="بحث باسم الشبكة..."> setNetworksSearch(e.target.value)}
+                onChange={(e) => setNetworksSearch(e.target.value)}
               />
             </div>
           </div>
@@ -553,11 +553,11 @@ function SuperAdminPageInner() {
           <div className="flex flex-wrap gap-2 items-center">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Input aria-label="بحث باسم المندوب أو الهاتف..."
                 placeholder="بحث باسم المندوب أو الهاتف..."
                 className="pr-9"
                 value={agentsSearch}
-                onChange={(e) = aria-label="بحث باسم المندوب أو الهاتف..."> setAgentsSearch(e.target.value)}
+                onChange={(e) => setAgentsSearch(e.target.value)}
               />
             </div>
             <select
@@ -744,11 +744,11 @@ function SuperAdminPageInner() {
           <div className="flex flex-wrap gap-2 items-center">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Input aria-label="بحث برقم الكرت..."
                 placeholder="بحث برقم الكرت..."
                 className="pr-9"
                 value={cardsFilter.search ?? ""}
-                onChange={(e) = aria-label="بحث برقم الكرت..."> setCardsFilter((f) => ({ ...f, search: e.target.value }))}
+                onChange={(e) => setCardsFilter((f) => ({ ...f, search: e.target.value }))}
               />
             </div>
             <select
@@ -973,7 +973,7 @@ function MyNetworkPanel({
           </DialogHeader>
           <div className="space-y-2">
             <Label>اسم الشبكة</Label>
-            <Input
+            <Input aria-label="مثال: شبكة مدير التطبيق"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="مثال: شبكة مدير التطبيق"
@@ -1037,7 +1037,7 @@ function EditPhoneButton({
         </DialogHeader>
         <div className="space-y-2">
           <Label>رقم الهاتف</Label>
-          <Input
+          <Input aria-label="7xxxxxxxx"
             dir="ltr"
             inputMode="numeric"
             value={phone}
@@ -1382,7 +1382,7 @@ function EditNetworkButton({ network }: { network: any }) {
           </div>
           <div>
             <Label>العملة</Label>
-            <Input
+            <Input aria-label="SAR"
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
               placeholder="SAR"

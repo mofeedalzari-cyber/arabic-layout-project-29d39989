@@ -289,7 +289,7 @@ function PaymentsPageInner() {
             <Label className="text-xs mb-1.5 block">
               المبلغ المُسدَّد {currency && `(${currency})`}
             </Label>
-            <Input
+            <Input aria-label="مثال: 100"
               type="number"
               inputMode="decimal"
               min="0"
@@ -297,7 +297,7 @@ function PaymentsPageInner() {
               className="rounded-xl"
               placeholder="مثال: 100"
               value={amount}
-              onChange={(e) = aria-label="مثال: 100"> setAmount(e.target.value)}
+              onChange={(e) => setAmount(e.target.value)}
             />
           </div>
 

@@ -802,10 +802,10 @@ function CustomersPage() {
       <div className="flex gap-2 mb-4 items-center">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
+          <Input aria-label="بحث باسم أو رقم واتساب..."
             placeholder="بحث باسم أو رقم واتساب..."
             value={q}
-            onChange={(e) = aria-label="بحث باسم أو رقم واتساب..."> setQ(e.target.value)}
+            onChange={(e) => setQ(e.target.value)}
             className="pr-9 rounded-xl"
           />
         </div>
@@ -832,10 +832,10 @@ function CustomersPage() {
             </div>
             <div className="relative flex-1 min-w-[180px] max-w-xs">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Input aria-label="بحث بالاسم أو المندوب..."
                 placeholder="بحث بالاسم أو المندوب..."
                 value={netQ}
-                onChange={(e) = aria-label="بحث بالاسم أو المندوب..."> setNetQ(e.target.value)}
+                onChange={(e) => setNetQ(e.target.value)}
                 className="pr-9 rounded-xl h-9"
               />
             </div>
@@ -1448,7 +1448,7 @@ function CustomersPage() {
           <div className="space-y-3">
             <div>
               <Label>اسم المشتري</Label>
-              <Input
+              <Input aria-label="اختياري"
                 value={editBuyer}
                 onChange={(e) => setEditBuyer(e.target.value)}
                 placeholder="اختياري"
@@ -1479,7 +1479,7 @@ function CustomersPage() {
           <div className="space-y-3">
             <div>
               <Label>اسم الزبون</Label>
-              <Input
+              <Input aria-label="مثال: مفيد الزري"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="مثال: مفيد الزري"
@@ -1494,7 +1494,7 @@ function CustomersPage() {
                 <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">
                   +967
                 </span>
-                <Input
+                <Input aria-label="7XXXXXXXX"
                   value={localYemenDigits(newWhats)}
                   onChange={(e) => setNewWhats(localYemenDigits(e.target.value))}
                   placeholder="7XXXXXXXX"
@@ -1707,7 +1707,7 @@ function CustomersPage() {
               </div>
               <div>
                 <Label className="text-xs mb-1.5 block">رقم الكرت (اختياري)</Label>
-                <Input
+                <Input aria-label="أدخل رقم الكرت يدوياً"
                   value={chargeCard}
                   onChange={(e) => setChargeCard(e.target.value)}
                   placeholder="أدخل رقم الكرت يدوياً"
@@ -1717,7 +1717,7 @@ function CustomersPage() {
               </div>
               <div>
                 <Label className="text-xs mb-1.5 block">السبب / ملاحظة (اختياري)</Label>
-                <Input
+                <Input aria-label="مثال: خدمة إضافية"
                   value={chargeNote}
                   onChange={(e) => setChargeNote(e.target.value)}
                   placeholder="مثال: خدمة إضافية"

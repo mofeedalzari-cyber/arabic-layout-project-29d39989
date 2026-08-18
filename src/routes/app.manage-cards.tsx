@@ -616,11 +616,11 @@ function ManageCardsPageInner() {
             <Label className="text-xs mb-1.5 block">بحث</Label>
             <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Input aria-label="بحث باليوزر / الكود..."
                 className="rounded-xl pr-9"
                 placeholder="بحث باليوزر / الكود..."
                 value={search}
-                onChange={(e) = aria-label="بحث باليوزر / الكود..."> {
+                onChange={(e) => {
                   setSearch(e.target.value);
                   setPage(1);
                 }}

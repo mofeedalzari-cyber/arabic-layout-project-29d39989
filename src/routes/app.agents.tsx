@@ -169,10 +169,10 @@ function AgentsPageInner() {
 
       <div className="relative mb-4 max-w-md">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
+        <Input aria-label="بحث..."
           placeholder="بحث..."
           value={q}
-          onChange={(e) = aria-label="بحث..."> setQ(e.target.value)}
+          onChange={(e) => setQ(e.target.value)}
           className="pr-9 rounded-xl"
         />
       </div>
@@ -445,7 +445,7 @@ function EditAgentDialog({
           </div>
           <div className="space-y-1.5">
             <Label>رقم الهاتف</Label>
-            <Input
+            <Input aria-label="7xxxxxxxx"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               inputMode="tel"
@@ -456,7 +456,7 @@ function EditAgentDialog({
           </div>
           <div className="space-y-1.5">
             <Label>كلمة السر الجديدة</Label>
-            <Input
+            <Input aria-label="اتركها فارغة لعدم التغيير"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

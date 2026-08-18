@@ -779,7 +779,7 @@ function PackageForm({
       <div className="grid grid-cols-2 gap-2">
         <div>
           <Label className="text-xs">اسم الباقة</Label>
-          <Input
+          <Input aria-label="باقة يومية"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="باقة يومية"
@@ -787,7 +787,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">السعر (ريال)</Label>
-          <Input
+          <Input aria-label="50"
             type="number"
             step="0.01"
             value={form.price}
@@ -797,7 +797,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">حجم الباقة / الرصيد</Label>
-          <Input
+          <Input aria-label="50 GB"
             value={form.data_size ?? ""}
             onChange={(e) => setForm({ ...form, data_size: e.target.value })}
             placeholder="50 GB"
@@ -805,7 +805,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">السرعة</Label>
-          <Input
+          <Input aria-label="20 Mbps"
             value={form.speed ?? ""}
             onChange={(e) => setForm({ ...form, speed: e.target.value })}
             placeholder="20 Mbps"
@@ -813,7 +813,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">مدة الصلاحية</Label>
-          <Input
+          <Input aria-label="30 يوم"
             value={form.validity ?? ""}
             onChange={(e) => setForm({ ...form, validity: e.target.value })}
             placeholder="30 يوم"

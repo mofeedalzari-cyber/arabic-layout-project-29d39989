@@ -404,10 +404,10 @@ function CabinPage() {
 
                 {addingCustomer ? (
                   <div className="space-y-2">
-                    <Input
+                    <Input aria-label="اسم الزبون"
                       placeholder="اسم الزبون"
                       value={newName}
-                      onChange={(e) = aria-label="اسم الزبون"> setNewName(e.target.value)}
+                      onChange={(e) => setNewName(e.target.value)}
                       className="rounded-xl bg-background"
                     />
                     <div
@@ -417,11 +417,11 @@ function CabinPage() {
                       <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">
                         +967
                       </span>
-                      <Input
+                      <Input aria-label="7XXXXXXXX"
                         placeholder="7XXXXXXXX"
                         inputMode="tel"
                         value={localYemenDigits(newWa)}
-                        onChange={(e) = aria-label="7XXXXXXXX"> setNewWa(localYemenDigits(e.target.value))}
+                        onChange={(e) => setNewWa(localYemenDigits(e.target.value))}
                         className="flex-1 rounded-none border-0 bg-background font-mono"
                       />
                     </div>
@@ -575,10 +575,10 @@ function CabinPage() {
           <div className="mt-4 space-y-3 pb-4">
             <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
               <div className="text-xs text-muted-foreground font-semibold">إضافة زبون جديد</div>
-              <Input
+              <Input aria-label="اسم الزبون"
                 placeholder="اسم الزبون"
                 value={newName}
-                onChange={(e) = aria-label="اسم الزبون"> setNewName(e.target.value)}
+                onChange={(e) => setNewName(e.target.value)}
                 className="rounded-xl bg-background"
               />
               <div
@@ -588,11 +588,11 @@ function CabinPage() {
                 <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">
                   +967
                 </span>
-                <Input
+                <Input aria-label="7XXXXXXXX"
                   placeholder="7XXXXXXXX"
                   inputMode="tel"
                   value={localYemenDigits(newWa)}
-                  onChange={(e) = aria-label="7XXXXXXXX"> setNewWa(localYemenDigits(e.target.value))}
+                  onChange={(e) => setNewWa(localYemenDigits(e.target.value))}
                   className="flex-1 rounded-none border-0 bg-background font-mono"
                 />
               </div>
@@ -762,10 +762,10 @@ function PackageDetails({
         <div className="px-4">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
+            <Input aria-label="ابحث باسم المستخدم..."
               placeholder="ابحث باسم المستخدم..."
               value={q}
-              onChange={(e) = aria-label="ابحث باسم المستخدم..."> setQ(e.target.value)}
+              onChange={(e) => setQ(e.target.value)}
               className="pr-9 rounded-2xl h-11 bg-background"
             />
           </div>
@@ -1050,7 +1050,7 @@ function SaleReceipt({ sale }: { sale: any }) {
 
       <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
         <div className="flex gap-2">
-          <Input
+          <Input aria-label="اكتب اسم الشخص الذي تم بيع الكرت له"
             value={buyerName}
             onChange={(e) => setBuyerName(e.target.value)}
             placeholder="اكتب اسم الشخص الذي تم بيع الكرت له"
