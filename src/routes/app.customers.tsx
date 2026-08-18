@@ -807,9 +807,10 @@ function CustomersPage() {
                 </SelectItem>
                 {netAgents.map((a) => (
                   <SelectItem key={a.id} value={a.id}>
-                    {a.username} ({a.count}) — المتبقي: {fmtMoney(a.balance)}
+                    {a.full_name || a.username} ({a.count}) — المتبقي: {fmtMoney(a.balance)}
                   </SelectItem>
                 ))}
+
               </SelectContent>
             </Select>
           </div>
