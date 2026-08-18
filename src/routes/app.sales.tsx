@@ -106,6 +106,8 @@ function SalesPage() {
   const { role, user } = useAuth();
   const isAdmin = role === "admin";
   const qc = useQueryClient();
+  const { sale: saleParam } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [q, setQ] = useState("");
   const [customerFilter, setCustomerFilter] = useState<string>("all");
   const [agentFilter, setAgentFilter] = useState<string>("all");
