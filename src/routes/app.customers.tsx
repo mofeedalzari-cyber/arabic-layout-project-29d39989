@@ -151,6 +151,26 @@ function CustomersPage() {
     },
   });
 
+  const { data: myNetwork } = useQuery({
+    queryKey: ["my-network-info", user?.id],
+    enabled: !!user?.id && isAdmin,
+    queryFn: async () => {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("network_id")
+        .eq("id", user!.id)
+        .maybeSingle();
+      const netId = (prof as any)?.network_id;
+      if (!netId) return null;
+      const { data: net } = await supabase
+        .from("networks")
+        .select("id, name")
+        .eq("id", netId)
+        .maybeSingle();
+      return (net ?? null) as { id: string; name: string } | null;
+    },
+  });
+
   const { data: netAgentProfiles } = useQuery({
     queryKey: ["network-agent-profiles", user?.id],
     enabled: !!user?.id && isAdmin && (netCustomers?.length ?? 0) > 0,
@@ -159,10 +179,10 @@ function CustomersPage() {
       if (!ids.length) return [];
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, full_name")
+        .select("id, username, full_name, phone")
         .in("id", ids);
       if (error) throw error;
-      return (data ?? []) as { id: string; username: string; full_name: string | null }[];
+      return (data ?? []) as { id: string; username: string; full_name: string | null; phone: string | null }[];
     },
   });
 
