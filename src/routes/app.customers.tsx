@@ -850,15 +850,10 @@ function CustomersPage() {
                   <SelectValue placeholder="اختر اسم المندوب" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">
-                    كل المناديب ({netCustomers?.length ?? 0}) — المبيعات:{" "}
-                    {fmtMoney(netAgents.reduce((a, g) => a + g.sales, 0))} — المتبقي:{" "}
-                    {fmtMoney(netAgents.reduce((a, g) => a + g.balance, 0))}
-                  </SelectItem>
+                  <SelectItem value="all">كل المناديب</SelectItem>
                   {netAgents.map((a) => (
                     <SelectItem key={a.id} value={a.id}>
-                      {a.full_name || a.username} ({a.count}) — المبيعات: {fmtMoney(a.sales)} — المسدد: {fmtMoney(a.paid)} —
-                      المتبقي: {fmtMoney(a.balance)}
+                      {a.full_name || a.username}
                     </SelectItem>
                   ))}
                 </SelectContent>
