@@ -770,6 +770,27 @@ function CustomersPage() {
               />
             </div>
           </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
+            <Button
+              size="sm"
+              variant={netAgentId === "all" ? "default" : "outline"}
+              className="rounded-full shrink-0 h-8"
+              onClick={() => setNetAgentId("all")}
+            >
+              كل المناديب ({netCustomers?.length ?? 0})
+            </Button>
+            {netAgents.map((a) => (
+              <Button
+                key={a.id}
+                size="sm"
+                variant={netAgentId === a.id ? "default" : "outline"}
+                className="rounded-full shrink-0 h-8"
+                onClick={() => setNetAgentId(a.id)}
+              >
+                {a.username} ({a.count})
+              </Button>
+            ))}
+          </div>
           <div className="grid gap-2 max-h-[420px] overflow-y-auto">
             {netRows.map((c) => (
               <div
