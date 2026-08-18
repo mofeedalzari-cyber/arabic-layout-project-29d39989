@@ -123,12 +123,21 @@ function ManageCardsPageInner() {
     queryKey: ["net-agents", networkId],
     queryFn: async () => {
       if (!networkId) return [];
+      const { data: roles, error: rolesErr } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .eq("role", "agent");
+      if (rolesErr) throw rolesErr;
+      const agentIds = (roles ?? []).map((r: any) => r.user_id as string);
+      if (agentIds.length === 0) return [];
       const { data, error } = await supabase
         .from("profiles")
         .select("id, full_name, username, phone")
         .eq("network_id", networkId)
+        .in("id", agentIds)
         .order("full_name");
       if (error) throw error;
+
       return (data ?? []).map((p: any) => ({
         id: p.id as string,
         name:
