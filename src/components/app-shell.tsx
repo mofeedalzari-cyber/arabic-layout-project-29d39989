@@ -220,15 +220,18 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
               <span className="truncate">كرتي</span>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-xl"
-              onClick={toggleTheme}
-              aria-label="تبديل الوضع"
-            >
-              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
+            <div className="flex items-center gap-1">
+              <NotificationsButton />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-xl"
+                onClick={toggleTheme}
+                aria-label="تبديل الوضع"
+              >
+                {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
         </header>
 
