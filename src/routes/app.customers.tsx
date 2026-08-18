@@ -855,16 +855,12 @@ function CustomersPage() {
                     {fmtMoney(netAgents.reduce((a, g) => a + g.sales, 0))} — المتبقي:{" "}
                     {fmtMoney(netAgents.reduce((a, g) => a + g.balance, 0))}
                   </SelectItem>
-                  {netAgents.map((a) => {
-                    const ph = String(agentProfileMap.get(a.id)?.phone || "").replace(/^967/, "");
-                    return (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.full_name || a.username}
-                        {ph ? ` (${ph})` : ""} ({a.count}) — المبيعات: {fmtMoney(a.sales)} — المسدد: {fmtMoney(a.paid)} —
-                        المتبقي: {fmtMoney(a.balance)}
-                      </SelectItem>
-                    );
-                  })}
+                  {netAgents.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.full_name || a.username} ({a.count}) — المبيعات: {fmtMoney(a.sales)} — المسدد: {fmtMoney(a.paid)} —
+                      المتبقي: {fmtMoney(a.balance)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
