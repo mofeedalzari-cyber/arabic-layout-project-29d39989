@@ -95,8 +95,8 @@ export async function systemNotify({ title, body, path, tag }: SystemNotifyInput
     const reg = await navigator.serviceWorker?.getRegistration();
     const options: NotificationOptions & { vibrate?: number[] } = {
       body,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
+      icon: "/app-icon.png",
+      badge: "/app-icon.png",
       tag,
       data: { path: path ?? "/app" },
       vibrate: [120, 60, 120],
