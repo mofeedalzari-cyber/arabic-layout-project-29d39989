@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AnnounceAgentsCard } from "@/components/announce-agents-card";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
@@ -109,6 +110,7 @@ function SettingsPage() {
 
       <WhatsAppAppCard />
 
+      {role === "admin" && <AnnounceAgentsCard />}
       {role === "admin" && <BackupCard />}
       {role === "agent" && <AgentBackupCard />}
       {role === "admin" && <DangerZone adminId={profile?.id} />}

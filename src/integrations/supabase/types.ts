@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          network_id: string
+          sender_id: string | null
+          sender_name: string | null
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          network_id: string
+          sender_id?: string | null
+          sender_name?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          network_id?: string
+          sender_id?: string | null
+          sender_name?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "networks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_requests: {
         Row: {
           agent_full_name: string | null
@@ -1085,6 +1123,12 @@ export type Database = {
       }
       my_owned_network_id: { Args: never; Returns: string }
       network_admin_push_tokens: {
+        Args: { _network_id: string }
+        Returns: {
+          token: string
+        }[]
+      }
+      network_agent_push_tokens: {
         Args: { _network_id: string }
         Returns: {
           token: string
