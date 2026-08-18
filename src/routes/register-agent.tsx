@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Bike, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { notifyNewJoinRequest } from "@/lib/push.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, usernameToEmail } from "@/lib/auth-context";
 import {
@@ -98,6 +99,10 @@ function AgentRegisterPage() {
         return toast.error("رقم الجوال مستخدم من قبل");
       return toast.error(error.message);
     }
+
+    void notifyNewJoinRequest({
+      data: { networkName: regNet.trim(), username, fullName: regName.trim() },
+    }).catch(() => {});
 
     toast.success("تم إنشاء الحساب! سيتم تفعيله من قبل مدير الشبكة قبل البدء.");
     navigate({ to: "/auth" });

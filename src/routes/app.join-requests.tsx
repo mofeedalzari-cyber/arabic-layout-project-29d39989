@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Check, X, Clock, UserPlus, Inbox } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { notifyJoinDecision } from "@/lib/push.functions";
 import { displayPhone, fmtArabicDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/app/join-requests")({
@@ -89,8 +90,15 @@ function JoinList({ status }: { status: string }) {
     mutationFn: async (id: string) => {
       const { error } = await supabase.rpc("approve_join_request", { _request_id: id });
       if (error) throw error;
+      return id;
     },
-    onSuccess: () => {
+    onSuccess: (id: string) => {
+      const row = (rows ?? []).find((x: any) => x.id === id);
+      if (row?.agent_id) {
+        void notifyJoinDecision({
+          data: { agentId: row.agent_id, status: "APPROVED" },
+        }).catch(() => {});
+      }
       toast.success("تم قبول المندوب وتفعيل حسابه");
       qc.invalidateQueries({ queryKey: ["join-requests"] });
       qc.invalidateQueries({ queryKey: ["agents"] });
@@ -103,7 +111,13 @@ function JoinList({ status }: { status: string }) {
       const { error } = await supabase.rpc("reject_join_request", { _request_id: id, _reason: r });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_d, vars: { id: string; r: string }) => {
+      const row = (rows ?? []).find((x: any) => x.id === vars.id);
+      if (row?.agent_id) {
+        void notifyJoinDecision({
+          data: { agentId: row.agent_id, status: "REJECTED", reason: vars.r || undefined },
+        }).catch(() => {});
+      }
       toast.success("تم رفض الطلب");
       setRejectFor(null);
       setReason("");
