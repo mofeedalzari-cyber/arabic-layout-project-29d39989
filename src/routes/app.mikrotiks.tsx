@@ -238,7 +238,7 @@ function MikrotiksPage() {
                     />
                   </FormRow>
                   <FormRow label="منفذ REST">
-                    <Input aria-label="80"
+                    <Input aria-label="المنفذ"
                       type="number"
                       value={form.port}
                       onChange={(e) => setForm({ ...form, port: Number(e.target.value) })}

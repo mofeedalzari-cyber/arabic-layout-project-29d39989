@@ -1037,7 +1037,7 @@ function EditPhoneButton({
         </DialogHeader>
         <div className="space-y-2">
           <Label>رقم الهاتف</Label>
-          <Input aria-label="7xxxxxxxx"
+          <Input aria-label="رقم الهاتف"
             dir="ltr"
             inputMode="numeric"
             value={phone}

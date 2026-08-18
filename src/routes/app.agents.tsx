@@ -445,7 +445,7 @@ function EditAgentDialog({
           </div>
           <div className="space-y-1.5">
             <Label>رقم الهاتف</Label>
-            <Input aria-label="7xxxxxxxx"
+            <Input aria-label="رقم الهاتف"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               inputMode="tel"
@@ -456,7 +456,7 @@ function EditAgentDialog({
           </div>
           <div className="space-y-1.5">
             <Label>كلمة السر الجديدة</Label>
-            <Input aria-label="اتركها فارغة لعدم التغيير"
+            <Input aria-label="كلمة المرور الجديدة"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

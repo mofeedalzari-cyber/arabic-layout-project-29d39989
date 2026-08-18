@@ -787,7 +787,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">السعر (ريال)</Label>
-          <Input aria-label="50"
+          <Input aria-label="السعر"
             type="number"
             step="0.01"
             value={form.price}

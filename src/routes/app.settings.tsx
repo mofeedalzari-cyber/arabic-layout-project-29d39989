@@ -89,7 +89,7 @@ function SettingsPage() {
         </div>
         <div className="space-y-2">
           <Label className="text-xs">رقم الهاتف</Label>
-          <Input aria-label="7xxxxxxxx"
+          <Input aria-label="رقم الهاتف"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="rounded-xl"
