@@ -15,7 +15,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { displayPhone, fmtArabicDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/app/join-requests")({ component: JoinRequestsPage });
+export const Route = createFileRoute("/app/join-requests")({
+  head: () => ({
+    meta: [
+      { title: "طلبات الانضمام — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "مراجعة طلبات انضمام المناديب إلى شبكتك والموافقة عليها أو رفضها." },
+      { property: "og:title", content: "طلبات الانضمام — كرتي" },
+      { property: "og:description", content: "مراجعة طلبات انضمام المناديب إلى شبكتك والموافقة عليها أو رفضها." },
+    ],
+  }),
+  component: JoinRequestsPage });
 
 function JoinRequestsPage() {
   const { role, loading } = useAuth();

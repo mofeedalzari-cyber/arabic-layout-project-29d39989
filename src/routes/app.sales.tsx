@@ -48,7 +48,17 @@ import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
 import { RevealText } from "@/components/reveal-text";
 
-export const Route = createFileRoute("/app/sales")({ component: SalesPage });
+export const Route = createFileRoute("/app/sales")({
+  head: () => ({
+    meta: [
+      { title: "المبيعات — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "سجل مبيعات الكروت مع الفلترة بالتاريخ والباقة وطباعة التقارير." },
+      { property: "og:title", content: "المبيعات — كرتي" },
+      { property: "og:description", content: "سجل مبيعات الكروت مع الفلترة بالتاريخ والباقة وطباعة التقارير." },
+    ],
+  }),
+  component: SalesPage });
 
 type SaleRow = {
   id: string;
@@ -404,7 +414,7 @@ function SalesPage() {
       <div className="flex flex-wrap items-center gap-2 mb-3 shrink-0">
         <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
+          <Input aria-label="بحث برقم العملية / الاسم / الكرت..."
             placeholder="بحث برقم العملية / الاسم / الكرت..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -710,8 +720,7 @@ function SalesPage() {
                           variant="ghost"
                           className="h-8 w-8"
                           onClick={() => openEdit(s)}
-                          title="تعديل"
-                        >
+                          title="تعديل" aria-label="تعديل">
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                       )}
@@ -764,7 +773,7 @@ function SalesPage() {
           <div className="space-y-3">
             <div>
               <Label>اسم المشتري</Label>
-              <Input
+              <Input aria-label="اختياري"
                 value={editBuyer}
                 onChange={(e) => setEditBuyer(e.target.value)}
                 placeholder="اختياري"

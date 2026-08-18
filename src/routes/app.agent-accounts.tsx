@@ -29,7 +29,17 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/app/agent-accounts")({ component: AgentAccountsPage });
+export const Route = createFileRoute("/app/agent-accounts")({
+  head: () => ({
+    meta: [
+      { title: "حسابات المناديب — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "متابعة حسابات المناديب المالية والمبيعات والمسدد والمتبقي." },
+      { property: "og:title", content: "حسابات المناديب — كرتي" },
+      { property: "og:description", content: "متابعة حسابات المناديب المالية والمبيعات والمسدد والمتبقي." },
+    ],
+  }),
+  component: AgentAccountsPage });
 
 function AgentAccountsPage() {
   const { role, loading } = useAuth();

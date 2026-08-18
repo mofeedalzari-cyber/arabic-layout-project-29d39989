@@ -79,7 +79,17 @@ function normalizeWa(v: string) {
   return d ? "967" + d : "";
 }
 
-export const Route = createFileRoute("/app/customers")({ component: CustomersPage });
+export const Route = createFileRoute("/app/customers")({
+  head: () => ({
+    meta: [
+      { title: "الزبائن — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إدارة حسابات الزبائن وأرصدتهم وكشوف الحساب والتسديدات." },
+      { property: "og:title", content: "الزبائن — كرتي" },
+      { property: "og:description", content: "إدارة حسابات الزبائن وأرصدتهم وكشوف الحساب والتسديدات." },
+    ],
+  }),
+  component: CustomersPage });
 
 type Customer = { id: string; name: string; whatsapp: string | null; created_at: string };
 type NetCustomer = {
@@ -792,7 +802,7 @@ function CustomersPage() {
       <div className="flex gap-2 mb-4 items-center">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
+          <Input aria-label="بحث باسم أو رقم واتساب..."
             placeholder="بحث باسم أو رقم واتساب..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -822,7 +832,7 @@ function CustomersPage() {
             </div>
             <div className="relative flex-1 min-w-[180px] max-w-xs">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Input aria-label="بحث بالاسم أو المندوب..."
                 placeholder="بحث بالاسم أو المندوب..."
                 value={netQ}
                 onChange={(e) => setNetQ(e.target.value)}
@@ -1289,8 +1299,7 @@ function CustomersPage() {
                                     onClick={() => {
                                       if (confirm("حذف هذا القيد؟")) deleteCustomerPayment(p.id);
                                     }}
-                                    title="حذف"
-                                  >
+                                    title="حذف" aria-label="حذف">
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                                 </TableCell>
@@ -1384,8 +1393,7 @@ function CustomersPage() {
                                   variant="ghost"
                                   className="h-7 w-7"
                                   onClick={() => openSaleEdit(s)}
-                                  title="تعديل"
-                                >
+                                  title="تعديل" aria-label="تعديل">
                                   <Pencil className="h-3.5 w-3.5" />
                                 </Button>
                               </TableCell>
@@ -1440,7 +1448,7 @@ function CustomersPage() {
           <div className="space-y-3">
             <div>
               <Label>اسم المشتري</Label>
-              <Input
+              <Input aria-label="اختياري"
                 value={editBuyer}
                 onChange={(e) => setEditBuyer(e.target.value)}
                 placeholder="اختياري"
@@ -1471,7 +1479,7 @@ function CustomersPage() {
           <div className="space-y-3">
             <div>
               <Label>اسم الزبون</Label>
-              <Input
+              <Input aria-label="مثال: مفيد الزري"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="مثال: مفيد الزري"
@@ -1486,7 +1494,7 @@ function CustomersPage() {
                 <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">
                   +967
                 </span>
-                <Input
+                <Input aria-label="7XXXXXXXX"
                   value={localYemenDigits(newWhats)}
                   onChange={(e) => setNewWhats(localYemenDigits(e.target.value))}
                   placeholder="7XXXXXXXX"
@@ -1699,7 +1707,7 @@ function CustomersPage() {
               </div>
               <div>
                 <Label className="text-xs mb-1.5 block">رقم الكرت (اختياري)</Label>
-                <Input
+                <Input aria-label="أدخل رقم الكرت يدوياً"
                   value={chargeCard}
                   onChange={(e) => setChargeCard(e.target.value)}
                   placeholder="أدخل رقم الكرت يدوياً"
@@ -1709,7 +1717,7 @@ function CustomersPage() {
               </div>
               <div>
                 <Label className="text-xs mb-1.5 block">السبب / ملاحظة (اختياري)</Label>
-                <Input
+                <Input aria-label="مثال: خدمة إضافية"
                   value={chargeNote}
                   onChange={(e) => setChargeNote(e.target.value)}
                   placeholder="مثال: خدمة إضافية"

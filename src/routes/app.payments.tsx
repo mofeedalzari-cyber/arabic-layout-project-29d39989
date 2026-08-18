@@ -39,7 +39,17 @@ import { displayPhone, fmtMoney, fmtArabicDateTimePdf, fmtArabicDateTime } from 
 import { HandCoins, Receipt as ReceiptIcon, Share2, Pencil, Trash2, History } from "lucide-react";
 import { openWhatsApp } from "@/lib/wa-open";
 
-export const Route = createFileRoute("/app/payments")({ component: PaymentsPage });
+export const Route = createFileRoute("/app/payments")({
+  head: () => ({
+    meta: [
+      { title: "السداد — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "تسجيل عمليات السداد وطباعة سندات السداد وإرسالها للمناديب." },
+      { property: "og:title", content: "السداد — كرتي" },
+      { property: "og:description", content: "تسجيل عمليات السداد وطباعة سندات السداد وإرسالها للمناديب." },
+    ],
+  }),
+  component: PaymentsPage });
 
 function PaymentsPage() {
   const { role, loading } = useAuth();
@@ -279,7 +289,7 @@ function PaymentsPageInner() {
             <Label className="text-xs mb-1.5 block">
               المبلغ المُسدَّد {currency && `(${currency})`}
             </Label>
-            <Input
+            <Input aria-label="مثال: 100"
               type="number"
               inputMode="decimal"
               min="0"
@@ -405,16 +415,14 @@ function PaymentsPageInner() {
                               setEditRow(p);
                               setEditAmount(String(p.amount));
                               setEditNote(p.note ?? "");
-                            }}
-                          >
+                            }} aria-label="تعديل">
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8 text-destructive"
-                            onClick={() => setDeleteRow(p)}
-                          >
+                            onClick={() => setDeleteRow(p)} aria-label="حذف">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>

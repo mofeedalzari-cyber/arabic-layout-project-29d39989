@@ -57,7 +57,17 @@ import {
 } from "lucide-react";
 import { RevealText } from "@/components/reveal-text";
 
-export const Route = createFileRoute("/app/mikrotiks")({ component: MikrotiksPage });
+export const Route = createFileRoute("/app/mikrotiks")({
+  head: () => ({
+    meta: [
+      { title: "أجهزة مايكروتك — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "ربط أجهزة مايكروتك بالشبكة وإدارة اتصالها وسحب الكروت." },
+      { property: "og:title", content: "أجهزة مايكروتك — كرتي" },
+      { property: "og:description", content: "ربط أجهزة مايكروتك بالشبكة وإدارة اتصالها وسحب الكروت." },
+    ],
+  }),
+  component: MikrotiksPage });
 
 type Mikrotik = {
   id: string;
@@ -205,14 +215,14 @@ function MikrotiksPage() {
               </DialogHeader>
               <div className="grid gap-3">
                 <FormRow label="اسم الجهاز">
-                  <Input
+                  <Input aria-label="مثال: راوتر الفرع الرئيسي"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="مثال: راوتر الفرع الرئيسي"
                   />
                 </FormRow>
                 <FormRow label="عنوان IP المحلي أو الدومين">
-                  <Input
+                  <Input aria-label="192.168.88.1"
                     value={form.host}
                     onChange={(e) => setForm({ ...form, host: e.target.value })}
                     placeholder="192.168.88.1"
@@ -228,7 +238,7 @@ function MikrotiksPage() {
                     />
                   </FormRow>
                   <FormRow label="منفذ REST">
-                    <Input
+                    <Input aria-label="المنفذ"
                       type="number"
                       value={form.port}
                       onChange={(e) => setForm({ ...form, port: Number(e.target.value) })}
@@ -985,7 +995,7 @@ function ProfilesTab({ api }: { api: Api }) {
               </DialogHeader>
               <div className="grid gap-3">
                 <FormRow label="اسم الباقة">
-                  <Input
+                  <Input aria-label="مثال: 10M-30days"
                     dir="ltr"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -993,7 +1003,7 @@ function ProfilesTab({ api }: { api: Api }) {
                   />
                 </FormRow>
                 <FormRow label="السرعة (Rate Limit)">
-                  <Input
+                  <Input aria-label="10M/10M"
                     dir="ltr"
                     value={form.rate_limit}
                     onChange={(e) => setForm({ ...form, rate_limit: e.target.value })}
@@ -1001,7 +1011,7 @@ function ProfilesTab({ api }: { api: Api }) {
                   />
                 </FormRow>
                 <FormRow label="مدة الجلسة (Session Timeout)">
-                  <Input
+                  <Input aria-label="30d 00:00:00"
                     dir="ltr"
                     value={form.session_timeout}
                     onChange={(e) => setForm({ ...form, session_timeout: e.target.value })}

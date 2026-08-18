@@ -304,7 +304,7 @@ function AdminBreakdowns() {
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
           <div className="flex items-center gap-2 min-w-0">
             <Activity className="h-4 w-4 text-primary shrink-0" />
-            <h3 className="font-bold text-sm sm:text-base">ملخص الشبكة</h3>
+            <h2 className="font-bold text-sm sm:text-base">ملخص الشبكة</h2>
           </div>
           <div className="flex flex-col sm:flex-row sm:mr-auto gap-2 w-full sm:w-auto">
             <Button
@@ -352,7 +352,7 @@ function AdminBreakdowns() {
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
           <div className="flex items-center gap-2 min-w-0">
             <Layers className="h-4 w-4 text-primary shrink-0" />
-            <h3 className="font-bold text-sm sm:text-base">إحصائيات المبيعات حسب الفئات</h3>
+            <h2 className="font-bold text-sm sm:text-base">إحصائيات المبيعات حسب الفئات</h2>
           </div>
           <Button
             size="sm"
@@ -406,7 +406,7 @@ function AdminBreakdowns() {
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
             <div className="flex items-center gap-2 min-w-0">
               <UserCheck className="h-4 w-4 text-primary shrink-0" />
-              <h3 className="font-bold text-sm sm:text-base">إحصائيات المناديب</h3>
+              <h2 className="font-bold text-sm sm:text-base">إحصائيات المناديب</h2>
             </div>
             <Button
               size="sm"

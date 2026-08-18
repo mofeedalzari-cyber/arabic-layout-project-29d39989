@@ -49,7 +49,17 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { fmtMoney } from "@/lib/format";
 
-export const Route = createFileRoute("/app/networks/$id")({ component: PackagesPage });
+export const Route = createFileRoute("/app/networks/$id")({
+  head: () => ({
+    meta: [
+      { title: "باقات الشبكة — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إدارة باقات شبكة الإنترنت وأسعارها وألوانها." },
+      { property: "og:title", content: "باقات الشبكة — كرتي" },
+      { property: "og:description", content: "إدارة باقات شبكة الإنترنت وأسعارها وألوانها." },
+    ],
+  }),
+  component: PackagesPage });
 
 const pkgSchema = z.object({
   name: z.string().trim().min(2).max(80),
@@ -334,8 +344,7 @@ function PackagesPage() {
                       onClick={() => {
                         setEditing(p);
                         setOpen(true);
-                      }}
-                    >
+                      }} aria-label="تعديل">
                       <Edit3 className="h-4 w-4" />
                     </Button>
                     <Button
@@ -344,8 +353,7 @@ function PackagesPage() {
                       className="rounded-xl h-11 w-11 text-destructive"
                       onClick={() => {
                         if (confirm(`حذف "${p.name}"؟`)) delPkg.mutate(p.id);
-                      }}
-                    >
+                      }} aria-label="حذف">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </>
@@ -732,7 +740,7 @@ function Row({ label, value, onCopy }: { label: string; value: string; onCopy?: 
         <div className="font-mono font-bold truncate">{value}</div>
       </div>
       {onCopy && (
-        <Button size="icon" variant="ghost" className="rounded-lg shrink-0" onClick={onCopy}>
+        <Button size="icon" variant="ghost" className="rounded-lg shrink-0" onClick={onCopy} aria-label="نسخ">
           <Copy className="h-4 w-4" />
         </Button>
       )}
@@ -771,7 +779,7 @@ function PackageForm({
       <div className="grid grid-cols-2 gap-2">
         <div>
           <Label className="text-xs">اسم الباقة</Label>
-          <Input
+          <Input aria-label="باقة يومية"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="باقة يومية"
@@ -779,7 +787,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">السعر (ريال)</Label>
-          <Input
+          <Input aria-label="السعر"
             type="number"
             step="0.01"
             value={form.price}
@@ -789,7 +797,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">حجم الباقة / الرصيد</Label>
-          <Input
+          <Input aria-label="50 GB"
             value={form.data_size ?? ""}
             onChange={(e) => setForm({ ...form, data_size: e.target.value })}
             placeholder="50 GB"
@@ -797,7 +805,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">السرعة</Label>
-          <Input
+          <Input aria-label="20 Mbps"
             value={form.speed ?? ""}
             onChange={(e) => setForm({ ...form, speed: e.target.value })}
             placeholder="20 Mbps"
@@ -805,7 +813,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">مدة الصلاحية</Label>
-          <Input
+          <Input aria-label="30 يوم"
             value={form.validity ?? ""}
             onChange={(e) => setForm({ ...form, validity: e.target.value })}
             placeholder="30 يوم"

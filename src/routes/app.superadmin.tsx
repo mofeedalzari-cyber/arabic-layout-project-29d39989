@@ -57,7 +57,17 @@ import {
 import { RevealText } from "@/components/reveal-text";
 import { superadminBackupNetwork } from "@/lib/superadmin-backup.functions";
 
-export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
+export const Route = createFileRoute("/app/superadmin")({
+  head: () => ({
+    meta: [
+      { title: "لوحة مدير التطبيق — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إدارة كل الشبكات والمناديب والباقات والكروت من لوحة مدير التطبيق." },
+      { property: "og:title", content: "لوحة مدير التطبيق — كرتي" },
+      { property: "og:description", content: "إدارة كل الشبكات والمناديب والباقات والكروت من لوحة مدير التطبيق." },
+    ],
+  }),
+  component: SuperAdminPage });
 
 /** زر نسخة احتياطية لشبكة واحدة (لمدير التطبيق) */
 function NetworkBackupButton({
@@ -297,7 +307,7 @@ function SuperAdminPageInner() {
           <div className="flex flex-wrap gap-2 items-center">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Input aria-label="بحث باسم الشبكة..."
                 placeholder="بحث باسم الشبكة..."
                 className="pr-9"
                 value={networksSearch}
@@ -543,7 +553,7 @@ function SuperAdminPageInner() {
           <div className="flex flex-wrap gap-2 items-center">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Input aria-label="بحث باسم المندوب أو الهاتف..."
                 placeholder="بحث باسم المندوب أو الهاتف..."
                 className="pr-9"
                 value={agentsSearch}
@@ -734,7 +744,7 @@ function SuperAdminPageInner() {
           <div className="flex flex-wrap gap-2 items-center">
             <div className="relative flex-1 min-w-[180px]">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Input aria-label="بحث برقم الكرت..."
                 placeholder="بحث برقم الكرت..."
                 className="pr-9"
                 value={cardsFilter.search ?? ""}
@@ -963,7 +973,7 @@ function MyNetworkPanel({
           </DialogHeader>
           <div className="space-y-2">
             <Label>اسم الشبكة</Label>
-            <Input
+            <Input aria-label="مثال: شبكة مدير التطبيق"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="مثال: شبكة مدير التطبيق"
@@ -1027,7 +1037,7 @@ function EditPhoneButton({
         </DialogHeader>
         <div className="space-y-2">
           <Label>رقم الهاتف</Label>
-          <Input
+          <Input aria-label="رقم الهاتف"
             dir="ltr"
             inputMode="numeric"
             value={phone}
@@ -1372,7 +1382,7 @@ function EditNetworkButton({ network }: { network: any }) {
           </div>
           <div>
             <Label>العملة</Label>
-            <Input
+            <Input aria-label="SAR"
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
               placeholder="SAR"

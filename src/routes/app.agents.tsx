@@ -40,7 +40,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export const Route = createFileRoute("/app/agents")({ component: AgentsPage });
+export const Route = createFileRoute("/app/agents")({
+  head: () => ({
+    meta: [
+      { title: "إدارة المناديب — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إدارة حسابات المناديب وأرصدتهم وتسديد الديون ومتابعة مبيعاتهم." },
+      { property: "og:title", content: "إدارة المناديب — كرتي" },
+      { property: "og:description", content: "إدارة حسابات المناديب وأرصدتهم وتسديد الديون ومتابعة مبيعاتهم." },
+    ],
+  }),
+  component: AgentsPage });
 
 function AgentsPage() {
   const { role, loading } = useAuth();
@@ -159,7 +169,7 @@ function AgentsPageInner() {
 
       <div className="relative mb-4 max-w-md">
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
+        <Input aria-label="بحث..."
           placeholder="بحث..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -211,8 +221,7 @@ function AgentsPageInner() {
                     full_name: a.full_name,
                     phone: (a as any).phone,
                   })
-                }
-              >
+                } aria-label="تعديل">
                 <Pencil className="h-4 w-4" />
               </Button>
               <Button
@@ -225,8 +234,7 @@ function AgentsPageInner() {
                     id: a.id,
                     name: a.full_name || displayPhone((a as any).phone, a.username),
                   })
-                }
-              >
+                } aria-label="حذف">
                 <Trash2 className="h-4 w-4" />
               </Button>
               <div className="flex items-center gap-2 shrink-0">
@@ -293,8 +301,7 @@ function AgentsPageInner() {
                       full_name: a.full_name,
                       phone: (a as any).phone,
                     })
-                  }
-                >
+                  } aria-label="تعديل">
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
@@ -306,8 +313,7 @@ function AgentsPageInner() {
                       id: a.id,
                       name: a.full_name || displayPhone((a as any).phone, a.username),
                     })
-                  }
-                >
+                  } aria-label="حذف">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -439,7 +445,7 @@ function EditAgentDialog({
           </div>
           <div className="space-y-1.5">
             <Label>رقم الهاتف</Label>
-            <Input
+            <Input aria-label="رقم الهاتف"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               inputMode="tel"
@@ -450,7 +456,7 @@ function EditAgentDialog({
           </div>
           <div className="space-y-1.5">
             <Label>كلمة السر الجديدة</Label>
-            <Input
+            <Input aria-label="كلمة المرور الجديدة"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -704,8 +710,7 @@ export function AgentStats({
           onClick={() => {
             refetch();
             qc.invalidateQueries({ queryKey: ["agents"] });
-          }}
-        >
+          }} aria-label="تحديث">
           <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
         </Button>
         <div className="text-center flex-1">

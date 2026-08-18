@@ -13,7 +13,17 @@ import { fmtArabicDateTime } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/app/logs")({ component: LogsPage });
+export const Route = createFileRoute("/app/logs")({
+  head: () => ({
+    meta: [
+      { title: "سجل العمليات — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "متابعة سجل عمليات الشبكة والتغييرات التي أجراها المناديب والمدير." },
+      { property: "og:title", content: "سجل العمليات — كرتي" },
+      { property: "og:description", content: "متابعة سجل عمليات الشبكة والتغييرات التي أجراها المناديب والمدير." },
+    ],
+  }),
+  component: LogsPage });
 
 function LogsPage() {
   const { role, loading } = useAuth();

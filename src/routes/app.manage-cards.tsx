@@ -45,7 +45,17 @@ import { useAuth } from "@/lib/auth-context";
 import { displayPhone, fmtArabicDateTime, fmtMoney } from "@/lib/format";
 import { printAssignedCards } from "@/lib/card-print";
 
-export const Route = createFileRoute("/app/manage-cards")({ component: ManageCardsPage });
+export const Route = createFileRoute("/app/manage-cards")({
+  head: () => ({
+    meta: [
+      { title: "إدارة الكروت — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إدارة كروت الشبكة: تحديد وطباعة وحذف ونقل الكروت بين المناديب." },
+      { property: "og:title", content: "إدارة الكروت — كرتي" },
+      { property: "og:description", content: "إدارة كروت الشبكة: تحديد وطباعة وحذف ونقل الكروت بين المناديب." },
+    ],
+  }),
+  component: ManageCardsPage });
 
 const ALL = "__ALL__";
 const PAGE_SIZE = 15;
@@ -606,7 +616,7 @@ function ManageCardsPageInner() {
             <Label className="text-xs mb-1.5 block">بحث</Label>
             <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Input aria-label="بحث باليوزر / الكود..."
                 className="rounded-xl pr-9"
                 placeholder="بحث باليوزر / الكود..."
                 value={search}
@@ -964,8 +974,7 @@ function ManageCardsPageInner() {
                           className="h-8 w-8 text-destructive hover:bg-destructive/10"
                           onClick={() => {
                             if (confirm("حذف هذا الكرت؟")) delOne.mutate(c.id);
-                          }}
-                        >
+                          }} aria-label="حذف">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </td>
@@ -990,8 +999,7 @@ function ManageCardsPageInner() {
                 variant="outline"
                 className="h-8 w-8 rounded-lg"
                 onClick={() => setPage(1)}
-                disabled={currentPage === 1}
-              >
+                disabled={currentPage === 1} aria-label="ChevronsRight">
                 <ChevronsRight className="h-4 w-4" />
               </Button>
               <Button
@@ -999,8 +1007,7 @@ function ManageCardsPageInner() {
                 variant="outline"
                 className="h-8 w-8 rounded-lg"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
+                disabled={currentPage === 1} aria-label="التالي">
                 <ChevronRight className="h-4 w-4" />
               </Button>
               <Button
@@ -1008,8 +1015,7 @@ function ManageCardsPageInner() {
                 variant="outline"
                 className="h-8 w-8 rounded-lg"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-              >
+                disabled={currentPage === totalPages} aria-label="السابق">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
@@ -1017,8 +1023,7 @@ function ManageCardsPageInner() {
                 variant="outline"
                 className="h-8 w-8 rounded-lg"
                 onClick={() => setPage(totalPages)}
-                disabled={currentPage === totalPages}
-              >
+                disabled={currentPage === totalPages} aria-label="ChevronsLeft">
                 <ChevronsLeft className="h-4 w-4" />
               </Button>
             </div>

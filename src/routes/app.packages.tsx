@@ -51,7 +51,17 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { fmtMoney } from "@/lib/format";
 
-export const Route = createFileRoute("/app/packages")({ component: PackagesPage });
+export const Route = createFileRoute("/app/packages")({
+  head: () => ({
+    meta: [
+      { title: "الباقات — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إنشاء وتعديل باقات الكروت وأسعارها وألوانها وطلب الكروت." },
+      { property: "og:title", content: "الباقات — كرتي" },
+      { property: "og:description", content: "إنشاء وتعديل باقات الكروت وأسعارها وألوانها وطلب الكروت." },
+    ],
+  }),
+  component: PackagesPage });
 
 const pkgSchema = z.object({
   network_id: z.string().uuid("اختر الشبكة"),
@@ -403,8 +413,7 @@ function PackagesPage() {
                     className={`rounded-xl h-11 ${pc ? "bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white" : "bg-muted border-border text-foreground hover:bg-muted/80"}`}
                     onClick={() => {
                       if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name });
-                    }}
-                  >
+                    }} aria-label="حذف">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -644,7 +653,7 @@ function PackageForm({
       <div className="grid grid-cols-2 gap-2">
         <div>
           <Label className="text-xs">اسم الباقة</Label>
-          <Input
+          <Input aria-label="باقة يومية"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="باقة يومية"
@@ -652,7 +661,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">السعر (ريال)</Label>
-          <Input
+          <Input aria-label="السعر"
             type="number"
             step="0.01"
             inputMode="decimal"
@@ -667,7 +676,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">حجم الباقة</Label>
-          <Input
+          <Input aria-label="50 GB"
             value={form.data_size ?? ""}
             onChange={(e) => setForm({ ...form, data_size: e.target.value })}
             placeholder="50 GB"
@@ -675,7 +684,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">السرعة</Label>
-          <Input
+          <Input aria-label="20 Mbps"
             value={form.speed ?? ""}
             onChange={(e) => setForm({ ...form, speed: e.target.value })}
             placeholder="20 Mbps"
@@ -683,7 +692,7 @@ function PackageForm({
         </div>
         <div>
           <Label className="text-xs">مدة الصلاحية</Label>
-          <Input
+          <Input aria-label="30 يوم"
             value={form.validity ?? ""}
             onChange={(e) => setForm({ ...form, validity: e.target.value })}
             placeholder="30 يوم"
@@ -756,7 +765,7 @@ function PackageForm({
         </div>
         <div className="col-span-2">
           <Label className="text-xs">الوقت المسموح</Label>
-          <Input
+          <Input aria-label="مثال: 4 ساعات يومياً"
             value={form.allowed_time ?? ""}
             onChange={(e) => setForm({ ...form, allowed_time: e.target.value })}
             placeholder="مثال: 4 ساعات يومياً"

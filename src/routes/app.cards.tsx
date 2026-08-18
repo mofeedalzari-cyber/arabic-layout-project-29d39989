@@ -21,7 +21,17 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { Navigate } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/app/cards")({ component: CardsPage });
+export const Route = createFileRoute("/app/cards")({
+  head: () => ({
+    meta: [
+      { title: "رفع الكروت — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "رفع الكروت من ملفات PDF أو النص واستخراج أرقام الكروت تلقائياً." },
+      { property: "og:title", content: "رفع الكروت — كرتي" },
+      { property: "og:description", content: "رفع الكروت من ملفات PDF أو النص واستخراج أرقام الكروت تلقائياً." },
+    ],
+  }),
+  component: CardsPage });
 
 function CardsPage() {
   const { role, loading } = useAuth();

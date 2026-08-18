@@ -49,7 +49,17 @@ import { CardTemplateDialog } from "@/components/card-template-dialog";
 import { loadTemplate, printCards, printCardsPdf } from "@/lib/card-print";
 import { pickContact } from "@/lib/pick-contact";
 
-export const Route = createFileRoute("/app/cabin")({ component: CabinPage });
+export const Route = createFileRoute("/app/cabin")({
+  head: () => ({
+    meta: [
+      { title: "كبينة البيع — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "بيع كروت الإنترنت للزبائن بسرعة وإرسال الكرت عبر واتساب." },
+      { property: "og:title", content: "كبينة البيع — كرتي" },
+      { property: "og:description", content: "بيع كروت الإنترنت للزبائن بسرعة وإرسال الكرت عبر واتساب." },
+    ],
+  }),
+  component: CabinPage });
 
 interface CabinRow {
   package_id: string;
@@ -394,7 +404,7 @@ function CabinPage() {
 
                 {addingCustomer ? (
                   <div className="space-y-2">
-                    <Input
+                    <Input aria-label="اسم الزبون"
                       placeholder="اسم الزبون"
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
@@ -407,7 +417,7 @@ function CabinPage() {
                       <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">
                         +967
                       </span>
-                      <Input
+                      <Input aria-label="7XXXXXXXX"
                         placeholder="7XXXXXXXX"
                         inputMode="tel"
                         value={localYemenDigits(newWa)}
@@ -565,7 +575,7 @@ function CabinPage() {
           <div className="mt-4 space-y-3 pb-4">
             <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
               <div className="text-xs text-muted-foreground font-semibold">إضافة زبون جديد</div>
-              <Input
+              <Input aria-label="اسم الزبون"
                 placeholder="اسم الزبون"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
@@ -578,7 +588,7 @@ function CabinPage() {
                 <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">
                   +967
                 </span>
-                <Input
+                <Input aria-label="7XXXXXXXX"
                   placeholder="7XXXXXXXX"
                   inputMode="tel"
                   value={localYemenDigits(newWa)}
@@ -629,16 +639,14 @@ function CabinPage() {
                       className="rounded-lg"
                       onClick={() =>
                         window.open(`https://wa.me/${normalizeWa(c.whatsapp)}`, "_blank")
-                      }
-                    >
+                      } aria-label="واتساب">
                       <MessageCircle className="h-4 w-4 text-success" />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
                       className="rounded-lg"
-                      onClick={() => deleteCustomer(c.id)}
-                    >
+                      onClick={() => deleteCustomer(c.id)} aria-label="حذف">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -737,8 +745,7 @@ function PackageDetails({
           onClick={() => {
             refetch();
             qc.invalidateQueries({ queryKey: ["agent-cabin"] });
-          }}
-        >
+          }} aria-label="تحديث">
           <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
         </Button>
         <div className="text-center flex-1">
@@ -755,7 +762,7 @@ function PackageDetails({
         <div className="px-4">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
+            <Input aria-label="ابحث باسم المستخدم..."
               placeholder="ابحث باسم المستخدم..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -1043,7 +1050,7 @@ function SaleReceipt({ sale }: { sale: any }) {
 
       <div className="rounded-2xl bg-muted/40 p-3 space-y-2">
         <div className="flex gap-2">
-          <Input
+          <Input aria-label="اكتب اسم الشخص الذي تم بيع الكرت له"
             value={buyerName}
             onChange={(e) => setBuyerName(e.target.value)}
             placeholder="اكتب اسم الشخص الذي تم بيع الكرت له"
@@ -1187,13 +1194,12 @@ function Row({
             variant="ghost"
             className="rounded-lg"
             onClick={() => setShown((s) => !s)}
-            title={shown ? "إخفاء" : "إظهار"}
-          >
+            title={shown ? "إخفاء" : "إظهار"} aria-label="إخفاء">
             {shown ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         )}
         {onCopy && shown && (
-          <Button size="icon" variant="ghost" className="rounded-lg" onClick={onCopy}>
+          <Button size="icon" variant="ghost" className="rounded-lg" onClick={onCopy} aria-label="نسخ">
             <Copy className="h-4 w-4" />
           </Button>
         )}
