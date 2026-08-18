@@ -49,6 +49,9 @@ import { toast } from "sonner";
 import { RevealText } from "@/components/reveal-text";
 
 export const Route = createFileRoute("/app/sales")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    sale: typeof search.sale === "string" ? search.sale : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "المبيعات — كرتي" },
