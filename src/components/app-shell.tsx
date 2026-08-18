@@ -44,6 +44,7 @@ interface NavItem {
   adminOnly?: boolean;
   agentOnly?: boolean;
   superOnly?: boolean;
+  hideInBottomNav?: boolean;
 }
 
 
