@@ -284,9 +284,11 @@ export function useRequestNotifications() {
           } else {
             playTone("reject");
             void nativeVibrate([200, 80, 200]);
+            const rejectBody = row?.reject_reason ? `السبب: ${row.reject_reason}` : `${pkg} · الكمية: ${qty}`;
             void systemNotify({
               title: "تم رفض طلبك ❌",
-              body: row?.reject_reason ? `السبب: ${row.reject_reason}` : `${pkg} · الكمية: ${qty}`,
+              body: rejectBody,
+              largeBody: `تم رفض طلب سحب الكروت ❌\n${rejectBody}`,
               path: "/app/requests",
               tag: `dec-${id}`,
             });
