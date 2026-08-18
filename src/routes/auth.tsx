@@ -70,6 +70,7 @@ function AuthPage() {
 
   const [loginPhone, setLoginPhone] = useState("");
   const [loginP, setLoginP] = useState("");
+  const [remember, setRemember] = useState(true);
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotPhone, setForgotPhone] = useState("");
@@ -79,6 +80,40 @@ function AuthPage() {
   useEffect(() => {
     if (!loading && user) navigate({ to: "/app" });
   }, [loading, user, navigate]);
+
+  // تذكر بيانات الدخول على نفس الجهاز
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(REMEMBER_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as {
+        phone?: string;
+        password?: string;
+        accountType?: AccountType;
+      };
+      if (saved.phone) setLoginPhone(saved.phone);
+      if (saved.password) setLoginP(saved.password);
+      if (saved.accountType === "agent" || saved.accountType === "network")
+        setAccountType(saved.accountType);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  function persistCredentials() {
+    try {
+      if (remember) {
+        localStorage.setItem(
+          REMEMBER_KEY,
+          JSON.stringify({ phone: loginPhone, password: loginP, accountType }),
+        );
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
+    } catch {
+      /* ignore */
+    }
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
