@@ -223,6 +223,18 @@ function CabinPage() {
       sale.customer = selCustomer;
       sale.buyer_name = selCustomer.name;
     }
+    if (profile?.network_id) {
+      void notifyNewSale({
+        data: {
+          networkId: profile.network_id,
+          saleId: sale?.sale_id ?? undefined,
+          agentName: profile?.full_name || profile?.username || undefined,
+          packageName: confirmPkg.package_name ?? undefined,
+          price: Number(confirmPkg.price) || undefined,
+          customerName: selCustomer?.name ?? undefined,
+        },
+      }).catch(() => {});
+    }
     setSelling(false);
     setConfirmPkg(null);
     setSaleResult(sale);
