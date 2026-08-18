@@ -312,4 +312,48 @@ export function useRequestNotifications() {
       supabase.removeChannel(channel);
     };
   }, [role, userId, navigate, qc]);
+
+  // تنبيهات المدير الجماعية للمناديب
+  useEffect(() => {
+    if (!networkId || role === "admin") return;
+
+    const channel = supabase
+      .channel(`announcements-${networkId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "announcements",
+          filter: `network_id=eq.${networkId}`,
+        },
+        (payload: any) => {
+          const row = payload?.new;
+          const id = row?.id as string | undefined;
+          if (!id || seenAdmin.current.has(id)) return;
+          seenAdmin.current.add(id);
+
+          const title = (row?.title as string) || "تنبيه من الإدارة";
+          const body = (row?.body as string) || "";
+
+          playTone("new");
+          void nativeVibrate();
+
+          void systemNotify({
+            title,
+            body,
+            largeBody: body,
+            path: "/app",
+            tag: `ann-${id}`,
+          });
+
+          toast.info(title, { description: body, duration: 6000 });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [role, networkId]);
 }
