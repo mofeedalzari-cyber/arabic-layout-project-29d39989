@@ -60,6 +60,8 @@ export const Route = createFileRoute("/auth")({
 
 type AccountType = "agent" | "network";
 
+const REMEMBER_KEY = "kary.login.remember";
+
 function AuthPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -70,6 +72,7 @@ function AuthPage() {
 
   const [loginPhone, setLoginPhone] = useState("");
   const [loginP, setLoginP] = useState("");
+  const [remember, setRemember] = useState(true);
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotPhone, setForgotPhone] = useState("");
@@ -79,6 +82,40 @@ function AuthPage() {
   useEffect(() => {
     if (!loading && user) navigate({ to: "/app" });
   }, [loading, user, navigate]);
+
+  // تذكر بيانات الدخول على نفس الجهاز
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(REMEMBER_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as {
+        phone?: string;
+        password?: string;
+        accountType?: AccountType;
+      };
+      if (saved.phone) setLoginPhone(saved.phone);
+      if (saved.password) setLoginP(saved.password);
+      if (saved.accountType === "agent" || saved.accountType === "network")
+        setAccountType(saved.accountType);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  function persistCredentials() {
+    try {
+      if (remember) {
+        localStorage.setItem(
+          REMEMBER_KEY,
+          JSON.stringify({ phone: loginPhone, password: loginP, accountType }),
+        );
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
+    } catch {
+      /* ignore */
+    }
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -167,6 +204,7 @@ function AuthPage() {
       if (digits) {
         await (supabase.rpc as any)("login_guard_record", { _phone: digits, _ok: true });
       }
+      persistCredentials();
       toast.success("تم تسجيل الدخول");
       navigate({ to: "/app" });
     } catch (error) {
@@ -248,7 +286,26 @@ function AuthPage() {
               autoComplete="current-password"
             />
 
-            <div className="text-start">
+            <div className="flex items-center justify-between gap-3">
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => {
+                    const on = e.target.checked;
+                    setRemember(on);
+                    if (!on) {
+                      try {
+                        localStorage.removeItem(REMEMBER_KEY);
+                      } catch {
+                        /* ignore */
+                      }
+                    }
+                  }}
+                  className="h-4 w-4 accent-[#12a05f]"
+                />
+                تذكر بياناتي
+              </label>
               <button
                 type="button"
                 onClick={() => {
