@@ -868,10 +868,11 @@ function CustomersPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div className="text-sm text-muted-foreground">
-              {settleFor?.name} — المندوب: {settleFor?.agent_username ?? "—"}
+              {settleFor?.name} — المندوب: {agentProfileMap.get(settleFor?.agent_id ?? "")?.full_name || settleFor?.agent_username || "—"}
               <br />
               المتبقي: {fmtMoney(Number(settleFor?.balance ?? 0))}
             </div>
+
             <div>
               <Label>المبلغ</Label>
               <Input
