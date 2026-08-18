@@ -309,8 +309,22 @@ function NavLink({ item }: { item: NavItem }) {
   );
 }
 
-function getBottomNavItems(_items: NavItem[], _pathname: string): NavItem[] {
+function getBottomNavItems(
+  role: string | null,
+  isSuperadmin?: boolean,
+): NavItem[] {
   const map = new Map<string, NavItem>(NAV.map((n) => [n.to, n]));
+  if (isSuperadmin) {
+    return [map.get("/app/superadmin")].filter((it): it is NavItem => !!it);
+  }
+  if (role === "admin") {
+    return [
+      map.get("/app"),
+      map.get("/app/networks"),
+      map.get("/app/packages"),
+      map.get("/app/requests"),
+    ].filter((it): it is NavItem => !!it);
+  }
   return [
     map.get("/app"),
     map.get("/app/cabin"),
