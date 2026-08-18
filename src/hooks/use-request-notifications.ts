@@ -272,6 +272,7 @@ export function useRequestNotifications() {
             void systemNotify({
               title: "تم قبول طلبك ✅",
               body: `${pkg} · الكمية: ${qty}`,
+              largeBody: `تم قبول طلب سحب الكروت ✅\nالباقة: ${pkg}\nالكمية: ${qty}`,
               path: "/app/cabin",
               tag: `dec-${id}`,
             });
