@@ -100,7 +100,7 @@ export function useRequestNotifications() {
           if (!id || seenAdmin.current.has(id)) return;
           seenAdmin.current.add(id);
 
-          const agent = cleanPhoneLike(row?.agent_username) || "مندوب";
+          const agent = row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب";
           const pkg = row?.package_name ?? "باقة";
           const qty = row?.quantity ?? "";
 
@@ -108,8 +108,9 @@ export function useRequestNotifications() {
           void nativeVibrate();
 
           void systemNotify({
-            title: `طلب سحب جديد — ${agent}`,
-            body: `${pkg} · الكمية: ${qty}`,
+            title: "طلب سحب جديد",
+            body: `${agent} · ${pkg} · الكمية: ${qty}`,
+            largeBody: `طلب سحب كروت جديد من ${agent}\nالباقة: ${pkg}\nالكمية: ${qty}`,
             path: "/app/requests",
             tag: `req-${id}`,
           });
