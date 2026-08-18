@@ -197,10 +197,12 @@ function CustomersPage() {
           (c) =>
             (c.name ?? "").toLowerCase().includes(s) ||
             (c.whatsapp ?? "").includes(s) ||
-            (c.agent_username ?? "").toLowerCase().includes(s),
+            (c.agent_username ?? "").toLowerCase().includes(s) ||
+            (agentProfileMap.get(c.agent_id ?? "")?.full_name ?? "").toLowerCase().includes(s),
         )
       : list;
-  }, [netCustomers, netQ, netAgentId]);
+  }, [netCustomers, netQ, netAgentId, agentProfileMap]);
+
 
   const netTotals = useMemo(() => {
     return {
