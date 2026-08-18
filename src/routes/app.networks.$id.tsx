@@ -228,8 +228,20 @@ function PackagesPage() {
       toast.error(key ? map[key] : error.message);
       return;
     }
+    const sale: any = Array.isArray(data) ? data[0] : data;
+    if (networkId) {
+      void notifyNewSale({
+        data: {
+          networkId,
+          saleId: sale?.sale_id ?? undefined,
+          agentName: profile?.full_name || profile?.username || undefined,
+          packageName: confirmPkg.name ?? undefined,
+          price: Number(confirmPkg.price) || undefined,
+        },
+      }).catch(() => {});
+    }
     setConfirmPkg(null);
-    setSaleResult(Array.isArray(data) ? data[0] : data);
+    setSaleResult(sale);
     qc.invalidateQueries({ queryKey: ["pkg-counts", networkId] });
     qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
     qc.invalidateQueries({ queryKey: ["sales"] });
