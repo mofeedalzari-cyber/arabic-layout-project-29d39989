@@ -908,6 +908,15 @@ export type Database = {
           requests_updated: number
         }[]
       }
+      admin_settle_customer_via_agent: {
+        Args: { _amount?: number; _customer_id: string; _note?: string }
+        Returns: {
+          agent_applied: number
+          agent_remaining_debt: number
+          customer_balance: number
+          customer_paid: number
+        }[]
+      }
       admin_stats: { Args: never; Returns: Json }
       admin_transfer_sold_cards: {
         Args: { _ids: string[]; _to_agent: string }
@@ -1073,6 +1082,21 @@ export type Database = {
         Args: { _network_id: string }
         Returns: {
           token: string
+        }[]
+      }
+      network_customers: {
+        Args: never
+        Returns: {
+          agent_id: string
+          agent_username: string
+          balance: number
+          charges: number
+          created_at: string
+          id: string
+          name: string
+          paid: number
+          sales_total: number
+          whatsapp: string
         }[]
       }
       package_counts: {
