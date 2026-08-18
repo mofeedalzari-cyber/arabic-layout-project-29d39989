@@ -128,3 +128,22 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+// فتح التطبيق على الصفحة المطلوبة عند الضغط على الإشعار
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const path = (event.notification.data && event.notification.data.path) || '/app';
+  event.waitUntil(
+    (async () => {
+      const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const client of all) {
+        if ('focus' in client) {
+          await client.focus();
+          try { client.navigate(path); } catch (_) {}
+          return;
+        }
+      }
+      await self.clients.openWindow(path);
+    })(),
+  );
+});
