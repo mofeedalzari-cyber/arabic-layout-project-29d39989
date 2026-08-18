@@ -151,18 +151,42 @@ function CustomersPage() {
     },
   });
 
+  const { data: netAgentProfiles } = useQuery({
+    queryKey: ["network-agent-profiles", user?.id],
+    enabled: !!user?.id && isAdmin && (netCustomers?.length ?? 0) > 0,
+    queryFn: async () => {
+      const ids = [...new Set((netCustomers ?? []).map((c) => c.agent_id).filter(Boolean))] as string[];
+      if (!ids.length) return [];
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, full_name")
+        .in("id", ids);
+      if (error) throw error;
+      return (data ?? []) as { id: string; username: string; full_name: string | null }[];
+    },
+  });
+
+  const agentProfileMap = useMemo(() => {
+    const m = new Map<string, { username: string; full_name: string | null }>();
+    for (const p of netAgentProfiles ?? []) m.set(p.id, p);
+    return m;
+  }, [netAgentProfiles]);
+
   const netAgents = useMemo(() => {
-    const map = new Map<string, { id: string; username: string; count: number; balance: number }>();
+    const map = new Map<string, { id: string; username: string; full_name: string | null; count: number; balance: number }>();
     for (const c of netCustomers ?? []) {
       const id = c.agent_id ?? "none";
-      const cur =
-        map.get(id) ?? { id, username: c.agent_username ?? "بدون مندوب", count: 0, balance: 0 };
+      const profile = agentProfileMap.get(id);
+      const displayName = profile?.full_name || profile?.username || c.agent_username || "بدون مندوب";
+      const cur = map.get(id) ?? { id, username: c.agent_username ?? "بدون مندوب", full_name: displayName, count: 0, balance: 0 };
       cur.count += 1;
       cur.balance += Number(c.balance) || 0;
+      if (!cur.full_name && profile?.full_name) cur.full_name = profile.full_name;
       map.set(id, cur);
     }
-    return [...map.values()].sort((a, b) => a.username.localeCompare(b.username, "ar"));
-  }, [netCustomers]);
+    return [...map.values()].sort((a, b) => (a.full_name || a.username).localeCompare(b.full_name || b.username, "ar"));
+  }, [netCustomers, agentProfileMap]);
+
 
   const netRows = useMemo(() => {
     const s = netQ.trim().toLowerCase();
