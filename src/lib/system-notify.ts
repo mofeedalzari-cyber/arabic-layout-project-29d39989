@@ -59,6 +59,8 @@ export async function ensureNotificationPermission(): Promise<boolean> {
 export type SystemNotifyInput = {
   title: string;
   body?: string;
+  /** نص مفصل يظهر عند توسيع الإشعار (Android) */
+  largeBody?: string;
   /** مسار داخل التطبيق يُفتح عند الضغط */
   path?: string;
   tag?: string;
