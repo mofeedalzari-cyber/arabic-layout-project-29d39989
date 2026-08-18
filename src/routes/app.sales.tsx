@@ -160,6 +160,33 @@ function SalesPage() {
     },
   });
 
+  // فاتورة عملية بيع محددة (تُفتح عند الضغط على إشعار البيع: /app/sales?sale=<id>)
+  const { data: paramSale } = useQuery({
+    queryKey: ["sale-invoice", saleParam],
+    enabled: !!saleParam,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales")
+        .select(
+          "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_number, customers ( name )",
+        )
+        .eq("id", saleParam!)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      return {
+        ...(data as any),
+        customer_name: (data as any).customers?.name ?? null,
+        card_username: (data as any).card_number ?? null,
+        card_password: null,
+      } as SaleRow;
+    },
+  });
+  const invoiceSale = (sales ?? []).find((s) => s.id === saleParam) ?? paramSale ?? null;
+  const closeInvoice = () => navigate({ search: { sale: undefined } });
+
+
+
 
 
   const customerOptions = useMemo(() => {
