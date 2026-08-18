@@ -44,6 +44,7 @@ interface NavItem {
   adminOnly?: boolean;
   agentOnly?: boolean;
   superOnly?: boolean;
+  hideInBottomNav?: boolean;
 }
 
 
@@ -53,7 +54,7 @@ const NAV: NavItem[] = [
   { to: "/app/password-resets", label: "استعادة كلمة المرور", icon: KeyRound, superOnly: true },
   { to: "/app/networks", label: "الشبكات", icon: Wifi, adminOnly: true },
   { to: "/app/cabin", label: "كبينة البيع", icon: Store, agentOnly: true },
-  { to: "/app/customers", label: "الزبائن", icon: Users },
+  { to: "/app/customers", label: "الزبائن", icon: Users, hideInBottomNav: true },
   { to: "/app/packages", label: "الباقات", icon: Package },
   { to: "/app/requests", label: "الطلبات", icon: Inbox },
   { to: "/app/join-requests", label: "طلبات الانضمام", icon: UserPlus, adminOnly: true },
@@ -258,7 +259,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           <div className="grid grid-cols-4 h-16">
             {items
-              .filter((it) => !it.superOnly)
+              .filter((it) => !it.superOnly && !it.hideInBottomNav)
               .slice(0, 4)
               .map((it) => (
                 <BottomLink key={it.to} item={it} />
