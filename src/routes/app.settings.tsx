@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AnnounceAgentsCard } from "@/components/announce-agents-card";
 
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
