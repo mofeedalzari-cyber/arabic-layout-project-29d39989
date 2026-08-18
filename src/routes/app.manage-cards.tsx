@@ -45,7 +45,17 @@ import { useAuth } from "@/lib/auth-context";
 import { displayPhone, fmtArabicDateTime, fmtMoney } from "@/lib/format";
 import { printAssignedCards } from "@/lib/card-print";
 
-export const Route = createFileRoute("/app/manage-cards")({ component: ManageCardsPage });
+export const Route = createFileRoute("/app/manage-cards")({
+  head: () => ({
+    meta: [
+      { title: "إدارة الكروت — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إدارة كروت الشبكة: تحديد وطباعة وحذف ونقل الكروت بين المناديب." },
+      { property: "og:title", content: "إدارة الكروت — كرتي" },
+      { property: "og:description", content: "إدارة كروت الشبكة: تحديد وطباعة وحذف ونقل الكروت بين المناديب." },
+    ],
+  }),
+  component: ManageCardsPage });
 
 const ALL = "__ALL__";
 const PAGE_SIZE = 15;

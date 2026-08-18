@@ -79,7 +79,17 @@ function normalizeWa(v: string) {
   return d ? "967" + d : "";
 }
 
-export const Route = createFileRoute("/app/customers")({ component: CustomersPage });
+export const Route = createFileRoute("/app/customers")({
+  head: () => ({
+    meta: [
+      { title: "الزبائن — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إدارة حسابات الزبائن وأرصدتهم وكشوف الحساب والتسديدات." },
+      { property: "og:title", content: "الزبائن — كرتي" },
+      { property: "og:description", content: "إدارة حسابات الزبائن وأرصدتهم وكشوف الحساب والتسديدات." },
+    ],
+  }),
+  component: CustomersPage });
 
 type Customer = { id: string; name: string; whatsapp: string | null; created_at: string };
 type NetCustomer = {

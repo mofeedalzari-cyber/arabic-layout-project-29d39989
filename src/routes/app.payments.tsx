@@ -39,7 +39,17 @@ import { displayPhone, fmtMoney, fmtArabicDateTimePdf, fmtArabicDateTime } from 
 import { HandCoins, Receipt as ReceiptIcon, Share2, Pencil, Trash2, History } from "lucide-react";
 import { openWhatsApp } from "@/lib/wa-open";
 
-export const Route = createFileRoute("/app/payments")({ component: PaymentsPage });
+export const Route = createFileRoute("/app/payments")({
+  head: () => ({
+    meta: [
+      { title: "السداد — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "تسجيل عمليات السداد وطباعة سندات السداد وإرسالها للمناديب." },
+      { property: "og:title", content: "السداد — كرتي" },
+      { property: "og:description", content: "تسجيل عمليات السداد وطباعة سندات السداد وإرسالها للمناديب." },
+    ],
+  }),
+  component: PaymentsPage });
 
 function PaymentsPage() {
   const { role, loading } = useAuth();

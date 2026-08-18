@@ -57,7 +57,17 @@ import {
 import { RevealText } from "@/components/reveal-text";
 import { superadminBackupNetwork } from "@/lib/superadmin-backup.functions";
 
-export const Route = createFileRoute("/app/superadmin")({ component: SuperAdminPage });
+export const Route = createFileRoute("/app/superadmin")({
+  head: () => ({
+    meta: [
+      { title: "لوحة مدير التطبيق — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إدارة كل الشبكات والمناديب والباقات والكروت من لوحة مدير التطبيق." },
+      { property: "og:title", content: "لوحة مدير التطبيق — كرتي" },
+      { property: "og:description", content: "إدارة كل الشبكات والمناديب والباقات والكروت من لوحة مدير التطبيق." },
+    ],
+  }),
+  component: SuperAdminPage });
 
 /** زر نسخة احتياطية لشبكة واحدة (لمدير التطبيق) */
 function NetworkBackupButton({

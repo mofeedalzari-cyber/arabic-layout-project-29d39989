@@ -48,7 +48,17 @@ import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
 import { RevealText } from "@/components/reveal-text";
 
-export const Route = createFileRoute("/app/sales")({ component: SalesPage });
+export const Route = createFileRoute("/app/sales")({
+  head: () => ({
+    meta: [
+      { title: "المبيعات — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "سجل مبيعات الكروت مع الفلترة بالتاريخ والباقة وطباعة التقارير." },
+      { property: "og:title", content: "المبيعات — كرتي" },
+      { property: "og:description", content: "سجل مبيعات الكروت مع الفلترة بالتاريخ والباقة وطباعة التقارير." },
+    ],
+  }),
+  component: SalesPage });
 
 type SaleRow = {
   id: string;

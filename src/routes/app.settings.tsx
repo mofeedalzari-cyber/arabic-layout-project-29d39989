@@ -27,7 +27,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export const Route = createFileRoute("/app/settings")({ component: SettingsPage });
+export const Route = createFileRoute("/app/settings")({
+  head: () => ({
+    meta: [
+      { title: "الإعدادات — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إعدادات الحساب والنسخ الاحتياطي والاستعادة لشبكتك." },
+      { property: "og:title", content: "الإعدادات — كرتي" },
+      { property: "og:description", content: "إعدادات الحساب والنسخ الاحتياطي والاستعادة لشبكتك." },
+    ],
+  }),
+  component: SettingsPage });
 
 function SettingsPage() {
   const { profile, role } = useAuth();

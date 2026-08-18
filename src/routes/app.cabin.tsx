@@ -49,7 +49,17 @@ import { CardTemplateDialog } from "@/components/card-template-dialog";
 import { loadTemplate, printCards, printCardsPdf } from "@/lib/card-print";
 import { pickContact } from "@/lib/pick-contact";
 
-export const Route = createFileRoute("/app/cabin")({ component: CabinPage });
+export const Route = createFileRoute("/app/cabin")({
+  head: () => ({
+    meta: [
+      { title: "كبينة البيع — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "بيع كروت الإنترنت للزبائن بسرعة وإرسال الكرت عبر واتساب." },
+      { property: "og:title", content: "كبينة البيع — كرتي" },
+      { property: "og:description", content: "بيع كروت الإنترنت للزبائن بسرعة وإرسال الكرت عبر واتساب." },
+    ],
+  }),
+  component: CabinPage });
 
 interface CabinRow {
   package_id: string;

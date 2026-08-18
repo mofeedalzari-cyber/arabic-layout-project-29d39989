@@ -49,7 +49,17 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { fmtMoney } from "@/lib/format";
 
-export const Route = createFileRoute("/app/networks/$id")({ component: PackagesPage });
+export const Route = createFileRoute("/app/networks/$id")({
+  head: () => ({
+    meta: [
+      { title: "باقات الشبكة — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إدارة باقات شبكة الإنترنت وأسعارها وألوانها." },
+      { property: "og:title", content: "باقات الشبكة — كرتي" },
+      { property: "og:description", content: "إدارة باقات شبكة الإنترنت وأسعارها وألوانها." },
+    ],
+  }),
+  component: PackagesPage });
 
 const pkgSchema = z.object({
   name: z.string().trim().min(2).max(80),

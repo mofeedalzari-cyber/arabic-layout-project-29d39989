@@ -51,7 +51,17 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { fmtMoney } from "@/lib/format";
 
-export const Route = createFileRoute("/app/packages")({ component: PackagesPage });
+export const Route = createFileRoute("/app/packages")({
+  head: () => ({
+    meta: [
+      { title: "الباقات — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إنشاء وتعديل باقات الكروت وأسعارها وألوانها وطلب الكروت." },
+      { property: "og:title", content: "الباقات — كرتي" },
+      { property: "og:description", content: "إنشاء وتعديل باقات الكروت وأسعارها وألوانها وطلب الكروت." },
+    ],
+  }),
+  component: PackagesPage });
 
 const pkgSchema = z.object({
   network_id: z.string().uuid("اختر الشبكة"),

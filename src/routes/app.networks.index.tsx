@@ -22,7 +22,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-export const Route = createFileRoute("/app/networks/")({ component: NetworksPage });
+export const Route = createFileRoute("/app/networks/")({
+  head: () => ({
+    meta: [
+      { title: "الشبكات — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "عرض شبكات الإنترنت وإدارة بياناتها وباقاتها." },
+      { property: "og:title", content: "الشبكات — كرتي" },
+      { property: "og:description", content: "عرض شبكات الإنترنت وإدارة بياناتها وباقاتها." },
+    ],
+  }),
+  component: NetworksPage });
 
 const netSchema = z.object({
   name: z.string().trim().min(2, "الاسم مطلوب").max(60),

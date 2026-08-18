@@ -19,7 +19,17 @@ import { useUserNames } from "@/lib/use-user-names";
 import { displayPhone, fmtMoney, fmtArabicDateTime } from "@/lib/format";
 import { notifyRequestDecision } from "@/lib/push.functions";
 
-export const Route = createFileRoute("/app/requests")({ component: RequestsPage });
+export const Route = createFileRoute("/app/requests")({
+  head: () => ({
+    meta: [
+      { title: "طلبات الكروت — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "متابعة طلبات الكروت من المناديب والموافقة على تسليم الباقات." },
+      { property: "og:title", content: "طلبات الكروت — كرتي" },
+      { property: "og:description", content: "متابعة طلبات الكروت من المناديب والموافقة على تسليم الباقات." },
+    ],
+  }),
+  component: RequestsPage });
 
 function RequestsPage() {
   const { role } = useAuth();

@@ -40,7 +40,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export const Route = createFileRoute("/app/agents")({ component: AgentsPage });
+export const Route = createFileRoute("/app/agents")({
+  head: () => ({
+    meta: [
+      { title: "إدارة المناديب — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "إدارة حسابات المناديب وأرصدتهم وتسديد الديون ومتابعة مبيعاتهم." },
+      { property: "og:title", content: "إدارة المناديب — كرتي" },
+      { property: "og:description", content: "إدارة حسابات المناديب وأرصدتهم وتسديد الديون ومتابعة مبيعاتهم." },
+    ],
+  }),
+  component: AgentsPage });
 
 function AgentsPage() {
   const { role, loading } = useAuth();

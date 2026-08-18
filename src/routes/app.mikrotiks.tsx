@@ -57,7 +57,17 @@ import {
 } from "lucide-react";
 import { RevealText } from "@/components/reveal-text";
 
-export const Route = createFileRoute("/app/mikrotiks")({ component: MikrotiksPage });
+export const Route = createFileRoute("/app/mikrotiks")({
+  head: () => ({
+    meta: [
+      { title: "أجهزة مايكروتك — كرتي" },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "description", content: "ربط أجهزة مايكروتك بالشبكة وإدارة اتصالها وسحب الكروت." },
+      { property: "og:title", content: "أجهزة مايكروتك — كرتي" },
+      { property: "og:description", content: "ربط أجهزة مايكروتك بالشبكة وإدارة اتصالها وسحب الكروت." },
+    ],
+  }),
+  component: MikrotiksPage });
 
 type Mikrotik = {
   id: string;
