@@ -96,7 +96,8 @@ type Sale = {
 };
 
 function CustomersPage() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === "admin";
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Customer | null>(null);
