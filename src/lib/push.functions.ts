@@ -113,8 +113,8 @@ export const notifyNewJoinRequest = createServerFn({ method: "POST" })
 
     const who = data.fullName || req.agent_full_name || req.agent_username || "مندوب";
     return sendFcmToTokens(tokens, {
-      title: "طلب انضمام جديد 👤",
-      body: `${who} يطلب الانضمام إلى ${data.networkName}`,
+      title: "طلب انضمام جديد",
+      body: `${who} · ${data.networkName}`,
       path: "/app/join-requests",
       tag: "join-request",
     });
