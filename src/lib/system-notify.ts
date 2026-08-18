@@ -67,7 +67,7 @@ export type SystemNotifyInput = {
 };
 
 /** إظهار إشعار نظام أعلى الشاشة */
-export async function systemNotify({ title, body, path, tag }: SystemNotifyInput): Promise<void> {
+export async function systemNotify({ title, body, largeBody, path, tag }: SystemNotifyInput): Promise<void> {
   if (typeof window === "undefined") return;
   const allowed = await ensureNotificationPermission();
   if (!allowed) return;
@@ -81,6 +81,8 @@ export async function systemNotify({ title, body, path, tag }: SystemNotifyInput
             id: Math.floor(Math.random() * 2_000_000_000),
             title,
             body: body ?? "",
+            largeBody: largeBody || body || undefined,
+            summaryText: "كرتي",
             channelId: "karti_alerts",
             smallIcon: "ic_stat_icon_config_sample",
             extra: { path },
@@ -100,7 +102,8 @@ export async function systemNotify({ title, body, path, tag }: SystemNotifyInput
       icon: "/app-icon.png",
       badge: "/app-icon.png",
       tag,
-      data: { path: path ?? "/app" },
+      requireInteraction: true,
+      data: { path: path ?? "/app", largeBody },
       vibrate: [120, 60, 120],
     };
     if (reg) {
