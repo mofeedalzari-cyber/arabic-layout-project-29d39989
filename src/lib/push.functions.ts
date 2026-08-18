@@ -150,3 +150,34 @@ export const notifyJoinDecision = createServerFn({ method: "POST" })
       tag: "join-decision",
     });
   });
+
+/** إشعار لمديري الشبكة عند إتمام عملية بيع */
+export const notifyNewSale = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        networkId: z.string().uuid(),
+        saleId: z.string().uuid().optional(),
+        agentName: z.string().max(120).optional(),
+        packageName: z.string().max(120).optional(),
+        price: z.number().nonnegative().max(100000000).optional(),
+        customerName: z.string().max(120).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { sendFcmToTokens } = await import("./fcm.server");
+    const { data: rows, error } = await context.supabase.rpc("network_admin_push_tokens", {
+      _network_id: data.networkId,
+    });
+    if (error) return { sent: 0, failed: 0, skipped: "no-access" };
+    const tokens = ((rows as { token: string }[] | null) ?? []).map((r) => r.token);
+    const amount = data.price != null ? `${data.price} ﷼` : "";
+    return sendFcmToTokens(tokens, {
+      title: `عملية بيع جديدة — ${data.agentName || "مندوب"}`,
+      body: [data.packageName || "باقة", amount, data.customerName].filter(Boolean).join(" · "),
+      path: data.saleId ? `/app/sales?sale=${data.saleId}` : "/app/sales",
+      tag: "new-sale",
+    });
+  });
