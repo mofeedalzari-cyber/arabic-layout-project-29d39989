@@ -53,7 +53,7 @@ const NAV: NavItem[] = [
   { to: "/app/password-resets", label: "استعادة كلمة المرور", icon: KeyRound, superOnly: true },
   { to: "/app/networks", label: "الشبكات", icon: Wifi, adminOnly: true },
   { to: "/app/cabin", label: "كبينة البيع", icon: Store, agentOnly: true },
-  { to: "/app/customers", label: "الزبائن", icon: Users, agentOnly: true },
+  { to: "/app/customers", label: "الزبائن", icon: Users },
   { to: "/app/packages", label: "الباقات", icon: Package },
   { to: "/app/requests", label: "الطلبات", icon: Inbox },
   { to: "/app/join-requests", label: "طلبات الانضمام", icon: UserPlus, adminOnly: true },
