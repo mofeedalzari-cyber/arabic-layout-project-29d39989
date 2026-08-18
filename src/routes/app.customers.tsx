@@ -770,26 +770,22 @@ function CustomersPage() {
               />
             </div>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 mb-2">
-            <Button
-              size="sm"
-              variant={netAgentId === "all" ? "default" : "outline"}
-              className="rounded-full shrink-0 h-8"
-              onClick={() => setNetAgentId("all")}
-            >
-              كل المناديب ({netCustomers?.length ?? 0})
-            </Button>
-            {netAgents.map((a) => (
-              <Button
-                key={a.id}
-                size="sm"
-                variant={netAgentId === a.id ? "default" : "outline"}
-                className="rounded-full shrink-0 h-8"
-                onClick={() => setNetAgentId(a.id)}
-              >
-                {a.username} ({a.count})
-              </Button>
-            ))}
+          <div className="mb-3">
+            <Select value={netAgentId} onValueChange={setNetAgentId}>
+              <SelectTrigger className="rounded-xl h-10 w-full sm:w-[340px]">
+                <SelectValue placeholder="اختر اسم المندوب" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  كل المناديب ({netCustomers?.length ?? 0}) — المتبقي: {fmtMoney(netAgents.reduce((a, g) => a + g.balance, 0))}
+                </SelectItem>
+                {netAgents.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.username} ({a.count}) — المتبقي: {fmtMoney(a.balance)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid gap-2 max-h-[420px] overflow-y-auto">
             {netRows.map((c) => (
