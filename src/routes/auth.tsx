@@ -204,6 +204,7 @@ function AuthPage() {
       if (digits) {
         await (supabase.rpc as any)("login_guard_record", { _phone: digits, _ok: true });
       }
+      persistCredentials();
       toast.success("تم تسجيل الدخول");
       navigate({ to: "/app" });
     } catch (error) {
