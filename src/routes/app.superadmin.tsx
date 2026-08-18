@@ -311,7 +311,7 @@ function SuperAdminPageInner() {
                 placeholder="بحث باسم الشبكة..."
                 className="pr-9"
                 value={networksSearch}
-                onChange={(e) => setNetworksSearch(e.target.value)}
+                onChange={(e) = aria-label="بحث باسم الشبكة..."> setNetworksSearch(e.target.value)}
               />
             </div>
           </div>
@@ -557,7 +557,7 @@ function SuperAdminPageInner() {
                 placeholder="بحث باسم المندوب أو الهاتف..."
                 className="pr-9"
                 value={agentsSearch}
-                onChange={(e) => setAgentsSearch(e.target.value)}
+                onChange={(e) = aria-label="بحث باسم المندوب أو الهاتف..."> setAgentsSearch(e.target.value)}
               />
             </div>
             <select
@@ -748,7 +748,7 @@ function SuperAdminPageInner() {
                 placeholder="بحث برقم الكرت..."
                 className="pr-9"
                 value={cardsFilter.search ?? ""}
-                onChange={(e) => setCardsFilter((f) => ({ ...f, search: e.target.value }))}
+                onChange={(e) = aria-label="بحث برقم الكرت..."> setCardsFilter((f) => ({ ...f, search: e.target.value }))}
               />
             </div>
             <select

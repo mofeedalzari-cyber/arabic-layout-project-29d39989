@@ -297,7 +297,7 @@ function PaymentsPageInner() {
               className="rounded-xl"
               placeholder="مثال: 100"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) = aria-label="مثال: 100"> setAmount(e.target.value)}
             />
           </div>
 

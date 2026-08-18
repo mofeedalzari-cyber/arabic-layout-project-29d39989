@@ -172,7 +172,7 @@ function AgentsPageInner() {
         <Input
           placeholder="بحث..."
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) = aria-label="بحث..."> setQ(e.target.value)}
           className="pr-9 rounded-xl"
         />
       </div>

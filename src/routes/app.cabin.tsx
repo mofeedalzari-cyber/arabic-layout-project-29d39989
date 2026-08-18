@@ -407,7 +407,7 @@ function CabinPage() {
                     <Input
                       placeholder="اسم الزبون"
                       value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
+                      onChange={(e) = aria-label="اسم الزبون"> setNewName(e.target.value)}
                       className="rounded-xl bg-background"
                     />
                     <div
@@ -421,7 +421,7 @@ function CabinPage() {
                         placeholder="7XXXXXXXX"
                         inputMode="tel"
                         value={localYemenDigits(newWa)}
-                        onChange={(e) => setNewWa(localYemenDigits(e.target.value))}
+                        onChange={(e) = aria-label="7XXXXXXXX"> setNewWa(localYemenDigits(e.target.value))}
                         className="flex-1 rounded-none border-0 bg-background font-mono"
                       />
                     </div>
@@ -578,7 +578,7 @@ function CabinPage() {
               <Input
                 placeholder="اسم الزبون"
                 value={newName}
-                onChange={(e) => setNewName(e.target.value)}
+                onChange={(e) = aria-label="اسم الزبون"> setNewName(e.target.value)}
                 className="rounded-xl bg-background"
               />
               <div
@@ -592,7 +592,7 @@ function CabinPage() {
                   placeholder="7XXXXXXXX"
                   inputMode="tel"
                   value={localYemenDigits(newWa)}
-                  onChange={(e) => setNewWa(localYemenDigits(e.target.value))}
+                  onChange={(e) = aria-label="7XXXXXXXX"> setNewWa(localYemenDigits(e.target.value))}
                   className="flex-1 rounded-none border-0 bg-background font-mono"
                 />
               </div>
@@ -765,7 +765,7 @@ function PackageDetails({
             <Input
               placeholder="ابحث باسم المستخدم..."
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) = aria-label="ابحث باسم المستخدم..."> setQ(e.target.value)}
               className="pr-9 rounded-2xl h-11 bg-background"
             />
           </div>

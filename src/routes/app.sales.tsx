@@ -417,7 +417,7 @@ function SalesPage() {
           <Input
             placeholder="بحث برقم العملية / الاسم / الكرت..."
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) = aria-label="بحث برقم العملية / الاسم / الكرت..."> setQ(e.target.value)}
             className="pr-9 rounded-xl"
           />
           {q && (

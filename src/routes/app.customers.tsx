@@ -805,7 +805,7 @@ function CustomersPage() {
           <Input
             placeholder="بحث باسم أو رقم واتساب..."
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) = aria-label="بحث باسم أو رقم واتساب..."> setQ(e.target.value)}
             className="pr-9 rounded-xl"
           />
         </div>
@@ -835,7 +835,7 @@ function CustomersPage() {
               <Input
                 placeholder="بحث بالاسم أو المندوب..."
                 value={netQ}
-                onChange={(e) => setNetQ(e.target.value)}
+                onChange={(e) = aria-label="بحث بالاسم أو المندوب..."> setNetQ(e.target.value)}
                 className="pr-9 rounded-xl h-9"
               />
             </div>

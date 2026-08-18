@@ -620,7 +620,7 @@ function ManageCardsPageInner() {
                 className="rounded-xl pr-9"
                 placeholder="بحث باليوزر / الكود..."
                 value={search}
-                onChange={(e) => {
+                onChange={(e) = aria-label="بحث باليوزر / الكود..."> {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
