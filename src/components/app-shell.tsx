@@ -305,6 +305,18 @@ function NavLink({ item }: { item: NavItem }) {
   );
 }
 
+function getBottomNavItems(items: NavItem[], pathname: string): NavItem[] {
+  const base = items.filter((it) => !it.superOnly && !it.hideInBottomNav);
+  if (pathname === "/app/agent-accounts") {
+    // في صفحة حساب المندوب: إخفاء الطلبات واستبدالها بالزبائن
+    return base
+      .filter((it) => it.to !== "/app/requests")
+      .concat({ to: "/app/customers", label: "الزبائن", icon: Users })
+      .filter((it, idx, arr) => arr.findIndex((x) => x.to === it.to) === idx);
+  }
+  return base;
+}
+
 function BottomLink({ item }: { item: NavItem }) {
   const loc = useLocation();
   const active =
