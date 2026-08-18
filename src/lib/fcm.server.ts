@@ -114,7 +114,7 @@ export async function sendFcmToTokens(
             message: {
               token,
               notification: { title: payload.title, body: payload.body },
-              data: { path: payload.path ?? "/app", tag: payload.tag ?? "karti" },
+              data: { path: payload.path ?? "/app", tag: payload.tag ?? "karti", body: payload.body },
               android: {
                 priority: "HIGH",
                 notification: {

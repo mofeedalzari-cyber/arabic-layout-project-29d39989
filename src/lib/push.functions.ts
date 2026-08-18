@@ -22,9 +22,10 @@ export const notifyNewCardRequest = createServerFn({ method: "POST" })
     });
     if (error) return { sent: 0, failed: 0, skipped: "no-access" };
     const tokens = ((rows as { token: string }[] | null) ?? []).map((r) => r.token);
+    const agent = data.agentName || "مندوب";
     return sendFcmToTokens(tokens, {
-      title: `طلب سحب جديد — ${data.agentName || "مندوب"}`,
-      body: `${data.packageName || "باقة"} · الكمية: ${data.quantity ?? ""}`,
+      title: "طلب سحب جديد",
+      body: `${agent} · ${data.packageName || "باقة"} · الكمية: ${data.quantity ?? ""}`,
       path: "/app/requests",
       tag: "card-request",
     });
@@ -112,8 +113,8 @@ export const notifyNewJoinRequest = createServerFn({ method: "POST" })
 
     const who = data.fullName || req.agent_full_name || req.agent_username || "مندوب";
     return sendFcmToTokens(tokens, {
-      title: "طلب انضمام جديد 👤",
-      body: `${who} يطلب الانضمام إلى ${data.networkName}`,
+      title: "طلب انضمام جديد",
+      body: `${who} · ${data.networkName}`,
       path: "/app/join-requests",
       tag: "join-request",
     });
@@ -173,10 +174,12 @@ export const notifyNewSale = createServerFn({ method: "POST" })
     });
     if (error) return { sent: 0, failed: 0, skipped: "no-access" };
     const tokens = ((rows as { token: string }[] | null) ?? []).map((r) => r.token);
+    const agent = data.agentName || "مندوب";
     const amount = data.price != null ? `${data.price} ﷼` : "";
+    const desc = [data.packageName || "باقة", amount, data.customerName].filter(Boolean).join(" · ");
     return sendFcmToTokens(tokens, {
-      title: `عملية بيع جديدة — ${data.agentName || "مندوب"}`,
-      body: [data.packageName || "باقة", amount, data.customerName].filter(Boolean).join(" · "),
+      title: "عملية بيع جديدة",
+      body: `${agent} · ${desc}`,
       path: data.saleId ? `/app/sales?sale=${data.saleId}` : "/app/sales",
       tag: "new-sale",
     });

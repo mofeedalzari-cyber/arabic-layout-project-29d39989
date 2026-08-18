@@ -100,7 +100,7 @@ export function useRequestNotifications() {
           if (!id || seenAdmin.current.has(id)) return;
           seenAdmin.current.add(id);
 
-          const agent = cleanPhoneLike(row?.agent_username) || "مندوب";
+          const agent = row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب";
           const pkg = row?.package_name ?? "باقة";
           const qty = row?.quantity ?? "";
 
@@ -108,8 +108,9 @@ export function useRequestNotifications() {
           void nativeVibrate();
 
           void systemNotify({
-            title: `طلب سحب جديد — ${agent}`,
-            body: `${pkg} · الكمية: ${qty}`,
+            title: "طلب سحب جديد",
+            body: `${agent} · ${pkg} · الكمية: ${qty}`,
+            largeBody: `طلب سحب كروت جديد من ${agent}\nالباقة: ${pkg}\nالكمية: ${qty}`,
             path: "/app/requests",
             tag: `req-${id}`,
           });
@@ -157,9 +158,11 @@ export function useRequestNotifications() {
           playTone("new");
           void nativeVibrate();
 
+          const joinAgent = row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب";
           void systemNotify({
             title: "طلب انضمام جديد",
-            body: row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب",
+            body: joinAgent,
+            largeBody: `طلب انضمام مندوب جديد: ${joinAgent}`,
             path: "/app/join-requests",
             tag: `join-${id}`,
           });
@@ -200,7 +203,7 @@ export function useRequestNotifications() {
           if (!id || seenAdmin.current.has(id)) return;
           seenAdmin.current.add(id);
 
-          const agent = cleanPhoneLike(row?.agent_username) || "مندوب";
+          const agent = row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب";
           const pkg = row?.package_name ?? "باقة";
           const price = row?.price != null ? `${row.price} ﷼` : "";
           const buyer = row?.buyer_name || "";
@@ -210,8 +213,9 @@ export function useRequestNotifications() {
           void nativeVibrate([80, 40, 80]);
 
           void systemNotify({
-            title: `عملية بيع جديدة — ${agent}`,
-            body: desc,
+            title: "عملية بيع جديدة",
+            body: `${agent} · ${desc}`,
+            largeBody: `عملية بيع جديدة من ${agent}\nالباقة: ${pkg}\nالمبلغ: ${price || "—"}\nالزبون: ${buyer || "—"}`,
             path: `/app/sales?sale=${id}`,
             tag: `sale-${id}`,
           });
@@ -268,6 +272,7 @@ export function useRequestNotifications() {
             void systemNotify({
               title: "تم قبول طلبك ✅",
               body: `${pkg} · الكمية: ${qty}`,
+              largeBody: `تم قبول طلب سحب الكروت ✅\nالباقة: ${pkg}\nالكمية: ${qty}`,
               path: "/app/cabin",
               tag: `dec-${id}`,
             });
@@ -279,9 +284,11 @@ export function useRequestNotifications() {
           } else {
             playTone("reject");
             void nativeVibrate([200, 80, 200]);
+            const rejectBody = row?.reject_reason ? `السبب: ${row.reject_reason}` : `${pkg} · الكمية: ${qty}`;
             void systemNotify({
               title: "تم رفض طلبك ❌",
-              body: row?.reject_reason ? `السبب: ${row.reject_reason}` : `${pkg} · الكمية: ${qty}`,
+              body: rejectBody,
+              largeBody: `تم رفض طلب سحب الكروت ❌\n${rejectBody}`,
               path: "/app/requests",
               tag: `dec-${id}`,
             });
