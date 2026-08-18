@@ -797,6 +797,45 @@ function SalesPage() {
         )}
       </Card>
 
+      <Dialog open={!!saleParam} onOpenChange={(o) => !o && closeInvoice()}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-center">فاتورة عملية بيع</DialogTitle>
+          </DialogHeader>
+          {invoiceSale ? (
+            <div className="space-y-2 text-sm">
+              {[
+                ["رقم العملية", invoiceSale.transaction_no],
+                ["الباقة", invoiceSale.package_name],
+                ["الشبكة", invoiceSale.network_name],
+                ["المندوب", displayName(invoiceSale.agent_username, invoiceSale.agent_id)],
+                ["الزبون", invoiceSale.customer_name ?? invoiceSale.buyer_name ?? "—"],
+                ["رقم الكرت", invoiceSale.card_username ?? "—"],
+                ["التاريخ", fmtArabicDateTime(invoiceSale.sold_at)],
+              ].map(([k, v]) => (
+                <div key={k as string} className="flex justify-between gap-3 border-b pb-1.5">
+                  <span className="text-muted-foreground">{k}</span>
+                  <span className="font-medium">{v}</span>
+                </div>
+              ))}
+              <div className="flex justify-between gap-3 pt-1 text-base">
+                <span className="text-muted-foreground">المبلغ</span>
+                <span className="font-bold text-primary">
+                  {fmtMoney(Number(invoiceSale.price))}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="py-6 text-center text-muted-foreground">جاري تحميل الفاتورة...</div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={closeInvoice}>
+              إغلاق
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!toEdit} onOpenChange={(o) => !o && setToEdit(null)}>
         <DialogContent dir="rtl">
           <DialogHeader>
