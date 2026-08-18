@@ -184,3 +184,30 @@ export const notifyNewSale = createServerFn({ method: "POST" })
       tag: "new-sale",
     });
   });
+
+/** إشعار جماعي من المدير إلى مناديب شبكته */
+export const notifyNetworkAgents = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        networkId: z.string().uuid(),
+        title: z.string().min(1).max(80),
+        body: z.string().min(1).max(400),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { sendFcmToTokens } = await import("./fcm.server");
+    const { data: rows, error } = await context.supabase.rpc("network_agent_push_tokens", {
+      _network_id: data.networkId,
+    });
+    if (error) return { sent: 0, failed: 0, skipped: "no-access" };
+    const tokens = ((rows as { token: string }[] | null) ?? []).map((r) => r.token);
+    return sendFcmToTokens(tokens, {
+      title: data.title,
+      body: data.body,
+      path: "/app",
+      tag: "announcement",
+    });
+  });
