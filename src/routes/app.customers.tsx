@@ -122,6 +122,81 @@ function CustomersPage() {
   const [chargeQty, setChargeQty] = useState<string>("1");
   const [chargeCard, setChargeCard] = useState<string>("");
   const [chargeBusy, setChargeBusy] = useState(false);
+  const [netQ, setNetQ] = useState("");
+  const [settleFor, setSettleFor] = useState<NetCustomer | null>(null);
+  const [settleAmount, setSettleAmount] = useState("");
+  const [settleNote, setSettleNote] = useState("");
+  const [settleBusy, setSettleBusy] = useState(false);
+
+  const { data: netCustomers } = useQuery({
+    queryKey: ["network-customers", user?.id],
+    enabled: !!user?.id && isAdmin,
+    queryFn: async (): Promise<NetCustomer[]> => {
+      const { data, error } = await supabase.rpc("network_customers" as any);
+      if (error) throw error;
+      return (data ?? []) as NetCustomer[];
+    },
+  });
+
+  const netRows = useMemo(() => {
+    const s = netQ.trim().toLowerCase();
+    const list = netCustomers ?? [];
+    return s
+      ? list.filter(
+          (c) =>
+            (c.name ?? "").toLowerCase().includes(s) ||
+            (c.whatsapp ?? "").includes(s) ||
+            (c.agent_username ?? "").toLowerCase().includes(s),
+        )
+      : list;
+  }, [netCustomers, netQ]);
+
+  const netTotals = useMemo(() => {
+    const list = netCustomers ?? [];
+    return {
+      count: list.length,
+      balance: list.reduce((a, c) => a + (Number(c.balance) || 0), 0),
+    };
+  }, [netCustomers]);
+
+  async function handleAdminSettle() {
+    if (!settleFor) return;
+    const amount = Number(settleAmount);
+    if (!amount || amount <= 0) {
+      toast.error("أدخل مبلغاً صحيحاً");
+      return;
+    }
+    setSettleBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("admin_settle_customer_via_agent" as any, {
+        _customer_id: settleFor.id,
+        _amount: amount,
+        _note: settleNote.trim() || null,
+      });
+      if (error) {
+        toast.error("تعذر التسديد: " + error.message);
+        return;
+      }
+      const r = (Array.isArray(data) ? data[0] : data) as any;
+      toast.success(
+        `تم تسديد ${fmtMoney(Number(r?.customer_paid ?? amount))} — خُصم من حساب المندوب ${fmtMoney(
+          Number(r?.agent_applied ?? 0),
+        )}`,
+      );
+      setSettleFor(null);
+      setSettleAmount("");
+      setSettleNote("");
+      qc.invalidateQueries({ queryKey: ["network-customers"] });
+      qc.invalidateQueries({ queryKey: ["customer-payments"] });
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
+      qc.invalidateQueries({ queryKey: ["agent-accounts"] });
+      qc.invalidateQueries({ queryKey: ["agents"] });
+      qc.invalidateQueries({ queryKey: ["payments"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+    } finally {
+      setSettleBusy(false);
+    }
+  }
 
   async function handleAddCustomer() {
     const name = newName.trim();
