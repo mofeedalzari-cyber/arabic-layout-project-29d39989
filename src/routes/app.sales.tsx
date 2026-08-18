@@ -353,6 +353,8 @@ function SalesPage() {
     setToEdit(null);
     qc.invalidateQueries({ queryKey: ["sales"] });
     qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
+    qc.invalidateQueries({ queryKey: ["customer-sales"] });
+    qc.invalidateQueries({ queryKey: ["customers-page"] });
   }
 
   async function bulkDelete() {
