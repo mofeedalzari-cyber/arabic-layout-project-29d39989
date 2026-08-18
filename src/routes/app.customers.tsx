@@ -193,14 +193,21 @@ function CustomersPage() {
   }, [netAgentProfiles]);
 
   const netAgents = useMemo(() => {
-    const map = new Map<string, { id: string; username: string; full_name: string | null; count: number; balance: number }>();
+    const map = new Map<
+      string,
+      { id: string; username: string; full_name: string | null; count: number; balance: number; sales: number; paid: number }
+    >();
     for (const c of netCustomers ?? []) {
       const id = c.agent_id ?? "none";
       const profile = agentProfileMap.get(id);
       const displayName = profile?.full_name || profile?.username || c.agent_username || "بدون مندوب";
-      const cur = map.get(id) ?? { id, username: c.agent_username ?? "بدون مندوب", full_name: displayName, count: 0, balance: 0 };
+      const cur =
+        map.get(id) ??
+        { id, username: c.agent_username ?? "بدون مندوب", full_name: displayName, count: 0, balance: 0, sales: 0, paid: 0 };
       cur.count += 1;
       cur.balance += Number(c.balance) || 0;
+      cur.sales += (Number((c as any).sales_total) || 0) + (Number((c as any).charges) || 0);
+      cur.paid += Number((c as any).paid) || 0;
       if (!cur.full_name && profile?.full_name) cur.full_name = profile.full_name;
       map.set(id, cur);
     }
@@ -228,6 +235,11 @@ function CustomersPage() {
     return {
       count: netRows.length,
       balance: netRows.reduce((a, c) => a + (Number(c.balance) || 0), 0),
+      sales: netRows.reduce(
+        (a, c) => a + (Number((c as any).sales_total) || 0) + (Number((c as any).charges) || 0),
+        0,
+      ),
+      paid: netRows.reduce((a, c) => a + (Number((c as any).paid) || 0), 0),
     };
   }, [netRows]);
 
@@ -803,7 +815,8 @@ function CustomersPage() {
               <Users className="h-4 w-4 text-primary" />
               زبائن الشبكة
               <span className="text-[11px] text-muted-foreground font-normal">
-                ({netTotals.count}) — إجمالي المتبقي: {fmtMoney(netTotals.balance)}
+                ({netTotals.count}) — المبيعات: {fmtMoney(netTotals.sales)} • المسدد: {fmtMoney(netTotals.paid)} • المتبقي:{" "}
+                {fmtMoney(netTotals.balance)}
               </span>
             </div>
             <div className="relative flex-1 min-w-[180px] max-w-xs">
@@ -838,14 +851,17 @@ function CustomersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    كل المناديب ({netCustomers?.length ?? 0}) — المتبقي: {fmtMoney(netAgents.reduce((a, g) => a + g.balance, 0))}
+                    كل المناديب ({netCustomers?.length ?? 0}) — المبيعات:{" "}
+                    {fmtMoney(netAgents.reduce((a, g) => a + g.sales, 0))} — المتبقي:{" "}
+                    {fmtMoney(netAgents.reduce((a, g) => a + g.balance, 0))}
                   </SelectItem>
                   {netAgents.map((a) => {
                     const ph = String(agentProfileMap.get(a.id)?.phone || "").replace(/^967/, "");
                     return (
                       <SelectItem key={a.id} value={a.id}>
                         {a.full_name || a.username}
-                        {ph ? ` (${ph})` : ""} ({a.count}) — المتبقي: {fmtMoney(a.balance)}
+                        {ph ? ` (${ph})` : ""} ({a.count}) — المبيعات: {fmtMoney(a.sales)} — المسدد: {fmtMoney(a.paid)} —
+                        المتبقي: {fmtMoney(a.balance)}
                       </SelectItem>
                     );
                   })}
