@@ -203,7 +203,7 @@ export function useRequestNotifications() {
           if (!id || seenAdmin.current.has(id)) return;
           seenAdmin.current.add(id);
 
-          const agent = cleanPhoneLike(row?.agent_username) || "مندوب";
+          const agent = row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب";
           const pkg = row?.package_name ?? "باقة";
           const price = row?.price != null ? `${row.price} ﷼` : "";
           const buyer = row?.buyer_name || "";
@@ -213,8 +213,9 @@ export function useRequestNotifications() {
           void nativeVibrate([80, 40, 80]);
 
           void systemNotify({
-            title: `عملية بيع جديدة — ${agent}`,
-            body: desc,
+            title: "عملية بيع جديدة",
+            body: `${agent} · ${desc}`,
+            largeBody: `عملية بيع جديدة من ${agent}\nالباقة: ${pkg}\nالمبلغ: ${price || "—"}\nالزبون: ${buyer || "—"}`,
             path: `/app/sales?sale=${id}`,
             tag: `sale-${id}`,
           });
