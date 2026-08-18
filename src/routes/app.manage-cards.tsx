@@ -278,6 +278,9 @@ function ManageCardsPageInner() {
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
       qc.invalidateQueries({ queryKey: ["aa-sales"] });
       qc.invalidateQueries({ queryKey: ["aa-cards"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["customer-sales"] });
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -303,6 +306,9 @@ function ManageCardsPageInner() {
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
       qc.invalidateQueries({ queryKey: ["aa-sales"] });
       qc.invalidateQueries({ queryKey: ["aa-cards"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["customer-sales"] });
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -333,6 +339,9 @@ function ManageCardsPageInner() {
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
       qc.invalidateQueries({ queryKey: ["aa-sales"] });
       qc.invalidateQueries({ queryKey: ["aa-cards"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["customer-sales"] });
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -484,6 +493,9 @@ function ManageCardsPageInner() {
       setSelected(new Set());
       qc.invalidateQueries({ queryKey: ["admin-cards"] });
       qc.invalidateQueries({ queryKey: ["aa-cards"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["customer-sales"] });
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
