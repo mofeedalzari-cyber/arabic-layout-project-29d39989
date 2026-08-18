@@ -151,6 +151,26 @@ function CustomersPage() {
     },
   });
 
+  const { data: myNetwork } = useQuery({
+    queryKey: ["my-network-info", user?.id],
+    enabled: !!user?.id && isAdmin,
+    queryFn: async () => {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("network_id")
+        .eq("id", user!.id)
+        .maybeSingle();
+      const netId = (prof as any)?.network_id;
+      if (!netId) return null;
+      const { data: net } = await supabase
+        .from("networks")
+        .select("id, name")
+        .eq("id", netId)
+        .maybeSingle();
+      return (net ?? null) as { id: string; name: string } | null;
+    },
+  });
+
   const { data: netAgentProfiles } = useQuery({
     queryKey: ["network-agent-profiles", user?.id],
     enabled: !!user?.id && isAdmin && (netCustomers?.length ?? 0) > 0,
@@ -159,15 +179,15 @@ function CustomersPage() {
       if (!ids.length) return [];
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, full_name")
+        .select("id, username, full_name, phone")
         .in("id", ids);
       if (error) throw error;
-      return (data ?? []) as { id: string; username: string; full_name: string | null }[];
+      return (data ?? []) as { id: string; username: string; full_name: string | null; phone: string | null }[];
     },
   });
 
   const agentProfileMap = useMemo(() => {
-    const m = new Map<string, { username: string; full_name: string | null }>();
+    const m = new Map<string, { username: string; full_name: string | null; phone?: string | null }>();
     for (const p of netAgentProfiles ?? []) m.set(p.id, p);
     return m;
   }, [netAgentProfiles]);
@@ -796,23 +816,42 @@ function CustomersPage() {
               />
             </div>
           </div>
-          <div className="mb-3">
-            <Select value={netAgentId} onValueChange={setNetAgentId}>
-              <SelectTrigger className="rounded-xl h-10 w-full sm:w-[340px]">
-                <SelectValue placeholder="اختر اسم المندوب" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  كل المناديب ({netCustomers?.length ?? 0}) — المتبقي: {fmtMoney(netAgents.reduce((a, g) => a + g.balance, 0))}
-                </SelectItem>
-                {netAgents.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.full_name || a.username} ({a.count}) — المتبقي: {fmtMoney(a.balance)}
+          <div className="mb-3 grid gap-3">
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">الشبكة</div>
+              <Select value={myNetwork?.id ?? "none"} onValueChange={() => {}}>
+                <SelectTrigger className="rounded-xl h-11 w-full">
+                  <SelectValue placeholder="الشبكة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={myNetwork?.id ?? "none"}>
+                    {myNetwork?.name || "شبكتي"}
                   </SelectItem>
-                ))}
-
-              </SelectContent>
-            </Select>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">المندوب</div>
+              <Select value={netAgentId} onValueChange={setNetAgentId}>
+                <SelectTrigger className="rounded-xl h-11 w-full">
+                  <SelectValue placeholder="اختر اسم المندوب" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    كل المناديب ({netCustomers?.length ?? 0}) — المتبقي: {fmtMoney(netAgents.reduce((a, g) => a + g.balance, 0))}
+                  </SelectItem>
+                  {netAgents.map((a) => {
+                    const ph = String(agentProfileMap.get(a.id)?.phone || "").replace(/^967/, "");
+                    return (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.full_name || a.username}
+                        {ph ? ` (${ph})` : ""} ({a.count}) — المتبقي: {fmtMoney(a.balance)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="grid gap-2 max-h-[420px] overflow-y-auto">
             {netRows.map((c) => (
