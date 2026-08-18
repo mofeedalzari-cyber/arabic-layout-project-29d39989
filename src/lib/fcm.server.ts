@@ -122,6 +122,8 @@ export async function sendFcmToTokens(
                   sound: "default",
                   default_vibrate_timings: true,
                   notification_priority: "PRIORITY_MAX",
+                  body_loc_key: "notification_big_text",
+                  title_loc_key: "notification_title",
                 },
               },
             },
