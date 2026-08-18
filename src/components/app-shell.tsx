@@ -1,4 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
+import { NotificationsButton } from "@/components/notifications-button";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import {
