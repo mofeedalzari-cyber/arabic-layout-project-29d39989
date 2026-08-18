@@ -158,9 +158,11 @@ export function useRequestNotifications() {
           playTone("new");
           void nativeVibrate();
 
+          const joinAgent = row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب";
           void systemNotify({
             title: "طلب انضمام جديد",
-            body: row?.agent_full_name || cleanPhoneLike(row?.agent_username) || "مندوب",
+            body: joinAgent,
+            largeBody: `طلب انضمام مندوب جديد: ${joinAgent}`,
             path: "/app/join-requests",
             tag: `join-${id}`,
           });
