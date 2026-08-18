@@ -135,6 +135,7 @@ function CustomersPage() {
   const [chargeCard, setChargeCard] = useState<string>("");
   const [chargeBusy, setChargeBusy] = useState(false);
   const [netQ, setNetQ] = useState("");
+  const [netAgentId, setNetAgentId] = useState<string>("all");
   const [settleFor, setSettleFor] = useState<NetCustomer | null>(null);
   const [settleAmount, setSettleAmount] = useState("");
   const [settleNote, setSettleNote] = useState("");
