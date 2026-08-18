@@ -1299,8 +1299,7 @@ function CustomersPage() {
                                     onClick={() => {
                                       if (confirm("حذف هذا القيد؟")) deleteCustomerPayment(p.id);
                                     }}
-                                    title="حذف"
-                                  >
+                                    title="حذف" aria-label="حذف">
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                                 </TableCell>
@@ -1394,8 +1393,7 @@ function CustomersPage() {
                                   variant="ghost"
                                   className="h-7 w-7"
                                   onClick={() => openSaleEdit(s)}
-                                  title="تعديل"
-                                >
+                                  title="تعديل" aria-label="تعديل">
                                   <Pencil className="h-3.5 w-3.5" />
                                 </Button>
                               </TableCell>

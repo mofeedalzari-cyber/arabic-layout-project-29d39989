@@ -344,8 +344,7 @@ function PackagesPage() {
                       onClick={() => {
                         setEditing(p);
                         setOpen(true);
-                      }}
-                    >
+                      }} aria-label="تعديل">
                       <Edit3 className="h-4 w-4" />
                     </Button>
                     <Button
@@ -354,8 +353,7 @@ function PackagesPage() {
                       className="rounded-xl h-11 w-11 text-destructive"
                       onClick={() => {
                         if (confirm(`حذف "${p.name}"؟`)) delPkg.mutate(p.id);
-                      }}
-                    >
+                      }} aria-label="حذف">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </>
@@ -742,7 +740,7 @@ function Row({ label, value, onCopy }: { label: string; value: string; onCopy?: 
         <div className="font-mono font-bold truncate">{value}</div>
       </div>
       {onCopy && (
-        <Button size="icon" variant="ghost" className="rounded-lg shrink-0" onClick={onCopy}>
+        <Button size="icon" variant="ghost" className="rounded-lg shrink-0" onClick={onCopy} aria-label="نسخ">
           <Copy className="h-4 w-4" />
         </Button>
       )}

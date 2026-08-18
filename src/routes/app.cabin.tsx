@@ -639,16 +639,14 @@ function CabinPage() {
                       className="rounded-lg"
                       onClick={() =>
                         window.open(`https://wa.me/${normalizeWa(c.whatsapp)}`, "_blank")
-                      }
-                    >
+                      } aria-label="واتساب">
                       <MessageCircle className="h-4 w-4 text-success" />
                     </Button>
                     <Button
                       size="icon"
                       variant="ghost"
                       className="rounded-lg"
-                      onClick={() => deleteCustomer(c.id)}
-                    >
+                      onClick={() => deleteCustomer(c.id)} aria-label="حذف">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
@@ -747,8 +745,7 @@ function PackageDetails({
           onClick={() => {
             refetch();
             qc.invalidateQueries({ queryKey: ["agent-cabin"] });
-          }}
-        >
+          }} aria-label="تحديث">
           <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
         </Button>
         <div className="text-center flex-1">
@@ -1197,13 +1194,12 @@ function Row({
             variant="ghost"
             className="rounded-lg"
             onClick={() => setShown((s) => !s)}
-            title={shown ? "إخفاء" : "إظهار"}
-          >
+            title={shown ? "إخفاء" : "إظهار"} aria-label="إخفاء">
             {shown ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         )}
         {onCopy && shown && (
-          <Button size="icon" variant="ghost" className="rounded-lg" onClick={onCopy}>
+          <Button size="icon" variant="ghost" className="rounded-lg" onClick={onCopy} aria-label="نسخ">
             <Copy className="h-4 w-4" />
           </Button>
         )}

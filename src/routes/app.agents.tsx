@@ -221,8 +221,7 @@ function AgentsPageInner() {
                     full_name: a.full_name,
                     phone: (a as any).phone,
                   })
-                }
-              >
+                } aria-label="تعديل">
                 <Pencil className="h-4 w-4" />
               </Button>
               <Button
@@ -235,8 +234,7 @@ function AgentsPageInner() {
                     id: a.id,
                     name: a.full_name || displayPhone((a as any).phone, a.username),
                   })
-                }
-              >
+                } aria-label="حذف">
                 <Trash2 className="h-4 w-4" />
               </Button>
               <div className="flex items-center gap-2 shrink-0">
@@ -303,8 +301,7 @@ function AgentsPageInner() {
                       full_name: a.full_name,
                       phone: (a as any).phone,
                     })
-                  }
-                >
+                  } aria-label="تعديل">
                   <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
@@ -316,8 +313,7 @@ function AgentsPageInner() {
                       id: a.id,
                       name: a.full_name || displayPhone((a as any).phone, a.username),
                     })
-                  }
-                >
+                  } aria-label="حذف">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -714,8 +710,7 @@ export function AgentStats({
           onClick={() => {
             refetch();
             qc.invalidateQueries({ queryKey: ["agents"] });
-          }}
-        >
+          }} aria-label="تحديث">
           <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
         </Button>
         <div className="text-center flex-1">

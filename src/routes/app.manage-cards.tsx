@@ -974,8 +974,7 @@ function ManageCardsPageInner() {
                           className="h-8 w-8 text-destructive hover:bg-destructive/10"
                           onClick={() => {
                             if (confirm("حذف هذا الكرت؟")) delOne.mutate(c.id);
-                          }}
-                        >
+                          }} aria-label="حذف">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </td>
@@ -1000,8 +999,7 @@ function ManageCardsPageInner() {
                 variant="outline"
                 className="h-8 w-8 rounded-lg"
                 onClick={() => setPage(1)}
-                disabled={currentPage === 1}
-              >
+                disabled={currentPage === 1} aria-label="ChevronsRight">
                 <ChevronsRight className="h-4 w-4" />
               </Button>
               <Button
@@ -1009,8 +1007,7 @@ function ManageCardsPageInner() {
                 variant="outline"
                 className="h-8 w-8 rounded-lg"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
+                disabled={currentPage === 1} aria-label="التالي">
                 <ChevronRight className="h-4 w-4" />
               </Button>
               <Button
@@ -1018,8 +1015,7 @@ function ManageCardsPageInner() {
                 variant="outline"
                 className="h-8 w-8 rounded-lg"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-              >
+                disabled={currentPage === totalPages} aria-label="السابق">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
@@ -1027,8 +1023,7 @@ function ManageCardsPageInner() {
                 variant="outline"
                 className="h-8 w-8 rounded-lg"
                 onClick={() => setPage(totalPages)}
-                disabled={currentPage === totalPages}
-              >
+                disabled={currentPage === totalPages} aria-label="ChevronsLeft">
                 <ChevronsLeft className="h-4 w-4" />
               </Button>
             </div>

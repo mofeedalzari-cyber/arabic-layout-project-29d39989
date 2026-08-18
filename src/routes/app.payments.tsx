@@ -415,16 +415,14 @@ function PaymentsPageInner() {
                               setEditRow(p);
                               setEditAmount(String(p.amount));
                               setEditNote(p.note ?? "");
-                            }}
-                          >
+                            }} aria-label="تعديل">
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8 text-destructive"
-                            onClick={() => setDeleteRow(p)}
-                          >
+                            onClick={() => setDeleteRow(p)} aria-label="حذف">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>

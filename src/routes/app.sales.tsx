@@ -720,8 +720,7 @@ function SalesPage() {
                           variant="ghost"
                           className="h-8 w-8"
                           onClick={() => openEdit(s)}
-                          title="تعديل"
-                        >
+                          title="تعديل" aria-label="تعديل">
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                       )}

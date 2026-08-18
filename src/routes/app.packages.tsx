@@ -413,8 +413,7 @@ function PackagesPage() {
                     className={`rounded-xl h-11 ${pc ? "bg-white/15 border-white/40 text-white hover:bg-white/25 hover:text-white" : "bg-muted border-border text-foreground hover:bg-muted/80"}`}
                     onClick={() => {
                       if (confirm(`حذف "${p.name}"؟`)) del.mutate({ id: p.id, name: p.name });
-                    }}
-                  >
+                    }} aria-label="حذف">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
