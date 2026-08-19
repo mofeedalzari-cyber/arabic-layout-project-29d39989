@@ -191,12 +191,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let sub: { subscription: { unsubscribe: () => void } } | null = null;
 
+    const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T | null> =>
+      Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), ms))]);
+
     (async () => {
       try {
         // CRITICAL: restore the native-mirrored session into localStorage BEFORE
         // the Supabase client is ever touched, otherwise the very first read
         // happens against empty storage and the user looks signed out.
-        await ensureAuthStorageReady();
+        // مهلة قصيرة حتى لا تتعلّق شاشة التحميل إن تأخّر التخزين الأصلي.
+        await withTimeout(ensureAuthStorageReady(), 3000);
       } catch {
         /* ignore */
       }
@@ -215,14 +219,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sub = res.data;
 
       try {
-        const { data } = await supabase.auth.getSession();
+        const data = await withTimeout(supabase.auth.getSession(), 5000);
         if (!mounted) return;
-        await hydrateSession(data.session);
+        await hydrateSession(data?.data.session ?? null);
       } catch (e) {
         console.error("[auth] getSession failed", e);
         if (mounted) setLoading(false);
       }
     })();
+
 
     // عند عودة الإنترنت نُحدّث بيانات الحساب بهدوء
     const onOnline = () => {

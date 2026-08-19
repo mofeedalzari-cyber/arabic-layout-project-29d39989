@@ -33,6 +33,18 @@ function IndexRedirect() {
     navigate({ to: user ? "/app" : "/auth", replace: true });
   }, [loading, user, navigate]);
 
+  // حماية: إن تعطّل التحقق من الجلسة (WebView بدون إنترنت مثلًا) لا نبقى
+  // على شاشة "جارٍ التحميل" للأبد — ننتقل لصفحة الدخول بعد مهلة قصيرة.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (typeof window !== "undefined" && window.location.pathname === "/") {
+        window.location.replace("/auth");
+      }
+    }, 6000);
+    return () => clearTimeout(t);
+  }, []);
+
+
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4" dir="rtl">
       <div className="text-center">
