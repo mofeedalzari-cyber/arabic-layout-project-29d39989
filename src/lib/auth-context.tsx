@@ -189,21 +189,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    // Listener first to avoid missing initial event
-    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
-      if (!mounted) return;
-      // getSession below owns the initial hydration. Refresh events keep the
-      // same account data and must not start competing profile requests.
-      if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
-      if (s?.access_token && s.access_token === hydratedToken.current) return;
-      // Supabase advises deferring queries made from this callback to avoid
-      // contending with the auth client's internal event lock.
-      setTimeout(() => void hydrateSession(s), 0);
-    });
+    let sub: { subscription: { unsubscribe: () => void } } | null = null;
 
     (async () => {
       try {
+        // CRITICAL: restore the native-mirrored session into localStorage BEFORE
+        // the Supabase client is ever touched, otherwise the very first read
+        // happens against empty storage and the user looks signed out.
         await ensureAuthStorageReady();
+      } catch {
+        /* ignore */
+      }
+      if (!mounted) return;
+
+      const res = supabase.auth.onAuthStateChange((event, s) => {
+        if (!mounted) return;
+        // getSession below owns the initial hydration. Refresh events keep the
+        // same account data and must not start competing profile requests.
+        if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
+        if (s?.access_token && s.access_token === hydratedToken.current) return;
+        // Supabase advises deferring queries made from this callback to avoid
+        // contending with the auth client's internal event lock.
+        setTimeout(() => void hydrateSession(s), 0);
+      });
+      sub = res.data;
+
+      try {
         const { data } = await supabase.auth.getSession();
         if (!mounted) return;
         await hydrateSession(data.session);
