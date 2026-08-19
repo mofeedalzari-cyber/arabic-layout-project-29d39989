@@ -786,7 +786,7 @@ function CustomersPage() {
         <RefreshButton />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
         <StatCard
           icon={<Users className="h-4 w-4" />}
           label="إجمالي الزبائن"
@@ -806,6 +806,11 @@ function CustomersPage() {
           icon={<Receipt className="h-4 w-4" />}
           label="إجمالي المبيعات"
           value={fmtMoney(totals.revenue)}
+        />
+        <StatCard
+          icon={<Plus className="h-4 w-4" />}
+          label="إجمالي المبلغ المضاف"
+          value={fmtMoney(totals.charges)}
         />
       </div>
 
