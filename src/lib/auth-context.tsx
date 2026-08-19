@@ -236,7 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
       if (typeof window !== "undefined") window.removeEventListener("online", onOnline);
-      sub.subscription.unsubscribe();
+      sub?.subscription.unsubscribe();
     };
   }, []);
 
