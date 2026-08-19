@@ -843,8 +843,19 @@ function CustomersPage() {
                 ({netTotals.count}) — مبيعات الزبائن: {fmtMoney(netTotals.sales)} • المبلغ المضاف: {fmtMoney(netTotals.charges)} •
                 المسدد: {fmtMoney(netTotals.paid)} • المتبقي: {fmtMoney(netTotals.balance)}
               </span>
-
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-xl h-8"
+                disabled={printBusy || netRows.length === 0}
+                onClick={printNetCustomers}
+                aria-label="طباعة حسابات الزبائن PDF"
+              >
+                <FileText className="h-4 w-4 ml-1" />
+                {printBusy ? "جارٍ التجهيز..." : "طباعة PDF"}
+              </Button>
             </div>
+
             <div className="relative flex-1 min-w-[180px] max-w-xs">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input aria-label="بحث بالاسم أو المندوب..."
