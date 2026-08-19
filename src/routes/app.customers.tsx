@@ -453,14 +453,18 @@ function CustomersPage() {
   const totals = useMemo(() => {
     const linkedSales = (sales ?? []).filter((s) => s.customer_id);
     const totalRevenue = linkedSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+    const totalCharges = (payments ?? [])
+      .filter((p) => Number(p.amount) < 0)
+      .reduce((a, p) => a + Math.abs(Number(p.amount) || 0), 0);
     const activeCount = new Set(linkedSales.map((s) => s.customer_id)).size;
     return {
       customers: customers?.length ?? 0,
       active: activeCount,
       sales: linkedSales.length,
       revenue: totalRevenue,
+      charges: totalCharges,
     };
-  }, [customers, sales]);
+  }, [customers, sales, payments]);
 
   const rows = useMemo(() => {
     const list = (customers ?? []).map((c) => {
