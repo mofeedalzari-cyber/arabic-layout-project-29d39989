@@ -1003,6 +1003,11 @@ function CustomersPage() {
               <div className="text-left">
                 <div className="text-primary font-bold text-sm">{fmtMoney(c.total)}</div>
                 <div className="text-[10px] text-muted-foreground">{c.count} عملية</div>
+                {c.charges > 0 && (
+                  <div className="text-[11px] font-bold text-warning">
+                    مضاف: {fmtMoney(c.charges)}
+                  </div>
+                )}
                 <div
                   className={`text-[11px] font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}
                 >
