@@ -1072,6 +1072,7 @@ function CustomersPage() {
               <TableHead className="text-right">واتساب</TableHead>
               <TableHead className="text-right">عدد العمليات</TableHead>
               <TableHead className="text-right">إجمالي المبيعات</TableHead>
+              <TableHead className="text-right">المبلغ المضاف</TableHead>
               <TableHead className="text-right">المدفوع</TableHead>
               <TableHead className="text-right">الرصيد</TableHead>
               <TableHead className="text-right">آخر عملية</TableHead>
