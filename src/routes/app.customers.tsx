@@ -266,8 +266,7 @@ function CustomersPage() {
         agentProfileMap.get(c.agent_id ?? "")?.username ||
         c.agent_username ||
         "—";
-      const rows = netRows.map((c, i) => [
-        i + 1,
+      const rows: (string | number)[][] = netRows.map((c) => [
         c.name || "—",
         agentName(c),
         fmtMoney(Number(c.balance) || 0),
