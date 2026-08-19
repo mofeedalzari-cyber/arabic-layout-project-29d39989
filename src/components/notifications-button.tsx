@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { setAppBadge } from "@/lib/app-badge";
 
 export function NotificationsButton() {
   const { role, profile, isSuperadmin } = useAuth();
