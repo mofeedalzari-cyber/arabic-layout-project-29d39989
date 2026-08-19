@@ -262,6 +262,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           await supabase.auth.signOut({ scope: "local" });
           await clearNativeAuthStorage();
+          const { clearAppBadge } = await import("@/lib/app-badge");
+          await clearAppBadge();
           const { clearLocalDB } = await import("@/lib/local-db");
           await clearLocalDB();
         } catch (e) {
