@@ -840,8 +840,8 @@ function CustomersPage() {
               <Users className="h-4 w-4 text-primary" />
               زبائن الشبكة
               <span className="text-[11px] text-muted-foreground font-normal">
-                ({netTotals.count}) — مبيعات الزبائن: {fmtMoney(netTotals.sales)} • المسدد: {fmtMoney(netTotals.paid)} •
-                المتبقي: {fmtMoney(netTotals.balance)}
+                ({netTotals.count}) — مبيعات الزبائن: {fmtMoney(netTotals.sales)} • المبلغ المضاف: {fmtMoney(netTotals.charges)} •
+                المسدد: {fmtMoney(netTotals.paid)} • المتبقي: {fmtMoney(netTotals.balance)}
               </span>
 
             </div>
