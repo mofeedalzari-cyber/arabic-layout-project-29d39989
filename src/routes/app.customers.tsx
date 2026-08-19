@@ -250,6 +250,7 @@ function CustomersPage() {
         0,
       ),
       paid: netRows.reduce((a, c) => a + (Number((c as any).paid) || 0), 0),
+      charges: netRows.reduce((a, c) => a + (Number((c as any).charges) || 0), 0),
     };
   }, [netRows]);
 
@@ -453,14 +454,18 @@ function CustomersPage() {
   const totals = useMemo(() => {
     const linkedSales = (sales ?? []).filter((s) => s.customer_id);
     const totalRevenue = linkedSales.reduce((a, s) => a + (Number(s.price) || 0), 0);
+    const totalCharges = (payments ?? [])
+      .filter((p) => Number(p.amount) < 0)
+      .reduce((a, p) => a + Math.abs(Number(p.amount) || 0), 0);
     const activeCount = new Set(linkedSales.map((s) => s.customer_id)).size;
     return {
       customers: customers?.length ?? 0,
       active: activeCount,
       sales: linkedSales.length,
       revenue: totalRevenue,
+      charges: totalCharges,
     };
-  }, [customers, sales]);
+  }, [customers, sales, payments]);
 
   const rows = useMemo(() => {
     const list = (customers ?? []).map((c) => {
@@ -781,7 +786,7 @@ function CustomersPage() {
         <RefreshButton />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
         <StatCard
           icon={<Users className="h-4 w-4" />}
           label="إجمالي الزبائن"
@@ -801,6 +806,11 @@ function CustomersPage() {
           icon={<Receipt className="h-4 w-4" />}
           label="إجمالي المبيعات"
           value={fmtMoney(totals.revenue)}
+        />
+        <StatCard
+          icon={<Plus className="h-4 w-4" />}
+          label="إجمالي المبلغ المضاف"
+          value={fmtMoney(totals.charges)}
         />
       </div>
 
@@ -830,8 +840,8 @@ function CustomersPage() {
               <Users className="h-4 w-4 text-primary" />
               زبائن الشبكة
               <span className="text-[11px] text-muted-foreground font-normal">
-                ({netTotals.count}) — مبيعات الزبائن: {fmtMoney(netTotals.sales)} • المسدد: {fmtMoney(netTotals.paid)} •
-                المتبقي: {fmtMoney(netTotals.balance)}
+                ({netTotals.count}) — مبيعات الزبائن: {fmtMoney(netTotals.sales)} • المبلغ المضاف: {fmtMoney(netTotals.charges)} •
+                المسدد: {fmtMoney(netTotals.paid)} • المتبقي: {fmtMoney(netTotals.balance)}
               </span>
 
             </div>
@@ -993,6 +1003,11 @@ function CustomersPage() {
               <div className="text-left">
                 <div className="text-primary font-bold text-sm">{fmtMoney(c.total)}</div>
                 <div className="text-[10px] text-muted-foreground">{c.count} عملية</div>
+                {c.charges > 0 && (
+                  <div className="text-[11px] font-bold text-warning">
+                    مضاف: {fmtMoney(c.charges)}
+                  </div>
+                )}
                 <div
                   className={`text-[11px] font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}
                 >
@@ -1062,6 +1077,7 @@ function CustomersPage() {
               <TableHead className="text-right">واتساب</TableHead>
               <TableHead className="text-right">عدد العمليات</TableHead>
               <TableHead className="text-right">إجمالي المبيعات</TableHead>
+              <TableHead className="text-right">المبلغ المضاف</TableHead>
               <TableHead className="text-right">المدفوع</TableHead>
               <TableHead className="text-right">الرصيد</TableHead>
               <TableHead className="text-right">آخر عملية</TableHead>
@@ -1075,6 +1091,7 @@ function CustomersPage() {
                 <TableCell className="font-mono text-xs">{displayPhone(c.whatsapp, "")}</TableCell>
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
+                <TableCell className="text-warning font-bold">{fmtMoney(c.charges)}</TableCell>
                 <TableCell className="text-success font-bold">{fmtMoney(c.paid)}</TableCell>
                 <TableCell
                   className={`font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}
@@ -1139,8 +1156,8 @@ function CustomersPage() {
               </TableRow>
             ))}
             {rows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
+                <TableRow>
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-12">
                   لا يوجد زبائن.
                 </TableCell>
               </TableRow>
@@ -1196,6 +1213,10 @@ function CustomersPage() {
                     >
                       {fmtMoney(selectedBalance)}
                     </div>
+                  </div>
+                  <div className="rounded-xl bg-warning/10 p-3 text-center col-span-2">
+                    <div className="text-[11px] text-muted-foreground">إجمالي المبلغ المضاف</div>
+                    <div className="font-bold text-lg text-warning">{fmtMoney(selectedCharges)}</div>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3 flex-wrap">
