@@ -233,6 +233,15 @@ function AuthPage() {
     setForgotNote("");
   }
 
+  // لا نُظهر نموذج الدخول قبل التأكد من عدم وجود جلسة محفوظة على الجهاز
+  if (loading || user) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4" dir="rtl">
+        <p className="text-sm text-muted-foreground">جارٍ التحقق من تسجيل الدخول…</p>
+      </div>
+    );
+  }
+
   return (
     <AuthShell>
       <AuthCard>
