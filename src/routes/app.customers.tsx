@@ -837,27 +837,31 @@ function CustomersPage() {
         <StatCard
           icon={<Users className="h-4 w-4" />}
           label="إجمالي الزبائن"
-          value={String(totals.customers)}
+          value={String(isAdmin ? netTotals.count : totals.customers)}
         />
         <StatCard
           icon={<TrendingUp className="h-4 w-4" />}
           label="زبائن نشِطون"
-          value={String(totals.active)}
+          value={String(
+            isAdmin
+              ? netRows.filter((c) => (Number(c.sales_total) || 0) > 0 || (Number(c.charges) || 0) > 0).length
+              : totals.active,
+          )}
         />
         <StatCard
           icon={<ShoppingBag className="h-4 w-4" />}
-          label="عمليات البيع"
-          value={String(totals.sales)}
+          label={isAdmin ? "إجمالي المسدد" : "عمليات البيع"}
+          value={isAdmin ? fmtMoney(netTotals.paid) : String(totals.sales)}
         />
         <StatCard
           icon={<Receipt className="h-4 w-4" />}
           label="إجمالي المبيعات"
-          value={fmtMoney(totals.revenue)}
+          value={fmtMoney(isAdmin ? netTotals.sales : totals.revenue)}
         />
         <StatCard
           icon={<Plus className="h-4 w-4" />}
           label="إجمالي المبلغ المضاف"
-          value={fmtMoney(totals.charges)}
+          value={fmtMoney(isAdmin ? netTotals.charges : totals.charges)}
         />
       </div>
 
