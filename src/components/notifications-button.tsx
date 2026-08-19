@@ -72,6 +72,11 @@ export function NotificationsButton() {
       enabled: !!profile,
     });
 
+  // شارة العدد على أيقونة التطبيق (مثل فيسبوك)
+  useEffect(() => {
+    void setAppBadge(counts.total);
+  }, [counts.total]);
+
   const items: { to: string; label: string; count: number; icon: typeof Inbox }[] = [];
 
   if (isSuperadmin) {
