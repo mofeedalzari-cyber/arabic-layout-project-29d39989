@@ -250,6 +250,7 @@ function CustomersPage() {
         0,
       ),
       paid: netRows.reduce((a, c) => a + (Number((c as any).paid) || 0), 0),
+      charges: netRows.reduce((a, c) => a + (Number((c as any).charges) || 0), 0),
     };
   }, [netRows]);
 
