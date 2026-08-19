@@ -1207,6 +1207,10 @@ function CustomersPage() {
                       {fmtMoney(selectedBalance)}
                     </div>
                   </div>
+                  <div className="rounded-xl bg-warning/10 p-3 text-center col-span-2">
+                    <div className="text-[11px] text-muted-foreground">إجمالي المبلغ المضاف</div>
+                    <div className="font-bold text-lg text-warning">{fmtMoney(selectedCharges)}</div>
+                  </div>
                 </div>
                 <div className="flex gap-2 mt-3 flex-wrap">
                   <Button
