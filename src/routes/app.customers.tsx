@@ -256,6 +256,52 @@ function CustomersPage() {
     };
   }, [netRows]);
 
+  async function printNetCustomers() {
+    if (!netRows.length) return;
+    setPrintBusy(true);
+    try {
+      const { exportToPDF } = await import("@/lib/dashboard-export");
+      const agentName = (c: NetCustomer) =>
+        agentProfileMap.get(c.agent_id ?? "")?.full_name ||
+        agentProfileMap.get(c.agent_id ?? "")?.username ||
+        c.agent_username ||
+        "—";
+      const rows = netRows.map((c, i) => [
+        i + 1,
+        c.name || "—",
+        agentName(c),
+        fmtMoney(Number(c.balance) || 0),
+      ]);
+      const agentLabel =
+        netAgentId === "all"
+          ? "كل المناديب"
+          : netAgents.find((a) => a.id === netAgentId)?.full_name || "—";
+      await exportToPDF(
+        `حسابات الزبائن — ${fmtArabicDate(new Date())}`,
+        [
+          { label: "الشبكة", value: myNetwork?.name || "شبكتي" },
+          { label: "المندوب", value: agentLabel },
+          { label: "عدد الزبائن", value: netTotals.count },
+          { label: "إجمالي المتبقي", value: fmtMoney(netTotals.balance) },
+        ],
+        [
+          {
+            title: "حسابات الزبائن",
+            cols: ["اسم الزبون", "اسم المندوب", "المبلغ المتبقي"],
+            rows,
+          },
+        ],
+        { branch: myNetwork?.name || "—", userRole: "المدير" },
+      );
+    } catch (err) {
+      console.error("[printNetCustomers] failed:", err);
+      toast.error("تعذر طباعة حسابات الزبائن");
+    } finally {
+      setPrintBusy(false);
+    }
+  }
+
+
   async function handleAdminSettle() {
     if (!settleFor) return;
     const amount = Number(settleAmount);
