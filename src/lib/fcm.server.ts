@@ -122,8 +122,11 @@ export async function sendFcmToTokens(
                   sound: "default",
                   default_vibrate_timings: true,
                   notification_priority: "PRIORITY_MAX",
+                  // نقطة/عدّاد على أيقونة التطبيق في الشاشة الرئيسية
+                  notification_count: 1,
                 },
               },
+              apns: { payload: { aps: { badge: 1, sound: "default" } } },
             },
           }),
         });
