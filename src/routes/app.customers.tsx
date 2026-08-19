@@ -60,7 +60,7 @@ import {
   Plus,
   ArrowUpDown,
 } from "lucide-react";
-import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
+import { fmtMoney, fmtArabicDate, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
 import { openWhatsApp } from "@/lib/wa-open";
 import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
 import { pickContact } from "@/lib/pick-contact";
