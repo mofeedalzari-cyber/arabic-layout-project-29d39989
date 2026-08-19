@@ -60,7 +60,7 @@ import {
   Plus,
   ArrowUpDown,
 } from "lucide-react";
-import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
+import { fmtMoney, fmtArabicDate, fmtArabicDateTime, fmtArabicDateTimePdf, displayPhone } from "@/lib/format";
 import { openWhatsApp } from "@/lib/wa-open";
 import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
 import { pickContact } from "@/lib/pick-contact";
@@ -150,6 +150,8 @@ function CustomersPage() {
   const [settleAmount, setSettleAmount] = useState("");
   const [settleNote, setSettleNote] = useState("");
   const [settleBusy, setSettleBusy] = useState(false);
+  const [printBusy, setPrintBusy] = useState(false);
+
 
   const { data: netCustomers } = useQuery({
     queryKey: ["network-customers", user?.id],
@@ -253,6 +255,52 @@ function CustomersPage() {
       charges: netRows.reduce((a, c) => a + (Number((c as any).charges) || 0), 0),
     };
   }, [netRows]);
+
+  async function printNetCustomers() {
+    if (!netRows.length) return;
+    setPrintBusy(true);
+    try {
+      const { exportToPDF } = await import("@/lib/dashboard-export");
+      const agentName = (c: NetCustomer) =>
+        agentProfileMap.get(c.agent_id ?? "")?.full_name ||
+        agentProfileMap.get(c.agent_id ?? "")?.username ||
+        c.agent_username ||
+        "—";
+      const rows = netRows.map((c, i) => [
+        i + 1,
+        c.name || "—",
+        agentName(c),
+        fmtMoney(Number(c.balance) || 0),
+      ]);
+      const agentLabel =
+        netAgentId === "all"
+          ? "كل المناديب"
+          : netAgents.find((a) => a.id === netAgentId)?.full_name || "—";
+      await exportToPDF(
+        `حسابات الزبائن — ${fmtArabicDate(new Date())}`,
+        [
+          { label: "الشبكة", value: myNetwork?.name || "شبكتي" },
+          { label: "المندوب", value: agentLabel },
+          { label: "عدد الزبائن", value: netTotals.count },
+          { label: "إجمالي المتبقي", value: fmtMoney(netTotals.balance) },
+        ],
+        [
+          {
+            title: "حسابات الزبائن",
+            cols: ["اسم الزبون", "اسم المندوب", "المبلغ المتبقي"],
+            rows,
+          },
+        ],
+        { branch: myNetwork?.name || "—", userRole: "المدير" },
+      );
+    } catch (err) {
+      console.error("[printNetCustomers] failed:", err);
+      toast.error("تعذر طباعة حسابات الزبائن");
+    } finally {
+      setPrintBusy(false);
+    }
+  }
+
 
   async function handleAdminSettle() {
     if (!settleFor) return;
@@ -843,8 +891,19 @@ function CustomersPage() {
                 ({netTotals.count}) — مبيعات الزبائن: {fmtMoney(netTotals.sales)} • المبلغ المضاف: {fmtMoney(netTotals.charges)} •
                 المسدد: {fmtMoney(netTotals.paid)} • المتبقي: {fmtMoney(netTotals.balance)}
               </span>
-
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-xl h-8"
+                disabled={printBusy || netRows.length === 0}
+                onClick={printNetCustomers}
+                aria-label="طباعة حسابات الزبائن PDF"
+              >
+                <FileText className="h-4 w-4 ml-1" />
+                {printBusy ? "جارٍ التجهيز..." : "طباعة PDF"}
+              </Button>
             </div>
+
             <div className="relative flex-1 min-w-[180px] max-w-xs">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input aria-label="بحث بالاسم أو المندوب..."
