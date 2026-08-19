@@ -150,6 +150,8 @@ function CustomersPage() {
   const [settleAmount, setSettleAmount] = useState("");
   const [settleNote, setSettleNote] = useState("");
   const [settleBusy, setSettleBusy] = useState(false);
+  const [printBusy, setPrintBusy] = useState(false);
+
 
   const { data: netCustomers } = useQuery({
     queryKey: ["network-customers", user?.id],
