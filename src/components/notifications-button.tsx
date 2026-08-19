@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Bell, Inbox, UserPlus, ShieldAlert, CreditCard } from "lucide-react";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
+import { setAppBadge } from "@/lib/app-badge";
 
 export function NotificationsButton() {
   const { role, profile, isSuperadmin } = useAuth();
@@ -71,6 +72,11 @@ export function NotificationsButton() {
       refetchInterval: 15_000,
       enabled: !!profile,
     });
+
+  // شارة العدد على أيقونة التطبيق (مثل فيسبوك)
+  useEffect(() => {
+    void setAppBadge(counts.total);
+  }, [counts.total]);
 
   const items: { to: string; label: string; count: number; icon: typeof Inbox }[] = [];
 
