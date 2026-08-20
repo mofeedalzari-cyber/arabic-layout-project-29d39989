@@ -437,7 +437,7 @@ function CabinPage() {
                       onClick={() => setConfirmPkg(r)}
                       className={`w-full rounded-xl border-0 font-semibold h-10 ${r.color ? "bg-white text-foreground hover:bg-white/90" : "gradient-primary-bg text-primary-foreground hover:opacity-90"}`}
                     >
-                      {noStock ? "لا كروت" : "بيع كرت"}
+                      {noStock ? "لا كروت" : instantMode ? "بيع فوري" : "بيع كرت"}
                     </Button>
                   </div>
                 </div>
