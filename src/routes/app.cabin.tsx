@@ -49,6 +49,12 @@ import { notifyNewSale } from "@/lib/push.functions";
 import { CardTemplateDialog } from "@/components/card-template-dialog";
 import { loadTemplate, printCards, printCardsPdf } from "@/lib/card-print";
 import { pickContact } from "@/lib/pick-contact";
+import {
+  createHotspotUser,
+  generateCredentials,
+  removeHotspotUser,
+  type HotspotRouter,
+} from "@/lib/hotspot-provision";
 
 export const Route = createFileRoute("/app/cabin")({
   head: () => ({
