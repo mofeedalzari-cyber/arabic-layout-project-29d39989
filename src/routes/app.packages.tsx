@@ -71,6 +71,7 @@ const pkgSchema = z.object({
   speed: z.string().trim().max(40).optional().nullable(),
   validity: z.string().trim().max(40).optional().nullable(),
   allowed_time: z.string().trim().max(40).optional().nullable(),
+  hotspot_profile: z.string().trim().max(60).optional().nullable(),
   description: z.string().trim().max(240).optional().nullable(),
   color: z
     .string()
