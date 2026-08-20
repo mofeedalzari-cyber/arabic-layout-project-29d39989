@@ -145,6 +145,7 @@ function MikrotiksPage() {
         password: form.password,
         port: Number(form.port) || 8728,
         use_https: form.use_https,
+        allow_agent_provision: form.allow_agent_provision,
         notes: form.notes.trim() || null,
       };
       if (!payload.name || !payload.host || !payload.username) {
