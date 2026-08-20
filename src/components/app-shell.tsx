@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
+import { useRealtimeKeepAlive } from "@/hooks/use-realtime-keepalive";
 import { PageFooter } from "@/components/page-footer";
 
 interface NavItem {
@@ -72,6 +73,7 @@ const NAV: NavItem[] = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { profile, role, isSuperadmin, signOut } = useAuth();
   useRealtimeSync();
+  useRealtimeKeepAlive();
   // مدير التطبيق: لا يظهر له سوى صفحة الإدارة العامة
   const items = isSuperadmin
     ? NAV.filter((n) => n.superOnly)

@@ -356,4 +356,111 @@ export function useRequestNotifications() {
       supabase.removeChannel(channel);
     };
   }, [role, networkId]);
+
+  // خطة بديلة: استعلام دوري كل 20 ثانية.
+  // في الأندرويد يُقطع اتصال الويب سوكت أحيانًا بصمت (بعد إغلاق الشاشة أو ضعف
+  // الشبكة)، فلا تصل الأحداث إلا بعد إعادة تشغيل الإنترنت. هذا الاستعلام
+  // يضمن ظهور الإشعارات حتى لو تعطّل التحديث الفوري.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (role !== "admin" || !networkId) return;
+
+    const since = new Date().toISOString();
+    let stopped = false;
+
+    const poll = async () => {
+      if (stopped) return;
+      if (document.visibilityState === "hidden") return;
+      try {
+        const [reqs, joins, sls] = await Promise.all([
+          supabase
+            .from("card_requests")
+            .select("id, agent_full_name, agent_username, package_name, quantity")
+            .eq("network_id", networkId)
+            .eq("status", "PENDING")
+            .gt("created_at", since)
+            .limit(20),
+          supabase
+            .from("join_requests")
+            .select("id, agent_full_name, agent_username")
+            .eq("network_id", networkId)
+            .gt("created_at", since)
+            .limit(20),
+          supabase
+            .from("sales")
+            .select("id, agent_full_name, agent_username, package_name, price, buyer_name")
+            .eq("network_id", networkId)
+            .gt("created_at", since)
+            .limit(20),
+        ]);
+
+        for (const row of (reqs.data ?? []) as any[]) {
+          if (seenAdmin.current.has(row.id)) continue;
+          seenAdmin.current.add(row.id);
+          const agent = row.agent_full_name || cleanPhoneLike(row.agent_username) || "مندوب";
+          playTone("new");
+          void nativeVibrate();
+          void systemNotify({
+            title: "طلب سحب جديد",
+            body: `${agent} · ${row.package_name ?? "باقة"} · الكمية: ${row.quantity ?? ""}`,
+            largeBody: `طلب سحب كروت جديد من ${agent}\nالباقة: ${row.package_name ?? "باقة"}\nالكمية: ${row.quantity ?? ""}`,
+            path: "/app/requests",
+            tag: `req-${row.id}`,
+          });
+          qc.invalidateQueries({ queryKey: ["card-requests"] });
+          qc.invalidateQueries({ queryKey: ["requests"] });
+        }
+
+        for (const row of (joins.data ?? []) as any[]) {
+          if (seenAdmin.current.has(row.id)) continue;
+          seenAdmin.current.add(row.id);
+          const agent = row.agent_full_name || cleanPhoneLike(row.agent_username) || "مندوب";
+          playTone("new");
+          void nativeVibrate();
+          void systemNotify({
+            title: "طلب انضمام جديد",
+            body: agent,
+            largeBody: `طلب انضمام مندوب جديد: ${agent}`,
+            path: "/app/join-requests",
+            tag: `join-${row.id}`,
+          });
+          qc.invalidateQueries({ queryKey: ["join-requests"] });
+        }
+
+        for (const row of (sls.data ?? []) as any[]) {
+          if (seenAdmin.current.has(row.id)) continue;
+          seenAdmin.current.add(row.id);
+          const agent = row.agent_full_name || cleanPhoneLike(row.agent_username) || "مندوب";
+          const price = row.price != null ? `${row.price} ﷼` : "";
+          const desc = [row.package_name, price, row.buyer_name].filter(Boolean).join(" · ");
+          playTone("approve");
+          void nativeVibrate([80, 40, 80]);
+          void systemNotify({
+            title: "عملية بيع جديدة",
+            body: `${agent} · ${desc}`,
+            largeBody: `عملية بيع جديدة من ${agent}\nالباقة: ${row.package_name ?? "—"}\nالمبلغ: ${price || "—"}\nالزبون: ${row.buyer_name || "—"}`,
+            path: `/app/sales?sale=${row.id}`,
+            tag: `sale-${row.id}`,
+          });
+          qc.invalidateQueries({ queryKey: ["sales"] });
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+
+    const timer = setInterval(poll, 20_000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void poll();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onVisible);
+
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onVisible);
+    };
+  }, [role, networkId, qc]);
 }
