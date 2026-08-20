@@ -232,7 +232,39 @@ function CabinPage() {
       return;
     }
     setSelling(true);
-    const { data, error } = await supabase.rpc("sell_card", { _package_id: confirmPkg.package_id });
+    const useInstant = instantMode && !!router;
+    let data: any = null;
+    let error: any = null;
+
+    if (useInstant) {
+      // 🔌 بيع فوري: أنشئ المستخدم في الميكروتك ثم سجّل المبيعة
+      const creds = generateCredentials(confirmPkg.package_name);
+      try {
+        await createHotspotUser(router!, {
+          username: creds.username,
+          password: creds.password,
+          profile: pkgProfiles?.[confirmPkg.package_id] ?? undefined,
+          comment: `karti:${confirmPkg.package_name}`,
+        });
+      } catch (e: any) {
+        setSelling(false);
+        toast.error(e?.message || "تعذّر إنشاء المستخدم في الميكروتك — تأكد أنك متصل بشبكة الراوتر");
+        return;
+      }
+      const res = await supabase.rpc("sell_instant_card", {
+        _package_id: confirmPkg.package_id,
+        _username: creds.username,
+        _password: creds.password,
+      });
+      data = res.data;
+      error = res.error;
+      if (error) await removeHotspotUser(router!, creds.username);
+    } else {
+      const res = await supabase.rpc("sell_card", { _package_id: confirmPkg.package_id });
+      data = res.data;
+      error = res.error;
+    }
+
     if (error) {
       setSelling(false);
       const map: Record<string, string> = {
@@ -241,6 +273,8 @@ function CabinPage() {
         FORBIDDEN: "غير مصرح",
         PACKAGE_NOT_FOUND: "الباقة غير موجودة",
         NETWORK_INACTIVE: "الشبكة موقوفة",
+        CARD_EXISTS: "اسم المستخدم مستخدم مسبقاً — أعد المحاولة",
+        USERNAME_REQUIRED: "تعذّر توليد اسم المستخدم",
       };
       const key = Object.keys(map).find((k) => error.message.includes(k));
       toast.error(key ? map[key] : error.message);
