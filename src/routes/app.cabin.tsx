@@ -619,7 +619,9 @@ function CabinPage() {
               <div className="flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-xs text-warning-foreground">
                 <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-warning" />
                 <span>
-                  سيتم خصم أول كرت من كبينتك ولا يمكن التراجع.
+                  {instantMode && router
+                    ? `سيتم إنشاء مستخدم جديد في الميكروتك (${router.name}) وتسجيل المبيعة، ولا يمكن التراجع.`
+                    : "سيتم خصم أول كرت من كبينتك ولا يمكن التراجع."}
                   {selCustomer ? ` سيُرسل الكرت إلى ${selCustomer.name} عبر واتساب.` : ""}
                 </span>
               </div>
