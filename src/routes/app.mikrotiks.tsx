@@ -78,6 +78,7 @@ type Mikrotik = {
   password: string;
   port: number;
   use_https: boolean;
+  allow_agent_provision?: boolean;
   notes: string | null;
   created_at: string;
 };
