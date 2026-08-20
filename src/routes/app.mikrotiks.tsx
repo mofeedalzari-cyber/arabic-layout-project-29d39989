@@ -125,6 +125,7 @@ function MikrotiksPage() {
         password: editing.password,
         port: editing.port,
         use_https: editing.use_https,
+        allow_agent_provision: editing.allow_agent_provision ?? false,
         notes: editing.notes ?? "",
       });
     } else {
