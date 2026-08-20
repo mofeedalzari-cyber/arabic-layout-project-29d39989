@@ -53,6 +53,7 @@ async function exportToPDF(
 import { AgentStats } from "./app.agents";
 
 import { PackagesChart, AgentsChart } from "@/components/dashboard-charts";
+import { PeriodSalesCard } from "@/components/period-sales-card";
 
 export const Route = createFileRoute("/app/")({
   component: DashboardPage,
@@ -136,6 +137,10 @@ function AdminDashboard() {
           label="قيمة المتوفر"
           value={fmtMoney(stats?.available_value ?? 0)}
         />
+      </div>
+
+      <div className="mb-5">
+        <PeriodSalesCard />
       </div>
 
       <AdminBreakdowns />
@@ -585,6 +590,12 @@ function AgentHome({ name }: { name: string }) {
       <div className="mb-4 flex justify-start">
         <RefreshButton />
       </div>
+
+      {user && (
+        <div className="mb-4">
+          <PeriodSalesCard agentId={user.id} />
+        </div>
+      )}
 
       {user && (
         <div className="mb-4">
