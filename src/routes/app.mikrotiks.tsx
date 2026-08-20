@@ -268,6 +268,19 @@ function MikrotiksPage() {
                     checked={form.use_https}
                     onCheckedChange={(v) => setForm({ ...form, use_https: v })}
                   />
+                 </div>
+                <div className="flex items-center justify-between p-3 rounded-xl border">
+                  <div>
+                    <div className="text-sm font-medium">السماح بالبيع الفوري للمناديب</div>
+                    <div className="text-xs text-muted-foreground">
+                      يستطيع المندوب البيع بدون كروت محمّلة — يُنشأ المستخدم في الهوت سبوت لحظة
+                      البيع (يتطلب اتصال المندوب بشبكة الراوتر)
+                    </div>
+                  </div>
+                  <Switch
+                    checked={form.allow_agent_provision}
+                    onCheckedChange={(v) => setForm({ ...form, allow_agent_provision: v })}
+                  />
                 </div>
                 <FormRow label="ملاحظات (اختياري)">
                   <Input
