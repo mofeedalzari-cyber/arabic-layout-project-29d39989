@@ -73,6 +73,7 @@ const NAV: NavItem[] = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { profile, role, isSuperadmin, signOut } = useAuth();
   useRealtimeSync();
+  useRealtimeKeepAlive();
   // مدير التطبيق: لا يظهر له سوى صفحة الإدارة العامة
   const items = isSuperadmin
     ? NAV.filter((n) => n.superOnly)
