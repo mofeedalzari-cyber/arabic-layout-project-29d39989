@@ -78,6 +78,7 @@ type Mikrotik = {
   password: string;
   port: number;
   use_https: boolean;
+  allow_agent_provision?: boolean;
   notes: string | null;
   created_at: string;
 };
@@ -89,6 +90,7 @@ const emptyForm = {
   password: "",
   port: 8728,
   use_https: false,
+  allow_agent_provision: false,
   notes: "",
 };
 
@@ -124,6 +126,7 @@ function MikrotiksPage() {
         password: editing.password,
         port: editing.port,
         use_https: editing.use_https,
+        allow_agent_provision: editing.allow_agent_provision ?? false,
         notes: editing.notes ?? "",
       });
     } else {
@@ -142,6 +145,7 @@ function MikrotiksPage() {
         password: form.password,
         port: Number(form.port) || 8728,
         use_https: form.use_https,
+        allow_agent_provision: form.allow_agent_provision,
         notes: form.notes.trim() || null,
       };
       if (!payload.name || !payload.host || !payload.username) {
@@ -263,6 +267,19 @@ function MikrotiksPage() {
                   <Switch
                     checked={form.use_https}
                     onCheckedChange={(v) => setForm({ ...form, use_https: v })}
+                  />
+                 </div>
+                <div className="flex items-center justify-between p-3 rounded-xl border">
+                  <div>
+                    <div className="text-sm font-medium">السماح بالبيع الفوري للمناديب</div>
+                    <div className="text-xs text-muted-foreground">
+                      يستطيع المندوب البيع بدون كروت محمّلة — يُنشأ المستخدم في الهوت سبوت لحظة
+                      البيع (يتطلب اتصال المندوب بشبكة الراوتر)
+                    </div>
+                  </div>
+                  <Switch
+                    checked={form.allow_agent_provision}
+                    onCheckedChange={(v) => setForm({ ...form, allow_agent_provision: v })}
                   />
                 </div>
                 <FormRow label="ملاحظات (اختياري)">

@@ -39,6 +39,7 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -49,6 +50,12 @@ import { notifyNewSale } from "@/lib/push.functions";
 import { CardTemplateDialog } from "@/components/card-template-dialog";
 import { loadTemplate, printCards, printCardsPdf } from "@/lib/card-print";
 import { pickContact } from "@/lib/pick-contact";
+import {
+  createHotspotUser,
+  generateCredentials,
+  removeHotspotUser,
+  type HotspotRouter,
+} from "@/lib/hotspot-provision";
 
 export const Route = createFileRoute("/app/cabin")({
   head: () => ({
@@ -125,6 +132,31 @@ function CabinPage() {
     },
   });
 
+  // 📡 راوتر الشبكة (إن سمح المدير بالبيع الفوري) — لإنشاء المستخدم لحظة البيع
+  const { data: router } = useQuery({
+    queryKey: ["agent-hotspot-router"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("agent_hotspot_router");
+      if (error) return null;
+      const r = Array.isArray(data) ? data[0] : data;
+      return (r ?? null) as HotspotRouter | null;
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const { data: pkgProfiles } = useQuery({
+    queryKey: ["pkg-hotspot-profiles"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("packages").select("id, hotspot_profile");
+      if (error) return {} as Record<string, string | null>;
+      const map: Record<string, string | null> = {};
+      for (const p of data ?? []) map[(p as any).id] = (p as any).hotspot_profile ?? null;
+      return map;
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const [instantMode, setInstantMode] = useState(false);
   const [confirmPkg, setConfirmPkg] = useState<CabinRow | null>(null);
   const [saleResult, setSaleResult] = useState<any>(null);
   const [selling, setSelling] = useState(false);
@@ -201,7 +233,39 @@ function CabinPage() {
       return;
     }
     setSelling(true);
-    const { data, error } = await supabase.rpc("sell_card", { _package_id: confirmPkg.package_id });
+    const useInstant = instantMode && !!router;
+    let data: any = null;
+    let error: any = null;
+
+    if (useInstant) {
+      // 🔌 بيع فوري: أنشئ المستخدم في الميكروتك ثم سجّل المبيعة
+      const creds = generateCredentials(confirmPkg.package_name);
+      try {
+        await createHotspotUser(router!, {
+          username: creds.username,
+          password: creds.password,
+          profile: pkgProfiles?.[confirmPkg.package_id] ?? undefined,
+          comment: `karti:${confirmPkg.package_name}`,
+        });
+      } catch (e: any) {
+        setSelling(false);
+        toast.error(e?.message || "تعذّر إنشاء المستخدم في الميكروتك — تأكد أنك متصل بشبكة الراوتر");
+        return;
+      }
+      const res = await supabase.rpc("sell_instant_card", {
+        _package_id: confirmPkg.package_id,
+        _username: creds.username,
+        _password: creds.password,
+      });
+      data = res.data;
+      error = res.error;
+      if (error) await removeHotspotUser(router!, creds.username);
+    } else {
+      const res = await supabase.rpc("sell_card", { _package_id: confirmPkg.package_id });
+      data = res.data;
+      error = res.error;
+    }
+
     if (error) {
       setSelling(false);
       const map: Record<string, string> = {
@@ -210,6 +274,8 @@ function CabinPage() {
         FORBIDDEN: "غير مصرح",
         PACKAGE_NOT_FOUND: "الباقة غير موجودة",
         NETWORK_INACTIVE: "الشبكة موقوفة",
+        CARD_EXISTS: "اسم المستخدم مستخدم مسبقاً — أعد المحاولة",
+        USERNAME_REQUIRED: "تعذّر توليد اسم المستخدم",
       };
       const key = Object.keys(map).find((k) => error.message.includes(k));
       toast.error(key ? map[key] : error.message);
@@ -264,7 +330,29 @@ function CabinPage() {
           <Users className="h-4 w-4 ml-1" />
           الزبائن ({customers?.length ?? 0})
         </Button>
+        {router && (
+          <Button
+            variant={instantMode ? "default" : "outline"}
+            size="sm"
+            className={`rounded-xl ${instantMode ? "gradient-primary-bg border-0" : ""}`}
+            onClick={() => setInstantMode((v) => !v)}
+          >
+            <Zap className="h-4 w-4 ml-1" />
+            {instantMode ? "البيع الفوري مُفعّل" : "بيع فوري (بدون كرت)"}
+          </Button>
+        )}
       </div>
+
+      {router && instantMode && (
+        <div className="mb-4 flex items-start gap-2 rounded-2xl bg-primary/10 p-3 text-xs text-foreground">
+          <Zap className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
+          <span>
+            البيع الفوري عبر الراوتر <strong>{router.name}</strong> — يتم إنشاء اسم مستخدم وكلمة سر
+            جديدين في الميكروتك لحظة البيع بدون الحاجة لكروت محمّلة مسبقاً. يجب أن يكون جهازك متصلاً
+            بشبكة الراوتر.
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-3 mb-5">
         <StatMini label="متوفر" value={String(totalAvail)} tone="success" />
@@ -274,18 +362,20 @@ function CabinPage() {
 
       {isLoading ? (
         <div className="text-center py-16 text-muted-foreground">جارٍ التحميل...</div>
-      ) : (rows?.filter((r) => r.available > 0).length ?? 0) === 0 ? (
+      ) : (rows?.filter((r) => instantMode || r.available > 0).length ?? 0) === 0 ? (
         <div className="text-center py-16 space-y-3">
           <PackageOpen className="h-10 w-10 mx-auto text-muted-foreground" />
           <div className="text-muted-foreground">لا توجد كروت متاحة في كبينتك.</div>
           <div className="text-xs text-muted-foreground">
-            اذهب إلى الشبكات واطلب كروت من المدير.
+            {router
+              ? "فعّل البيع الفوري لإنشاء الكروت مباشرة من الميكروتك."
+              : "اذهب إلى الشبكات واطلب كروت من المدير."}
           </div>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rows!.filter((r) => r.available > 0).map((r) => {
-            const noStock = r.available === 0;
+          {rows!.filter((r) => instantMode || r.available > 0).map((r) => {
+            const noStock = !instantMode && r.available === 0;
             return (
               <Card
                 key={r.package_id}
@@ -347,7 +437,7 @@ function CabinPage() {
                       onClick={() => setConfirmPkg(r)}
                       className={`w-full rounded-xl border-0 font-semibold h-10 ${r.color ? "bg-white text-foreground hover:bg-white/90" : "gradient-primary-bg text-primary-foreground hover:opacity-90"}`}
                     >
-                      {noStock ? "لا كروت" : "بيع كرت"}
+                      {noStock ? "لا كروت" : instantMode ? "بيع فوري" : "بيع كرت"}
                     </Button>
                   </div>
                 </div>
@@ -529,7 +619,9 @@ function CabinPage() {
               <div className="flex items-start gap-2 rounded-xl bg-warning/10 p-3 text-xs text-warning-foreground">
                 <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-warning" />
                 <span>
-                  سيتم خصم أول كرت من كبينتك ولا يمكن التراجع.
+                  {instantMode && router
+                    ? `سيتم إنشاء مستخدم جديد في الميكروتك (${router.name}) وتسجيل المبيعة، ولا يمكن التراجع.`
+                    : "سيتم خصم أول كرت من كبينتك ولا يمكن التراجع."}
                   {selCustomer ? ` سيُرسل الكرت إلى ${selCustomer.name} عبر واتساب.` : ""}
                 </span>
               </div>
