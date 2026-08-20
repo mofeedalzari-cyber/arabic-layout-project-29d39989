@@ -408,6 +408,7 @@ export type Database = {
       }
       mikrotiks: {
         Row: {
+          allow_agent_provision: boolean
           created_at: string
           created_by: string | null
           host: string
@@ -422,6 +423,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          allow_agent_provision?: boolean
           created_at?: string
           created_by?: string | null
           host: string
@@ -436,6 +438,7 @@ export type Database = {
           username: string
         }
         Update: {
+          allow_agent_provision?: boolean
           created_at?: string
           created_by?: string | null
           host?: string
@@ -514,6 +517,7 @@ export type Database = {
           created_at: string
           data_size: string | null
           description: string | null
+          hotspot_profile: string | null
           icon: string | null
           id: string
           is_active: boolean
@@ -531,6 +535,7 @@ export type Database = {
           created_at?: string
           data_size?: string | null
           description?: string | null
+          hotspot_profile?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean
@@ -548,6 +553,7 @@ export type Database = {
           created_at?: string
           data_size?: string | null
           description?: string | null
+          hotspot_profile?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean
@@ -1026,6 +1032,18 @@ export type Database = {
           sold_count: number
           speed: string
           validity: string
+        }[]
+      }
+      agent_hotspot_router: {
+        Args: never
+        Returns: {
+          host: string
+          id: string
+          name: string
+          password: string
+          port: number
+          use_https: boolean
+          username: string
         }[]
       }
       agent_list_package_cards: {
