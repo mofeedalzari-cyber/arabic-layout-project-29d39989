@@ -1232,6 +1232,19 @@ export type Database = {
           transaction_no: string
         }[]
       }
+      sell_instant_card: {
+        Args: { _package_id: string; _password: string; _username: string }
+        Returns: {
+          card_password: string
+          card_username: string
+          network_name: string
+          package_name: string
+          price: number
+          sale_id: string
+          sold_at: string
+          transaction_no: string
+        }[]
+      }
       set_agent_active: {
         Args: { _active: boolean; _agent_id: string }
         Returns: undefined
