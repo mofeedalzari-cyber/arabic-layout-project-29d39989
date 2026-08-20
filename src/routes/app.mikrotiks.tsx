@@ -89,6 +89,7 @@ const emptyForm = {
   password: "",
   port: 8728,
   use_https: false,
+  allow_agent_provision: false,
   notes: "",
 };
 
