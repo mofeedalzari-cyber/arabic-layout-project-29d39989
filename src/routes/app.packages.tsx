@@ -619,6 +619,7 @@ function PackageForm({
     speed: initial?.speed ?? "",
     validity: initial?.validity ?? "",
     allowed_time: initial?.allowed_time ?? "",
+    hotspot_profile: initial?.hotspot_profile ?? "",
     description: initial?.description ?? "",
     color: initial?.color ?? null,
     sort_order: initial?.sort_order ?? 0,
@@ -697,6 +698,15 @@ function PackageForm({
             value={form.validity ?? ""}
             onChange={(e) => setForm({ ...form, validity: e.target.value })}
             placeholder="30 يوم"
+          />
+        </div>
+        <div>
+          <Label className="text-xs">بروفايل الهوت سبوت</Label>
+          <Input
+            aria-label="بروفايل الهوت سبوت في الميكروتك"
+            value={form.hotspot_profile ?? ""}
+            onChange={(e) => setForm({ ...form, hotspot_profile: e.target.value })}
+            placeholder="default"
           />
         </div>
         <div>
