@@ -593,6 +593,12 @@ function AgentHome({ name }: { name: string }) {
 
       {user && (
         <div className="mb-4">
+          <PeriodSalesCard agentId={user.id} />
+        </div>
+      )}
+
+      {user && (
+        <div className="mb-4">
           <AgentStats
             agentId={user.id}
             name={profile?.full_name || displayPhone(profile?.phone, profile?.username) || name}
