@@ -329,7 +329,29 @@ function CabinPage() {
           <Users className="h-4 w-4 ml-1" />
           الزبائن ({customers?.length ?? 0})
         </Button>
+        {router && (
+          <Button
+            variant={instantMode ? "default" : "outline"}
+            size="sm"
+            className={`rounded-xl ${instantMode ? "gradient-primary-bg border-0" : ""}`}
+            onClick={() => setInstantMode((v) => !v)}
+          >
+            <Zap className="h-4 w-4 ml-1" />
+            {instantMode ? "البيع الفوري مُفعّل" : "بيع فوري (بدون كرت)"}
+          </Button>
+        )}
       </div>
+
+      {router && instantMode && (
+        <div className="mb-4 flex items-start gap-2 rounded-2xl bg-primary/10 p-3 text-xs text-foreground">
+          <Zap className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
+          <span>
+            البيع الفوري عبر الراوتر <strong>{router.name}</strong> — يتم إنشاء اسم مستخدم وكلمة سر
+            جديدين في الميكروتك لحظة البيع بدون الحاجة لكروت محمّلة مسبقاً. يجب أن يكون جهازك متصلاً
+            بشبكة الراوتر.
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-3 mb-5">
         <StatMini label="متوفر" value={String(totalAvail)} tone="success" />
@@ -339,18 +361,20 @@ function CabinPage() {
 
       {isLoading ? (
         <div className="text-center py-16 text-muted-foreground">جارٍ التحميل...</div>
-      ) : (rows?.filter((r) => r.available > 0).length ?? 0) === 0 ? (
+      ) : (rows?.filter((r) => instantMode || r.available > 0).length ?? 0) === 0 ? (
         <div className="text-center py-16 space-y-3">
           <PackageOpen className="h-10 w-10 mx-auto text-muted-foreground" />
           <div className="text-muted-foreground">لا توجد كروت متاحة في كبينتك.</div>
           <div className="text-xs text-muted-foreground">
-            اذهب إلى الشبكات واطلب كروت من المدير.
+            {router
+              ? "فعّل البيع الفوري لإنشاء الكروت مباشرة من الميكروتك."
+              : "اذهب إلى الشبكات واطلب كروت من المدير."}
           </div>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rows!.filter((r) => r.available > 0).map((r) => {
-            const noStock = r.available === 0;
+          {rows!.filter((r) => instantMode || r.available > 0).map((r) => {
+            const noStock = !instantMode && r.available === 0;
             return (
               <Card
                 key={r.package_id}
