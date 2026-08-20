@@ -39,6 +39,7 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
