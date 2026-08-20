@@ -138,6 +138,10 @@ function AdminDashboard() {
         />
       </div>
 
+      <div className="mb-5">
+        <PeriodSalesCard />
+      </div>
+
       <AdminBreakdowns />
     </div>
   );
