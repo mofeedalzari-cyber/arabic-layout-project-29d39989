@@ -125,6 +125,31 @@ function CabinPage() {
     },
   });
 
+  // 📡 راوتر الشبكة (إن سمح المدير بالبيع الفوري) — لإنشاء المستخدم لحظة البيع
+  const { data: router } = useQuery({
+    queryKey: ["agent-hotspot-router"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("agent_hotspot_router");
+      if (error) return null;
+      const r = Array.isArray(data) ? data[0] : data;
+      return (r ?? null) as HotspotRouter | null;
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const { data: pkgProfiles } = useQuery({
+    queryKey: ["pkg-hotspot-profiles"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("packages").select("id, hotspot_profile");
+      if (error) return {} as Record<string, string | null>;
+      const map: Record<string, string | null> = {};
+      for (const p of data ?? []) map[(p as any).id] = (p as any).hotspot_profile ?? null;
+      return map;
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const [instantMode, setInstantMode] = useState(false);
   const [confirmPkg, setConfirmPkg] = useState<CabinRow | null>(null);
   const [saleResult, setSaleResult] = useState<any>(null);
   const [selling, setSelling] = useState(false);
