@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { fmtMoney } from "@/lib/format";
-import { CalendarDays, CalendarRange, CalendarCheck } from "lucide-react";
+import { CalendarDays, CalendarRange, CalendarCheck, Package } from "lucide-react";
 import { RefreshButton } from "@/components/refresh-button";
 
-type Row = { price: number; sold_at: string };
+type Row = { price: number; sold_at: string; package_name: string | null };
 
 function startOfDay(d: Date) {
   const x = new Date(d);
@@ -26,7 +26,7 @@ export function PeriodSalesCard({ agentId }: { agentId?: string }) {
     queryFn: async () => {
       let q = supabase
         .from("sales")
-        .select("price, sold_at")
+        .select("price, sold_at, package_name")
         .gte("sold_at", monthStart.toISOString());
       if (agentId) q = q.eq("agent_id", agentId);
       const { data, error } = await q;
@@ -44,6 +44,21 @@ export function PeriodSalesCard({ agentId }: { agentId?: string }) {
   const today = agg(dayStart);
   const week = agg(weekStart);
   const month = agg(monthStart);
+
+  const packages = (data ?? [])
+    .filter((r) => new Date(r.sold_at) >= monthStart)
+    .reduce((map, row) => {
+      const name = row.package_name?.trim() || "باقة بدون اسم";
+      const current = map.get(name) || { count: 0, value: 0 };
+      current.count += 1;
+      current.value += Number(row.price || 0);
+      map.set(name, current);
+      return map;
+    }, new Map<string, { count: number; value: number }>());
+
+  const sortedPackages = Array.from(packages.entries())
+    .map(([name, stats]) => ({ name, ...stats }))
+    .sort((a, b) => b.count - a.count);
 
   return (
     <Card className="card-elegant p-3 sm:p-5 border-0 w-full max-w-full" dir="rtl">
@@ -79,6 +94,35 @@ export function PeriodSalesCard({ agentId }: { agentId?: string }) {
           loading={isLoading}
           tone="warning"
         />
+      </div>
+
+      <div className="mt-4 pt-3 border-t border-border/40">
+        <div className="flex items-center gap-2 mb-2">
+          <Package className="h-4 w-4 text-primary shrink-0" />
+          <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground">توزيع الباقات هذا الشهر</h3>
+        </div>
+        {isLoading ? (
+          <div className="text-sm text-muted-foreground">جاري التحميل...</div>
+        ) : sortedPackages.length === 0 ? (
+          <div className="text-sm text-muted-foreground">لا توجد مبيعات هذا الشهر</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {sortedPackages.map((pkg) => (
+              <div
+                key={pkg.name}
+                className="rounded-lg bg-muted/50 p-2 sm:p-3 flex flex-col justify-between"
+              >
+                <div className="text-[11px] sm:text-xs font-medium text-foreground [overflow-wrap:anywhere] leading-tight mb-1">
+                  {pkg.name}
+                </div>
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-[11px] text-muted-foreground">{pkg.count} كرت</span>
+                  <span className="text-xs font-bold text-primary">{fmtMoney(pkg.value)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );
