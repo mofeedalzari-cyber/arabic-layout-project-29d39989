@@ -108,7 +108,7 @@ function PeriodItem({
   const textTone =
     tone === "success" ? "text-success" : tone === "warning" ? "text-warning" : "text-primary";
   return (
-    <div className="rounded-xl bg-muted/40 p-3 min-w-0">
+    <div className="rounded-xl bg-muted/40 p-2 sm:p-3 min-w-0">
       <div className="flex items-center gap-2 mb-1.5">
         <span className={`rounded-lg p-1.5 shrink-0 ${toneClass}`}>{icon}</span>
         <span className="text-[11px] text-muted-foreground [overflow-wrap:anywhere]">{label}</span>
