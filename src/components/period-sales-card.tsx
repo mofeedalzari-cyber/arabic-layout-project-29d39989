@@ -96,10 +96,12 @@ function PeriodBlock({
   config,
   rows,
   loading,
+  className,
 }: {
   config: PeriodConfig;
   rows: Row[];
   loading?: boolean;
+  className?: string;
 }) {
   const Icon = config.icon;
   const filtered = rows.filter((r) => new Date(r.sold_at) >= config.from);
@@ -132,7 +134,7 @@ function PeriodBlock({
         : "text-primary";
 
   return (
-    <div className="rounded-xl bg-muted/40 p-3 sm:p-4 border border-border/30">
+    <div className={`rounded-xl bg-muted/40 p-3 sm:p-4 border border-border/30 ${className ?? ""}`}>
       <div className="flex items-center gap-2 mb-3">
         <span className={`rounded-lg p-1.5 shrink-0 ${toneClass}`}>
           <Icon className="h-4 w-4" />
