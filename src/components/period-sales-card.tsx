@@ -54,7 +54,7 @@ export function PeriodSalesCard({ agentId }: { agentId?: string }) {
           <RefreshButton />
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
         <PeriodItem
           icon={<CalendarDays className="h-4 w-4" />}
           label="مبيعات اليوم"
@@ -108,7 +108,7 @@ function PeriodItem({
   const textTone =
     tone === "success" ? "text-success" : tone === "warning" ? "text-warning" : "text-primary";
   return (
-    <div className="rounded-xl bg-muted/40 p-3 min-w-0">
+    <div className="rounded-xl bg-muted/40 p-2 sm:p-3 min-w-0">
       <div className="flex items-center gap-2 mb-1.5">
         <span className={`rounded-lg p-1.5 shrink-0 ${toneClass}`}>{icon}</span>
         <span className="text-[11px] text-muted-foreground [overflow-wrap:anywhere]">{label}</span>
