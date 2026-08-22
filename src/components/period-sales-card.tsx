@@ -54,7 +54,7 @@ export function PeriodSalesCard({ agentId }: { agentId?: string }) {
           <RefreshButton />
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
         <PeriodItem
           icon={<CalendarDays className="h-4 w-4" />}
           label="مبيعات اليوم"
