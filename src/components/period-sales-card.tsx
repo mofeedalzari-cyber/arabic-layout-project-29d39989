@@ -69,13 +69,14 @@ export function PeriodSalesCard({ agentId }: { agentId?: string }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-row gap-3 overflow-x-auto pb-1">
         {periods.map((p) => (
           <PeriodBlock
             key={p.key}
             config={p}
             rows={data ?? []}
             loading={isLoading}
+            className="min-w-[260px] flex-1"
           />
         ))}
       </div>
