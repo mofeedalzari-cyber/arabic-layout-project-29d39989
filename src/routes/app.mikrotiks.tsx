@@ -171,7 +171,7 @@ function MikrotiksPage() {
   const save = useMutation({
     mutationFn: async () => {
       if (!profile?.network_id) throw new Error("لا توجد شبكة");
-      const payload: Record<string, unknown> = {
+      const payload = {
         network_id: profile.network_id,
         name: form.name.trim(),
         host: form.host.trim(),
@@ -180,9 +180,9 @@ function MikrotiksPage() {
         use_https: form.use_https,
         allow_agent_provision: form.allow_agent_provision,
         notes: form.notes.trim() || null,
+        // حدّث كلمة المرور فقط لو كتب المستخدم كلمة جديدة فعلياً
+        ...(form.password ? { password: form.password } : {}),
       };
-      // حدّث كلمة المرور فقط لو كتب المستخدم كلمة جديدة فعلياً
-      if (form.password) payload.password = form.password;
       if (!payload.name || !payload.host || !payload.username) {
         throw new Error("الاسم والعنوان واسم المستخدم مطلوبة");
       }
