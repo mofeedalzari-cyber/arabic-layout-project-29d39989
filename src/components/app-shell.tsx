@@ -33,6 +33,7 @@ import {
   HandCoins,
   ShieldCheck,
   KeyRound,
+  Router,
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
@@ -55,6 +56,7 @@ const NAV: NavItem[] = [
   { to: "/app/superadmin", label: "إدارة التطبيق", icon: ShieldCheck, superOnly: true },
   { to: "/app/password-resets", label: "استعادة كلمة المرور", icon: KeyRound, superOnly: true },
   { to: "/app/networks", label: "الشبكات", icon: Wifi, adminOnly: true },
+  { to: "/app/mikrotiks", label: "أجهزة مايكروتك", icon: Router, adminOnly: true, hideInBottomNav: true },
   { to: "/app/cabin", label: "كبينة البيع", icon: Store, agentOnly: true },
   { to: "/app/customers", label: "الزبائن", icon: Users, hideInBottomNav: true },
   { to: "/app/packages", label: "الباقات", icon: Package },
