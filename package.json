@@ -74,6 +74,7 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",
     "nitro": "3.0.260603-beta",
+    "node-routeros": "^1.6.9",
     "pdfjs-dist": "^6.1.200",
     "pdfmake": "^0.3.11",
     "react": "19.2.5",
