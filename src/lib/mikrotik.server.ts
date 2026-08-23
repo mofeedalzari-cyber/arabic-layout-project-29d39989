@@ -75,6 +75,7 @@ export async function withRouter<T>(
   creds: MtCreds,
   fn: (api: RouterOSClient) => Promise<T>,
 ): Promise<T> {
+  assertPubliclyReachable(creds.host);
   const api = await createClient(creds);
   try {
     await api.connect();
