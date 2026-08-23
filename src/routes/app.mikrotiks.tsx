@@ -55,6 +55,7 @@ import {
   Package as PackageIcon,
   LogOut,
   PlugZap,
+  Smartphone,
 } from "lucide-react";
 import {
   mtGetOverview,
@@ -68,6 +69,19 @@ import {
   mtDeleteProfile,
   mtTestConnection,
 } from "@/lib/mikrotik.functions";
+import {
+  mtLocalTest,
+  mtLocalOverview,
+  mtLocalActive,
+  mtLocalKickActive,
+  mtLocalUsers,
+  mtLocalAddUser,
+  mtLocalDeleteUser,
+  mtLocalProfiles,
+  mtLocalAddProfile,
+  mtLocalDeleteProfile,
+  type LocalRouter,
+} from "@/lib/mikrotik-local";
 
 export const Route = createFileRoute("/app/mikrotiks")({
   head: () => ({
@@ -88,6 +102,7 @@ type Mikrotik = {
   name: string;
   host: string;
   username: string;
+  password?: string; // تُجلب إلى المتصفح فقط في وضع الاتصال المحلي
   port: number;
   use_https: boolean; // تُستخدم الآن كـ API-SSL (tls)
   allow_agent_provision?: boolean;
@@ -111,14 +126,34 @@ function MikrotiksPage() {
   const qc = useQueryClient();
   const isAdmin = role === "admin" || isSuperadmin;
 
+  // وضع الاتصال المحلي: يتصل التطبيق بالميكروتك من هذا الجهاز مباشرة (نفس شبكة الواي فاي)
+  const [localMode, setLocalMode] = useState(false);
+  useEffect(() => {
+    try {
+      setLocalMode(localStorage.getItem("mt-local-mode") === "1");
+    } catch {
+      /* تجاهل */
+    }
+  }, []);
+  const toggleLocalMode = (v: boolean) => {
+    setLocalMode(v);
+    try {
+      localStorage.setItem("mt-local-mode", v ? "1" : "0");
+    } catch {
+      /* تجاهل */
+    }
+  };
+
   const { data: items = [], isLoading } = useQuery({
-    queryKey: ["mikrotiks", profile?.network_id],
+    queryKey: ["mikrotiks", profile?.network_id, localMode],
     queryFn: async () => {
+      // كلمة المرور تُجلب فقط في الوضع المحلي لأن الاتصال يتم من الجهاز نفسه
+      const cols = localMode
+        ? "id, network_id, name, host, username, password, port, use_https, allow_agent_provision, notes, created_at"
+        : "id, network_id, name, host, username, port, use_https, allow_agent_provision, notes, created_at";
       const { data, error } = await supabase
         .from("mikrotiks")
-        .select(
-          "id, network_id, name, host, username, port, use_https, allow_agent_provision, notes, created_at",
-        )
+        .select(cols)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Mikrotik[];
@@ -150,6 +185,19 @@ function MikrotiksPage() {
 
   const test = useMutation({
     mutationFn: async () => {
+      if (localMode) {
+        const password = form.password || editing?.password || "";
+        if (!password) throw new Error("كلمة المرور مطلوبة للاختبار المحلي");
+        const res = await mtLocalTest({
+          host: form.host.trim(),
+          port: Number(form.port) || 8728,
+          username: form.username.trim(),
+          password,
+          use_https: form.use_https,
+        });
+        if (!res.ok) throw new Error(res.error);
+        return res;
+      }
       const res = await mtTestConnection({
         data: {
           mikrotikId: editing?.id,
@@ -232,7 +280,11 @@ function MikrotiksPage() {
     <div dir="rtl">
       <PageHeader
         title="الميكروتيك"
-        description="إدارة أجهزة الميكروتيك عبر RouterOS API (يدعم v6 و v7). الاتصال يتم من السيرفر — يمكنك إدارة الراوتر من أي مكان."
+        description={
+          localMode
+            ? "وضع الاتصال المحلي: يتصل التطبيق بالميكروتك من هذا الجهاز مباشرة — يجب أن تكون على نفس شبكة الواي فاي للراوتر."
+            : "إدارة أجهزة الميكروتيك عبر RouterOS API (يدعم v6 و v7). الاتصال يتم من السيرفر — يمكنك إدارة الراوتر من أي مكان."
+        }
         action={
           <Dialog
             open={openForm}
@@ -251,10 +303,20 @@ function MikrotiksPage() {
               <DialogHeader>
                 <DialogTitle>{editing ? "تعديل الميكروتيك" : "إضافة ميكروتيك"}</DialogTitle>
                 <DialogDescription>
-                  الاتصال عبر RouterOS API من السيرفر. فعّل الخدمة في الميكروتيك:{" "}
-                  <span dir="ltr">/ip service enable api</span> ويُفضّل{" "}
-                  <span dir="ltr">api-ssl</span> للتشفير. إن كان الراوتر خلف NAT فافتح المنفذ (Port
-                  Forward) للإنترنت.
+                  {localMode ? (
+                    <>
+                      الوضع المحلي يستخدم REST API ويتطلب RouterOS v7 أو أحدث. فعّل الخدمة:{" "}
+                      <span dir="ltr">/ip service enable www</span> واستخدم عنوان الشبكة المحلية
+                      مثل <span dir="ltr">192.168.88.1</span> — يجب أن يكون جوالك على نفس الواي فاي.
+                    </>
+                  ) : (
+                    <>
+                      الاتصال عبر RouterOS API من السيرفر. فعّل الخدمة في الميكروتيك:{" "}
+                      <span dir="ltr">/ip service enable api</span> ويُفضّل{" "}
+                      <span dir="ltr">api-ssl</span> للتشفير. إن كان الراوتر خلف NAT فافتح المنفذ
+                      (Port Forward) للإنترنت.
+                    </>
+                  )}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-3">

@@ -14,7 +14,8 @@ const config: CapacitorConfig = {
   server: {
     url: appUrl,
     androidScheme: "https",
-    cleartext: false,
+    // السماح بالاتصال المحلي غير المشفّر بأجهزة الميكروتك داخل الشبكة (http://192.168.x.x)
+    cleartext: true,
     // صفحة محلية تُعرض بدل الشاشة السوداء / خطأ الشبكة عند انقطاع الإنترنت
     errorPath: "offline.html",
     allowNavigation: [
@@ -25,7 +26,8 @@ const config: CapacitorConfig = {
     ],
   },
   android: {
-    allowMixedContent: false,
+    // مطلوب للاتصال المحلي المباشر بالميكروتك (HTTP داخل LAN) من WebView
+    allowMixedContent: true,
     backgroundColor: "#009688",
     webContentsDebuggingEnabled: false,
   },
