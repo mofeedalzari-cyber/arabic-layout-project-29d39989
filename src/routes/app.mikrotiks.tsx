@@ -365,7 +365,15 @@ function MikrotiksPage() {
             فعّل خدمة API في الميكروتيك: <span dir="ltr">/ip service enable api</span> (المنفذ
             8728) أو <span dir="ltr">api-ssl</span> (المنفذ 8729، يُنصح به للتشفير).
           </li>
+          <li>
+            يجب أن يكون العنوان <strong>IP عاماً</strong> — العناوين المحلية (192.168.x.x /
+            10.x.x.x) لا يمكن للسيرفر السحابي الوصول إليها.
+          </li>
           <li>للوصول من خارج الشبكة المحلية افتح منفذ API على الراوتر (Port Forward) أو استخدم IP عاماً.</li>
+          <li>
+            الاتصال الخام (TCP 8728) يتطلب استضافة Node.js مثل <strong>Render</strong> — لا يعمل في
+            معاينة Lovable السحابية.
+          </li>
           <li>يعمل مع RouterOS v6 و v7 معاً.</li>
         </ul>
       </Card>

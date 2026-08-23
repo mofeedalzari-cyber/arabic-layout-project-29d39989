@@ -33,10 +33,30 @@ async function createClient(creds: MtCreds): Promise<RouterOSClient> {
   });
 }
 
+/** عناوين الشبكات الخاصة التي لا يمكن لسيرفر سحابي الوصول إليها */
+const PRIVATE_HOST_RE =
+  /^(localhost|0\.|10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.|::1$|fc|fd)/i;
+
+/**
+ * السيرفر يعمل في استضافة سحابية — لا يمكنه الوصول لعناوين LAN الخاصة.
+ * نرفض مبكراً برسالة واضحة بدل انتظار مهلة الاتصال 10 ثوانٍ.
+ */
+function assertPubliclyReachable(host: string) {
+  const h = host.trim().toLowerCase();
+  if (PRIVATE_HOST_RE.test(h)) {
+    throw new Error(
+      `العنوان "${host}" خاص بشبكة محلية (LAN) — السيرفر السحابي لا يستطيع الوصول إليه. ` +
+        "استخدم IP عاماً للراوتر مع فتح منفذ API (Port Forward)، أو VPN، أو Cloudflare Tunnel.",
+    );
+  }
+}
+
 /** رسائل خطأ عربية واضحة لأعطال الاتصال الشائعة */
 export function friendlyMtError(err: unknown): string {
   const raw = err instanceof Error ? err.message : String(err);
   const m = raw.toLowerCase();
+  if (m.includes("not implemented") || m.includes("unenv") || m.includes("is not a function"))
+    return "اتصال Binary API (TCP خام) غير مدعوم في بيئة الاستضافة الحالية — انشر التطبيق على Render حيث يعمل Node.js.";
   if (m.includes("timeout") || m.includes("timed out") || m.includes("etimedout"))
     return "انتهت مهلة الاتصال — تأكد من العنوان والمنفذ وأن المنفذ مفتوح على الراوتر (Port Forward).";
   if (m.includes("econnrefused") || m.includes("refused"))
@@ -55,6 +75,7 @@ export async function withRouter<T>(
   creds: MtCreds,
   fn: (api: RouterOSClient) => Promise<T>,
 ): Promise<T> {
+  assertPubliclyReachable(creds.host);
   const api = await createClient(creds);
   try {
     await api.connect();
