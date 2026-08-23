@@ -38,7 +38,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Router,
   Plus,
@@ -54,8 +54,20 @@ import {
   CreditCard,
   Package as PackageIcon,
   LogOut,
+  PlugZap,
 } from "lucide-react";
-import { RevealText } from "@/components/reveal-text";
+import {
+  mtGetOverview,
+  mtGetActive,
+  mtKickActive,
+  mtGetUsers,
+  mtAddUser,
+  mtDeleteUser,
+  mtGetProfiles,
+  mtAddProfile,
+  mtDeleteProfile,
+  mtTestConnection,
+} from "@/lib/mikrotik.functions";
 
 export const Route = createFileRoute("/app/mikrotiks")({
   head: () => ({
@@ -69,15 +81,15 @@ export const Route = createFileRoute("/app/mikrotiks")({
   }),
   component: MikrotiksPage });
 
+// كلمة المرور لا تُجلب إلى المتصفح إطلاقاً — تُدار من السيرفر فقط
 type Mikrotik = {
   id: string;
   network_id: string;
   name: string;
   host: string;
   username: string;
-  password: string;
   port: number;
-  use_https: boolean;
+  use_https: boolean; // تُستخدم الآن كـ API-SSL (tls)
   allow_agent_provision?: boolean;
   notes: string | null;
   created_at: string;
@@ -104,7 +116,9 @@ function MikrotiksPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("mikrotiks")
-        .select("*")
+        .select(
+          "id, network_id, name, host, username, port, use_https, allow_agent_provision, notes, created_at",
+        )
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Mikrotik[];
@@ -123,7 +137,7 @@ function MikrotiksPage() {
         name: editing.name,
         host: editing.host,
         username: editing.username,
-        password: editing.password,
+        password: "", // كلمة المرور لا تُعرض — اتركها فارغة للإبقاء على الحالية
         port: editing.port,
         use_https: editing.use_https,
         allow_agent_provision: editing.allow_agent_provision ?? false,
@@ -134,22 +148,46 @@ function MikrotiksPage() {
     }
   }, [editing, openForm]);
 
+  const test = useMutation({
+    mutationFn: async () => {
+      const res = await mtTestConnection({
+        data: {
+          mikrotikId: editing?.id,
+          host: form.host.trim(),
+          port: Number(form.port) || 8728,
+          username: form.username.trim(),
+          password: form.password || undefined,
+          use_ssl: form.use_https,
+        },
+      });
+      if (!res.ok) throw new Error(res.error);
+      return res;
+    },
+    onSuccess: (res) =>
+      toast.success(`الاتصال ناجح ✅ — ${res.identity || "جهاز"} (RouterOS ${res.version || "?"})`),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const save = useMutation({
     mutationFn: async () => {
       if (!profile?.network_id) throw new Error("لا توجد شبكة");
-      const payload = {
+      const payload: Record<string, unknown> = {
         network_id: profile.network_id,
         name: form.name.trim(),
         host: form.host.trim(),
         username: form.username.trim(),
-        password: form.password,
         port: Number(form.port) || 8728,
         use_https: form.use_https,
         allow_agent_provision: form.allow_agent_provision,
         notes: form.notes.trim() || null,
       };
+      // حدّث كلمة المرور فقط لو كتب المستخدم كلمة جديدة فعلياً
+      if (form.password) payload.password = form.password;
       if (!payload.name || !payload.host || !payload.username) {
         throw new Error("الاسم والعنوان واسم المستخدم مطلوبة");
+      }
+      if (!editing && !form.password) {
+        throw new Error("كلمة المرور مطلوبة عند إضافة جهاز جديد");
       }
       if (editing) {
         const { error } = await supabase.from("mikrotiks").update(payload).eq("id", editing.id);
@@ -194,7 +232,7 @@ function MikrotiksPage() {
     <div dir="rtl">
       <PageHeader
         title="الميكروتيك"
-        description="إدارة أجهزة الميكروتيك والاتصال بها عبر REST API (RouterOS v7+). استخدم التطبيق من داخل نفس الشبكة المحلية."
+        description="إدارة أجهزة الميكروتيك عبر RouterOS API (يدعم v6 و v7). الاتصال يتم من السيرفر — يمكنك إدارة الراوتر من أي مكان."
         action={
           <Dialog
             open={openForm}
@@ -213,8 +251,10 @@ function MikrotiksPage() {
               <DialogHeader>
                 <DialogTitle>{editing ? "تعديل الميكروتيك" : "إضافة ميكروتيك"}</DialogTitle>
                 <DialogDescription>
-                  للاتصال عبر REST يوصى بمنفذ 80 (HTTP) أو 443 (HTTPS) وتفعيل www / www-ssl في IP →
-                  Services.
+                  الاتصال عبر RouterOS API من السيرفر. فعّل الخدمة في الميكروتيك:{" "}
+                  <span dir="ltr">/ip service enable api</span> ويُفضّل{" "}
+                  <span dir="ltr">api-ssl</span> للتشفير. إن كان الراوتر خلف NAT فافتح المنفذ (Port
+                  Forward) للإنترنت.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-3">
@@ -225,11 +265,11 @@ function MikrotiksPage() {
                     placeholder="مثال: راوتر الفرع الرئيسي"
                   />
                 </FormRow>
-                <FormRow label="عنوان IP المحلي أو الدومين">
+                <FormRow label="عنوان IP العام أو الدومين">
                   <Input aria-label="192.168.88.1"
                     value={form.host}
                     onChange={(e) => setForm({ ...form, host: e.target.value })}
-                    placeholder="192.168.88.1"
+                    placeholder="203.0.113.10 أو router.example.com"
                     dir="ltr"
                   />
                 </FormRow>
@@ -241,17 +281,17 @@ function MikrotiksPage() {
                       dir="ltr"
                     />
                   </FormRow>
-                  <FormRow label="منفذ REST">
+                  <FormRow label="منفذ API">
                     <Input aria-label="المنفذ"
                       type="number"
                       value={form.port}
                       onChange={(e) => setForm({ ...form, port: Number(e.target.value) })}
                       dir="ltr"
-                      placeholder="80"
+                      placeholder="8728"
                     />
                   </FormRow>
                 </div>
-                <FormRow label="كلمة المرور">
+                <FormRow label={editing ? "كلمة المرور (اتركها فارغة للإبقاء على الحالية)" : "كلمة المرور"}>
                   <PasswordInput
                     value={form.password}
                     onChange={(v) => setForm({ ...form, password: v })}
@@ -259,9 +299,9 @@ function MikrotiksPage() {
                 </FormRow>
                 <div className="flex items-center justify-between p-3 rounded-xl border">
                   <div>
-                    <div className="text-sm font-medium">استخدام HTTPS</div>
+                    <div className="text-sm font-medium">اتصال مشفّر (API-SSL)</div>
                     <div className="text-xs text-muted-foreground">
-                      فعّل لو www-ssl مُشغّل في الميكروتيك
+                      فعّل لو خدمة api-ssl مُشغّلة في الميكروتيك (المنفذ الافتراضي 8729)
                     </div>
                   </div>
                   <Switch
@@ -274,7 +314,7 @@ function MikrotiksPage() {
                     <div className="text-sm font-medium">السماح بالبيع الفوري للمناديب</div>
                     <div className="text-xs text-muted-foreground">
                       يستطيع المندوب البيع بدون كروت محمّلة — يُنشأ المستخدم في الهوت سبوت لحظة
-                      البيع (يتطلب اتصال المندوب بشبكة الراوتر)
+                      البيع
                     </div>
                   </div>
                   <Switch
@@ -289,7 +329,20 @@ function MikrotiksPage() {
                   />
                 </FormRow>
               </div>
-              <DialogFooter>
+              <DialogFooter className="gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => test.mutate()}
+                  disabled={test.isPending || !form.host.trim() || !form.username.trim()}
+                  className="rounded-xl gap-1"
+                >
+                  {test.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <PlugZap className="h-4 w-4" />
+                  )}
+                  اختبار الاتصال
+                </Button>
                 <Button
                   onClick={() => save.mutate()}
                   disabled={save.isPending}
@@ -307,13 +360,13 @@ function MikrotiksPage() {
       <Card className="p-3 mb-4 bg-info/10 border-info/30 text-xs leading-6">
         <strong>ملاحظات اتصال:</strong>
         <ul className="list-disc pr-5 mt-1 space-y-0.5">
-          <li>يجب أن يكون جوالك متصلاً بنفس شبكة الميكروتيك الواي فاي.</li>
+          <li>الاتصال يتم من السيرفر مباشرة — لا حاجة أن يكون جوالك على شبكة الميكروتيك.</li>
           <li>
-            فعّل REST API في الميكروتيك: <span dir="ltr">/ip service enable www</span> (RouterOS
-            v7).
+            فعّل خدمة API في الميكروتيك: <span dir="ltr">/ip service enable api</span> (المنفذ
+            8728) أو <span dir="ltr">api-ssl</span> (المنفذ 8729، يُنصح به للتشفير).
           </li>
-          <li>منفذ REST الافتراضي: 80 (HTTP) أو 443 (HTTPS) — وليس 8728.</li>
-          <li>إذا فشل الاتصال من المتصفح بسبب CORS، استخدم تطبيق الأندرويد (APK).</li>
+          <li>للوصول من خارج الشبكة المحلية افتح منفذ API على الراوتر (Port Forward) أو استخدم IP عاماً.</li>
+          <li>يعمل مع RouterOS v6 و v7 معاً.</li>
         </ul>
       </Card>
 
@@ -394,7 +447,7 @@ function MikrotikCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const webUrl = `${item.use_https ? "https" : "http"}://${item.host}`;
+  const webUrl = `http://${item.host}`;
   return (
     <Card className="p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
@@ -413,12 +466,12 @@ function MikrotikCard({
 
       <div className="grid grid-cols-2 gap-2 text-xs">
         <InfoPill label="المستخدم" value={item.username} ltr />
-        <InfoPill label="HTTPS" value={item.use_https ? "مفعّل" : "معطّل"} />
+        <InfoPill label="التشفير" value={item.use_https ? "API-SSL" : "API عادي"} />
       </div>
 
       <div className="text-xs flex items-center gap-1">
         <span className="text-muted-foreground">كلمة المرور:</span>
-        <RevealText username={item.password || "—"} />
+        <span className="tracking-widest select-none">••••••••</span>
       </div>
 
       <div className="flex flex-wrap gap-2 mt-auto">
@@ -480,57 +533,13 @@ function InfoPill({ label, value, ltr }: { label: string; value: string; ltr?: b
 }
 
 // ============================================================
-// MikroTik REST API client (browser-side, LAN only)
+// نافذة تفاصيل الجهاز — كل الاتصالات تتم من السيرفر عبر RouterOS API
 // ============================================================
 
-function useMikrotikApi(item: Mikrotik | null) {
-  return useMemo(() => {
-    if (!item) return null;
-    const scheme = item.use_https ? "https" : "http";
-    const port = item.port && item.port !== 80 && item.port !== 443 ? `:${item.port}` : "";
-    const base = `${scheme}://${item.host}${port}/rest`;
-    const auth = "Basic " + btoa(`${item.username}:${item.password}`);
-    const headers: HeadersInit = { Authorization: auth, "Content-Type": "application/json" };
-
-    async function req(path: string, init?: RequestInit) {
-      const res = await fetch(`${base}${path}`, {
-        ...init,
-        headers: { ...headers, ...(init?.headers ?? {}) },
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(`${res.status} ${res.statusText} ${text}`.trim());
-      }
-      const ct = res.headers.get("content-type") ?? "";
-      if (ct.includes("application/json")) return res.json();
-      return null;
-    }
-
-    return {
-      get: (path: string) => req(path),
-      post: (path: string, body: unknown) =>
-        req(path, { method: "POST", body: JSON.stringify(body) }),
-      del: (path: string, id: string) =>
-        req(`${path}/${encodeURIComponent(id)}`, { method: "DELETE" }),
-      patch: (path: string, id: string, body: unknown) =>
-        req(`${path}/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) }),
-    };
-  }, [item]);
-}
-
-type MikrotikInfo = {
-  identity?: string;
-  version?: string;
-  boardName?: string;
-  uptime?: string;
-  cpuLoad?: string;
-  freeMemory?: string;
-  totalMemory?: string;
-};
+type MtRow = Record<string, string>;
 
 function MikrotikDetailsDialog({ item, onClose }: { item: Mikrotik | null; onClose: () => void }) {
-  const api = useMikrotikApi(item);
-  const webUrl = item ? `${item.use_https ? "https" : "http"}://${item.host}` : "";
+  const webUrl = item ? `http://${item.host}` : "";
 
   return (
     <Dialog open={!!item} onOpenChange={(o) => !o && onClose()}>
@@ -544,39 +553,41 @@ function MikrotikDetailsDialog({ item, onClose }: { item: Mikrotik | null; onClo
             <span dir="ltr" className="inline-block">
               {item?.host}:{item?.port}
             </span>{" "}
-            — REST API
+            — RouterOS API (من السيرفر)
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="overview" dir="rtl">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="overview" className="gap-1">
-              <Wifi className="h-4 w-4" /> نظرة عامة
-            </TabsTrigger>
-            <TabsTrigger value="active" className="gap-1">
-              <Users className="h-4 w-4" /> النشطون
-            </TabsTrigger>
-            <TabsTrigger value="users" className="gap-1">
-              <CreditCard className="h-4 w-4" /> الكروت
-            </TabsTrigger>
-            <TabsTrigger value="profiles" className="gap-1">
-              <PackageIcon className="h-4 w-4" /> الباقات
-            </TabsTrigger>
-          </TabsList>
+        {item && (
+          <Tabs defaultValue="overview" dir="rtl">
+            <TabsList className="grid grid-cols-4 w-full">
+              <TabsTrigger value="overview" className="gap-1">
+                <Wifi className="h-4 w-4" /> نظرة عامة
+              </TabsTrigger>
+              <TabsTrigger value="active" className="gap-1">
+                <Users className="h-4 w-4" /> النشطون
+              </TabsTrigger>
+              <TabsTrigger value="users" className="gap-1">
+                <CreditCard className="h-4 w-4" /> الكروت
+              </TabsTrigger>
+              <TabsTrigger value="profiles" className="gap-1">
+                <PackageIcon className="h-4 w-4" /> الباقات
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="overview" className="mt-4">
-            {api && <OverviewTab api={api} />}
-          </TabsContent>
-          <TabsContent value="active" className="mt-4">
-            {api && <ActiveTab api={api} />}
-          </TabsContent>
-          <TabsContent value="users" className="mt-4">
-            {api && <UsersTab api={api} />}
-          </TabsContent>
-          <TabsContent value="profiles" className="mt-4">
-            {api && <ProfilesTab api={api} />}
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="overview" className="mt-4">
+              <OverviewTab mikrotikId={item.id} />
+            </TabsContent>
+            <TabsContent value="active" className="mt-4">
+              <ActiveTab mikrotikId={item.id} />
+            </TabsContent>
+            <TabsContent value="users" className="mt-4">
+              <UsersTab mikrotikId={item.id} />
+            </TabsContent>
+            <TabsContent value="profiles" className="mt-4">
+              <ProfilesTab mikrotikId={item.id} />
+            </TabsContent>
+          </Tabs>
+        )}
 
         <DialogFooter>
           <a href={webUrl} target="_blank" rel="noreferrer">
@@ -591,22 +602,18 @@ function MikrotikDetailsDialog({ item, onClose }: { item: Mikrotik | null; onClo
   );
 }
 
-type Api = NonNullable<ReturnType<typeof useMikrotikApi>>;
-
 function ErrorBox({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const msg = error instanceof Error ? error.message : String(error);
   return (
     <div className="p-3 rounded-xl bg-warning/10 border border-warning/30 text-sm space-y-2">
       <div className="font-semibold">تعذّر الاتصال بالميكروتيك</div>
-      <div className="text-xs text-muted-foreground break-all" dir="ltr">
-        {msg}
-      </div>
+      <div className="text-xs text-muted-foreground break-all">{msg}</div>
       <ul className="text-xs list-disc pr-5 space-y-0.5 text-muted-foreground">
-        <li>تأكد أن جوالك على نفس شبكة الميكروتيك المحلية.</li>
         <li>
-          تأكد من تفعيل REST (RouterOS v7): <span dir="ltr">/ip service enable www</span>.
+          تأكد من تفعيل خدمة API: <span dir="ltr">/ip service enable api</span> (أو api-ssl).
         </li>
-        <li>جرّب تعديل المنفذ إلى 80 أو 443 بدلاً من 8728.</li>
+        <li>تأكد من فتح المنفذ على الراوتر (Port Forward) إن كان الجهاز خلف NAT.</li>
+        <li>تحقق من العنوان والمنفذ واسم المستخدم وكلمة المرور.</li>
       </ul>
       {onRetry && (
         <Button size="sm" variant="outline" className="rounded-xl gap-1" onClick={onRetry}>
@@ -617,27 +624,10 @@ function ErrorBox({ error, onRetry }: { error: unknown; onRetry?: () => void }) 
   );
 }
 
-function OverviewTab({ api }: { api: Api }) {
+function OverviewTab({ mikrotikId }: { mikrotikId: string }) {
   const q = useQuery({
-    queryKey: ["mt-overview"],
-    queryFn: async () => {
-      const [resource, identity] = await Promise.all([
-        api.get("/system/resource"),
-        api.get("/system/identity"),
-      ]);
-      const res = resource as Record<string, string>;
-      const idn = identity as Record<string, string>;
-      const info: MikrotikInfo = {
-        identity: idn?.name,
-        version: res?.version,
-        boardName: res?.["board-name"],
-        uptime: res?.uptime,
-        cpuLoad: res?.["cpu-load"],
-        freeMemory: res?.["free-memory"],
-        totalMemory: res?.["total-memory"],
-      };
-      return info;
-    },
+    queryKey: ["mt-overview", mikrotikId],
+    queryFn: () => mtGetOverview({ data: { mikrotikId } }),
     retry: false,
   });
 
@@ -675,20 +665,20 @@ function OverviewTab({ api }: { api: Api }) {
   );
 }
 
-function ActiveTab({ api }: { api: Api }) {
+function ActiveTab({ mikrotikId }: { mikrotikId: string }) {
   const qc = useQueryClient();
   const q = useQuery({
-    queryKey: ["mt-active"],
-    queryFn: async () => (await api.get("/ip/hotspot/active")) as Array<Record<string, string>>,
+    queryKey: ["mt-active", mikrotikId],
+    queryFn: () => mtGetActive({ data: { mikrotikId } }) as Promise<MtRow[]>,
     retry: false,
     refetchInterval: 10000,
   });
 
   const kick = useMutation({
-    mutationFn: async (id: string) => api.del("/ip/hotspot/active", id),
+    mutationFn: (activeId: string) => mtKickActive({ data: { mikrotikId, activeId } }),
     onSuccess: () => {
       toast.success("تم قطع الاتصال");
-      qc.invalidateQueries({ queryKey: ["mt-active"] });
+      qc.invalidateQueries({ queryKey: ["mt-active", mikrotikId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -736,6 +726,7 @@ function ActiveTab({ api }: { api: Api }) {
                   variant="outline"
                   className="rounded-xl text-destructive gap-1"
                   onClick={() => kick.mutate(u[".id"])}
+                  disabled={kick.isPending}
                 >
                   <LogOut className="h-3 w-3" /> قطع
                 </Button>
@@ -748,47 +739,49 @@ function ActiveTab({ api }: { api: Api }) {
   );
 }
 
-function UsersTab({ api }: { api: Api }) {
+function UsersTab({ mikrotikId }: { mikrotikId: string }) {
   const qc = useQueryClient();
   const [openAdd, setOpenAdd] = useState(false);
   const [form, setForm] = useState({ name: "", password: "", profile: "default" });
 
   const users = useQuery({
-    queryKey: ["mt-users"],
-    queryFn: async () => (await api.get("/ip/hotspot/user")) as Array<Record<string, string>>,
+    queryKey: ["mt-users", mikrotikId],
+    queryFn: () => mtGetUsers({ data: { mikrotikId } }) as Promise<MtRow[]>,
     retry: false,
   });
 
   const profiles = useQuery({
-    queryKey: ["mt-profiles-list"],
-    queryFn: async () =>
-      (await api.get("/ip/hotspot/user/profile")) as Array<Record<string, string>>,
+    queryKey: ["mt-profiles", mikrotikId],
+    queryFn: () => mtGetProfiles({ data: { mikrotikId } }) as Promise<MtRow[]>,
     retry: false,
   });
 
   const add = useMutation({
     mutationFn: async () => {
       if (!form.name.trim()) throw new Error("اسم المستخدم مطلوب");
-      await api.post("/ip/hotspot/user/add", {
-        name: form.name.trim(),
-        password: form.password,
-        profile: form.profile || "default",
+      await mtAddUser({
+        data: {
+          mikrotikId,
+          name: form.name.trim(),
+          password: form.password,
+          profile: form.profile || "default",
+        },
       });
     },
     onSuccess: () => {
       toast.success("تم إضافة المستخدم");
       setOpenAdd(false);
       setForm({ name: "", password: "", profile: "default" });
-      qc.invalidateQueries({ queryKey: ["mt-users"] });
+      qc.invalidateQueries({ queryKey: ["mt-users", mikrotikId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const del = useMutation({
-    mutationFn: async (id: string) => api.del("/ip/hotspot/user", id),
+    mutationFn: (userId: string) => mtDeleteUser({ data: { mikrotikId, userId } }),
     onSuccess: () => {
       toast.success("تم الحذف");
-      qc.invalidateQueries({ queryKey: ["mt-users"] });
+      qc.invalidateQueries({ queryKey: ["mt-users", mikrotikId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -933,7 +926,7 @@ function UsersTab({ api }: { api: Api }) {
   );
 }
 
-function ProfilesTab({ api }: { api: Api }) {
+function ProfilesTab({ mikrotikId }: { mikrotikId: string }) {
   const qc = useQueryClient();
   const [openAdd, setOpenAdd] = useState(false);
   const [form, setForm] = useState({
@@ -944,35 +937,38 @@ function ProfilesTab({ api }: { api: Api }) {
   });
 
   const profiles = useQuery({
-    queryKey: ["mt-profiles"],
-    queryFn: async () =>
-      (await api.get("/ip/hotspot/user/profile")) as Array<Record<string, string>>,
+    queryKey: ["mt-profiles", mikrotikId],
+    queryFn: () => mtGetProfiles({ data: { mikrotikId } }) as Promise<MtRow[]>,
     retry: false,
   });
 
   const add = useMutation({
     mutationFn: async () => {
       if (!form.name.trim()) throw new Error("اسم الباقة مطلوب");
-      const body: Record<string, string> = { name: form.name.trim() };
-      if (form.rate_limit) body["rate-limit"] = form.rate_limit;
-      if (form.session_timeout) body["session-timeout"] = form.session_timeout;
-      if (form.shared_users) body["shared-users"] = form.shared_users;
-      await api.post("/ip/hotspot/user/profile/add", body);
+      await mtAddProfile({
+        data: {
+          mikrotikId,
+          name: form.name.trim(),
+          rateLimit: form.rate_limit || undefined,
+          sessionTimeout: form.session_timeout || undefined,
+          sharedUsers: form.shared_users || undefined,
+        },
+      });
     },
     onSuccess: () => {
       toast.success("تم إضافة الباقة");
       setOpenAdd(false);
       setForm({ name: "", rate_limit: "", session_timeout: "", shared_users: "1" });
-      qc.invalidateQueries({ queryKey: ["mt-profiles"] });
+      qc.invalidateQueries({ queryKey: ["mt-profiles", mikrotikId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const del = useMutation({
-    mutationFn: async (id: string) => api.del("/ip/hotspot/user/profile", id),
+    mutationFn: (profileId: string) => mtDeleteProfile({ data: { mikrotikId, profileId } }),
     onSuccess: () => {
       toast.success("تم الحذف");
-      qc.invalidateQueries({ queryKey: ["mt-profiles"] });
+      qc.invalidateQueries({ queryKey: ["mt-profiles", mikrotikId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
