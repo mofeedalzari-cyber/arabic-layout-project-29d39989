@@ -153,10 +153,10 @@ function MikrotiksPage() {
         : "id, network_id, name, host, username, port, use_https, allow_agent_provision, notes, created_at";
       const { data, error } = await supabase
         .from("mikrotiks")
-        .select(cols)
+        .select(cols as "*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Mikrotik[];
+      return (data ?? []) as unknown as Mikrotik[];
     },
     enabled: !!profile?.network_id && isAdmin,
   });
