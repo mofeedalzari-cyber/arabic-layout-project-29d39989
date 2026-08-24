@@ -38,6 +38,7 @@ import {
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useRealtimeSync } from "@/hooks/use-realtime-sync";
 import { useRealtimeKeepAlive } from "@/hooks/use-realtime-keepalive";
+import { useAppFlag } from "@/hooks/use-app-flag";
 import { PageFooter } from "@/components/page-footer";
 
 interface NavItem {
