@@ -34,6 +34,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { fmtMoney, displayPhone, fmtArabicDateTime, cleanPhoneLike } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -855,9 +856,64 @@ function SuperAdminPageInner() {
         </TabsContent>
 
       </Tabs>
+
+      <FeatureFlagsCard />
     </div>
   );
 }
+
+function FeatureFlagsCard() {
+  const qc = useQueryClient();
+  const flag = useQuery({
+    queryKey: ["app-flag", "mikrotiks_nav"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("app_flags")
+        .select("enabled")
+        .eq("key", "mikrotiks_nav")
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.enabled ?? true) as boolean;
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const { error } = await supabase
+        .from("app_flags")
+        .upsert({ key: "mikrotiks_nav", enabled, updated_at: new Date().toISOString() });
+      if (error) throw error;
+    },
+    onSuccess: (_d, enabled) => {
+      qc.invalidateQueries({ queryKey: ["app-flag", "mikrotiks_nav"] });
+      toast.success(enabled ? "تم إظهار أجهزة مايكروتك" : "تم إخفاء أجهزة مايكروتك");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "فشل الحفظ"),
+  });
+
+  const enabled = flag.data ?? true;
+
+  return (
+    <Card className="p-4" dir="rtl">
+      <h2 className="text-sm font-bold mb-3">خيارات التطبيق</h2>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-sm font-medium">أجهزة مايكروتك</div>
+          <div className="text-[11px] text-muted-foreground">
+            عند الإخفاء يختفي الخيار من القائمة الجانبية لجميع مدراء الشبكات.
+          </div>
+        </div>
+        <Switch
+          checked={enabled}
+          disabled={flag.isLoading || save.isPending}
+          onCheckedChange={(v) => save.mutate(v)}
+          aria-label="إظهار أو إخفاء أجهزة مايكروتك"
+        />
+      </div>
+    </Card>
+  );
+}
+
 
 function StatCard({
   label,

@@ -52,6 +52,24 @@ export type Database = {
           },
         ]
       }
+      app_flags: {
+        Row: {
+          enabled: boolean
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       card_requests: {
         Row: {
           agent_full_name: string | null
