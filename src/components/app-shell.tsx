@@ -77,15 +77,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { profile, role, isSuperadmin, signOut } = useAuth();
   useRealtimeSync();
   useRealtimeKeepAlive();
+  const { enabled: mikrotiksEnabled } = useAppFlag("mikrotiks_nav", true);
   // مدير التطبيق: لا يظهر له سوى صفحة الإدارة العامة
   const items = isSuperadmin
     ? NAV.filter((n) => n.superOnly)
     : NAV.filter((n) => {
         if (n.superOnly) return false;
+        if (n.to === "/app/mikrotiks" && !mikrotiksEnabled) return false;
         if (n.adminOnly) return role === "admin";
         if (n.agentOnly) return role === "agent";
         return true;
       });
+
 
 
   const [dark, setDark] = useState(false);
