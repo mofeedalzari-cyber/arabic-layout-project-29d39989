@@ -94,7 +94,9 @@ export function playTouchSound() {
  * تفعيل صوت اللمس التلقائي عند التنقل بين الصفحات.
  * يستمع لأحداث resolved في الراوتر ويعزف صوتاً خفيفاً.
  */
-export function initTouchSound(router: { subscribe: (event: string, cb: () => void) => () => void }) {
+export function initTouchSound(router: {
+  subscribe: (event: "onResolved", cb: () => void) => () => void;
+}) {
   enabled = readEnabled();
 
   // محاولة أولية لإعداد AudioContext بعد تفاعل المستخدم (يساعد في السماح بالتشغيل)
