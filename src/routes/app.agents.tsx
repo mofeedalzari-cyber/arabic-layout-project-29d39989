@@ -777,6 +777,11 @@ export function AgentStats({
           <TopStat label="إجمالي الديون" value={fmtMoney(data.debt.total)} tone="primary" />
           <TopStat label="إجمالي المسدد" value={fmtMoney(data.debt.paid)} />
         </div>
+        {data.debt.paid > 0 && (
+          <div className="mt-2 flex justify-start">
+            <ResetPaidButton agentId={agentId} label="تصفير المسدد لهذا المندوب" />
+          </div>
+        )}
       </div>
 
       <div className="p-4 space-y-4">
