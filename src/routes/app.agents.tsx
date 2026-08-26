@@ -163,8 +163,9 @@ function AgentsPageInner() {
   return (
     <>
       <PageHeader title="المناديب" description="إدارة حسابات المناديب وعرض إحصائياتهم" />
-      <div className="mb-4 flex justify-start">
+      <div className="mb-4 flex flex-wrap items-center justify-start gap-2">
         <RefreshButton />
+        <ResetPaidButton label="تصفير المسدد لكل المناديب" />
       </div>
 
       <div className="relative mb-4 max-w-md">
