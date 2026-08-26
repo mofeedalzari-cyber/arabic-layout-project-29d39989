@@ -976,6 +976,14 @@ export type Database = {
           requests_updated: number
         }[]
       }
+      admin_reset_paid: {
+        Args: { _agent_id?: string }
+        Returns: {
+          cleared: number
+          payments_deleted: number
+          requests_updated: number
+        }[]
+      }
       admin_settle_customer_via_agent: {
         Args: { _amount?: number; _customer_id: string; _note?: string }
         Returns: {
