@@ -23,6 +23,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { OfflineBanner } from "@/components/offline-banner";
 import { initCapacitorNative } from "@/lib/capacitor-native";
 import { initPushNotifications } from "@/lib/push-notifications";
+import { initTouchSound } from "@/lib/touch-sound";
 import { initSentry } from "@/lib/sentry";
 import { initOfflineQueueAutoSync } from "@/lib/offline-queue";
 import { registerServiceWorker } from "@/lib/register-sw";
