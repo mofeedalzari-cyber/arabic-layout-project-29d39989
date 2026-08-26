@@ -24,6 +24,7 @@ import {
   Tag,
   Pencil,
   Trash2,
+  Eraser,
 } from "lucide-react";
 import { displayPhone, fmtMoney } from "@/lib/format";
 import { useServerFn } from "@tanstack/react-start";
@@ -970,5 +971,70 @@ function MiniCol({ v, l }: { v: string; l: string }) {
       <div className="text-sm font-extrabold truncate">{v}</div>
       <div className="text-[10px] text-muted-foreground">{l}</div>
     </div>
+  );
+}
+
+function ResetPaidButton({ agentId, label }: { agentId?: string; label: string }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const m = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc("admin_reset_paid" as any, {
+        _agent_id: agentId ?? null,
+      } as any);
+      if (error) throw error;
+      const r: any = Array.isArray(data) ? data[0] : data;
+      return { cleared: Number(r?.cleared ?? 0) };
+    },
+    onSuccess: (r) => {
+      toast.success(`تم تصفير المسدد — ${fmtMoney(r.cleared)}`);
+      qc.invalidateQueries();
+      setOpen(false);
+    },
+    onError: (e: Error) =>
+      toast.error(
+        e.message.includes("FORBIDDEN")
+          ? "غير مسموح"
+          : e.message.includes("AGENT_NOT_IN_NETWORK")
+            ? "المندوب ليس ضمن شبكتك"
+            : e.message,
+      ),
+  });
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <Button
+        size="sm"
+        variant="outline"
+        className="rounded-xl h-9 gap-1 text-destructive"
+        onClick={() => setOpen(true)}
+      >
+        <Eraser className="h-4 w-4" />
+        {label}
+      </Button>
+      <AlertDialogContent dir="rtl" className="text-right">
+        <AlertDialogHeader>
+          <AlertDialogTitle>تصفير المبالغ المسددة؟</AlertDialogTitle>
+          <AlertDialogDescription>
+            سيتم حذف سجل عمليات السداد وإرجاع "المسدد" إلى صفر
+            {agentId ? " لهذا المندوب" : " لجميع مناديب شبكتك"}. الدين المستحق يبقى كما هو وسيظهر
+            كاملاً من جديد. لا يمكن التراجع عن هذا الإجراء.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              m.mutate();
+            }}
+            disabled={m.isPending}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {m.isPending ? "جارٍ التصفير..." : "تصفير"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
