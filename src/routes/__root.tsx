@@ -165,6 +165,7 @@ function RootComponent() {
     registerServiceWorker();
     initCapacitorNative(router);
     void initPushNotifications(router);
+    const unsubscribeTouch = initTouchSound(router);
 
     // Auto-recover from stale chunk hashes after a redeploy:
     // if a dynamic import fails, force a hard reload so the browser
@@ -194,6 +195,7 @@ function RootComponent() {
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
     return () => {
+      unsubscribeTouch?.();
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onRejection);
     };
