@@ -32,8 +32,8 @@ function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-/** Render all pages of a PDF blob stacked vertically into one PNG Blob. */
-async function pdfBlobToPngBlob(pdfBlob: Blob, scale = 2): Promise<Blob> {
+/** Render each PDF page to its own PNG Blob (one image per page). */
+async function pdfBlobToPngBlobs(pdfBlob: Blob, scale = 2): Promise<Blob[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pdfjs: any = await import("pdfjs-dist");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,39 +43,25 @@ async function pdfBlobToPngBlob(pdfBlob: Blob, scale = 2): Promise<Blob> {
   const buf = await pdfBlob.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: buf }).promise;
 
-  const pages: { page: any; viewport: any }[] = [];
+  const blobs: Blob[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
-    pages.push({ page, viewport: page.getViewport({ scale }) });
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+    const blob = await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/png", 0.95),
+    );
+    blobs.push(blob);
   }
-
-  const width = Math.ceil(Math.max(...pages.map((p) => p.viewport.width)));
-  const height = Math.ceil(pages.reduce((a, p) => a + p.viewport.height, 0));
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, width, height);
-
-  let offset = 0;
-  for (const { page, viewport } of pages) {
-    const pageCanvas = document.createElement("canvas");
-    pageCanvas.width = Math.ceil(viewport.width);
-    pageCanvas.height = Math.ceil(viewport.height);
-    const pctx = pageCanvas.getContext("2d")!;
-    pctx.fillStyle = "#ffffff";
-    pctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-    await page.render({ canvasContext: pctx, viewport, canvas: pageCanvas }).promise;
-    ctx.drawImage(pageCanvas, 0, offset);
-    offset += pageCanvas.height;
-  }
-
-  return await new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/png", 0.95),
-  );
+  return blobs;
 }
+
 
 /**
  * Build the invoice image + text and send via WhatsApp.
@@ -91,25 +77,28 @@ export async function shareInvoiceImageOnWhatsApp(opts: {
   const { invoice, message, whatsappPhone, filenameBase } = opts;
 
   const pdfBlob = await buildCustomerInvoicePdfBlob(invoice);
-  const pngBlob = await pdfBlobToPngBlob(pdfBlob, 2);
+  const pngBlobs = await pdfBlobToPngBlobs(pdfBlob, 2);
 
   const baseName = safeFileName(filenameBase);
-  const fileName = `${baseName}_${Date.now()}.png`;
+  const stamp = Date.now();
+  const multi = pngBlobs.length > 1;
 
   if (!isNativeApp()) {
-    // Web: download image, then open WhatsApp with caption text.
-    try {
-      const url = URL.createObjectURL(pngBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${baseName}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      console.error("[shareInvoiceImageOnWhatsApp] web download failed:", err);
-    }
+    // Web: download each page as a separate image, then open WhatsApp.
+    pngBlobs.forEach((blob, idx) => {
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = multi ? `${baseName}_${idx + 1}.png` : `${baseName}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      } catch (err) {
+        console.error("[shareInvoiceImageOnWhatsApp] web download failed:", err);
+      }
+    });
     if (whatsappPhone) await openWhatsApp(whatsappPhone, message);
     return;
   }
@@ -135,20 +124,21 @@ export async function shareInvoiceImageOnWhatsApp(opts: {
   }
 
   try {
-    const base64 = await blobToBase64(pngBlob);
-    const written = await Filesystem.writeFile({
-      path: fileName,
-      data: base64,
-      directory: Directory.Cache,
-    });
-    // Share the image with caption. On Android, `files[]` reliably attaches
-    // the image; when the user picks WhatsApp the caption is prefilled.
-    // WhatsApp does not accept a specific phone number together with a media
-    // attachment via any public URL scheme, so a one-tap contact pick is
-    // unavoidable — we hint the target number in the dialog title.
+    const uris: string[] = [];
+    for (let i = 0; i < pngBlobs.length; i++) {
+      const base64 = await blobToBase64(pngBlobs[i]);
+      const written = await Filesystem.writeFile({
+        path: multi ? `${baseName}_${stamp}_${i + 1}.png` : `${baseName}_${stamp}.png`,
+        data: base64,
+        directory: Directory.Cache,
+      });
+      uris.push(written.uri);
+    }
+    // Share the images with caption. On Android, `files[]` reliably attaches
+    // the images; when the user picks WhatsApp the caption is prefilled.
     await Share.share({
       text: message,
-      files: [written.uri],
+      files: uris,
       dialogTitle: whatsappPhone
         ? `إرسال كشف الحساب عبر واتساب إلى +${String(whatsappPhone).replace(/\D/g, "")}`
         : "مشاركة كشف الحساب عبر واتساب",
