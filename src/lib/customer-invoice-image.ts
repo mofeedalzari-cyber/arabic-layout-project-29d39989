@@ -77,25 +77,28 @@ export async function shareInvoiceImageOnWhatsApp(opts: {
   const { invoice, message, whatsappPhone, filenameBase } = opts;
 
   const pdfBlob = await buildCustomerInvoicePdfBlob(invoice);
-  const pngBlob = await pdfBlobToPngBlob(pdfBlob, 2);
+  const pngBlobs = await pdfBlobToPngBlobs(pdfBlob, 2);
 
   const baseName = safeFileName(filenameBase);
-  const fileName = `${baseName}_${Date.now()}.png`;
+  const stamp = Date.now();
+  const multi = pngBlobs.length > 1;
 
   if (!isNativeApp()) {
-    // Web: download image, then open WhatsApp with caption text.
-    try {
-      const url = URL.createObjectURL(pngBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${baseName}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      console.error("[shareInvoiceImageOnWhatsApp] web download failed:", err);
-    }
+    // Web: download each page as a separate image, then open WhatsApp.
+    pngBlobs.forEach((blob, idx) => {
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = multi ? `${baseName}_${idx + 1}.png` : `${baseName}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      } catch (err) {
+        console.error("[shareInvoiceImageOnWhatsApp] web download failed:", err);
+      }
+    });
     if (whatsappPhone) await openWhatsApp(whatsappPhone, message);
     return;
   }
@@ -121,20 +124,21 @@ export async function shareInvoiceImageOnWhatsApp(opts: {
   }
 
   try {
-    const base64 = await blobToBase64(pngBlob);
-    const written = await Filesystem.writeFile({
-      path: fileName,
-      data: base64,
-      directory: Directory.Cache,
-    });
-    // Share the image with caption. On Android, `files[]` reliably attaches
-    // the image; when the user picks WhatsApp the caption is prefilled.
-    // WhatsApp does not accept a specific phone number together with a media
-    // attachment via any public URL scheme, so a one-tap contact pick is
-    // unavoidable — we hint the target number in the dialog title.
+    const uris: string[] = [];
+    for (let i = 0; i < pngBlobs.length; i++) {
+      const base64 = await blobToBase64(pngBlobs[i]);
+      const written = await Filesystem.writeFile({
+        path: multi ? `${baseName}_${stamp}_${i + 1}.png` : `${baseName}_${stamp}.png`,
+        data: base64,
+        directory: Directory.Cache,
+      });
+      uris.push(written.uri);
+    }
+    // Share the images with caption. On Android, `files[]` reliably attaches
+    // the images; when the user picks WhatsApp the caption is prefilled.
     await Share.share({
       text: message,
-      files: [written.uri],
+      files: uris,
       dialogTitle: whatsappPhone
         ? `إرسال كشف الحساب عبر واتساب إلى +${String(whatsappPhone).replace(/\D/g, "")}`
         : "مشاركة كشف الحساب عبر واتساب",
