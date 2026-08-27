@@ -71,24 +71,25 @@ export function playTouchSound() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    // موجة جيبية عالية جداً (نقرة خفيفة غير مزعجة)
+    // نقرة ناعمة قصيرة جداً وغير مزعجة
     osc.type = "sine";
-    osc.frequency.setValueAtTime(1200, now);
-    osc.frequency.exponentialRampToValueAtTime(600, now + 0.08);
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.exponentialRampToValueAtTime(330, now + 0.05);
 
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.005);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.03, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start(now);
-    osc.stop(now + 0.1);
+    osc.stop(now + 0.07);
   } catch {
     // ignore audio errors
   }
 }
+
 
 /**
  * تفعيل صوت اللمس التلقائي عند التنقل بين الصفحات.
