@@ -121,6 +121,41 @@ function SettingsPage() {
   );
 }
 
+function TouchSoundCard() {
+  const [on, setOn] = useState(true);
+  useEffect(() => {
+    setOn(isTouchSoundEnabled());
+  }, []);
+  return (
+    <Card className="card-elegant border-0 p-5 max-w-md mt-6 space-y-3">
+      <div className="flex items-center gap-2 font-semibold">
+        {on ? (
+          <Volume2 className="h-4 w-4 text-primary" />
+        ) : (
+          <VolumeX className="h-4 w-4 text-muted-foreground" />
+        )}
+        صوت اللمس عند التنقل
+      </div>
+      <p className="text-xs text-muted-foreground">
+        نقرة خفيفة جداً عند الانتقال بين الصفحات. يمكنك كتم الصوت نهائياً.
+      </p>
+      <div className="flex items-center justify-between rounded-xl border border-border px-3 py-2.5">
+        <span className="text-sm">{on ? "الصوت مفعّل" : "الصوت مكتوم"}</span>
+        <Switch
+          checked={on}
+          onCheckedChange={(v) => {
+            setTouchSoundEnabled(v);
+            setOn(v);
+            if (v) playTouchSound();
+            toast.success(v ? "تم تفعيل صوت اللمس" : "تم كتم صوت اللمس");
+          }}
+          aria-label="تفعيل أو كتم صوت اللمس"
+        />
+      </div>
+    </Card>
+  );
+}
+
 function WhatsAppAppCard() {
   const [pref, setPref] = useState<WaApp>("auto");
   useEffect(() => {
