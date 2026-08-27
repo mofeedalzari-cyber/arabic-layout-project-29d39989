@@ -21,7 +21,6 @@ import {
   MessageCircle,
   Check,
 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { getWaApp, setWaApp, WA_APP_LABELS, type WaApp } from "@/lib/wa-open";
 import { useEffect, useRef, useState } from "react";
 import { displayPhone } from "@/lib/format";
