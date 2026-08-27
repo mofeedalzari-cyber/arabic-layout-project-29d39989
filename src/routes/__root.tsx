@@ -23,7 +23,6 @@ import { SiteFooter } from "@/components/site-footer";
 import { OfflineBanner } from "@/components/offline-banner";
 import { initCapacitorNative } from "@/lib/capacitor-native";
 import { initPushNotifications } from "@/lib/push-notifications";
-import { initTouchSound } from "@/lib/touch-sound";
 import { initSentry } from "@/lib/sentry";
 import { initOfflineQueueAutoSync } from "@/lib/offline-queue";
 import { registerServiceWorker } from "@/lib/register-sw";
@@ -165,7 +164,6 @@ function RootComponent() {
     registerServiceWorker();
     initCapacitorNative(router);
     void initPushNotifications(router);
-    const unsubscribeTouch = initTouchSound(router);
 
     // Auto-recover from stale chunk hashes after a redeploy:
     // if a dynamic import fails, force a hard reload so the browser
@@ -195,7 +193,6 @@ function RootComponent() {
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
     return () => {
-      unsubscribeTouch?.();
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onRejection);
     };
