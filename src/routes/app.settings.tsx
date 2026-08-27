@@ -110,6 +110,9 @@ function SettingsPage() {
 
       <WhatsAppAppCard />
 
+      <TouchSoundCard />
+
+
       {role === "admin" && <AnnounceAgentsCard />}
       {role === "admin" && <BackupCard />}
       {role === "agent" && <AgentBackupCard />}
