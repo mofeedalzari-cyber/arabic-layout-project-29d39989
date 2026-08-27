@@ -12,7 +12,23 @@ import { backupMyNetwork } from "@/lib/network-backup.functions";
 import { restoreMyNetwork } from "@/lib/network-restore.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AlertTriangle, Trash2, Save, Download, Upload, MessageCircle, Check } from "lucide-react";
+import {
+  AlertTriangle,
+  Trash2,
+  Save,
+  Download,
+  Upload,
+  MessageCircle,
+  Check,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import {
+  isTouchSoundEnabled,
+  setTouchSoundEnabled,
+  playTouchSound,
+} from "@/lib/touch-sound";
 import { getWaApp, setWaApp, WA_APP_LABELS, type WaApp } from "@/lib/wa-open";
 import { useEffect, useRef, useState } from "react";
 import { displayPhone } from "@/lib/format";
