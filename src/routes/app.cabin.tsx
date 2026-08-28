@@ -168,6 +168,7 @@ function CabinPage() {
   const [detailsPkg, setDetailsPkg] = useState<CabinRow | null>(null);
   const [selCustomer, setSelCustomer] = useState<Customer | null>(null);
   const [customersOpen, setCustomersOpen] = useState(false);
+  const [custComboOpen, setCustComboOpen] = useState(false);
   const [addingCustomer, setAddingCustomer] = useState(false);
   const [newName, setNewName] = useState("");
   const [newWa, setNewWa] = useState("");
