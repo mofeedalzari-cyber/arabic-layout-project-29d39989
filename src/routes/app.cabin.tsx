@@ -597,10 +597,22 @@ function CabinPage() {
                         align="start"
                         sideOffset={6}
                         collisionPadding={{ top: 64, bottom: 16, left: 8, right: 8 }}
-                        className="max-h-[40vh] overflow-y-auto"
+                        className="max-h-[45vh] overflow-y-auto"
                       >
-
-                        {(customers ?? []).map((c) => (
+                        <div
+                          className="sticky top-0 z-10 bg-popover p-2"
+                          onKeyDown={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => e.stopPropagation()}
+                        >
+                          <Input
+                            autoFocus
+                            value={custSearch}
+                            onChange={(e) => setCustSearch(e.target.value)}
+                            placeholder="ابحث بالاسم أو الرقم..."
+                            className="h-9 rounded-lg text-sm"
+                          />
+                        </div>
+                        {filteredCustomers.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             <span className="flex items-center gap-2">
                               <span className="font-bold">{c.name}</span>
@@ -610,7 +622,13 @@ function CabinPage() {
                             </span>
                           </SelectItem>
                         ))}
+                        {filteredCustomers.length === 0 && (
+                          <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                            لا توجد نتائج
+                          </div>
+                        )}
                       </SelectContent>
+
                     </Select>
                   </>
                 )}
