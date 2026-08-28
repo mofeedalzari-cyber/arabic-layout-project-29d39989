@@ -14,12 +14,17 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Wifi,
   ShieldAlert,
@@ -163,6 +168,7 @@ function CabinPage() {
   const [detailsPkg, setDetailsPkg] = useState<CabinRow | null>(null);
   const [selCustomer, setSelCustomer] = useState<Customer | null>(null);
   const [customersOpen, setCustomersOpen] = useState(false);
+  const [custComboOpen, setCustComboOpen] = useState(false);
   const [addingCustomer, setAddingCustomer] = useState(false);
   const [newName, setNewName] = useState("");
   const [newWa, setNewWa] = useState("");
@@ -576,60 +582,68 @@ function CabinPage() {
                     <div className="text-xs font-semibold text-destructive mb-1">
                       * اختيار الزبون إلزامي
                     </div>
-                    <Select
-                      value={selCustomer?.id ?? ""}
-                      onValueChange={(id) => {
-                        const c = (customers ?? []).find((x) => x.id === id) ?? null;
-                        setSelCustomer(c);
-                      }}
+                    <Popover
+                      open={custComboOpen}
+                      onOpenChange={setCustComboOpen}
                     >
-                      <SelectTrigger className="rounded-xl bg-background h-10">
-                        <SelectValue
-                          placeholder={
-                            (customers?.length ?? 0) === 0
-                              ? "لا يوجد زبائن — أضف زبونًا"
-                              : "اختر الزبون"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent
-                        side="bottom"
-                        align="start"
-                        sideOffset={6}
-                        collisionPadding={{ top: 64, bottom: 16, left: 8, right: 8 }}
-                        className="max-h-[45vh] overflow-y-auto"
-                      >
-                        <div
-                          className="sticky top-0 z-10 bg-popover p-2"
-                          onKeyDown={(e) => e.stopPropagation()}
-                          onPointerDown={(e) => e.stopPropagation()}
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={custComboOpen}
+                          className="w-full justify-between rounded-xl bg-background h-10 font-normal"
                         >
-                          <Input
-                            autoFocus
-                            value={custSearch}
-                            onChange={(e) => setCustSearch(e.target.value)}
+                          <span className="truncate">
+                            {selCustomer
+                              ? `${selCustomer.name} — ${selCustomer.whatsapp}`
+                              : (customers?.length ?? 0) === 0
+                                ? "لا يوجد زبائن — أضف زبونًا"
+                                : "اختر الزبون"}
+                          </span>
+                          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-[--radix-popover-trigger-width] p-0"
+                        align="start"
+                        side="bottom"
+                        sideOffset={6}
+                      >
+                        <Command>
+                          <CommandInput
                             placeholder="ابحث بالاسم أو الرقم..."
-                            className="h-9 rounded-lg text-sm"
+                            value={custSearch}
+                            onValueChange={setCustSearch}
                           />
-                        </div>
-                        {filteredCustomers.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            <span className="flex items-center gap-2">
-                              <span className="font-bold">{c.name}</span>
-                              <span className="text-[11px] text-muted-foreground font-mono">
-                                {c.whatsapp}
-                              </span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                        {filteredCustomers.length === 0 && (
-                          <div className="px-3 py-4 text-center text-xs text-muted-foreground">
-                            لا توجد نتائج
-                          </div>
-                        )}
-                      </SelectContent>
-
-                    </Select>
+                          <CommandList className="max-h-[45vh]">
+                            <CommandEmpty className="py-4 text-xs text-muted-foreground">
+                              لا توجد نتائج
+                            </CommandEmpty>
+                            {filteredCustomers.map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.name} ${c.whatsapp} ${c.id}`}
+                                onSelect={() => {
+                                  setSelCustomer(c);
+                                  setCustComboOpen(false);
+                                  setCustSearch("");
+                                }}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <span className="font-bold">{c.name}</span>
+                                  <span className="text-[11px] text-muted-foreground font-mono">
+                                    {c.whatsapp}
+                                  </span>
+                                </span>
+                                {selCustomer?.id === c.id && (
+                                  <Check className="mr-auto h-4 w-4 text-primary" />
+                                )}
+                              </CommandItem>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </>
                 )}
               </div>
