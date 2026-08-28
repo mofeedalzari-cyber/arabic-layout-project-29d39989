@@ -583,14 +583,14 @@ function CabinPage() {
                       * اختيار الزبون إلزامي
                     </div>
                     <Popover
-                      open={customersOpen}
-                      onOpenChange={setCustomersOpen}
+                      open={custComboOpen}
+                      onOpenChange={setCustComboOpen}
                     >
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           role="combobox"
-                          aria-expanded={customersOpen}
+                          aria-expanded={custComboOpen}
                           className="w-full justify-between rounded-xl bg-background h-10 font-normal"
                         >
                           <span className="truncate">
@@ -625,7 +625,7 @@ function CabinPage() {
                                 value={`${c.name} ${c.whatsapp} ${c.id}`}
                                 onSelect={() => {
                                   setSelCustomer(c);
-                                  setCustomersOpen(false);
+                                  setCustComboOpen(false);
                                   setCustSearch("");
                                 }}
                               >
