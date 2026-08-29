@@ -949,6 +949,12 @@ function PackageDetails({
 
                 const doPrint = async (autoPrint: boolean) => {
                   try {
+                    // الطباعة مع التحويل إلى مباع تتطلب اختيار الزبون أولاً
+                    if (autoPrint && !printCustomer) {
+                      toast.error("اختر اسم الزبون أولاً قبل الطباعة والتحويل إلى مباع");
+                      setPrintCustOpen(true);
+                      return;
+                    }
                     // تحميل القالب
                     const tpl = loadTemplate(pkg.package_id);
                     if (!tpl) {
