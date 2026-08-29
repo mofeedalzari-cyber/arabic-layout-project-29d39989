@@ -990,11 +990,24 @@ function PackageDetails({
                         fail = 0;
                       for (let i = 0; i < availableCodes.length; i++) {
                         try {
-                          const { error } = await supabase.rpc("sell_card", {
+                          const { data, error } = await supabase.rpc("sell_card", {
                             _package_id: pkg.package_id,
                           });
                           if (error) fail++;
-                          else ok++;
+                          else {
+                            ok++;
+                            // ربط العملية بالزبون المختار
+                            const sale: any = Array.isArray(data) ? data[0] : data;
+                            if (printCustomer && sale?.sale_id) {
+                              await supabase
+                                .from("sales")
+                                .update({
+                                  customer_id: printCustomer.id,
+                                  buyer_name: printCustomer.name,
+                                })
+                                .eq("id", sale.sale_id);
+                            }
+                          }
                         } catch (err) {
                           console.error("[doPrint] sell_card failed:", err);
                           fail++;
