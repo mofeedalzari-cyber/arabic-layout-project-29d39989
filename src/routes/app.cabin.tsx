@@ -1109,7 +1109,8 @@ function PackageDetails({
                     <Button
                       size="sm"
                       className="rounded-xl h-9 gradient-primary-bg border-0"
-                      disabled={available === 0}
+                      disabled={available === 0 || !printCustomer}
+                      title={!printCustomer ? "اختر الزبون أولاً" : undefined}
                       onClick={() => doPrint(true)}
                     >
                       <Printer className="h-4 w-4 ml-1" /> طباعة وتحويل إلى مباع
