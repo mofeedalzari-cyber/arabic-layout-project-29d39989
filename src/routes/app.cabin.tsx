@@ -835,6 +835,20 @@ function PackageDetails({
   const [tab, setTab] = useState<"sold" | "available">("available");
   const [q, setQ] = useState("");
   const [tplOpen, setTplOpen] = useState(false);
+  // زبون الطباعة: يُربط بالكروت عند "طباعة وتحويل إلى مباع"
+  const [printCustomer, setPrintCustomer] = useState<Customer | null>(null);
+  const [printCustOpen, setPrintCustOpen] = useState(false);
+  const { data: myCustomers } = useQuery({
+    queryKey: ["my-customers", agentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, name, whatsapp, network_id")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Customer[];
+    },
+  });
   const {
     data: cards,
     isFetching,
