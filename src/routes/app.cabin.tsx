@@ -1029,6 +1029,60 @@ function PackageDetails({
 
                 return (
                   <>
+                    {/* اختيار الزبون الذي تُطبع له الكروت */}
+                    <Popover open={printCustOpen} onOpenChange={setPrintCustOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-xl h-9 max-w-[180px]"
+                        >
+                          <UserIcon className="h-4 w-4 ml-1 shrink-0" />
+                          <span className="truncate">
+                            {printCustomer ? printCustomer.name : "اختر الزبون"}
+                          </span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72 p-0" align="start" dir="rtl">
+                        <Command>
+                          <CommandInput placeholder="ابحث باسم الزبون أو رقمه..." />
+                          <CommandList>
+                            <CommandEmpty>لا يوجد زبائن مطابقين</CommandEmpty>
+                            {printCustomer && (
+                              <CommandItem
+                                value="__clear__"
+                                onSelect={() => {
+                                  setPrintCustomer(null);
+                                  setPrintCustOpen(false);
+                                }}
+                              >
+                                بدون زبون
+                              </CommandItem>
+                            )}
+                            {(myCustomers ?? []).map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.name} ${c.whatsapp}`}
+                                onSelect={() => {
+                                  setPrintCustomer(c);
+                                  setPrintCustOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={`h-4 w-4 ml-2 ${printCustomer?.id === c.id ? "opacity-100" : "opacity-0"}`}
+                                />
+                                <div className="flex flex-col">
+                                  <span className="font-semibold">{c.name}</span>
+                                  <span className="text-[11px] text-muted-foreground" dir="ltr">
+                                    {c.whatsapp}
+                                  </span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <Button
                       size="sm"
                       variant="outline"
