@@ -835,6 +835,20 @@ function PackageDetails({
   const [tab, setTab] = useState<"sold" | "available">("available");
   const [q, setQ] = useState("");
   const [tplOpen, setTplOpen] = useState(false);
+  // زبون الطباعة: يُربط بالكروت عند "طباعة وتحويل إلى مباع"
+  const [printCustomer, setPrintCustomer] = useState<Customer | null>(null);
+  const [printCustOpen, setPrintCustOpen] = useState(false);
+  const { data: myCustomers } = useQuery({
+    queryKey: ["my-customers", agentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, name, whatsapp, network_id")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Customer[];
+    },
+  });
   const {
     data: cards,
     isFetching,
@@ -976,11 +990,24 @@ function PackageDetails({
                         fail = 0;
                       for (let i = 0; i < availableCodes.length; i++) {
                         try {
-                          const { error } = await supabase.rpc("sell_card", {
+                          const { data, error } = await supabase.rpc("sell_card", {
                             _package_id: pkg.package_id,
                           });
                           if (error) fail++;
-                          else ok++;
+                          else {
+                            ok++;
+                            // ربط العملية بالزبون المختار
+                            const sale: any = Array.isArray(data) ? data[0] : data;
+                            if (printCustomer && sale?.sale_id) {
+                              await supabase
+                                .from("sales")
+                                .update({
+                                  customer_id: printCustomer.id,
+                                  buyer_name: printCustomer.name,
+                                })
+                                .eq("id", sale.sale_id);
+                            }
+                          }
                         } catch (err) {
                           console.error("[doPrint] sell_card failed:", err);
                           fail++;
@@ -1002,6 +1029,60 @@ function PackageDetails({
 
                 return (
                   <>
+                    {/* اختيار الزبون الذي تُطبع له الكروت */}
+                    <Popover open={printCustOpen} onOpenChange={setPrintCustOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-xl h-9 max-w-[180px]"
+                        >
+                          <UserIcon className="h-4 w-4 ml-1 shrink-0" />
+                          <span className="truncate">
+                            {printCustomer ? printCustomer.name : "اختر الزبون"}
+                          </span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72 p-0" align="start" dir="rtl">
+                        <Command>
+                          <CommandInput placeholder="ابحث باسم الزبون أو رقمه..." />
+                          <CommandList>
+                            <CommandEmpty>لا يوجد زبائن مطابقين</CommandEmpty>
+                            {printCustomer && (
+                              <CommandItem
+                                value="__clear__"
+                                onSelect={() => {
+                                  setPrintCustomer(null);
+                                  setPrintCustOpen(false);
+                                }}
+                              >
+                                بدون زبون
+                              </CommandItem>
+                            )}
+                            {(myCustomers ?? []).map((c) => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.name} ${c.whatsapp}`}
+                                onSelect={() => {
+                                  setPrintCustomer(c);
+                                  setPrintCustOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={`h-4 w-4 ml-2 ${printCustomer?.id === c.id ? "opacity-100" : "opacity-0"}`}
+                                />
+                                <div className="flex flex-col">
+                                  <span className="font-semibold">{c.name}</span>
+                                  <span className="text-[11px] text-muted-foreground" dir="ltr">
+                                    {c.whatsapp}
+                                  </span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <Button
                       size="sm"
                       variant="outline"
