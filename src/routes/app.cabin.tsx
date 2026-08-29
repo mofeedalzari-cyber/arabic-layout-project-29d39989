@@ -949,6 +949,12 @@ function PackageDetails({
 
                 const doPrint = async (autoPrint: boolean) => {
                   try {
+                    // الطباعة مع التحويل إلى مباع تتطلب اختيار الزبون أولاً
+                    if (autoPrint && !printCustomer) {
+                      toast.error("اختر اسم الزبون أولاً قبل الطباعة والتحويل إلى مباع");
+                      setPrintCustOpen(true);
+                      return;
+                    }
                     // تحميل القالب
                     const tpl = loadTemplate(pkg.package_id);
                     if (!tpl) {
@@ -1103,7 +1109,8 @@ function PackageDetails({
                     <Button
                       size="sm"
                       className="rounded-xl h-9 gradient-primary-bg border-0"
-                      disabled={available === 0}
+                      disabled={available === 0 || !printCustomer}
+                      title={!printCustomer ? "اختر الزبون أولاً" : undefined}
                       onClick={() => doPrint(true)}
                     >
                       <Printer className="h-4 w-4 ml-1" /> طباعة وتحويل إلى مباع
