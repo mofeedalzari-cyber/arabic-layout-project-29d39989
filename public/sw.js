@@ -3,7 +3,7 @@
  * - CacheFirst for hashed static assets.
  * - Skips non-GET and cross-origin (Supabase / API) requests.
  */
-const VERSION = 'karti-v5';
+const VERSION = 'karti-v6';
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const SHELL_URLS = [
@@ -21,7 +21,6 @@ const SHELL_URLS = [
   '/app/networks',
   '/app/requests',
   '/app/settings',
-  '/offline.html',
   '/manifest.webmanifest',
   '/favicon.ico',
 ];
@@ -75,8 +74,7 @@ self.addEventListener('fetch', (event) => {
         const fallback = async () =>
           (await cache.match(req, { ignoreSearch: true })) ||
           (await cache.match('/app')) ||
-          (await cache.match('/')) ||
-          (await cache.match('/offline.html'));
+          (await cache.match('/'));
         try {
           // مهلة قصيرة: إن كان الإنترنت ضعيفاً جداً نفتح النسخة المحفوظة فوراً
           const controller = new AbortController();
