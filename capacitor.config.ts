@@ -4,7 +4,23 @@ import { config as loadEnv } from "dotenv";
 // تحميل متغيرات .env لأن Capacitor CLI لا يحمّلها تلقائياً
 loadEnv();
 
-const appUrl = process.env['VITE_APP_URL'] || "http://localhost:3000";
+const PRODUCTION_APP_URL = "https://arabic-layout-project-g2h5.onrender.com";
+
+function getAppUrl(): string {
+  const configuredUrl = process.env['VITE_APP_URL']?.trim();
+  if (!configuredUrl) return PRODUCTION_APP_URL;
+
+  try {
+    const parsed = new URL(configuredUrl);
+    const isLocalhost = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+    const isOfflinePage = parsed.pathname.toLowerCase().includes("offline.html");
+    return isLocalhost || isOfflinePage ? PRODUCTION_APP_URL : parsed.origin;
+  } catch {
+    return PRODUCTION_APP_URL;
+  }
+}
+
+const appUrl = getAppUrl();
 const appHostname = appUrl.startsWith("http") ? new URL(appUrl).hostname : appUrl;
 
 const config: CapacitorConfig = {
@@ -45,9 +61,6 @@ const config: CapacitorConfig = {
       backgroundColor: "#009688",
       style: "LIGHT",
       overlaysWebView: true,
-    },
-    App: {
-      launchUrl: appUrl,
     },
   },
 };
