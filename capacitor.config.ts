@@ -16,8 +16,6 @@ const config: CapacitorConfig = {
     androidScheme: "https",
     // السماح بالاتصال المحلي غير المشفّر بأجهزة الميكروتك داخل الشبكة (http://192.168.x.x)
     cleartext: true,
-    // صفحة محلية تُعرض بدل الشاشة السوداء / خطأ الشبكة عند انقطاع الإنترنت
-    errorPath: "offline.html",
     allowNavigation: [
       appHostname,
       "*.onrender.com",
