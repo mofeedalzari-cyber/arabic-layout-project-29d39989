@@ -236,8 +236,31 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
           </Button>
         </div>
       )}
-      <div className="space-y-3">
-        {rows.map((r: any) => {
+      {(
+        [
+          { key: "CASH", label: "طلبات نقد", Icon: Banknote, c: "text-success" },
+          { key: "CREDIT", label: "طلبات آجل", Icon: Wallet, c: "text-warning" },
+        ] as const
+      ).map((sec) => {
+        const secRows = (rows ?? []).filter((r: any) =>
+          sec.key === "CASH" ? r.payment_method === "CASH" : r.payment_method !== "CASH",
+        );
+        const SecIcon = sec.Icon;
+        return (
+          <div key={sec.key} className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <SecIcon className={`h-4 w-4 ${sec.c}`} />
+              <h2 className={`text-sm font-bold ${sec.c}`}>{sec.label}</h2>
+              <span className="text-xs text-muted-foreground">({secRows.length})</span>
+            </div>
+            {secRows.length === 0 ? (
+              <div className="text-xs text-muted-foreground bg-muted/40 rounded-xl p-3">
+                لا توجد طلبات في هذا القسم.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {secRows.map((r: any) => {
+
           const total = Number(r.total_value ?? 0);
           const paid = Number(r.paid_amount ?? 0);
           const remaining = Math.max(total - paid, 0);
@@ -355,8 +378,13 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
               </div>
             </Card>
           );
-        })}
-      </div>
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
 
       <Dialog open={!!rejectFor} onOpenChange={(o) => !o && setRejectFor(null)}>
         <DialogContent className="max-w-md rounded-3xl" dir="rtl">
