@@ -35,6 +35,8 @@ function RequestsPage() {
   const { role } = useAuth();
   const isAdmin = role === "admin";
   const [tab, setTab] = useState<"PENDING" | "APPROVED" | "REJECTED">("PENDING");
+  const [query, setQuery] = useState("");
+
 
   return (
     <div dir="rtl">
