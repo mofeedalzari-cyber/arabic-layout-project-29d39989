@@ -349,6 +349,20 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
                   )}
                   {isCash ? "نقد" : "آجل"}
                 </div>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={switchMethod.isPending}
+                    className="rounded-lg h-9 px-3"
+                    onClick={() =>
+                      switchMethod.mutate({ id: r.id, method: isCash ? "CREDIT" : "CASH" })
+                    }
+                  >
+                    <ArrowLeftRight className="h-3.5 w-3.5 ml-1" />
+                    {isCash ? "تحويل إلى آجل" : "تحويل إلى نقد"}
+                  </Button>
+                )}
                 {isAdmin && r.status === "PENDING" && (
                   <>
                     <Button
