@@ -1003,7 +1003,7 @@ export type Database = {
         }[]
       }
       admin_transfer_sold_cards: {
-        Args: { _ids: string[]; _to_agent: string }
+        Args: { _force_customer?: string; _ids: string[]; _to_agent: string }
         Returns: {
           amount: number
           moved: number
