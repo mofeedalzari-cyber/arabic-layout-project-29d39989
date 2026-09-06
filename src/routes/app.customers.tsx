@@ -247,17 +247,50 @@ function CustomersPage() {
   }, [netCustomers, agentProfileMap]);
 
 
+  const { data: movePreview, isLoading: movePreviewLoading } = useQuery({
+    queryKey: ["move-preview", moveFor?.id],
+    enabled: !!moveFor?.id,
+    queryFn: async () => {
+      const [salesRes, paysRes] = await Promise.all([
+        supabase
+          .from("sales")
+          .select("id, card_id, price")
+          .eq("customer_id", moveFor!.id),
+        supabase
+          .from("customer_payments")
+          .select("id, amount")
+          .eq("customer_id", moveFor!.id),
+      ]);
+      const sales = (salesRes.data ?? []) as { id: string; card_id: string | null; price: number }[];
+      const pays = (paysRes.data ?? []) as { id: string; amount: number }[];
+      return {
+        salesCount: sales.length,
+        cardsCount: sales.filter((s) => !!s.card_id).length,
+        salesTotal: sales.reduce((a, s) => a + (Number(s.price) || 0), 0),
+        paymentsCount: pays.filter((p) => Number(p.amount) > 0).length,
+        paymentsTotal: pays.reduce((a, p) => a + Math.max(0, Number(p.amount) || 0), 0),
+        chargesTotal: pays.reduce((a, p) => a + Math.max(0, -(Number(p.amount) || 0)), 0),
+      };
+    },
+  });
+
   const netRows = useMemo(() => {
-    const s = netQ.trim().toLowerCase();
+    const norm = (v: string | null | undefined) =>
+      String(v ?? "")
+        .replace(/[\r\n\t]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    const s = norm(netQ);
     let list = netCustomers ?? [];
     if (netAgentId !== "all") list = list.filter((c) => (c.agent_id ?? "none") === netAgentId);
     return s
       ? list.filter(
           (c) =>
-            (c.name ?? "").toLowerCase().includes(s) ||
-            (c.whatsapp ?? "").includes(s) ||
-            (c.agent_username ?? "").toLowerCase().includes(s) ||
-            (agentProfileMap.get(c.agent_id ?? "")?.full_name ?? "").toLowerCase().includes(s),
+            norm(c.name).includes(s) ||
+            norm(c.whatsapp).replace(/\s/g, "").includes(s.replace(/\s/g, "")) ||
+            norm(c.agent_username).includes(s) ||
+            norm(agentProfileMap.get(c.agent_id ?? "")?.full_name).includes(s),
         )
       : list;
   }, [netCustomers, netQ, netAgentId, agentProfileMap]);
@@ -1010,11 +1043,13 @@ function CustomersPage() {
             {netRows.map((c) => (
               <div
                 key={c.id}
-                className="rounded-xl border border-border/60 p-3 flex items-center gap-3 flex-wrap"
+                className="rounded-xl border border-border/60 p-3 flex items-start gap-3 flex-wrap min-h-fit"
               >
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold break-words leading-snug">{c.name}</div>
-                  <div className="text-[11px] text-muted-foreground">
+                <div className="flex-1 min-w-[160px]">
+                  <div className="font-semibold break-words whitespace-normal leading-snug" title={c.name}>
+                    {c.name}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground break-words whitespace-normal leading-snug">
                     {displayPhone(c.whatsapp, "")} — المندوب: {agentProfileMap.get(c.agent_id ?? "")?.full_name || c.agent_username || "—"}
                   </div>
 
@@ -1120,11 +1155,49 @@ function CustomersPage() {
             <DialogTitle>نقل الزبون إلى مندوب آخر</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <div className="text-sm text-muted-foreground">
-              {moveFor?.name} — المندوب الحالي:{" "}
+            <div className="text-sm text-muted-foreground break-words whitespace-normal leading-snug">
+              <span className="font-semibold text-foreground">{moveFor?.name}</span> — المندوب الحالي:{" "}
               {agentProfileMap.get(moveFor?.agent_id ?? "")?.full_name ||
                 moveFor?.agent_username ||
                 "—"}
+            </div>
+            <div className="rounded-xl border border-border/60 p-3 text-xs space-y-1">
+              <div className="font-bold text-sm mb-1">ما سيتم نقله</div>
+              {movePreviewLoading && <div className="text-muted-foreground">جارٍ حساب البيانات...</div>}
+              {!movePreviewLoading && (
+                <>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">اسم الزبون ورقمه</span>
+                    <span className="font-semibold break-words text-left">
+                      {moveFor?.name} — {displayPhone(moveFor?.whatsapp ?? "", "")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">الرصيد المتبقي</span>
+                    <span className="font-semibold text-warning">{fmtMoney(Number(moveFor?.balance ?? 0))}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">عمليات البيع</span>
+                    <span className="font-semibold">
+                      {movePreview?.salesCount ?? 0} عملية — {fmtMoney(Number(movePreview?.salesTotal ?? 0))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">الكروت المباعة</span>
+                    <span className="font-semibold">{movePreview?.cardsCount ?? 0} كرت</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">التسديدات</span>
+                    <span className="font-semibold text-success">
+                      {movePreview?.paymentsCount ?? 0} — {fmtMoney(Number(movePreview?.paymentsTotal ?? 0))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">المبالغ المضافة</span>
+                    <span className="font-semibold">{fmtMoney(Number(movePreview?.chargesTotal ?? 0))}</span>
+                  </div>
+                </>
+              )}
             </div>
             <div>
               <Label>المندوب المستلم</Label>
@@ -1267,7 +1340,9 @@ function CustomersPage() {
           <TableBody>
             {rows.map((c) => (
               <TableRow key={c.id} className="cursor-pointer" onClick={() => setSelected(c)}>
-                <TableCell className="font-semibold">{c.name}</TableCell>
+                <TableCell className="font-semibold align-top whitespace-normal break-words max-w-[220px]" title={c.name}>
+                  {c.name}
+                </TableCell>
                 <TableCell className="font-mono text-xs">{displayPhone(c.whatsapp, "")}</TableCell>
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
