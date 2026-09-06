@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, X, Clock, Inbox, Wallet, Banknote, Trash2 } from "lucide-react";
+import { Check, X, Clock, Inbox, Wallet, Banknote, Trash2, ArrowLeftRight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUserNames } from "@/lib/use-user-names";
