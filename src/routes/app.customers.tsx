@@ -1175,7 +1175,7 @@ function CustomersPage() {
                 {c.name.slice(0, 2).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold truncate">{c.name}</div>
+                <div className="font-semibold break-words leading-snug">{c.name}</div>
                 <div className="text-[11px] text-muted-foreground">
                   {displayPhone(c.whatsapp, "")}
                 </div>
