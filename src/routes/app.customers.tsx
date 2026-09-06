@@ -1343,7 +1343,7 @@ function CustomersPage() {
           <TableBody>
             {rows.map((c) => (
               <TableRow key={c.id} className="cursor-pointer" onClick={() => setSelected(c)}>
-                <TableCell className="font-semibold align-top whitespace-normal break-words max-w-[220px]" title={c.name}>
+                <TableCell className="font-semibold align-top whitespace-normal min-w-[180px] max-w-[320px]" title={c.name}>
                   {c.name}
                 </TableCell>
                 <TableCell className="font-mono text-xs">{displayPhone(c.whatsapp, "")}</TableCell>
