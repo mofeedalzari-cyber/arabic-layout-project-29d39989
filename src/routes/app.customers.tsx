@@ -1013,7 +1013,7 @@ function CustomersPage() {
                 className="rounded-xl border border-border/60 p-3 flex items-center gap-3 flex-wrap"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold truncate">{c.name}</div>
+                  <div className="font-semibold break-words leading-snug">{c.name}</div>
                   <div className="text-[11px] text-muted-foreground">
                     {displayPhone(c.whatsapp, "")} — المندوب: {agentProfileMap.get(c.agent_id ?? "")?.full_name || c.agent_username || "—"}
                   </div>
@@ -1175,7 +1175,7 @@ function CustomersPage() {
                 {c.name.slice(0, 2).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold truncate">{c.name}</div>
+                <div className="font-semibold break-words leading-snug">{c.name}</div>
                 <div className="text-[11px] text-muted-foreground">
                   {displayPhone(c.whatsapp, "")}
                 </div>
