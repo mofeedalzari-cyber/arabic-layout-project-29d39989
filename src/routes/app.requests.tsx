@@ -80,7 +80,7 @@ function RequestList({ status, isAdmin, query }: { status: string; isAdmin: bool
   const qc = useQueryClient();
   const { display } = useUserNames();
 
-  const { data: rows, isLoading } = useQuery({
+  const { data: rawRows, isLoading } = useQuery({
     queryKey: ["card-requests", status],
     queryFn: async () => {
       const { data, error } = await supabase
