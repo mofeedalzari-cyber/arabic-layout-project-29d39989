@@ -1044,7 +1044,20 @@ function CustomersPage() {
                   <Banknote className="h-4 w-4 ml-1" />
                   تسديد للمدير
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => {
+                    setMoveFor(c);
+                    setMoveTo("");
+                  }}
+                >
+                  <ArrowUpDown className="h-4 w-4 ml-1" />
+                  نقل لمندوب
+                </Button>
               </div>
+
             ))}
             {netRows.length === 0 && (
               <div className="text-center text-sm text-muted-foreground py-6">لا يوجد زبائن</div>
