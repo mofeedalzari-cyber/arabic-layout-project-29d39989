@@ -151,6 +151,11 @@ function CustomersPage() {
   const [settleNote, setSettleNote] = useState("");
   const [settleBusy, setSettleBusy] = useState(false);
   const [printBusy, setPrintBusy] = useState(false);
+  const [moveFor, setMoveFor] = useState<NetCustomer | null>(null);
+  const [moveTo, setMoveTo] = useState<string>("");
+  const [moveBusy, setMoveBusy] = useState(false);
+
+
 
 
   const { data: netCustomers } = useQuery({
@@ -182,6 +187,21 @@ function CustomersPage() {
       return (net ?? null) as { id: string; name: string } | null;
     },
   });
+
+  const { data: allNetAgents } = useQuery({
+    queryKey: ["network-all-agents", myNetwork?.id],
+    enabled: !!myNetwork?.id && isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, full_name")
+        .eq("network_id", myNetwork!.id);
+      if (error) throw error;
+      return (data ?? []) as { id: string; username: string; full_name: string | null }[];
+    },
+  });
+
+
 
   const { data: netAgentProfiles } = useQuery({
     queryKey: ["network-agent-profiles", user?.id],
@@ -339,6 +359,44 @@ function CustomersPage() {
       setSettleBusy(false);
     }
   }
+
+  async function handleTransferCustomer() {
+    if (!moveFor || !moveTo) {
+      toast.error("اختر المندوب المستلم");
+      return;
+    }
+    setMoveBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("admin_transfer_customer" as any, {
+        _customer_id: moveFor.id,
+        _to_agent: moveTo,
+      });
+      if (error) {
+        toast.error("تعذر نقل الزبون: " + error.message);
+        return;
+      }
+      const r = (Array.isArray(data) ? data[0] : data) as any;
+      toast.success(
+        `تم نقل الزبون مع ${Number(r?.moved_sales ?? 0)} عملية بيع و ${Number(
+          r?.moved_cards ?? 0,
+        )} كرت بقيمة ${fmtMoney(Number(r?.amount ?? 0))}`,
+      );
+      setMoveFor(null);
+      setMoveTo("");
+      qc.invalidateQueries({ queryKey: ["network-customers"] });
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
+      qc.invalidateQueries({ queryKey: ["customer-payments"] });
+      qc.invalidateQueries({ queryKey: ["agent-accounts"] });
+      qc.invalidateQueries({ queryKey: ["agents"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["payments"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+    } finally {
+      setMoveBusy(false);
+    }
+  }
+
+
 
   async function handleAddCustomer() {
     const name = newName.trim();
@@ -986,7 +1044,20 @@ function CustomersPage() {
                   <Banknote className="h-4 w-4 ml-1" />
                   تسديد للمدير
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => {
+                    setMoveFor(c);
+                    setMoveTo("");
+                  }}
+                >
+                  <ArrowUpDown className="h-4 w-4 ml-1" />
+                  نقل لمندوب
+                </Button>
               </div>
+
             ))}
             {netRows.length === 0 && (
               <div className="text-center text-sm text-muted-foreground py-6">لا يوجد زبائن</div>
@@ -1042,6 +1113,53 @@ function CustomersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!moveFor} onOpenChange={(o) => !o && setMoveFor(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>نقل الزبون إلى مندوب آخر</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-sm text-muted-foreground">
+              {moveFor?.name} — المندوب الحالي:{" "}
+              {agentProfileMap.get(moveFor?.agent_id ?? "")?.full_name ||
+                moveFor?.agent_username ||
+                "—"}
+            </div>
+            <div>
+              <Label>المندوب المستلم</Label>
+              <Select value={moveTo} onValueChange={setMoveTo}>
+                <SelectTrigger className="rounded-xl h-11 w-full">
+                  <SelectValue placeholder="اختر المندوب" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(allNetAgents ?? [])
+                    .filter((a) => a.id !== moveFor?.agent_id)
+                    .map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.full_name || a.username}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              سيتم نقل بيانات الزبون وكل عمليات البيع والكروت المباعة له والتسديدات
+              والمبالغ المضافة إلى المندوب الجديد، مع تعديل حسابات المندوبين.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveFor(null)}>
+              إلغاء
+            </Button>
+            <Button disabled={moveBusy || !moveTo} onClick={handleTransferCustomer}>
+              {moveBusy ? "جاري النقل..." : "تأكيد النقل"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
 
 
       {/* Mobile cards */}
