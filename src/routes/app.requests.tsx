@@ -76,7 +76,7 @@ function RequestsPage() {
   );
 }
 
-function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) {
+function RequestList({ status, isAdmin, query }: { status: string; isAdmin: boolean; query: string }) {
   const qc = useQueryClient();
   const { display } = useUserNames();
 
