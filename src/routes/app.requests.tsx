@@ -378,8 +378,13 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
               </div>
             </Card>
           );
-        })}
-      </div>
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
 
       <Dialog open={!!rejectFor} onOpenChange={(o) => !o && setRejectFor(null)}>
         <DialogContent className="max-w-md rounded-3xl" dir="rtl">
