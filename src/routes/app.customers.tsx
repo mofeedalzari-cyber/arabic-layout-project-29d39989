@@ -188,6 +188,21 @@ function CustomersPage() {
     },
   });
 
+  const { data: allNetAgents } = useQuery({
+    queryKey: ["network-all-agents", myNetwork?.id],
+    enabled: !!myNetwork?.id && isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, username, full_name")
+        .eq("network_id", myNetwork!.id);
+      if (error) throw error;
+      return (data ?? []) as { id: string; username: string; full_name: string | null }[];
+    },
+  });
+
+
+
   const { data: netAgentProfiles } = useQuery({
     queryKey: ["network-agent-profiles", user?.id],
     enabled: !!user?.id && isAdmin && (netCustomers?.length ?? 0) > 0,
