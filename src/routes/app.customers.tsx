@@ -1267,7 +1267,9 @@ function CustomersPage() {
           <TableBody>
             {rows.map((c) => (
               <TableRow key={c.id} className="cursor-pointer" onClick={() => setSelected(c)}>
-                <TableCell className="font-semibold">{c.name}</TableCell>
+                <TableCell className="font-semibold align-top whitespace-normal break-words max-w-[220px]" title={c.name}>
+                  {c.name}
+                </TableCell>
                 <TableCell className="font-mono text-xs">{displayPhone(c.whatsapp, "")}</TableCell>
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
