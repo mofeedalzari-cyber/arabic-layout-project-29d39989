@@ -1010,11 +1010,13 @@ function CustomersPage() {
             {netRows.map((c) => (
               <div
                 key={c.id}
-                className="rounded-xl border border-border/60 p-3 flex items-center gap-3 flex-wrap"
+                className="rounded-xl border border-border/60 p-3 flex items-start gap-3 flex-wrap min-h-fit"
               >
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold break-words leading-snug">{c.name}</div>
-                  <div className="text-[11px] text-muted-foreground">
+                <div className="flex-1 min-w-[160px]">
+                  <div className="font-semibold break-words whitespace-normal leading-snug" title={c.name}>
+                    {c.name}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground break-words whitespace-normal leading-snug">
                     {displayPhone(c.whatsapp, "")} — المندوب: {agentProfileMap.get(c.agent_id ?? "")?.full_name || c.agent_username || "—"}
                   </div>
 
