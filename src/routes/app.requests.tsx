@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, X, Clock, Inbox, Wallet, Banknote, Trash2 } from "lucide-react";
+import { Check, X, Clock, Inbox, Wallet, Banknote, Trash2, ArrowLeftRight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUserNames } from "@/lib/use-user-names";
@@ -177,6 +177,21 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const switchMethod = useMutation({
+    mutationFn: async ({ id, method }: { id: string; method: "CASH" | "CREDIT" }) => {
+      const { error } = await supabase
+        .from("card_requests")
+        .update({ payment_method: method })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تغيير نوع الدفع");
+      qc.invalidateQueries({ queryKey: ["card-requests"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const pay = useMutation({
     mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
       const { data, error } = await supabase.rpc("record_request_payment", {
@@ -334,6 +349,20 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
                   )}
                   {isCash ? "نقد" : "آجل"}
                 </div>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={switchMethod.isPending}
+                    className="rounded-lg h-9 px-3"
+                    onClick={() =>
+                      switchMethod.mutate({ id: r.id, method: isCash ? "CREDIT" : "CASH" })
+                    }
+                  >
+                    <ArrowLeftRight className="h-3.5 w-3.5 ml-1" />
+                    {isCash ? "تحويل إلى آجل" : "تحويل إلى نقد"}
+                  </Button>
+                )}
                 {isAdmin && r.status === "PENDING" && (
                   <>
                     <Button
