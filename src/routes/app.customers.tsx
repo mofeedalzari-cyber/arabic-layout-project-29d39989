@@ -1246,17 +1246,17 @@ function CustomersPage() {
             className="card-elegant border-0 p-3 slide-up"
             onClick={() => setSelected(c)}
           >
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl gradient-primary-bg text-white flex items-center justify-center font-bold text-sm">
+            <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+              <div className="h-10 w-10 rounded-xl gradient-primary-bg text-white flex items-center justify-center font-bold text-sm shrink-0">
                 {c.name.slice(0, 2).toUpperCase()}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold break-words leading-snug">{c.name}</div>
+              <div className="min-w-0">
+                <div className="font-semibold whitespace-normal leading-snug">{c.name}</div>
                 <div className="text-[11px] text-muted-foreground">
                   {displayPhone(c.whatsapp, "")}
                 </div>
               </div>
-              <div className="text-left">
+              <div className="text-left shrink-0">
                 <div className="text-primary font-bold text-sm">{fmtMoney(c.total)}</div>
                 <div className="text-[10px] text-muted-foreground">{c.count} عملية</div>
                 {c.charges > 0 && (
