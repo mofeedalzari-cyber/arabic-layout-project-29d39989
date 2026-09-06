@@ -44,7 +44,14 @@ function RequestsPage() {
         title="طلبات سحب الكروت"
         description={isAdmin ? "طلبات المناديب بانتظار الموافقة" : "طلباتك للكروت"}
       />
-      <div className="mb-4 flex justify-start">
+      <div className="mb-4 flex items-center gap-2">
+        <Input
+          placeholder="بحث: اسم المندوب، الهاتف، الشبكة، الفئة..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="rounded-xl h-10 flex-1"
+          dir="rtl"
+        />
         <RefreshButton />
       </div>
 
@@ -61,10 +68,11 @@ function RequestsPage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value={tab}>
-          <RequestList status={tab} isAdmin={isAdmin} />
+          <RequestList status={tab} isAdmin={isAdmin} query={query.trim()} />
         </TabsContent>
       </Tabs>
     </div>
+
   );
 }
 
