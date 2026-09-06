@@ -994,6 +994,14 @@ export type Database = {
         }[]
       }
       admin_stats: { Args: never; Returns: Json }
+      admin_transfer_customer: {
+        Args: { _customer_id: string; _to_agent: string }
+        Returns: {
+          amount: number
+          moved_cards: number
+          moved_sales: number
+        }[]
+      }
       admin_transfer_sold_cards: {
         Args: { _ids: string[]; _to_agent: string }
         Returns: {
