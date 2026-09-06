@@ -1043,54 +1043,57 @@ function CustomersPage() {
             {netRows.map((c) => (
               <div
                 key={c.id}
-                className="rounded-xl border border-border/60 p-3 flex items-start gap-3 flex-wrap min-h-fit"
+                className="rounded-xl border border-border/60 p-3 grid gap-3 min-h-fit"
               >
-                <div className="flex-1 min-w-[160px]">
-                  <div className="font-semibold break-words whitespace-normal leading-snug" title={c.name}>
-                    {c.name}
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                  <div className="min-w-0">
+                    <div className="font-semibold whitespace-normal leading-snug" title={c.name}>
+                      {c.name}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground whitespace-normal leading-snug">
+                      {displayPhone(c.whatsapp, "")} — المندوب: {agentProfileMap.get(c.agent_id ?? "")?.full_name || c.agent_username || "—"}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-muted-foreground break-words whitespace-normal leading-snug">
-                    {displayPhone(c.whatsapp, "")} — المندوب: {agentProfileMap.get(c.agent_id ?? "")?.full_name || c.agent_username || "—"}
+                  <div className="text-left shrink-0">
+                    <div className="text-primary font-bold text-sm">
+                      {fmtMoney(Number(c.sales_total) + Number(c.charges))}
+                    </div>
+                    <div
+                      className={`text-[11px] font-bold ${
+                        Number(c.balance) > 0 ? "text-warning" : "text-success"
+                      }`}
+                    >
+                      المتبقي: {fmtMoney(Number(c.balance))}
+                    </div>
                   </div>
-
                 </div>
-                <div className="text-left">
-                  <div className="text-primary font-bold text-sm">
-                    {fmtMoney(Number(c.sales_total) + Number(c.charges))}
-                  </div>
-                  <div
-                    className={`text-[11px] font-bold ${
-                      Number(c.balance) > 0 ? "text-warning" : "text-success"
-                    }`}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-success hover:bg-success/90 text-white"
+                    disabled={Number(c.balance) <= 0}
+                    onClick={() => {
+                      setSettleFor(c);
+                      setSettleAmount(String(Number(c.balance)));
+                      setSettleNote("");
+                    }}
                   >
-                    المتبقي: {fmtMoney(Number(c.balance))}
-                  </div>
+                    <Banknote className="h-4 w-4 ml-1" />
+                    تسديد للمدير
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-xl"
+                    onClick={() => {
+                      setMoveFor(c);
+                      setMoveTo("");
+                    }}
+                  >
+                    <ArrowUpDown className="h-4 w-4 ml-1" />
+                    نقل لمندوب
+                  </Button>
                 </div>
-                <Button
-                  size="sm"
-                  className="bg-success hover:bg-success/90 text-white"
-                  disabled={Number(c.balance) <= 0}
-                  onClick={() => {
-                    setSettleFor(c);
-                    setSettleAmount(String(Number(c.balance)));
-                    setSettleNote("");
-                  }}
-                >
-                  <Banknote className="h-4 w-4 ml-1" />
-                  تسديد للمدير
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-xl"
-                  onClick={() => {
-                    setMoveFor(c);
-                    setMoveTo("");
-                  }}
-                >
-                  <ArrowUpDown className="h-4 w-4 ml-1" />
-                  نقل لمندوب
-                </Button>
               </div>
 
             ))}
