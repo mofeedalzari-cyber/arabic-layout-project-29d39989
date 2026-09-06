@@ -105,7 +105,26 @@ function RequestList({ status, isAdmin, query }: { status: string; isAdmin: bool
     staleTime: 60_000,
   });
 
+  const q = query.toLowerCase();
+  const rows = (rawRows ?? []).filter((r: any) => {
+    if (!q) return true;
+    const hay = [
+      r.agent_username,
+      r.agent_full_name,
+      r.network_name,
+      r.package_name,
+      r.notes,
+      r.reject_reason,
+      phones?.get(r.agent_username),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return hay.includes(q);
+  });
+
   const [rejectFor, setRejectFor] = useState<any>(null);
+
   const [reason, setReason] = useState("");
   const [payFor, setPayFor] = useState<any>(null);
   const [payAmount, setPayAmount] = useState<string>("");
