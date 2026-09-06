@@ -1155,11 +1155,49 @@ function CustomersPage() {
             <DialogTitle>نقل الزبون إلى مندوب آخر</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <div className="text-sm text-muted-foreground">
-              {moveFor?.name} — المندوب الحالي:{" "}
+            <div className="text-sm text-muted-foreground break-words whitespace-normal leading-snug">
+              <span className="font-semibold text-foreground">{moveFor?.name}</span> — المندوب الحالي:{" "}
               {agentProfileMap.get(moveFor?.agent_id ?? "")?.full_name ||
                 moveFor?.agent_username ||
                 "—"}
+            </div>
+            <div className="rounded-xl border border-border/60 p-3 text-xs space-y-1">
+              <div className="font-bold text-sm mb-1">ما سيتم نقله</div>
+              {movePreviewLoading && <div className="text-muted-foreground">جارٍ حساب البيانات...</div>}
+              {!movePreviewLoading && (
+                <>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">اسم الزبون ورقمه</span>
+                    <span className="font-semibold break-words text-left">
+                      {moveFor?.name} — {displayPhone(moveFor?.whatsapp ?? "", "")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">الرصيد المتبقي</span>
+                    <span className="font-semibold text-warning">{fmtMoney(Number(moveFor?.balance ?? 0))}</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">عمليات البيع</span>
+                    <span className="font-semibold">
+                      {movePreview?.salesCount ?? 0} عملية — {fmtMoney(Number(movePreview?.salesTotal ?? 0))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">الكروت المباعة</span>
+                    <span className="font-semibold">{movePreview?.cardsCount ?? 0} كرت</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">التسديدات</span>
+                    <span className="font-semibold text-success">
+                      {movePreview?.paymentsCount ?? 0} — {fmtMoney(Number(movePreview?.paymentsTotal ?? 0))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <span className="text-muted-foreground">المبالغ المضافة</span>
+                    <span className="font-semibold">{fmtMoney(Number(movePreview?.chargesTotal ?? 0))}</span>
+                  </div>
+                </>
+              )}
             </div>
             <div>
               <Label>المندوب المستلم</Label>
