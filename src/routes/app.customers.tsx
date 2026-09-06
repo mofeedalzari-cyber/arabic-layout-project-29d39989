@@ -151,6 +151,11 @@ function CustomersPage() {
   const [settleNote, setSettleNote] = useState("");
   const [settleBusy, setSettleBusy] = useState(false);
   const [printBusy, setPrintBusy] = useState(false);
+  const [moveFor, setMoveFor] = useState<NetCustomer | null>(null);
+  const [moveTo, setMoveTo] = useState<string>("");
+  const [moveBusy, setMoveBusy] = useState(false);
+
+
 
 
   const { data: netCustomers } = useQuery({
