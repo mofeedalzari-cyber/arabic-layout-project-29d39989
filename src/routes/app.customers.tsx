@@ -247,6 +247,33 @@ function CustomersPage() {
   }, [netCustomers, agentProfileMap]);
 
 
+  const { data: movePreview, isLoading: movePreviewLoading } = useQuery({
+    queryKey: ["move-preview", moveFor?.id],
+    enabled: !!moveFor?.id,
+    queryFn: async () => {
+      const [salesRes, paysRes] = await Promise.all([
+        supabase
+          .from("sales")
+          .select("id, card_id, price")
+          .eq("customer_id", moveFor!.id),
+        supabase
+          .from("customer_payments")
+          .select("id, amount")
+          .eq("customer_id", moveFor!.id),
+      ]);
+      const sales = (salesRes.data ?? []) as { id: string; card_id: string | null; price: number }[];
+      const pays = (paysRes.data ?? []) as { id: string; amount: number }[];
+      return {
+        salesCount: sales.length,
+        cardsCount: sales.filter((s) => !!s.card_id).length,
+        salesTotal: sales.reduce((a, s) => a + (Number(s.price) || 0), 0),
+        paymentsCount: pays.filter((p) => Number(p.amount) > 0).length,
+        paymentsTotal: pays.reduce((a, p) => a + Math.max(0, Number(p.amount) || 0), 0),
+        chargesTotal: pays.reduce((a, p) => a + Math.max(0, -(Number(p.amount) || 0)), 0),
+      };
+    },
+  });
+
   const netRows = useMemo(() => {
     const norm = (v: string | null | undefined) =>
       String(v ?? "")
