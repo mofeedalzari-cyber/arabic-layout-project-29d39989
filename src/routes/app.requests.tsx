@@ -177,6 +177,21 @@ function RequestList({ status, isAdmin }: { status: string; isAdmin: boolean }) 
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const switchMethod = useMutation({
+    mutationFn: async ({ id, method }: { id: string; method: "CASH" | "CREDIT" }) => {
+      const { error } = await supabase
+        .from("card_requests")
+        .update({ payment_method: method })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("تم تغيير نوع الدفع");
+      qc.invalidateQueries({ queryKey: ["card-requests"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const pay = useMutation({
     mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
       const { data, error } = await supabase.rpc("record_request_payment", {
