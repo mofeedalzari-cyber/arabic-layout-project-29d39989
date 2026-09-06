@@ -1114,6 +1114,53 @@ function CustomersPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!moveFor} onOpenChange={(o) => !o && setMoveFor(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>نقل الزبون إلى مندوب آخر</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-sm text-muted-foreground">
+              {moveFor?.name} — المندوب الحالي:{" "}
+              {agentProfileMap.get(moveFor?.agent_id ?? "")?.full_name ||
+                moveFor?.agent_username ||
+                "—"}
+            </div>
+            <div>
+              <Label>المندوب المستلم</Label>
+              <Select value={moveTo} onValueChange={setMoveTo}>
+                <SelectTrigger className="rounded-xl h-11 w-full">
+                  <SelectValue placeholder="اختر المندوب" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(allNetAgents ?? [])
+                    .filter((a) => a.id !== moveFor?.agent_id)
+                    .map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.full_name || a.username}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              سيتم نقل بيانات الزبون وكل عمليات البيع والكروت المباعة له والتسديدات
+              والمبالغ المضافة إلى المندوب الجديد، مع تعديل حسابات المندوبين.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveFor(null)}>
+              إلغاء
+            </Button>
+            <Button disabled={moveBusy || !moveTo} onClick={handleTransferCustomer}>
+              {moveBusy ? "جاري النقل..." : "تأكيد النقل"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
 
       {/* Mobile cards */}
       <div className="grid gap-2 lg:hidden">
