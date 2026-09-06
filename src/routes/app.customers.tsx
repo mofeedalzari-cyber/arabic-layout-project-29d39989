@@ -248,16 +248,22 @@ function CustomersPage() {
 
 
   const netRows = useMemo(() => {
-    const s = netQ.trim().toLowerCase();
+    const norm = (v: string | null | undefined) =>
+      String(v ?? "")
+        .replace(/[\r\n\t]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    const s = norm(netQ);
     let list = netCustomers ?? [];
     if (netAgentId !== "all") list = list.filter((c) => (c.agent_id ?? "none") === netAgentId);
     return s
       ? list.filter(
           (c) =>
-            (c.name ?? "").toLowerCase().includes(s) ||
-            (c.whatsapp ?? "").includes(s) ||
-            (c.agent_username ?? "").toLowerCase().includes(s) ||
-            (agentProfileMap.get(c.agent_id ?? "")?.full_name ?? "").toLowerCase().includes(s),
+            norm(c.name).includes(s) ||
+            norm(c.whatsapp).replace(/\s/g, "").includes(s.replace(/\s/g, "")) ||
+            norm(c.agent_username).includes(s) ||
+            norm(agentProfileMap.get(c.agent_id ?? "")?.full_name).includes(s),
         )
       : list;
   }, [netCustomers, netQ, netAgentId, agentProfileMap]);
