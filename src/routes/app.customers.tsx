@@ -360,6 +360,44 @@ function CustomersPage() {
     }
   }
 
+  async function handleTransferCustomer() {
+    if (!moveFor || !moveTo) {
+      toast.error("اختر المندوب المستلم");
+      return;
+    }
+    setMoveBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("admin_transfer_customer" as any, {
+        _customer_id: moveFor.id,
+        _to_agent: moveTo,
+      });
+      if (error) {
+        toast.error("تعذر نقل الزبون: " + error.message);
+        return;
+      }
+      const r = (Array.isArray(data) ? data[0] : data) as any;
+      toast.success(
+        `تم نقل الزبون مع ${Number(r?.moved_sales ?? 0)} عملية بيع و ${Number(
+          r?.moved_cards ?? 0,
+        )} كرت بقيمة ${fmtMoney(Number(r?.amount ?? 0))}`,
+      );
+      setMoveFor(null);
+      setMoveTo("");
+      qc.invalidateQueries({ queryKey: ["network-customers"] });
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
+      qc.invalidateQueries({ queryKey: ["customer-payments"] });
+      qc.invalidateQueries({ queryKey: ["agent-accounts"] });
+      qc.invalidateQueries({ queryKey: ["agents"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["payments"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+    } finally {
+      setMoveBusy(false);
+    }
+  }
+
+
+
   async function handleAddCustomer() {
     const name = newName.trim();
     const whatsapp = normalizeWa(newWhats);
