@@ -121,9 +121,12 @@ function withSecurityHeaders(response: Response, request?: Request): Response {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      if (request.method === "OPTIONS") {
+        return withSecurityHeaders(new Response(null, { status: 204 }), request);
+      }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response));
+      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response), request);
     } catch (error) {
       console.error(error);
       return withSecurityHeaders(
@@ -131,6 +134,7 @@ export default {
           status: 500,
           headers: { "content-type": "text/html; charset=utf-8" },
         }),
+        request,
       );
     }
   },
