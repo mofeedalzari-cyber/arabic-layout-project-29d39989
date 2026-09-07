@@ -1201,6 +1201,7 @@ export type Database = {
           whatsapp: string
         }[]
       }
+      next_invoice_number: { Args: never; Returns: number }
       package_counts: {
         Args: { _network_id: string }
         Returns: {
