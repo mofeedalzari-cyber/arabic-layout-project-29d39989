@@ -66,9 +66,34 @@ const CSP = [
   "upgrade-insecure-requests",
 ].join("; ");
 
-function withSecurityHeaders(response: Response): Response {
+// Cross-origin requests are only echoed back for known-good origins.
+const TRUSTED_ORIGIN_PATTERNS: RegExp[] = [
+  /^https:\/\/([a-z0-9-]+\.)*lovable\.app$/i,
+  /^https:\/\/([a-z0-9-]+\.)*lovable\.dev$/i,
+  /^https:\/\/([a-z0-9-]+\.)*onrender\.com$/i,
+  /^https?:\/\/localhost(:\d+)?$/i,
+  /^https?:\/\/127\.0\.0\.1(:\d+)?$/i,
+  // Capacitor / native WebView origins
+  /^capacitor:\/\/localhost$/i,
+  /^https:\/\/localhost$/i,
+];
+
+function isTrustedOrigin(origin: string): boolean {
+  return TRUSTED_ORIGIN_PATTERNS.some((re) => re.test(origin));
+}
+
+function withSecurityHeaders(response: Response, request?: Request): Response {
   const headers = new Headers(response.headers);
   const isHtml = (headers.get("content-type") ?? "").includes("text/html");
+
+  const origin = request?.headers.get("origin") ?? "";
+  if (origin && isTrustedOrigin(origin)) {
+    headers.set("access-control-allow-origin", origin);
+    headers.set("access-control-allow-credentials", "true");
+    headers.set("vary", "Origin");
+    headers.set("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    headers.set("access-control-allow-headers", "authorization, content-type, apikey, x-client-info");
+  }
 
   if (isHtml && !headers.has("content-security-policy")) {
     headers.set("content-security-policy", CSP);
@@ -96,9 +121,12 @@ function withSecurityHeaders(response: Response): Response {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      if (request.method === "OPTIONS") {
+        return withSecurityHeaders(new Response(null, { status: 204 }), request);
+      }
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response));
+      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response), request);
     } catch (error) {
       console.error(error);
       return withSecurityHeaders(
@@ -106,6 +134,7 @@ export default {
           status: 500,
           headers: { "content-type": "text/html; charset=utf-8" },
         }),
+        request,
       );
     }
   },

@@ -135,7 +135,18 @@ function currencyWord(currency: string): string {
   return c;
 }
 
-function nextInvoiceNumber(): number {
+/**
+ * أرقام الفواتير تُصدر من الخادم (عدّاد مركزي) لضمان عدم التكرار بين الأجهزة.
+ * في حال تعذّر الاتصال نرجع لعدّاد محلي كحل احتياطي.
+ */
+async function nextInvoiceNumber(): Promise<number> {
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data, error } = await supabase.rpc("next_invoice_number");
+    if (!error && data != null) return Number(data);
+  } catch {
+    /* offline — fall back below */
+  }
   try {
     const key = "karti_invoice_counter";
     const cur = Number(localStorage.getItem(key) || "1595");
@@ -209,7 +220,7 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
   if (typeof pdfMake.addFonts === "function") pdfMake.addFonts(FONTS);
   else pdfMake.fonts = { ...(pdfMake.fonts || {}), ...FONTS };
 
-  const invoiceNo = nextInvoiceNumber();
+  const invoiceNo = await nextInvoiceNumber();
   const totalQty = input.items.reduce((a, i) => a + (Number(i.qty) || 0), 0);
   const salesAmount = input.items.reduce(
     (a, i) => a + (Number(i.qty) || 0) * (Number(i.price) || 0),

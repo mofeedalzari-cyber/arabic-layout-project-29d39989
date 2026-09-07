@@ -8,7 +8,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
       ref={ref}
       className={cn(
         // هوامش خارجية صغيرة + حدود ناعمة + ظل خفيف
-        "rounded-lg border border-border/60 bg-card text-card-foreground shadow-sm",
+        "rounded-2xl border border-border/60 bg-card text-card-foreground shadow-soft",
         "transition-shadow hover:shadow-md",
         className,
       )}
