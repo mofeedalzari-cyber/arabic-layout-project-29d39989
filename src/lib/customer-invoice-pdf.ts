@@ -220,7 +220,7 @@ export async function buildCustomerInvoicePdfBlob(input: CustomerInvoiceInput): 
   if (typeof pdfMake.addFonts === "function") pdfMake.addFonts(FONTS);
   else pdfMake.fonts = { ...(pdfMake.fonts || {}), ...FONTS };
 
-  const invoiceNo = nextInvoiceNumber();
+  const invoiceNo = await nextInvoiceNumber();
   const totalQty = input.items.reduce((a, i) => a + (Number(i.qty) || 0), 0);
   const salesAmount = input.items.reduce(
     (a, i) => a + (Number(i.qty) || 0) * (Number(i.price) || 0),
