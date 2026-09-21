@@ -154,6 +154,16 @@ function CustomersPage() {
   const [moveFor, setMoveFor] = useState<NetCustomer | null>(null);
   const [moveTo, setMoveTo] = useState<string>("");
   const [moveBusy, setMoveBusy] = useState(false);
+  const [salesFor, setSalesFor] = useState<NetCustomer | null>(null);
+  const [reverseFor, setReverseFor] = useState<{
+    id: string;
+    transaction_no: string;
+    package_name: string;
+    price: number;
+    card_username: string | null;
+  } | null>(null);
+  const [reverseBusy, setReverseBusy] = useState(false);
+
 
 
 
