@@ -266,6 +266,76 @@ function SalesPage() {
     [packageSummary],
   );
 
+  // المباع لكل باقة في كل الشهور (بدون فلتر التاريخ)
+  const { data: allMonthsRows } = useQuery({
+    queryKey: ["sales-all-months"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("package_name, network_name, price, sold_at")
+        .order("sold_at", { ascending: false })
+        .limit(20000);
+      if (error) throw error;
+      return (data ?? []) as {
+        package_name: string;
+        network_name: string;
+        price: number;
+        sold_at: string;
+      }[];
+    },
+  });
+
+  const monthlySummary = useMemo(() => {
+    const months = new Map<
+      string,
+      { key: string; label: string; count: number; total: number; pkgs: Map<string, { pkg: string; network: string; count: number; total: number }> }
+    >();
+    (allMonthsRows ?? []).forEach((r) => {
+      const d = new Date(r.sold_at);
+      if (isNaN(d.getTime())) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const cur =
+        months.get(key) ??
+        {
+          key,
+          label: d.toLocaleDateString("ar-EG-u-nu-latn", { month: "long", year: "numeric" }),
+          count: 0,
+          total: 0,
+          pkgs: new Map(),
+        };
+      const price = Number(r.price) || 0;
+      cur.count += 1;
+      cur.total += price;
+      const pk = `${r.network_name}||${r.package_name}`;
+      const p = cur.pkgs.get(pk) ?? {
+        pkg: r.package_name,
+        network: r.network_name,
+        count: 0,
+        total: 0,
+      };
+      p.count += 1;
+      p.total += price;
+      cur.pkgs.set(pk, p);
+      months.set(key, cur);
+    });
+    return Array.from(months.values())
+      .sort((a, b) => b.key.localeCompare(a.key))
+      .map((m) => ({
+        ...m,
+        packages: Array.from(m.pkgs.values()).sort((a, b) => b.count - a.count),
+      }));
+  }, [allMonthsRows]);
+
+  const monthlyTotals = useMemo(
+    () => ({
+      count: monthlySummary.reduce((s, m) => s + m.count, 0),
+      total: monthlySummary.reduce((s, m) => s + m.total, 0),
+    }),
+    [monthlySummary],
+  );
+
+
   const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
   const someSelected = selected.size > 0;
   const displayedSales = pageSize === -1 ? filtered : filtered.slice(0, pageSize);
