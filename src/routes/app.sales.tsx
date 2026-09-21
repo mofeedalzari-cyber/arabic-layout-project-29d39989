@@ -60,6 +60,8 @@ export const Route = createFileRoute("/app/sales")({
       { name: "description", content: "سجل مبيعات الكروت مع الفلترة بالتاريخ والباقة وطباعة التقارير." },
       { property: "og:title", content: "المبيعات — كرتي" },
       { property: "og:description", content: "سجل مبيعات الكروت مع الفلترة بالتاريخ والباقة وطباعة التقارير." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SalesPage });
@@ -733,7 +735,7 @@ function SalesPage() {
               <b className="text-foreground">{fmtMoney(summaryTotals.total)}</b>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid max-h-80 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:max-h-none sm:grid-cols-2 sm:overflow-visible sm:pr-0 lg:grid-cols-3">
             {packageSummary.map((r) => (
               <div
                 key={`${r.network}-${r.pkg}`}
@@ -765,7 +767,7 @@ function SalesPage() {
               <b className="text-foreground">{fmtMoney(monthlyTotals.total)}</b>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="max-h-[28rem] space-y-3 overflow-y-auto pr-1 sm:max-h-none sm:overflow-visible sm:pr-0">
             {monthlySummary.map((m) => (
               <div key={m.key} className="rounded-xl border border-border/50 p-3">
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
