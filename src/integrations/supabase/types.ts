@@ -984,6 +984,7 @@ export type Database = {
           requests_updated: number
         }[]
       }
+      admin_reverse_sale: { Args: { _sale_id: string }; Returns: Json }
       admin_settle_customer_via_agent: {
         Args: { _amount?: number; _customer_id: string; _note?: string }
         Returns: {
