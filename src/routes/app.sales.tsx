@@ -720,7 +720,11 @@ function SalesPage() {
         </Card>
       )}
 
+      {/* مخطط زمني لمقارنة الباقات */}
+      <PackageTimelineChart months={monthlySummary} />
+
       {/* إحصائية المباع لكل باقة في كل الشهور */}
+
       {monthlySummary.length > 0 && (
         <Card className="card-elegant mt-4 border-0 p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
