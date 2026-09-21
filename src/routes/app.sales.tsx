@@ -266,6 +266,76 @@ function SalesPage() {
     [packageSummary],
   );
 
+  // المباع لكل باقة في كل الشهور (بدون فلتر التاريخ)
+  const { data: allMonthsRows } = useQuery({
+    queryKey: ["sales-all-months"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("package_name, network_name, price, sold_at")
+        .order("sold_at", { ascending: false })
+        .limit(20000);
+      if (error) throw error;
+      return (data ?? []) as {
+        package_name: string;
+        network_name: string;
+        price: number;
+        sold_at: string;
+      }[];
+    },
+  });
+
+  const monthlySummary = useMemo(() => {
+    const months = new Map<
+      string,
+      { key: string; label: string; count: number; total: number; pkgs: Map<string, { pkg: string; network: string; count: number; total: number }> }
+    >();
+    (allMonthsRows ?? []).forEach((r) => {
+      const d = new Date(r.sold_at);
+      if (isNaN(d.getTime())) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const cur =
+        months.get(key) ??
+        {
+          key,
+          label: d.toLocaleDateString("ar-EG-u-nu-latn", { month: "long", year: "numeric" }),
+          count: 0,
+          total: 0,
+          pkgs: new Map(),
+        };
+      const price = Number(r.price) || 0;
+      cur.count += 1;
+      cur.total += price;
+      const pk = `${r.network_name}||${r.package_name}`;
+      const p = cur.pkgs.get(pk) ?? {
+        pkg: r.package_name,
+        network: r.network_name,
+        count: 0,
+        total: 0,
+      };
+      p.count += 1;
+      p.total += price;
+      cur.pkgs.set(pk, p);
+      months.set(key, cur);
+    });
+    return Array.from(months.values())
+      .sort((a, b) => b.key.localeCompare(a.key))
+      .map((m) => ({
+        ...m,
+        packages: Array.from(m.pkgs.values()).sort((a, b) => b.count - a.count),
+      }));
+  }, [allMonthsRows]);
+
+  const monthlyTotals = useMemo(
+    () => ({
+      count: monthlySummary.reduce((s, m) => s + m.count, 0),
+      total: monthlySummary.reduce((s, m) => s + m.total, 0),
+    }),
+    [monthlySummary],
+  );
+
+
   const allSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
   const someSelected = selected.size > 0;
   const displayedSales = pageSize === -1 ? filtered : filtered.slice(0, pageSize);
@@ -649,6 +719,50 @@ function SalesPage() {
           </div>
         </Card>
       )}
+
+      {/* إحصائية المباع لكل باقة في كل الشهور */}
+      {monthlySummary.length > 0 && (
+        <Card className="card-elegant mt-4 border-0 p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="text-sm font-bold">المباع لكل باقة — كل الشهور</div>
+            <div className="text-xs text-muted-foreground">
+              الإجمالي: <b className="text-foreground">{monthlyTotals.count}</b> كرت —{" "}
+              <b className="text-foreground">{fmtMoney(monthlyTotals.total)}</b>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {monthlySummary.map((m) => (
+              <div key={m.key} className="rounded-xl border border-border/50 p-3">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm font-semibold">{m.label}</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    <b className="text-foreground">{m.count}</b> كرت —{" "}
+                    <b className="text-primary">{fmtMoney(m.total)}</b>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {m.packages.map((p) => (
+                    <div
+                      key={`${m.key}-${p.network}-${p.pkg}`}
+                      className="rounded-lg border border-border/40 bg-muted/30 p-2.5"
+                    >
+                      <div className="truncate text-sm font-semibold">{p.pkg}</div>
+                      <div className="truncate text-[11px] text-muted-foreground">{p.network}</div>
+                      <div className="mt-1.5 flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">
+                          عدد المباع: <b className="text-foreground">{p.count}</b>
+                        </span>
+                        <span className="font-bold text-primary">{fmtMoney(p.total)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
 
 
       <Card className="card-elegant relative mt-4 flex w-full flex-col border-0">
