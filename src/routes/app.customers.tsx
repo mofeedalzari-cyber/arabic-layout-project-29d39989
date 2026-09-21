@@ -290,7 +290,7 @@ function CustomersPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sales")
-        .select("id, transaction_no, package_name, price, sold_at, card_username, card_id")
+        .select("id, transaction_no, package_name, price, sold_at, card_number, card_id")
         .eq("customer_id", salesFor!.id)
         .order("sold_at", { ascending: false });
       if (error) throw error;
@@ -300,7 +300,7 @@ function CustomersPage() {
         package_name: string;
         price: number;
         sold_at: string;
-        card_username: string | null;
+        card_number: string | null;
         card_id: string | null;
       }[];
     },
