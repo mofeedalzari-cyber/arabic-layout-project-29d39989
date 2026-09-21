@@ -284,6 +284,60 @@ function CustomersPage() {
     },
   });
 
+  const { data: custSalesList, isLoading: custSalesLoading } = useQuery({
+    queryKey: ["admin-customer-sales", salesFor?.id],
+    enabled: !!salesFor?.id && isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("id, transaction_no, package_name, price, sold_at, card_username, card_id")
+        .eq("customer_id", salesFor!.id)
+        .order("sold_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as {
+        id: string;
+        transaction_no: string;
+        package_name: string;
+        price: number;
+        sold_at: string;
+        card_username: string | null;
+        card_id: string | null;
+      }[];
+    },
+  });
+
+  async function handleReverseSale() {
+    if (!reverseFor) return;
+    setReverseBusy(true);
+    const { data, error } = await (supabase.rpc as any)("admin_reverse_sale", {
+      _sale_id: reverseFor.id,
+    });
+    setReverseBusy(false);
+    if (error) {
+      toast.error(
+        error.message === "FORBIDDEN"
+          ? "هذه العملية متاحة لمدير الشبكة فقط"
+          : error.message,
+      );
+      return;
+    }
+    toast.success(
+      (data as any)?.card_returned
+        ? "تم إرجاع عملية البيع وإرجاع الكرت إلى حساب المندوب"
+        : "تم إرجاع عملية البيع",
+    );
+    setReverseFor(null);
+    qc.invalidateQueries({ queryKey: ["admin-customer-sales"] });
+    qc.invalidateQueries({ queryKey: ["network-customers"] });
+    qc.invalidateQueries({ queryKey: ["customer-sales"] });
+    qc.invalidateQueries({ queryKey: ["sales"] });
+    qc.invalidateQueries({ queryKey: ["cards"] });
+    qc.invalidateQueries({ queryKey: ["customers-page"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.refetchQueries({ type: "active" });
+  }
+
+
   const netRows = useMemo(() => {
     const norm = (v: string | null | undefined) =>
       String(v ?? "")
