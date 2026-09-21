@@ -160,7 +160,7 @@ function CustomersPage() {
     transaction_no: string;
     package_name: string;
     price: number;
-    card_username: string | null;
+    card_number: string | null;
   } | null>(null);
   const [reverseBusy, setReverseBusy] = useState(false);
 
