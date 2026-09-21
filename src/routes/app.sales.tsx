@@ -47,7 +47,6 @@ import { fmtMoney, fmtArabicDateTime, fmtArabicDateTimePdf } from "@/lib/format"
 import { useUserNames } from "@/lib/use-user-names";
 import { toast } from "sonner";
 import { RevealText } from "@/components/reveal-text";
-import { PackageTimelineChart } from "@/components/package-timeline-chart";
 
 
 export const Route = createFileRoute("/app/sales")({
@@ -754,8 +753,6 @@ function SalesPage() {
         </Card>
       )}
 
-      {/* مخطط زمني لمقارنة الباقات */}
-      <PackageTimelineChart months={monthlySummary} />
 
       {/* إحصائية المباع لكل باقة في كل الشهور */}
 
