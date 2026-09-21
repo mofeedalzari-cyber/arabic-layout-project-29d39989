@@ -60,6 +60,8 @@ export const Route = createFileRoute("/app/sales")({
       { name: "description", content: "سجل مبيعات الكروت مع الفلترة بالتاريخ والباقة وطباعة التقارير." },
       { property: "og:title", content: "المبيعات — كرتي" },
       { property: "og:description", content: "سجل مبيعات الكروت مع الفلترة بالتاريخ والباقة وطباعة التقارير." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SalesPage });
