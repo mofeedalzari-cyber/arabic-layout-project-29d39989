@@ -420,6 +420,17 @@ function SalesPage() {
     setDateTo(iso(end));
   }
 
+  // الفترة النشطة: هذا الشهر / الشهر الماضي / الكل
+  const activeRange: "this" | "last" | "all" | "custom" = (() => {
+    if (!dateFrom && !dateTo) return "all";
+    const now = new Date();
+    const iso = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (dateFrom === iso(new Date(now.getFullYear(), now.getMonth(), 1)) && dateTo === iso(new Date(now.getFullYear(), now.getMonth() + 1, 0))) return "this";
+    if (dateFrom === iso(new Date(now.getFullYear(), now.getMonth() - 1, 1)) && dateTo === iso(new Date(now.getFullYear(), now.getMonth(), 0))) return "last";
+    return "custom";
+  })();
+
 
   function toggleAll() {
     if (allSelected) setSelected(new Set());
