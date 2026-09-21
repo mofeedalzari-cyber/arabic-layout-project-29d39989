@@ -138,7 +138,7 @@ function SalesPage() {
           "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_id, card_number, is_external, customers ( name )",
         )
         .order("sold_at", { ascending: false })
-        .limit(dateFrom || dateTo ? 5000 : 500);
+        .limit(dateFrom || dateTo ? 5000 : 20000);
       if (dateFrom) query = query.gte("sold_at", `${dateFrom}T00:00:00`);
       if (dateTo) query = query.lte("sold_at", `${dateTo}T23:59:59.999`);
       const { data, error } = await query;
@@ -420,6 +420,17 @@ function SalesPage() {
     setDateTo(iso(end));
   }
 
+  // الفترة النشطة: هذا الشهر / الشهر الماضي / الكل
+  const activeRange: "this" | "last" | "all" | "custom" = (() => {
+    if (!dateFrom && !dateTo) return "all";
+    const now = new Date();
+    const iso = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    if (dateFrom === iso(new Date(now.getFullYear(), now.getMonth(), 1)) && dateTo === iso(new Date(now.getFullYear(), now.getMonth() + 1, 0))) return "this";
+    if (dateFrom === iso(new Date(now.getFullYear(), now.getMonth() - 1, 1)) && dateTo === iso(new Date(now.getFullYear(), now.getMonth(), 0))) return "last";
+    return "custom";
+  })();
+
 
   function toggleAll() {
     if (allSelected) setSelected(new Set());
@@ -671,11 +682,32 @@ function SalesPage() {
             className="h-10 w-[150px] rounded-xl"
           />
         </div>
-        <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={() => setMonthRange(0)}>
+        <Button
+          variant={activeRange === "this" ? "default" : "outline"}
+          size="sm"
+          className="h-10 rounded-xl"
+          onClick={() => setMonthRange(0)}
+        >
           هذا الشهر
         </Button>
-        <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={() => setMonthRange(-1)}>
+        <Button
+          variant={activeRange === "last" ? "default" : "outline"}
+          size="sm"
+          className="h-10 rounded-xl"
+          onClick={() => setMonthRange(-1)}
+        >
           الشهر الماضي
+        </Button>
+        <Button
+          variant={activeRange === "all" ? "default" : "outline"}
+          size="sm"
+          className="h-10 rounded-xl"
+          onClick={() => {
+            setDateFrom("");
+            setDateTo("");
+          }}
+        >
+          الكل
         </Button>
         {(dateFrom || dateTo) && (
           <Button
