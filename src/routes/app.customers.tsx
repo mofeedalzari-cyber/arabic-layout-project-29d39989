@@ -1157,6 +1157,16 @@ function CustomersPage() {
                     <ArrowUpDown className="h-4 w-4 ml-1" />
                     نقل لمندوب
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-xl"
+                    onClick={() => setSalesFor(c)}
+                  >
+                    <RotateCcw className="h-4 w-4 ml-1" />
+                    إرجاع عملية بيع
+                  </Button>
+
                 </div>
               </div>
 
