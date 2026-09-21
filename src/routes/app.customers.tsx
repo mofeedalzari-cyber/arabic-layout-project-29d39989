@@ -1310,6 +1310,105 @@ function CustomersPage() {
         </DialogContent>
       </Dialog>
 
+      {/* عمليات بيع الزبون — إرجاع عملية بيع (مدير الشبكة) */}
+      <Dialog open={!!salesFor} onOpenChange={(o) => !o && setSalesFor(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>عمليات بيع الزبون</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <div className="text-sm text-muted-foreground break-words leading-snug">
+              <span className="font-semibold text-foreground">{salesFor?.name}</span> — المندوب:{" "}
+              {agentProfileMap.get(salesFor?.agent_id ?? "")?.full_name ||
+                salesFor?.agent_username ||
+                "—"}
+            </div>
+            {custSalesLoading && (
+              <div className="text-sm text-muted-foreground py-4 text-center">جارٍ التحميل...</div>
+            )}
+            {!custSalesLoading && (custSalesList?.length ?? 0) === 0 && (
+              <div className="text-sm text-muted-foreground py-4 text-center">لا توجد عمليات بيع</div>
+            )}
+            <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
+              {(custSalesList ?? []).map((s) => (
+                <div key={s.id} className="rounded-xl border border-border/60 p-3 grid gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-sm break-words leading-snug">
+                        {s.package_name}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        عملية #{s.transaction_no} — {fmtArabicDateTime(s.sold_at)}
+                      </div>
+                      {s.card_number && (
+                        <div className="text-[11px] text-muted-foreground">كرت: {s.card_number}</div>
+                      )}
+                    </div>
+                    <div className="text-primary font-bold text-sm shrink-0">
+                      {fmtMoney(Number(s.price) || 0)}
+                    </div>
+                  </div>
+                  <div className="flex justify-start">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="rounded-xl"
+                      onClick={() =>
+                        setReverseFor({
+                          id: s.id,
+                          transaction_no: s.transaction_no,
+                          package_name: s.package_name,
+                          price: Number(s.price) || 0,
+                          card_number: s.card_number,
+                        })
+                      }
+                    >
+                      <RotateCcw className="h-4 w-4 ml-1" />
+                      إرجاع العملية
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              الإرجاع يحذف العملية من حساب الزبون ويعيد الكرت إلى حساب المندوب ليبيعه مرة أخرى.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSalesFor(null)}>
+              إغلاق
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!reverseFor} onOpenChange={(o) => !o && setReverseFor(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد إرجاع عملية البيع</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف عملية #{reverseFor?.transaction_no} ({reverseFor?.package_name} —{" "}
+              {fmtMoney(Number(reverseFor?.price ?? 0))}) من حساب الزبون، وإرجاع الكرت
+              {reverseFor?.card_number ? ` (${reverseFor.card_number})` : ""} إلى حساب المندوب.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={reverseBusy}>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={reverseBusy}
+              onClick={(e) => {
+                e.preventDefault();
+                handleReverseSale();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {reverseBusy ? "جاري الإرجاع..." : "تأكيد الإرجاع"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
 
 
 
