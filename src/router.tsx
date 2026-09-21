@@ -16,7 +16,7 @@ export const getRouter = () => {
           return failureCount < 3;
         },
         retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30_000),
-        staleTime: 30_000,
+        staleTime: 60_000,
         gcTime: 24 * 60 * 60 * 1000, // 24h — يسمح بقراءة الكاش المحفوظ محلياً
         refetchOnWindowFocus: false,
         networkMode: "offlineFirst",
@@ -74,8 +74,12 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
+    // ⚡ تحميل مسبق للصفحة عند لمس/تمرير الرابط ليصبح الانتقال فوريًا
+    defaultPreload: "intent",
+    defaultPreloadDelay: 30,
+    defaultPreloadStaleTime: 30_000,
   });
+
 
   return router;
 };
