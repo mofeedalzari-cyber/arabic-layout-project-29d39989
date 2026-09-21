@@ -349,6 +349,8 @@ function BottomLink({ item }: { item: NavItem }) {
   return (
     <Link
       to={item.to}
+      preload="render"
+
       className={cn(
         "flex flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors",
         active ? "text-primary" : "text-muted-foreground",
