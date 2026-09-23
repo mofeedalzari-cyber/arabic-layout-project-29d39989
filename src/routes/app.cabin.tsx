@@ -1112,23 +1112,33 @@ function PackageDetails({
                     >
                       <ImageIcon className="h-4 w-4 ml-1" /> قالب الطباعة
                     </Button>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={available}
+                      value={printQty}
+                      onChange={(e) => setPrintQty(e.target.value.replace(/[^0-9]/g, ""))}
+                      placeholder={`الكمية (المتاح ${available})`}
+                      className="h-9 w-40 rounded-xl"
+                    />
                     <Button
                       size="sm"
                       variant="outline"
                       className="rounded-xl h-9"
-                      disabled={available === 0}
+                      disabled={available === 0 || !printQty}
                       onClick={() => doPrint(false)}
                     >
-                      <Search className="h-4 w-4 ml-1" /> معاينة ({available})
+                      <Search className="h-4 w-4 ml-1" /> معاينة ({printQty || 0})
                     </Button>
                     <Button
                       size="sm"
                       className="rounded-xl h-9 gradient-primary-bg border-0"
-                      disabled={available === 0 || !printCustomer}
-                      title={!printCustomer ? "اختر الزبون أولاً" : undefined}
+                      disabled={available === 0 || !printCustomer || !printQty}
+                      title={!printCustomer ? "اختر الزبون أولاً" : !printQty ? "أدخل الكمية أولاً" : undefined}
                       onClick={() => doPrint(true)}
                     >
-                      <Printer className="h-4 w-4 ml-1" /> طباعة وتحويل إلى مباع
+                      <Printer className="h-4 w-4 ml-1" /> طباعة {printQty || ""} وتحويل إلى مباع
                     </Button>
                   </>
                 );
