@@ -893,6 +893,18 @@ function PackageDetails({
 
   return (
     <div className="bg-muted/30">
+      {/* شاشة حجب أثناء الطباعة: لا تُغلق حتى يكتمل تحويل الكروت وتجهيز الملف */}
+      {printing && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="bg-card border border-border/50 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 min-w-[240px]">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <div className="text-base font-bold text-center">{printStep || "جارٍ الطباعة..."}</div>
+            <div className="text-[11px] text-muted-foreground text-center">
+              لا تغلق الصفحة حتى تكتمل العملية
+            </div>
+          </div>
+        </div>
+      )}
       <div className="p-4 pb-3 flex items-center justify-between gap-3">
         <Button
           size="icon"
