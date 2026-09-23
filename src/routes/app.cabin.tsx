@@ -954,6 +954,7 @@ function PackageDetails({
 
                 const doPrint = async (autoPrint: boolean) => {
                   try {
+                    if (printing) return;
                     // الطباعة مع التحويل إلى مباع تتطلب اختيار الزبون أولاً
                     if (autoPrint && !printCustomer) {
                       toast.error("اختر اسم الزبون أولاً قبل الطباعة والتحويل إلى مباع");
