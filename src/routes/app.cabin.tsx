@@ -1020,7 +1020,8 @@ function PackageDetails({
                       } else {
                         await printCards({
                           template: tpl,
-                          codes: codesToPrint,
+                          // المعاينة: إخفاء أرقام الكروت حتى تتم الطباعة (البيع)
+                          codes: codesToPrint.map(() => "••••••••"),
                           title: `${pkg.network_name} — ${pkg.package_name}`,
                           autoPrint: false,
                         });
