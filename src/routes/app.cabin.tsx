@@ -984,13 +984,19 @@ function PackageDetails({
                     const selectedCodes = availableCodes.slice(0, qty);
 
                     let codesToPrint = selectedCodes;
+                    // حجب الشاشة من هنا حتى نهاية الطباعة
+                    setPrintStep(
+                      autoPrint
+                        ? `جارٍ تحويل ${qty} كرت إلى مباع...`
+                        : "جارٍ تجهيز ملف المعاينة..."
+                    );
+                    setPrinting(true);
                     if (autoPrint) {
-                      // التحويل إلى مباع أولاً (قبل فتح نافذة الطباعة/المشاركة التي قد توقف التطبيق)
-                      toast.info(`جارٍ تحويل ${qty} كرت إلى مباع...`);
                       let ok = 0,
                         fail = 0;
                       const soldCodes: string[] = [];
                       for (let i = 0; i < qty; i++) {
+                        setPrintStep(`جارٍ تحويل الكروت إلى مباع... (${i + 1}/${qty})`);
                         try {
                           const { data, error } = await supabase.rpc("sell_card", {
                             _package_id: pkg.package_id,
