@@ -837,6 +837,7 @@ function PackageDetails({
   const [tplOpen, setTplOpen] = useState(false);
   // زبون الطباعة: يُربط بالكروت عند "طباعة وتحويل إلى مباع"
   const [printCustomer, setPrintCustomer] = useState<Customer | null>(null);
+  const [printQty, setPrintQty] = useState<string>("");
   const [printCustOpen, setPrintCustOpen] = useState(false);
   const { data: myCustomers } = useQuery({
     queryKey: ["my-customers", agentId],
@@ -966,15 +967,25 @@ function PackageDetails({
                       toast.error("لا توجد كروت متاحة");
                       return;
                     }
+                    const qty = parseInt(printQty, 10);
+                    if (!qty || qty < 1) {
+                      toast.error("أدخل كمية الكروت المطلوب طباعتها أولاً");
+                      return;
+                    }
+                    if (qty > availableCodes.length) {
+                      toast.error(`الكمية أكبر من المتاح (${availableCodes.length})`);
+                      return;
+                    }
+                    const selectedCodes = availableCodes.slice(0, qty);
 
-                    let codesToPrint = availableCodes;
+                    let codesToPrint = selectedCodes;
                     if (autoPrint) {
                       // التحويل إلى مباع أولاً (قبل فتح نافذة الطباعة/المشاركة التي قد توقف التطبيق)
-                      toast.info(`جارٍ تحويل ${availableCodes.length} كرت إلى مباع...`);
+                      toast.info(`جارٍ تحويل ${qty} كرت إلى مباع...`);
                       let ok = 0,
                         fail = 0;
                       const soldCodes: string[] = [];
-                      for (let i = 0; i < availableCodes.length; i++) {
+                      for (let i = 0; i < qty; i++) {
                         try {
                           const { data, error } = await supabase.rpc("sell_card", {
                             _package_id: pkg.package_id,
@@ -1101,23 +1112,33 @@ function PackageDetails({
                     >
                       <ImageIcon className="h-4 w-4 ml-1" /> قالب الطباعة
                     </Button>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={available}
+                      value={printQty}
+                      onChange={(e) => setPrintQty(e.target.value.replace(/[^0-9]/g, ""))}
+                      placeholder={`الكمية (المتاح ${available})`}
+                      className="h-9 w-40 rounded-xl"
+                    />
                     <Button
                       size="sm"
                       variant="outline"
                       className="rounded-xl h-9"
-                      disabled={available === 0}
+                      disabled={available === 0 || !printQty}
                       onClick={() => doPrint(false)}
                     >
-                      <Search className="h-4 w-4 ml-1" /> معاينة ({available})
+                      <Search className="h-4 w-4 ml-1" /> معاينة ({printQty || 0})
                     </Button>
                     <Button
                       size="sm"
                       className="rounded-xl h-9 gradient-primary-bg border-0"
-                      disabled={available === 0 || !printCustomer}
-                      title={!printCustomer ? "اختر الزبون أولاً" : undefined}
+                      disabled={available === 0 || !printCustomer || !printQty}
+                      title={!printCustomer ? "اختر الزبون أولاً" : !printQty ? "أدخل الكمية أولاً" : undefined}
                       onClick={() => doPrint(true)}
                     >
-                      <Printer className="h-4 w-4 ml-1" /> طباعة وتحويل إلى مباع
+                      <Printer className="h-4 w-4 ml-1" /> طباعة {printQty || ""} وتحويل إلى مباع
                     </Button>
                   </>
                 );
