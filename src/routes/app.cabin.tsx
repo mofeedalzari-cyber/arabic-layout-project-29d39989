@@ -45,6 +45,7 @@ import {
   Eye,
   EyeOff,
   Zap,
+  Loader2,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -839,6 +840,9 @@ function PackageDetails({
   const [printCustomer, setPrintCustomer] = useState<Customer | null>(null);
   const [printQty, setPrintQty] = useState<string>("");
   const [printCustOpen, setPrintCustOpen] = useState(false);
+  // حجب الشاشة أثناء تحويل الكروت والطباعة حتى لا يُغلق المستخدم الصفحة قبل انتهاء التحويل
+  const [printing, setPrinting] = useState(false);
+  const [printStep, setPrintStep] = useState<string>("");
   const { data: myCustomers } = useQuery({
     queryKey: ["my-customers", agentId],
     queryFn: async () => {
@@ -889,6 +893,18 @@ function PackageDetails({
 
   return (
     <div className="bg-muted/30">
+      {/* شاشة حجب أثناء الطباعة: لا تُغلق حتى يكتمل تحويل الكروت وتجهيز الملف */}
+      {printing && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="bg-card border border-border/50 rounded-2xl shadow-xl p-8 flex flex-col items-center gap-4 min-w-[240px]">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <div className="text-base font-bold text-center">{printStep || "جارٍ الطباعة..."}</div>
+            <div className="text-[11px] text-muted-foreground text-center">
+              لا تغلق الصفحة حتى تكتمل العملية
+            </div>
+          </div>
+        </div>
+      )}
       <div className="p-4 pb-3 flex items-center justify-between gap-3">
         <Button
           size="icon"
@@ -950,6 +966,7 @@ function PackageDetails({
 
                 const doPrint = async (autoPrint: boolean) => {
                   try {
+                    if (printing) return;
                     // الطباعة مع التحويل إلى مباع تتطلب اختيار الزبون أولاً
                     if (autoPrint && !printCustomer) {
                       toast.error("اختر اسم الزبون أولاً قبل الطباعة والتحويل إلى مباع");
@@ -979,13 +996,19 @@ function PackageDetails({
                     const selectedCodes = availableCodes.slice(0, qty);
 
                     let codesToPrint = selectedCodes;
+                    // حجب الشاشة من هنا حتى نهاية الطباعة
+                    setPrintStep(
+                      autoPrint
+                        ? `جارٍ تحويل ${qty} كرت إلى مباع...`
+                        : "جارٍ تجهيز ملف المعاينة..."
+                    );
+                    setPrinting(true);
                     if (autoPrint) {
-                      // التحويل إلى مباع أولاً (قبل فتح نافذة الطباعة/المشاركة التي قد توقف التطبيق)
-                      toast.info(`جارٍ تحويل ${qty} كرت إلى مباع...`);
                       let ok = 0,
                         fail = 0;
                       const soldCodes: string[] = [];
                       for (let i = 0; i < qty; i++) {
+                        setPrintStep(`جارٍ تحويل الكروت إلى مباع... (${i + 1}/${qty})`);
                         try {
                           const { data, error } = await supabase.rpc("sell_card", {
                             _package_id: pkg.package_id,
@@ -1017,11 +1040,18 @@ function PackageDetails({
                       qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
                       if (fail === 0) toast.success(`تم تحويل ${ok} كرت إلى مباع`);
                       else toast.warning(`تم ${ok} — فشل ${fail}`);
-                      if (soldCodes.length === 0) return;
+                      if (soldCodes.length === 0) {
+                        setPrinting(false);
+                        setPrintStep("");
+                        return;
+                      }
                       codesToPrint = soldCodes;
                     }
 
                     try {
+                      setPrintStep(
+                        autoPrint ? "جارٍ تجهيز ملف الطباعة..." : "جارٍ تجهيز ملف المعاينة..."
+                      );
                       if (autoPrint) {
                         await printCardsPdf({
                           template: tpl,
@@ -1040,11 +1070,16 @@ function PackageDetails({
                       console.error("[doPrint] print failed:", printErr);
                       toast.error("فشلت الطباعة، يرجى المحاولة مجدداً");
                       return;
+                    } finally {
+                      setPrinting(false);
+                      setPrintStep("");
                     }
                   } catch (err) {
                     // حماية نهائية لمنع توقف التطبيق
                     console.error("[doPrint] CRITICAL error:", err);
                     toast.error("حدث خطأ غير متوقع، يرجى المحاولة مجدداً");
+                    setPrinting(false);
+                    setPrintStep("");
                   }
                 };
 
