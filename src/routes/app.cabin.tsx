@@ -45,6 +45,7 @@ import {
   Eye,
   EyeOff,
   Zap,
+  Loader2,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -839,6 +840,9 @@ function PackageDetails({
   const [printCustomer, setPrintCustomer] = useState<Customer | null>(null);
   const [printQty, setPrintQty] = useState<string>("");
   const [printCustOpen, setPrintCustOpen] = useState(false);
+  // حجب الشاشة أثناء تحويل الكروت والطباعة حتى لا يُغلق المستخدم الصفحة قبل انتهاء التحويل
+  const [printing, setPrinting] = useState(false);
+  const [printStep, setPrintStep] = useState<string>("");
   const { data: myCustomers } = useQuery({
     queryKey: ["my-customers", agentId],
     queryFn: async () => {
