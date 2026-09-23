@@ -44,14 +44,13 @@ export function clearTemplate(pkgId: string) {
 
 export async function printCards(opts: {
   template: CardTemplate;
-  codes: string[];
+  cardCount: number;
   title: string;
-  autoPrint?: boolean;
 }) {
-  // معاينة/طباعة موحّدة كملف PDF عبر pdfmake (بدلاً من HTML)
+  // المعاينة لا تستقبل أرقام الكروت أصلاً، لمنع ظهورها قبل إتمام البيع.
   await printCardsPdf({
     template: opts.template,
-    codes: opts.codes,
+    codes: Array.from({ length: opts.cardCount }, () => ""),
     title: opts.title,
   });
 }

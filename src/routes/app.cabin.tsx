@@ -1020,10 +1020,9 @@ function PackageDetails({
                       } else {
                         await printCards({
                           template: tpl,
-                          // المعاينة: إخفاء أرقام الكروت حتى تتم الطباعة (البيع)
-                          codes: codesToPrint.map(() => "••••••••"),
+                          // المعاينة تستقبل العدد فقط، ولا يصل إليها أي رقم كرت.
+                          cardCount: codesToPrint.length,
                           title: `${pkg.network_name} — ${pkg.package_name}`,
-                          autoPrint: false,
                         });
                       }
                     } catch (printErr) {
