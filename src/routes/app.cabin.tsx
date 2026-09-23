@@ -967,52 +967,33 @@ function PackageDetails({
                       return;
                     }
 
-                    // محاولة الطباعة مع حماية
-                    try {
-                      if (autoPrint) {
-                        await printCardsPdf({
-                          template: tpl,
-                          codes: availableCodes,
-                          title: `${pkg.network_name} — ${pkg.package_name}`,
-                        });
-                      } else {
-                        await printCards({
-                          template: tpl,
-                          codes: availableCodes,
-                          title: `${pkg.network_name} — ${pkg.package_name}`,
-                          autoPrint: false,
-                        });
-                      }
-                    } catch (printErr) {
-                      console.error("[doPrint] print failed:", printErr);
-                      toast.error("فشلت الطباعة، يرجى المحاولة مجدداً");
-                      return;
-                    }
-
+                    let codesToPrint = availableCodes;
                     if (autoPrint) {
-                      // تحويل جميع الكروت المتاحة إلى مباع
+                      // التحويل إلى مباع أولاً (قبل فتح نافذة الطباعة/المشاركة التي قد توقف التطبيق)
                       toast.info(`جارٍ تحويل ${availableCodes.length} كرت إلى مباع...`);
                       let ok = 0,
                         fail = 0;
+                      const soldCodes: string[] = [];
                       for (let i = 0; i < availableCodes.length; i++) {
                         try {
                           const { data, error } = await supabase.rpc("sell_card", {
                             _package_id: pkg.package_id,
                           });
-                          if (error) fail++;
-                          else {
-                            ok++;
-                            // ربط العملية بالزبون المختار
-                            const sale: any = Array.isArray(data) ? data[0] : data;
-                            if (printCustomer && sale?.sale_id) {
-                              await supabase
-                                .from("sales")
-                                .update({
-                                  customer_id: printCustomer.id,
-                                  buyer_name: printCustomer.name,
-                                })
-                                .eq("id", sale.sale_id);
-                            }
+                          if (error) {
+                            fail++;
+                            continue;
+                          }
+                          ok++;
+                          const sale: any = Array.isArray(data) ? data[0] : data;
+                          if (sale?.card_username) soldCodes.push(String(sale.card_username));
+                          if (printCustomer && sale?.sale_id) {
+                            await supabase
+                              .from("sales")
+                              .update({
+                                customer_id: printCustomer.id,
+                                buyer_name: printCustomer.name,
+                              })
+                              .eq("id", sale.sale_id);
                           }
                         } catch (err) {
                           console.error("[doPrint] sell_card failed:", err);
@@ -1025,6 +1006,29 @@ function PackageDetails({
                       qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
                       if (fail === 0) toast.success(`تم تحويل ${ok} كرت إلى مباع`);
                       else toast.warning(`تم ${ok} — فشل ${fail}`);
+                      if (soldCodes.length === 0) return;
+                      codesToPrint = soldCodes;
+                    }
+
+                    try {
+                      if (autoPrint) {
+                        await printCardsPdf({
+                          template: tpl,
+                          codes: codesToPrint,
+                          title: `${pkg.network_name} — ${pkg.package_name}`,
+                        });
+                      } else {
+                        await printCards({
+                          template: tpl,
+                          codes: codesToPrint,
+                          title: `${pkg.network_name} — ${pkg.package_name}`,
+                          autoPrint: false,
+                        });
+                      }
+                    } catch (printErr) {
+                      console.error("[doPrint] print failed:", printErr);
+                      toast.error("فشلت الطباعة، يرجى المحاولة مجدداً");
+                      return;
                     }
                   } catch (err) {
                     // حماية نهائية لمنع توقف التطبيق
