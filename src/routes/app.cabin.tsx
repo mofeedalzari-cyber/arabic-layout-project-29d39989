@@ -1028,11 +1028,18 @@ function PackageDetails({
                       qc.invalidateQueries({ queryKey: ["my-sales-stats"] });
                       if (fail === 0) toast.success(`تم تحويل ${ok} كرت إلى مباع`);
                       else toast.warning(`تم ${ok} — فشل ${fail}`);
-                      if (soldCodes.length === 0) return;
+                      if (soldCodes.length === 0) {
+                        setPrinting(false);
+                        setPrintStep("");
+                        return;
+                      }
                       codesToPrint = soldCodes;
                     }
 
                     try {
+                      setPrintStep(
+                        autoPrint ? "جارٍ تجهيز ملف الطباعة..." : "جارٍ تجهيز ملف المعاينة..."
+                      );
                       if (autoPrint) {
                         await printCardsPdf({
                           template: tpl,
@@ -1051,11 +1058,16 @@ function PackageDetails({
                       console.error("[doPrint] print failed:", printErr);
                       toast.error("فشلت الطباعة، يرجى المحاولة مجدداً");
                       return;
+                    } finally {
+                      setPrinting(false);
+                      setPrintStep("");
                     }
                   } catch (err) {
                     // حماية نهائية لمنع توقف التطبيق
                     console.error("[doPrint] CRITICAL error:", err);
                     toast.error("حدث خطأ غير متوقع، يرجى المحاولة مجدداً");
+                    setPrinting(false);
+                    setPrintStep("");
                   }
                 };
 
