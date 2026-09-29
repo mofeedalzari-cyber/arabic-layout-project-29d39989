@@ -1407,7 +1407,7 @@ function CustomersPage() {
               {aiNote && <p className="text-xs text-muted-foreground break-words">{aiNote}</p>}
             </div>
             <div>
-              <Label>المندوب المستلم</Label>
+              <Label>3) المندوب المستلم</Label>
               <Select
                 value={moveTo}
                 onValueChange={(v) => {
@@ -1436,7 +1436,7 @@ function CustomersPage() {
             </div>
             {moveTo && (
               <div>
-                <Label>زبائن المندوب المستلم ({(netCustomers ?? []).filter((c) => c.agent_id === moveTo).length}) — اختر زبونًا للدمج أو أضفه كزبون جديد</Label>
+                <Label>4) زبائن المندوب المستلم ({(netCustomers ?? []).filter((c) => c.agent_id === moveTo).length}) — اختر زبونًا للدمج أو أضفه كزبون جديد</Label>
                 <Input
                   value={mergeQ}
                   onChange={(e) => setMergeQ(e.target.value)}
