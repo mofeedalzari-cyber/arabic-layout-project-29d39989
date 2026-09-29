@@ -59,6 +59,7 @@ const NAV: NavItem[] = [
   { to: "/app/networks", label: "الشبكات", icon: Wifi, adminOnly: true },
   { to: "/app/mikrotiks", label: "أجهزة مايكروتك", icon: Router, adminOnly: true, hideInBottomNav: true },
   { to: "/app/cabin", label: "كبينة البيع", icon: Store, agentOnly: true },
+  { to: "/app/admin-cabin", label: "كبينة البيع", icon: Store, adminOnly: true, hideInBottomNav: true },
   { to: "/app/customers", label: "الزبائن", icon: Users, hideInBottomNav: true },
   { to: "/app/packages", label: "الباقات", icon: Package },
   { to: "/app/requests", label: "الطلبات", icon: Inbox },
