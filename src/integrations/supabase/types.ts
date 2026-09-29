@@ -911,6 +911,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _admin_check_agent: { Args: { _agent: string }; Returns: undefined }
+      admin_add_agent_customer: {
+        Args: { _agent: string; _name: string; _whatsapp: string }
+        Returns: string
+      }
+      admin_agent_cabin: {
+        Args: { _agent: string }
+        Returns: {
+          available: number
+          color: string
+          currency: string
+          package_id: string
+          package_name: string
+          price: number
+        }[]
+      }
+      admin_agent_customers: {
+        Args: { _agent: string }
+        Returns: {
+          id: string
+          name: string
+          whatsapp: string
+        }[]
+      }
+      admin_cabin_agents: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          username: string
+        }[]
+      }
       admin_delete_agent: { Args: { _agent_id: string }; Returns: Json }
       admin_delete_cards:
         | {
@@ -985,6 +1017,17 @@ export type Database = {
         }[]
       }
       admin_reverse_sale: { Args: { _sale_id: string }; Returns: Json }
+      admin_sell_for_agent: {
+        Args: { _agent: string; _customer_id: string; _package_id: string }
+        Returns: {
+          card_password: string
+          card_username: string
+          package_name: string
+          price: number
+          sale_id: string
+          transaction_no: string
+        }[]
+      }
       admin_settle_customer_via_agent: {
         Args: { _amount?: number; _customer_id: string; _note?: string }
         Returns: {
