@@ -32,6 +32,7 @@ import { Route as AppCardsRouteImport } from './routes/app.cards'
 import { Route as AppCabinRouteImport } from './routes/app.cabin'
 import { Route as AppAgentsRouteImport } from './routes/app.agents'
 import { Route as AppAgentAccountsRouteImport } from './routes/app.agent-accounts'
+import { Route as AppAdminCabinRouteImport } from './routes/app.admin-cabin'
 import { Route as AppNetworksIndexRouteImport } from './routes/app.networks.index'
 import { Route as AppNetworksIdRouteImport } from './routes/app.networks.$id'
 
@@ -150,6 +151,11 @@ const AppAgentAccountsRoute = AppAgentAccountsRouteImport.update({
   path: '/agent-accounts',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminCabinRoute = AppAdminCabinRouteImport.update({
+  id: '/admin-cabin',
+  path: '/admin-cabin',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppNetworksIndexRoute = AppNetworksIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/register-agent': typeof RegisterAgentRoute
   '/register-network': typeof RegisterNetworkRoute
+  '/app/admin-cabin': typeof AppAdminCabinRoute
   '/app/agent-accounts': typeof AppAgentAccountsRoute
   '/app/agents': typeof AppAgentsRoute
   '/app/cabin': typeof AppCabinRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/register-agent': typeof RegisterAgentRoute
   '/register-network': typeof RegisterNetworkRoute
+  '/app/admin-cabin': typeof AppAdminCabinRoute
   '/app/agent-accounts': typeof AppAgentAccountsRoute
   '/app/agents': typeof AppAgentsRoute
   '/app/cabin': typeof AppCabinRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/register-agent': typeof RegisterAgentRoute
   '/register-network': typeof RegisterNetworkRoute
+  '/app/admin-cabin': typeof AppAdminCabinRoute
   '/app/agent-accounts': typeof AppAgentAccountsRoute
   '/app/agents': typeof AppAgentsRoute
   '/app/cabin': typeof AppCabinRoute
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/register-agent'
     | '/register-network'
+    | '/app/admin-cabin'
     | '/app/agent-accounts'
     | '/app/agents'
     | '/app/cabin'
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/register-agent'
     | '/register-network'
+    | '/app/admin-cabin'
     | '/app/agent-accounts'
     | '/app/agents'
     | '/app/cabin'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/register-agent'
     | '/register-network'
+    | '/app/admin-cabin'
     | '/app/agent-accounts'
     | '/app/agents'
     | '/app/cabin'
@@ -494,6 +506,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgentAccountsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/admin-cabin': {
+      id: '/app/admin-cabin'
+      path: '/admin-cabin'
+      fullPath: '/app/admin-cabin'
+      preLoaderRoute: typeof AppAdminCabinRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/networks/': {
       id: '/app/networks/'
       path: '/'
@@ -526,6 +545,7 @@ const AppNetworksRouteWithChildren = AppNetworksRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAdminCabinRoute: typeof AppAdminCabinRoute
   AppAgentAccountsRoute: typeof AppAgentAccountsRoute
   AppAgentsRoute: typeof AppAgentsRoute
   AppCabinRoute: typeof AppCabinRoute
@@ -547,6 +567,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminCabinRoute: AppAdminCabinRoute,
   AppAgentAccountsRoute: AppAgentAccountsRoute,
   AppAgentsRoute: AppAgentsRoute,
   AppCabinRoute: AppCabinRoute,
