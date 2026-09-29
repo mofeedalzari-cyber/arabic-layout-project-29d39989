@@ -1258,7 +1258,7 @@ function CustomersPage() {
                     <Input
                       value={pickQ}
                       onChange={(e) => setPickQ(e.target.value)}
-                      placeholder="ابحث بالاسم..."
+                      placeholder="ابحث بالاسم أو الرقم..."
                       className="rounded-xl h-9"
                     />
                   </div>
@@ -1267,12 +1267,16 @@ function CustomersPage() {
                       (c) =>
                         c.id === moveFor?.id ||
                         !pickQ.trim() ||
-                        c.name.toLowerCase().includes(pickQ.trim().toLowerCase()),
+                        c.name.toLowerCase().includes(pickQ.trim().toLowerCase()) ||
+                        (c.whatsapp ?? "").includes(pickQ.trim().replace(/\D/g, "")),
                     )
                     .slice(0, 200)
                     .map((c) => (
                       <SelectItem key={c.id} value={c.id}>
-                        {c.name} — {agentProfileMap.get(c.agent_id ?? "")?.full_name || c.agent_username || "—"}
+                        <span className="break-words">
+                          {c.name} — {displayPhone(c.whatsapp ?? "", "بدون رقم")} —{" "}
+                          {fmtMoney(Number(c.balance ?? 0))}
+                        </span>
                       </SelectItem>
                     ))}
                 </SelectContent>
