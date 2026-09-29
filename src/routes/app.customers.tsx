@@ -1225,6 +1225,43 @@ function CustomersPage() {
               </Select>
             </div>
           </div>
+          <div className="mb-3 rounded-xl border border-primary/40 bg-primary/5 p-3 grid gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="font-bold text-sm">مراجعة الحسابات المكررة بالذكاء الاصطناعي</div>
+              <Button size="sm" className="rounded-xl" disabled={dupReviewBusy} onClick={runDupReview}>
+                {dupReviewBusy ? "جارٍ المراجعة..." : "افحص الأرقام والأسماء المكررة"}
+              </Button>
+            </div>
+            {dupReview && dupReview.length === 0 && (
+              <div className="text-xs text-muted-foreground">لا توجد حسابات مشتبه بتكرارها.</div>
+            )}
+            {dupReview?.map((r) => (
+              <div key={r.key} className="rounded-xl border border-border/60 bg-background p-2 grid gap-1 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-semibold">
+                    {r.same ? "يُحتمل أنه نفس الزبون" : "غالبًا زبائن مختلفون"} — ثقة {r.confidence}%
+                  </span>
+                  {r.same && (
+                    <Button size="sm" variant="outline" className="rounded-xl" disabled={mergeBusy} onClick={() => mergeReviewed(r)}>
+                      دمج
+                    </Button>
+                  )}
+                </div>
+                {r.customers.map((c: any) => (
+                  <div key={c.id} className="break-words text-xs">
+                    {c.id === r.keepId ? "✔ يُبقى: " : "• "}
+                    {c.name} — {displayPhone(c.whatsapp ?? "", "بدون رقم")} — المندوب:{" "}
+                    {agentProfileMap.get(c.agent_id ?? "")?.full_name || c.agent_username || "—"} — {fmtMoney(Number(c.balance ?? 0))}
+                  </div>
+                ))}
+                <ul className="text-xs text-muted-foreground list-disc pr-4">
+                  {r.reasons.map((x, i) => (
+                    <li key={i}>{x}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
           {(() => {
             const norm = (s: string) => (s ?? "").replace(/\s+/g, " ").trim().toLowerCase();
             const groups = new Map<string, any[]>();
