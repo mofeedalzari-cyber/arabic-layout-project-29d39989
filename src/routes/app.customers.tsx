@@ -1346,7 +1346,7 @@ function CustomersPage() {
             </div>
             {moveTo && (
               <div>
-                <Label>الزبون عند المندوب المستلم</Label>
+                <Label>زبائن المندوب المستلم ({(netCustomers ?? []).filter((c) => c.agent_id === moveTo).length}) — اختر زبونًا للدمج أو أضفه كزبون جديد</Label>
                 <Input
                   value={mergeQ}
                   onChange={(e) => setMergeQ(e.target.value)}
@@ -1359,7 +1359,7 @@ function CustomersPage() {
                     onClick={() => setMergeInto("new")}
                     className={`w-full text-right px-3 py-2 text-sm ${mergeInto === "new" ? "bg-primary/10 font-bold" : ""}`}
                   >
-                    زبون جديد (بدون دمج)
+                    + إضافة كزبون جديد عند المندوب
                   </button>
                   {(netCustomers ?? [])
                     .filter((c) => c.agent_id === moveTo)
