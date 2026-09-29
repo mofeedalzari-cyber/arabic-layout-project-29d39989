@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { suggestTransferAgent } from "@/lib/ai-transfer.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -158,6 +160,10 @@ function CustomersPage() {
   const [mergeQ, setMergeQ] = useState("");
   const [pickQ, setPickQ] = useState("");
   const [moveBusy, setMoveBusy] = useState(false);
+  const [moveReason, setMoveReason] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiNote, setAiNote] = useState("");
+  const suggestAgent = useServerFn(suggestTransferAgent);
   const [salesFor, setSalesFor] = useState<NetCustomer | null>(null);
   const [reverseFor, setReverseFor] = useState<{
     id: string;
@@ -1319,6 +1325,58 @@ function CustomersPage() {
                   </div>
                 </>
               )}
+            </div>
+            <div className="space-y-2 rounded-xl border border-primary/30 p-3">
+              <Label>سبب النقل</Label>
+              <Input
+                value={moveReason}
+                onChange={(e) => setMoveReason(e.target.value)}
+                placeholder="مثال: الزبون انتقل إلى حي آخر"
+                className="rounded-xl"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-xl"
+                disabled={aiBusy || !moveFor || moveReason.trim().length < 2}
+                onClick={async () => {
+                  if (!moveFor) return;
+                  setAiBusy(true);
+                  setAiNote("");
+                  try {
+                    const r = await suggestAgent({
+                      data: {
+                        customerId: moveFor.id,
+                        reason: moveReason.trim(),
+                        agents: (allNetAgents ?? []).map((a) => ({
+                          id: a.id,
+                          name: a.full_name || a.username,
+                        })),
+                      },
+                    });
+                    setMoveTo(r.agentId);
+                    const same = (netCustomers ?? []).find(
+                      (c) =>
+                        c.agent_id === r.agentId &&
+                        c.name.trim().toLowerCase() === moveFor.name.trim().toLowerCase(),
+                    );
+                    setMergeInto(same ? same.id : "new");
+                    setAiNote(`المقترح: ${r.agentName} — ${r.explanation}`);
+                  } catch (e: any) {
+                    const m = String(e?.message ?? "");
+                    toast.error(
+                      m.includes("RATE") ? "طلبات كثيرة، حاول بعد قليل" :
+                      m.includes("CREDITS") ? "رصيد الذكاء الاصطناعي غير كافٍ" :
+                      "تعذر الحصول على اقتراح",
+                    );
+                  } finally {
+                    setAiBusy(false);
+                  }
+                }}
+              >
+                {aiBusy ? "جارٍ التحليل..." : "اقترح المندوب الأنسب (ذكاء اصطناعي)"}
+              </Button>
+              {aiNote && <p className="text-xs text-muted-foreground break-words">{aiNote}</p>}
             </div>
             <div>
               <Label>المندوب المستلم</Label>
