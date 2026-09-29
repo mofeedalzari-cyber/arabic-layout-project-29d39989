@@ -159,6 +159,7 @@ function CustomersPage() {
   const [mergeInto, setMergeInto] = useState<string>("new");
   const [mergeQ, setMergeQ] = useState("");
   const [pickQ, setPickQ] = useState("");
+  const [moveFrom, setMoveFrom] = useState<string>("");
   const [moveBusy, setMoveBusy] = useState(false);
   const [moveReason, setMoveReason] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
@@ -1237,14 +1238,40 @@ function CustomersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!moveFor} onOpenChange={(o) => !o && setMoveFor(null)}>
+      <Dialog open={!!moveFor} onOpenChange={(o) => { if (!o) { setMoveFor(null); setMoveFrom(""); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>نقل الزبون إلى مندوب آخر</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>الزبون المراد نقله</Label>
+              <Label>1) المندوب الحالي للزبون</Label>
+              <Select
+                value={moveFrom || moveFor?.agent_id || ""}
+                onValueChange={(v) => {
+                  setMoveFrom(v);
+                  setPickQ("");
+                  setMoveTo("");
+                  setMergeInto("new");
+                  const first = (netCustomers ?? []).find((c) => c.agent_id === v);
+                  if (first) setMoveFor(first as any);
+                  else toast.error("لا يوجد زبائن لدى هذا المندوب");
+                }}
+              >
+                <SelectTrigger className="rounded-xl h-11 w-full">
+                  <SelectValue placeholder="اختر المندوب" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(allNetAgents ?? []).map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.full_name || a.username} ({(netCustomers ?? []).filter((c) => c.agent_id === a.id).length})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>2) الزبون المراد نقله</Label>
               <Select
                 value={moveFor?.id ?? ""}
                 onValueChange={(id) => {
@@ -1269,6 +1296,7 @@ function CustomersPage() {
                     />
                   </div>
                   {(netCustomers ?? [])
+                    .filter((c) => c.agent_id === (moveFrom || moveFor?.agent_id))
                     .filter(
                       (c) =>
                         c.id === moveFor?.id ||
@@ -1379,7 +1407,7 @@ function CustomersPage() {
               {aiNote && <p className="text-xs text-muted-foreground break-words">{aiNote}</p>}
             </div>
             <div>
-              <Label>المندوب المستلم</Label>
+              <Label>3) المندوب المستلم</Label>
               <Select
                 value={moveTo}
                 onValueChange={(v) => {
@@ -1408,7 +1436,7 @@ function CustomersPage() {
             </div>
             {moveTo && (
               <div>
-                <Label>زبائن المندوب المستلم ({(netCustomers ?? []).filter((c) => c.agent_id === moveTo).length}) — اختر زبونًا للدمج أو أضفه كزبون جديد</Label>
+                <Label>4) زبائن المندوب المستلم ({(netCustomers ?? []).filter((c) => c.agent_id === moveTo).length}) — اختر زبونًا للدمج أو أضفه كزبون جديد</Label>
                 <Input
                   value={mergeQ}
                   onChange={(e) => setMergeQ(e.target.value)}
