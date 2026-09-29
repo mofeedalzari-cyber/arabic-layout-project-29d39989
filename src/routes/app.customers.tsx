@@ -1250,6 +1250,37 @@ function CustomersPage() {
                 {dupReviewBusy ? "جارٍ المراجعة..." : "افحص الأرقام والأسماء المكررة"}
               </Button>
             </div>
+            {showMergeLog && (
+              <div className="rounded-xl border border-border/60 bg-background p-2 grid gap-2 max-h-96 overflow-y-auto">
+                {mergeLogsLoading && <div className="text-xs text-muted-foreground">جارٍ التحميل...</div>}
+                {!mergeLogsLoading && !(mergeLogs ?? []).length && (
+                  <div className="text-xs text-muted-foreground">لا توجد عمليات دمج مسجلة.</div>
+                )}
+                {(mergeLogs ?? []).map((l: any) => {
+                  const m = (l.metadata ?? {}) as any;
+                  const cross = m.source_agent_id && m.agent_id && m.source_agent_id !== m.agent_id;
+                  return (
+                    <div key={l.id} className="rounded-lg border border-border/40 p-2 text-xs grid gap-0.5 break-words">
+                      <div className="text-muted-foreground">{fmtArabicDateTime(l.created_at)}</div>
+                      <div>
+                        <span className="font-semibold">المندوب: </span>
+                        {cross ? `${m.source_agent_name || "—"} ← ${m.agent_name || "—"}` : m.agent_name || "—"}
+                      </div>
+                      <div>
+                        <span className="font-semibold">الزبون المدموج: </span>
+                        {m.source_name || "—"}
+                        {m.source_whatsapp ? ` (${displayPhone(m.source_whatsapp, "")})` : ""}
+                      </div>
+                      <div>
+                        <span className="font-semibold">الزبون المحتفظ به: </span>
+                        {m.target_name || "—"}
+                        {m.target_whatsapp ? ` (${displayPhone(m.target_whatsapp, "")})` : ""}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             {dupReview && dupReview.length === 0 && (
               <div className="text-xs text-muted-foreground">لا توجد حسابات مشتبه بتكرارها.</div>
             )}
