@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { suggestTransferAgent } from "@/lib/ai-transfer.functions";
+import { reviewDuplicateCustomers } from "@/lib/ai-duplicates.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -166,6 +167,11 @@ function CustomersPage() {
   const [aiBusy, setAiBusy] = useState(false);
   const [aiNote, setAiNote] = useState("");
   const suggestAgent = useServerFn(suggestTransferAgent);
+  const reviewDups = useServerFn(reviewDuplicateCustomers);
+  const [dupReviewBusy, setDupReviewBusy] = useState(false);
+  const [dupReview, setDupReview] = useState<
+    { key: string; same: boolean; confidence: number; keepId: string; reasons: string[]; customers: any[] }[] | null
+  >(null);
   const [salesFor, setSalesFor] = useState<NetCustomer | null>(null);
   const [reverseFor, setReverseFor] = useState<{
     id: string;
@@ -466,6 +472,86 @@ function CustomersPage() {
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
     } finally {
       setSettleBusy(false);
+    }
+  }
+
+  async function runDupReview() {
+    const list = ((netCustomers ?? []) as any[]).filter(
+      (c) => netAgentId === "all" || c.agent_id === netAgentId,
+    );
+    const digits = (s: string) => String(s ?? "").replace(/\D/g, "").slice(-9);
+    const normName = (s: string) =>
+      String(s ?? "").replace(/[إأآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, " ").trim().toLowerCase();
+    const groups = new Map<string, any[]>();
+    for (const c of list) {
+      const p = digits(c.whatsapp);
+      const k = p.length >= 7 ? "p:" + p : "n:" + normName(c.name);
+      if (k === "n:") continue;
+      const arr = groups.get(k) ?? [];
+      arr.push(c);
+      groups.set(k, arr);
+    }
+    const cands = [...groups.entries()].filter(([, g]) => g.length > 1).slice(0, 40);
+    if (!cands.length) {
+      setDupReview([]);
+      toast.success("لا توجد أرقام أو أسماء مكررة");
+      return;
+    }
+    setDupReviewBusy(true);
+    try {
+      const payload = cands.map(([key, g]) => ({
+        key,
+        customers: g.slice(0, 10).map((c) => ({
+          id: c.id,
+          name: String(c.name ?? ""),
+          phone: String(c.whatsapp ?? ""),
+          agentId: c.agent_id,
+          agentName: agentProfileMap.get(c.agent_id ?? "")?.full_name || c.agent_username || "—",
+          balance: Number(c.balance ?? 0),
+        })),
+      }));
+      const res = await reviewDups({ data: { groups: payload } });
+      setDupReview(
+        res.map((r) => ({ ...r, customers: cands.find(([k]) => k === r.key)?.[1] ?? [] })),
+      );
+    } catch (e: any) {
+      const m = String(e?.message ?? "");
+      toast.error(
+        m.includes("RATE") ? "طلبات كثيرة، حاول لاحقًا" : m.includes("CREDITS") ? "رصيد الذكاء الاصطناعي غير كافٍ" : "تعذرت المراجعة: " + m,
+      );
+    } finally {
+      setDupReviewBusy(false);
+    }
+  }
+
+  async function mergeReviewed(r: { key: string; keepId: string; customers: any[] }) {
+    const target = r.customers.find((c) => c.id === r.keepId) ?? r.customers[0];
+    if (!window.confirm(`دمج ${r.customers.length} حسابات في "${target.name}"؟ ستُنقل كل المبيعات والتسديدات.`)) return;
+    setMergeBusy(true);
+    try {
+      for (const s of r.customers) {
+        if (s.id === target.id) continue;
+        const { error } =
+          s.agent_id === target.agent_id
+            ? await supabase.rpc("admin_merge_customers" as any, { _source: s.id, _target: target.id })
+            : await supabase.rpc("admin_transfer_customer_merge" as any, {
+                _customer_id: s.id,
+                _to_agent: target.agent_id,
+                _merge_into: target.id,
+              });
+        if (error) {
+          toast.error("تعذر الدمج: " + error.message);
+          return;
+        }
+      }
+      toast.success("تم الدمج");
+      setDupReview((prev) => (prev ?? []).filter((x) => x.key !== r.key));
+      qc.invalidateQueries({ queryKey: ["network-customers"] });
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
+      qc.invalidateQueries({ queryKey: ["customer-payments"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+    } finally {
+      setMergeBusy(false);
     }
   }
 
