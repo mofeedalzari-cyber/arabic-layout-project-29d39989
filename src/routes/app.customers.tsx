@@ -156,6 +156,7 @@ function CustomersPage() {
   const [moveTo, setMoveTo] = useState<string>("");
   const [mergeInto, setMergeInto] = useState<string>("new");
   const [mergeQ, setMergeQ] = useState("");
+  const [pickQ, setPickQ] = useState("");
   const [moveBusy, setMoveBusy] = useState(false);
   const [salesFor, setSalesFor] = useState<NetCustomer | null>(null);
   const [reverseFor, setReverseFor] = useState<{
@@ -1236,11 +1237,46 @@ function CustomersPage() {
             <DialogTitle>نقل الزبون إلى مندوب آخر</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <div className="text-sm text-muted-foreground break-words whitespace-normal leading-snug">
-              <span className="font-semibold text-foreground">{moveFor?.name}</span> — المندوب الحالي:{" "}
-              {agentProfileMap.get(moveFor?.agent_id ?? "")?.full_name ||
-                moveFor?.agent_username ||
-                "—"}
+            <div>
+              <Label>الزبون المراد نقله</Label>
+              <Select
+                value={moveFor?.id ?? ""}
+                onValueChange={(id) => {
+                  const c = (netCustomers ?? []).find((x) => x.id === id);
+                  if (c) {
+                    setMoveFor(c as any);
+                    setMoveTo("");
+                    setMergeInto("new");
+                  }
+                }}
+              >
+                <SelectTrigger className="rounded-xl h-11 w-full">
+                  <SelectValue placeholder="اختر الزبون" />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="p-2" onKeyDown={(e) => e.stopPropagation()}>
+                    <Input
+                      value={pickQ}
+                      onChange={(e) => setPickQ(e.target.value)}
+                      placeholder="ابحث بالاسم..."
+                      className="rounded-xl h-9"
+                    />
+                  </div>
+                  {(netCustomers ?? [])
+                    .filter(
+                      (c) =>
+                        c.id === moveFor?.id ||
+                        !pickQ.trim() ||
+                        c.name.toLowerCase().includes(pickQ.trim().toLowerCase()),
+                    )
+                    .slice(0, 200)
+                    .map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name} — {agentProfileMap.get(c.agent_id ?? "")?.full_name || c.agent_username || "—"}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="rounded-xl border border-border/60 p-3 text-xs space-y-1">
               <div className="font-bold text-sm mb-1">ما سيتم نقله</div>
