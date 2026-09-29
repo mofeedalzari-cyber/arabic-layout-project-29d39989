@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.admin_cabin_agents(), public.admin_agent_cabin(uuid), public.admin_agent_customers(uuid), public.admin_add_agent_customer(uuid,text,text), public.admin_sell_for_agent(uuid,uuid,uuid), public._admin_check_agent(uuid) FROM anon, public;
