@@ -1003,6 +1003,14 @@ export type Database = {
           moved_sales: number
         }[]
       }
+      admin_transfer_customer_merge: {
+        Args: { _customer_id: string; _merge_into: string; _to_agent: string }
+        Returns: {
+          amount: number
+          moved_cards: number
+          moved_sales: number
+        }[]
+      }
       admin_transfer_sold_cards: {
         Args: { _force_customer?: string; _ids: string[]; _to_agent: string }
         Returns: {
