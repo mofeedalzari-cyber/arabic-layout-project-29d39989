@@ -154,6 +154,8 @@ function CustomersPage() {
   const [printBusy, setPrintBusy] = useState(false);
   const [moveFor, setMoveFor] = useState<NetCustomer | null>(null);
   const [moveTo, setMoveTo] = useState<string>("");
+  const [mergeInto, setMergeInto] = useState<string>("new");
+  const [mergeQ, setMergeQ] = useState("");
   const [moveBusy, setMoveBusy] = useState(false);
   const [salesFor, setSalesFor] = useState<NetCustomer | null>(null);
   const [reverseFor, setReverseFor] = useState<{
@@ -465,9 +467,10 @@ function CustomersPage() {
     }
     setMoveBusy(true);
     try {
-      const { data, error } = await supabase.rpc("admin_transfer_customer" as any, {
+      const { data, error } = await supabase.rpc("admin_transfer_customer_merge" as any, {
         _customer_id: moveFor.id,
         _to_agent: moveTo,
+        _merge_into: mergeInto && mergeInto !== "new" ? mergeInto : null,
       });
       if (error) {
         toast.error("تعذر نقل الزبون: " + error.message);
@@ -1279,7 +1282,18 @@ function CustomersPage() {
             </div>
             <div>
               <Label>المندوب المستلم</Label>
-              <Select value={moveTo} onValueChange={setMoveTo}>
+              <Select
+                value={moveTo}
+                onValueChange={(v) => {
+                  setMoveTo(v);
+                  const same = (netCustomers ?? []).find(
+                    (c) =>
+                      c.agent_id === v &&
+                      c.name.trim().toLowerCase() === (moveFor?.name ?? "").trim().toLowerCase(),
+                  );
+                  setMergeInto(same ? same.id : "new");
+                }}
+              >
                 <SelectTrigger className="rounded-xl h-11 w-full">
                   <SelectValue placeholder="اختر المندوب" />
                 </SelectTrigger>
@@ -1294,6 +1308,42 @@ function CustomersPage() {
                 </SelectContent>
               </Select>
             </div>
+            {moveTo && (
+              <div>
+                <Label>الزبون عند المندوب المستلم</Label>
+                <Input
+                  value={mergeQ}
+                  onChange={(e) => setMergeQ(e.target.value)}
+                  placeholder="ابحث باسم الزبون..."
+                  className="rounded-xl mb-2"
+                />
+                <div className="max-h-48 overflow-y-auto rounded-xl border border-border/60 divide-y divide-border/60">
+                  <button
+                    type="button"
+                    onClick={() => setMergeInto("new")}
+                    className={`w-full text-right px-3 py-2 text-sm ${mergeInto === "new" ? "bg-primary/10 font-bold" : ""}`}
+                  >
+                    زبون جديد (بدون دمج)
+                  </button>
+                  {(netCustomers ?? [])
+                    .filter((c) => c.agent_id === moveTo)
+                    .filter((c) => !mergeQ.trim() || c.name.toLowerCase().includes(mergeQ.trim().toLowerCase()))
+                    .map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setMergeInto(c.id)}
+                        className={`w-full text-right px-3 py-2 text-sm break-words ${mergeInto === c.id ? "bg-primary/10 font-bold" : ""}`}
+                      >
+                        {c.name} — {displayPhone(c.whatsapp ?? "", "")}
+                      </button>
+                    ))}
+                </div>
+                <div className="text-[11px] text-muted-foreground mt-1">
+                  عند اختيار زبون موجود تُدمج كل بيانات الزبون المنقول معه.
+                </div>
+              </div>
+            )}
             <div className="text-[11px] text-muted-foreground">
               سيتم نقل بيانات الزبون وكل عمليات البيع والكروت المباعة له والتسديدات
               والمبالغ المضافة إلى المندوب الجديد، مع تعديل حسابات المندوبين.
