@@ -169,6 +169,21 @@ function CustomersPage() {
   const suggestAgent = useServerFn(suggestTransferAgent);
   const reviewDups = useServerFn(reviewDuplicateCustomers);
   const [dupReviewBusy, setDupReviewBusy] = useState(false);
+  const [showMergeLog, setShowMergeLog] = useState(false);
+  const { data: mergeLogs, isLoading: mergeLogsLoading } = useQuery({
+    queryKey: ["merge-logs"],
+    enabled: showMergeLog,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("logs")
+        .select("id,actor_username,metadata,created_at")
+        .eq("action", "ADMIN_MERGE_CUSTOMERS")
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const [dupReview, setDupReview] = useState<
     { key: string; same: boolean; confidence: number; keepId: string; reasons: string[]; customers: any[] }[] | null
   >(null);
@@ -1228,6 +1243,9 @@ function CustomersPage() {
           <div className="mb-3 rounded-xl border border-primary/40 bg-primary/5 p-3 grid gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="font-bold text-sm">مراجعة الحسابات المكررة بالذكاء الاصطناعي</div>
+              <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setShowMergeLog((v) => !v)}>
+                {showMergeLog ? "إخفاء سجل الدمج" : "سجل عمليات الدمج"}
+              </Button>
               <Button size="sm" className="rounded-xl" disabled={dupReviewBusy} onClick={runDupReview}>
                 {dupReviewBusy ? "جارٍ المراجعة..." : "افحص الأرقام والأسماء المكررة"}
               </Button>
