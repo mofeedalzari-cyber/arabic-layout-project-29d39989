@@ -123,6 +123,7 @@ type Sale = {
 function CustomersPage() {
   const { user, role } = useAuth();
   const isAdmin = role === "admin";
+  const [mergeBusy, setMergeBusy] = useState(false);
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Customer | null>(null);
@@ -465,6 +466,29 @@ function CustomersPage() {
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
     } finally {
       setSettleBusy(false);
+    }
+  }
+
+  async function mergeDuplicates(group: any[]) {
+    if (!window.confirm(`دمج ${group.length} نسخ من الزبون "${group[0].name}" في زبون واحد؟ ستُنقل كل المبيعات والتسديدات.`)) return;
+    const sorted = [...group].sort((a, b) => (a.whatsapp ? 0 : 1) - (b.whatsapp ? 0 : 1));
+    const target = sorted[0];
+    setMergeBusy(true);
+    try {
+      for (const s of sorted.slice(1)) {
+        const { error } = await supabase.rpc("admin_merge_customers" as any, { _source: s.id, _target: target.id });
+        if (error) {
+          toast.error("تعذر الدمج: " + error.message);
+          return;
+        }
+      }
+      toast.success("تم دمج الزبون المكرر");
+      qc.invalidateQueries({ queryKey: ["network-customers"] });
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
+      qc.invalidateQueries({ queryKey: ["customer-payments"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+    } finally {
+      setMergeBusy(false);
     }
   }
 
@@ -1115,6 +1139,41 @@ function CustomersPage() {
               </Select>
             </div>
           </div>
+          {(() => {
+            const norm = (s: string) => (s ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+            const groups = new Map<string, any[]>();
+            for (const c of (netCustomers ?? []) as any[]) {
+              if (netAgentId !== "all" && c.agent_id !== netAgentId) continue;
+              const k = `${c.agent_id}|${norm(c.name)}`;
+              const arr = groups.get(k) ?? [];
+              arr.push(c);
+              groups.set(k, arr);
+            }
+            const dups = [...groups.values()].filter((g) => g.length > 1);
+            if (!dups.length) return null;
+            return (
+              <div className="mb-3 rounded-xl border border-warning/50 bg-warning/10 p-3 grid gap-2">
+                <div className="font-bold text-sm">زبائن مكررون ({dups.length})</div>
+                {dups.map((g) => (
+                  <div key={g[0].id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    <div className="min-w-0 break-words">
+                      <span className="font-semibold">{g[0].name}</span> × {g.length} — المندوب:{" "}
+                      {agentProfileMap.get(g[0].agent_id ?? "")?.full_name || g[0].agent_username || "—"}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-xl"
+                      disabled={mergeBusy}
+                      onClick={() => mergeDuplicates(g)}
+                    >
+                      دمج في زبون واحد
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
           <div className="grid gap-2 max-h-[420px] overflow-y-auto">
             {netRows.map((c) => (
               <div

@@ -999,6 +999,10 @@ export type Database = {
           username: string
         }[]
       }
+      admin_merge_customers: {
+        Args: { _source: string; _target: string }
+        Returns: undefined
+      }
       admin_network: { Args: { _uid: string }; Returns: string }
       admin_reset_balance: {
         Args: never
