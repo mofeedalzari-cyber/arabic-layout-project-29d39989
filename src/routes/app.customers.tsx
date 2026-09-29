@@ -169,6 +169,21 @@ function CustomersPage() {
   const suggestAgent = useServerFn(suggestTransferAgent);
   const reviewDups = useServerFn(reviewDuplicateCustomers);
   const [dupReviewBusy, setDupReviewBusy] = useState(false);
+  const [showMergeLog, setShowMergeLog] = useState(false);
+  const { data: mergeLogs, isLoading: mergeLogsLoading } = useQuery({
+    queryKey: ["merge-logs"],
+    enabled: showMergeLog,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("logs")
+        .select("id,actor_username,metadata,created_at")
+        .eq("action", "ADMIN_MERGE_CUSTOMERS")
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const [dupReview, setDupReview] = useState<
     { key: string; same: boolean; confidence: number; keepId: string; reasons: string[]; customers: any[] }[] | null
   >(null);
@@ -1228,10 +1243,44 @@ function CustomersPage() {
           <div className="mb-3 rounded-xl border border-primary/40 bg-primary/5 p-3 grid gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="font-bold text-sm">مراجعة الحسابات المكررة بالذكاء الاصطناعي</div>
+              <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setShowMergeLog((v) => !v)}>
+                {showMergeLog ? "إخفاء سجل الدمج" : "سجل عمليات الدمج"}
+              </Button>
               <Button size="sm" className="rounded-xl" disabled={dupReviewBusy} onClick={runDupReview}>
                 {dupReviewBusy ? "جارٍ المراجعة..." : "افحص الأرقام والأسماء المكررة"}
               </Button>
             </div>
+            {showMergeLog && (
+              <div className="rounded-xl border border-border/60 bg-background p-2 grid gap-2 max-h-96 overflow-y-auto">
+                {mergeLogsLoading && <div className="text-xs text-muted-foreground">جارٍ التحميل...</div>}
+                {!mergeLogsLoading && !(mergeLogs ?? []).length && (
+                  <div className="text-xs text-muted-foreground">لا توجد عمليات دمج مسجلة.</div>
+                )}
+                {(mergeLogs ?? []).map((l: any) => {
+                  const m = (l.metadata ?? {}) as any;
+                  const cross = m.source_agent_id && m.agent_id && m.source_agent_id !== m.agent_id;
+                  return (
+                    <div key={l.id} className="rounded-lg border border-border/40 p-2 text-xs grid gap-0.5 break-words">
+                      <div className="text-muted-foreground">{fmtArabicDateTime(l.created_at)}</div>
+                      <div>
+                        <span className="font-semibold">المندوب: </span>
+                        {cross ? `${m.source_agent_name || "—"} ← ${m.agent_name || "—"}` : m.agent_name || "—"}
+                      </div>
+                      <div>
+                        <span className="font-semibold">الزبون المدموج: </span>
+                        {m.source_name || "—"}
+                        {m.source_whatsapp ? ` (${displayPhone(m.source_whatsapp, "")})` : ""}
+                      </div>
+                      <div>
+                        <span className="font-semibold">الزبون المحتفظ به: </span>
+                        {m.target_name || "—"}
+                        {m.target_whatsapp ? ` (${displayPhone(m.target_whatsapp, "")})` : ""}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             {dupReview && dupReview.length === 0 && (
               <div className="text-xs text-muted-foreground">لا توجد حسابات مشتبه بتكرارها.</div>
             )}
