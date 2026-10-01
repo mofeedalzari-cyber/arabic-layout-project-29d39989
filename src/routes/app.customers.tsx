@@ -797,6 +797,9 @@ function CustomersPage() {
     const totalCharges = (payments ?? [])
       .filter((p) => Number(p.amount) < 0)
       .reduce((a, p) => a + Math.abs(Number(p.amount) || 0), 0);
+    const totalPaid = (payments ?? [])
+      .filter((p) => Number(p.amount) > 0)
+      .reduce((a, p) => a + (Number(p.amount) || 0), 0);
     const activeCount = new Set(linkedSales.map((s) => s.customer_id)).size;
     return {
       customers: customers?.length ?? 0,
@@ -804,6 +807,7 @@ function CustomersPage() {
       sales: linkedSales.length,
       revenue: totalRevenue,
       charges: totalCharges,
+      paid: totalPaid,
     };
   }, [customers, sales, payments]);
 
