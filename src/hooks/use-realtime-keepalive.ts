@@ -19,14 +19,16 @@ export function useRealtimeKeepAlive() {
     if (typeof window === "undefined") return;
     let disposed = false;
 
+    let lastRefetch = 0;
     const reconnect = (force = false) => {
       if (disposed) return;
+      let wasHealthy = true;
       try {
         const rt: any = (supabase as any).realtime;
         const channels = supabase.getChannels();
-        const healthy =
-          rt?.isConnected?.() && channels.every((c: any) => c.state === "joined");
-        if (!healthy || force) {
+        wasHealthy =
+          !!rt?.isConnected?.() && channels.every((c: any) => c.state === "joined");
+        if (!wasHealthy) {
           rt?.disconnect?.();
           rt?.connect?.();
           channels.forEach((c: any) => {
@@ -40,8 +42,11 @@ export function useRealtimeKeepAlive() {
       } catch {
         /* ignore */
       }
-      // إعادة جلب البيانات المعروضة حاليًا لتعويض ما فُقد أثناء الانقطاع
-      qc.invalidateQueries({ refetchType: "active" });
+      // إعادة الجلب فقط عند انقطاع فعلي، وبحد أقصى مرة كل 30 ثانية
+      if ((!wasHealthy || force) && Date.now() - lastRefetch > 30_000) {
+        lastRefetch = Date.now();
+        qc.invalidateQueries({ refetchType: "active" });
+      }
     };
 
     const onVisible = () => {
