@@ -69,7 +69,7 @@ export function NotificationsButton() {
 
         return base;
       },
-      refetchInterval: 15_000,
+      refetchInterval: 60_000,
       enabled: !!profile,
     });
 

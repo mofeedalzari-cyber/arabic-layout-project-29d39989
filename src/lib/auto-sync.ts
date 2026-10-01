@@ -36,9 +36,9 @@ export function initAutoSync(queryClient: QueryClient): () => void {
 
   window.addEventListener("online", onOnline);
   document.addEventListener("visibilitychange", onVisible);
-  // مزامنة دورية هادئة كل دقيقة عندما يكون التطبيق مفتوحاً
+  // التحديث الفوري يتكفّل بالتغييرات؛ هنا نرسل العمليات المؤجلة فقط
   const timer = window.setInterval(() => {
-    if (document.visibilityState === "visible") void runSync(queryClient);
+    if (document.visibilityState === "visible") void flushQueue().catch(() => {});
   }, 60_000);
 
   // مزامنة أولية بعد الإقلاع من الذاكرة المحلية
