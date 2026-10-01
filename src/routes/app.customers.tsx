@@ -797,6 +797,9 @@ function CustomersPage() {
     const totalCharges = (payments ?? [])
       .filter((p) => Number(p.amount) < 0)
       .reduce((a, p) => a + Math.abs(Number(p.amount) || 0), 0);
+    const totalPaid = (payments ?? [])
+      .filter((p) => Number(p.amount) > 0)
+      .reduce((a, p) => a + (Number(p.amount) || 0), 0);
     const activeCount = new Set(linkedSales.map((s) => s.customer_id)).size;
     return {
       customers: customers?.length ?? 0,
@@ -804,6 +807,7 @@ function CustomersPage() {
       sales: linkedSales.length,
       revenue: totalRevenue,
       charges: totalCharges,
+      paid: totalPaid,
     };
   }, [customers, sales, payments]);
 
@@ -1126,7 +1130,7 @@ function CustomersPage() {
         <RefreshButton />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+      <div className={`grid grid-cols-2 ${isAdmin ? "lg:grid-cols-5" : "lg:grid-cols-6"} gap-3 mb-4`}>
         <StatCard
           icon={<Users className="h-4 w-4" />}
           label="إجمالي الزبائن"
@@ -1156,6 +1160,13 @@ function CustomersPage() {
           label="إجمالي المبلغ المضاف"
           value={fmtMoney(isAdmin ? netTotals.charges : totals.charges)}
         />
+        {!isAdmin && (
+          <StatCard
+            icon={<Wallet className="h-4 w-4" />}
+            label="إجمالي المسدد"
+            value={fmtMoney(totals.paid)}
+          />
+        )}
       </div>
 
       <div className="flex gap-2 mb-4 items-center">
