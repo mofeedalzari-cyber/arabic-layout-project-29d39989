@@ -500,8 +500,9 @@ function CustomersPage() {
     const groups = new Map<string, any[]>();
     for (const c of list) {
       const p = digits(c.whatsapp);
-      const k = p.length >= 7 ? "p:" + p : "n:" + normName(c.name);
-      if (k === "n:") continue;
+      const base = p.length >= 7 ? "p:" + p : "n:" + normName(c.name);
+      if (base === "n:" || !c.agent_id) continue;
+      const k = (String(c.agent_id) + "|" + base).slice(0, 100);
       const arr = groups.get(k) ?? [];
       arr.push(c);
       groups.set(k, arr);
