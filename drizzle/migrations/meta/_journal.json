@@ -8,6 +8,13 @@
       "when": 1791557261386,
       "tag": "0000_fix_dashboard_agent_debts",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791558478577,
+      "tag": "0001_debts_from_sales",
+      "breakpoints": true
     }
   ]
 }
