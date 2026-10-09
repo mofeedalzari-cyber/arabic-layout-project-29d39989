@@ -133,18 +133,26 @@ function SalesPage() {
   const { data: sales, isLoading } = useQuery({
     queryKey: ["sales", dateFrom, dateTo],
     queryFn: async () => {
-      let query = supabase
-        .from("sales")
-        .select(
-          "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_id, card_number, is_external, customers ( name )",
-        )
-        .order("sold_at", { ascending: false })
-        .limit(dateFrom || dateTo ? 5000 : 20000);
-      if (dateFrom) query = query.gte("sold_at", `${dateFrom}T00:00:00`);
-      if (dateTo) query = query.lte("sold_at", `${dateTo}T23:59:59.999`);
-      const { data, error } = await query;
-      if (error) throw error;
-      const rows = data ?? [];
+      // الخادم يُرجع 1000 صف كحد أقصى لكل طلب، لذا نجلب على دفعات
+      const max = dateFrom || dateTo ? 5000 : 20000;
+      const PAGE = 1000;
+      const rows: any[] = [];
+      for (let from = 0; from < max; from += PAGE) {
+        let query = supabase
+          .from("sales")
+          .select(
+            "id, transaction_no, package_name, network_name, agent_username, agent_id, price, sold_at, buyer_name, customer_id, card_id, card_number, is_external, customers ( name )",
+          )
+          .order("sold_at", { ascending: false })
+          .order("id", { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (dateFrom) query = query.gte("sold_at", `${dateFrom}T00:00:00`);
+        if (dateTo) query = query.lte("sold_at", `${dateTo}T23:59:59.999`);
+        const { data, error } = await query;
+        if (error) throw error;
+        rows.push(...(data ?? []));
+        if (!data || data.length < PAGE) break;
+      }
       // كلمات سر الكروت تُجلب فقط عبر دالة آمنة (الكروت المبيعة وللمصرّح لهم)
       const cardIds = rows.map((s: any) => s.card_id).filter(Boolean);
       const credMap = new Map<string, string | null>();
