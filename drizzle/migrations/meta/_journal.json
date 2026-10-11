@@ -22,6 +22,13 @@
       "when": 1791558597396,
       "tag": "0002_debts_match_sales_value",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791756198691,
+      "tag": "0003_align_admin_stats_sold_value",
+      "breakpoints": true
     }
   ]
 }
