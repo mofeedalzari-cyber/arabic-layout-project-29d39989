@@ -29,6 +29,13 @@
       "when": 1791756198691,
       "tag": "0003_align_admin_stats_sold_value",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791806128701,
+      "tag": "0004_include_deleted_card_sales",
+      "breakpoints": true
     }
   ]
 }
