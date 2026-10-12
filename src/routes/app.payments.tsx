@@ -131,10 +131,21 @@ function PaymentsPageInner() {
         .select("id, request_id, amount, note, created_at, recorded_by_username")
         .in("request_id", ids)
         .order("created_at", { ascending: false });
-      return (data ?? []).map((p: any) => ({
-        ...p,
-        package_name: nameMap.get(p.request_id) ?? "",
-      }));
+      // عملية سداد واحدة توزَّع على عدة طلبات — نجمعها في صف واحد
+      const groups = new Map<string, any>();
+      for (const p of data ?? []) {
+        const key = `${String(p.created_at).slice(0, 19)}|${p.note ?? ""}`;
+        const g = groups.get(key);
+        const pkg = nameMap.get(p.request_id) ?? "";
+        if (g) {
+          g.amount = Number(g.amount) + Number(p.amount);
+          g.parts.push(p);
+          if (pkg && !g.pkgs.includes(pkg)) g.pkgs.push(pkg);
+        } else {
+          groups.set(key, { ...p, amount: Number(p.amount), parts: [p], pkgs: pkg ? [pkg] : [] });
+        }
+      }
+      return [...groups.values()].map((g) => ({ ...g, package_name: g.pkgs.join("، ") }));
     },
   });
 
