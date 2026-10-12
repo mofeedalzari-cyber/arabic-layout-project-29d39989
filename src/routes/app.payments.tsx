@@ -421,7 +421,7 @@ function PaymentsPageInner() {
                       <td className="p-2 text-muted-foreground">{p.note || "—"}</td>
                       <td className="p-2">
                         <div className="flex gap-1">
-                          <Button
+                          {(p.parts?.length ?? 1) === 1 && <Button
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8"
@@ -431,7 +431,7 @@ function PaymentsPageInner() {
                               setEditNote(p.note ?? "");
                             }} aria-label="تعديل">
                             <Pencil className="h-4 w-4" />
-                          </Button>
+                          </Button>}
                           <Button
                             size="icon"
                             variant="ghost"
@@ -505,7 +505,7 @@ function PaymentsPageInner() {
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteRow && deletePayment.mutate(deleteRow.id)}
+              onClick={() => deleteRow && deletePayment.mutate(deleteRow)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               حذف
