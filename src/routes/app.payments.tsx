@@ -131,10 +131,21 @@ function PaymentsPageInner() {
         .select("id, request_id, amount, note, created_at, recorded_by_username")
         .in("request_id", ids)
         .order("created_at", { ascending: false });
-      return (data ?? []).map((p: any) => ({
-        ...p,
-        package_name: nameMap.get(p.request_id) ?? "",
-      }));
+      // عملية سداد واحدة توزَّع على عدة طلبات — نجمعها في صف واحد
+      const groups = new Map<string, any>();
+      for (const p of data ?? []) {
+        const key = `${String(p.created_at).slice(0, 19)}|${p.note ?? ""}`;
+        const g = groups.get(key);
+        const pkg = nameMap.get(p.request_id) ?? "";
+        if (g) {
+          g.amount = Number(g.amount) + Number(p.amount);
+          g.parts.push(p);
+          if (pkg && !g.pkgs.includes(pkg)) g.pkgs.push(pkg);
+        } else {
+          groups.set(key, { ...p, amount: Number(p.amount), parts: [p], pkgs: pkg ? [pkg] : [] });
+        }
+      }
+      return [...groups.values()].map((g) => ({ ...g, package_name: g.pkgs.join("، ") }));
     },
   });
 
@@ -181,11 +192,14 @@ function PaymentsPageInner() {
   });
 
   const deletePayment = useMutation({
-    mutationFn: async (paymentId: string) => {
-      const { error } = await supabase.rpc("admin_delete_request_payment" as any, {
-        _payment_id: paymentId,
-      });
-      if (error) throw error;
+    mutationFn: async (row: any) => {
+      const ids: string[] = (row.parts ?? [row]).map((p: any) => p.id);
+      for (const id of ids) {
+        const { error } = await supabase.rpc("admin_delete_request_payment" as any, {
+          _payment_id: id,
+        });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       toast.success("تم حذف عملية التسديد");
@@ -407,7 +421,7 @@ function PaymentsPageInner() {
                       <td className="p-2 text-muted-foreground">{p.note || "—"}</td>
                       <td className="p-2">
                         <div className="flex gap-1">
-                          <Button
+                          {(p.parts?.length ?? 1) === 1 && <Button
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8"
@@ -417,7 +431,7 @@ function PaymentsPageInner() {
                               setEditNote(p.note ?? "");
                             }} aria-label="تعديل">
                             <Pencil className="h-4 w-4" />
-                          </Button>
+                          </Button>}
                           <Button
                             size="icon"
                             variant="ghost"
@@ -491,7 +505,7 @@ function PaymentsPageInner() {
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteRow && deletePayment.mutate(deleteRow.id)}
+              onClick={() => deleteRow && deletePayment.mutate(deleteRow)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               حذف
