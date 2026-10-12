@@ -192,11 +192,14 @@ function PaymentsPageInner() {
   });
 
   const deletePayment = useMutation({
-    mutationFn: async (paymentId: string) => {
-      const { error } = await supabase.rpc("admin_delete_request_payment" as any, {
-        _payment_id: paymentId,
-      });
-      if (error) throw error;
+    mutationFn: async (row: any) => {
+      const ids: string[] = (row.parts ?? [row]).map((p: any) => p.id);
+      for (const id of ids) {
+        const { error } = await supabase.rpc("admin_delete_request_payment" as any, {
+          _payment_id: id,
+        });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       toast.success("تم حذف عملية التسديد");
