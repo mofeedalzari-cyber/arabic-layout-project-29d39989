@@ -139,10 +139,6 @@ function AdminDashboard() {
         />
       </div>
 
-      <div className="mb-5">
-        <PeriodSalesCard />
-      </div>
-
       <AdminBreakdowns />
     </div>
   );
@@ -590,12 +586,6 @@ function AgentHome({ name }: { name: string }) {
       <div className="mb-4 flex justify-start">
         <RefreshButton />
       </div>
-
-      {user && (
-        <div className="mb-4">
-          <PeriodSalesCard agentId={user.id} />
-        </div>
-      )}
 
       {user && (
         <div className="mb-4">
