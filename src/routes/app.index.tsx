@@ -53,7 +53,6 @@ async function exportToPDF(
 import { AgentStats } from "./app.agents";
 
 import { PackagesChart, AgentsChart } from "@/components/dashboard-charts";
-import { PeriodSalesCard } from "@/components/period-sales-card";
 
 export const Route = createFileRoute("/app/")({
   component: DashboardPage,
