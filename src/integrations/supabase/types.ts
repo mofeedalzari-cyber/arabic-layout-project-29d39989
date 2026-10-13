@@ -256,6 +256,7 @@ export type Database = {
         Row: {
           agent_id: string
           created_at: string
+          credit_limit: number | null
           id: string
           name: string
           network_id: string | null
@@ -265,6 +266,7 @@ export type Database = {
         Insert: {
           agent_id: string
           created_at?: string
+          credit_limit?: number | null
           id?: string
           name: string
           network_id?: string | null
@@ -274,6 +276,7 @@ export type Database = {
         Update: {
           agent_id?: string
           created_at?: string
+          credit_limit?: number | null
           id?: string
           name?: string
           network_id?: string | null
@@ -1032,6 +1035,10 @@ export type Database = {
           transaction_no: string
         }[]
       }
+      admin_set_customer_limit: {
+        Args: { _customer_id: string; _limit: number }
+        Returns: undefined
+      }
       admin_settle_customer_via_agent: {
         Args: { _amount?: number; _customer_id: string; _note?: string }
         Returns: {
@@ -1258,6 +1265,8 @@ export type Database = {
         }[]
       }
       next_invoice_number: { Args: never; Returns: number }
+      norm_customer_name: { Args: { _n: string }; Returns: string }
+      norm_customer_phone: { Args: { _p: string }; Returns: string }
       package_counts: {
         Args: { _network_id: string }
         Returns: {
