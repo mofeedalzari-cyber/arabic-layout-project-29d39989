@@ -1389,6 +1389,24 @@ function CustomersPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Button
                     size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      const v = window.prompt(`سقف السحب للزبون ${c.name} (اتركه فارغًا لإلغاء السقف)`, "");
+                      if (v === null) return;
+                      const n = v.trim() === "" ? null : Number(v);
+                      if (n !== null && (!isFinite(n) || n < 0)) return toast.error("أدخل رقمًا صحيحًا");
+                      const { error } = await (supabase.rpc as any)("admin_set_customer_limit", {
+                        _customer_id: c.id,
+                        _limit: n,
+                      });
+                      if (error) return toast.error(error.message);
+                      toast.success(n ? `تم تحديد السقف ${fmtMoney(n)}` : "تم إلغاء السقف");
+                    }}
+                  >
+                    سقف السحب
+                  </Button>
+                  <Button
+                    size="sm"
                     className="bg-success hover:bg-success/90 text-white"
                     disabled={Number(c.balance) <= 0}
                     onClick={() => {
