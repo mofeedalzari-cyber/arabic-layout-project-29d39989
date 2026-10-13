@@ -1252,6 +1252,7 @@ function CustomersPage() {
               </Select>
             </div>
           </div>
+          <div className="hidden">
           <div className="mb-3 rounded-xl border border-primary/40 bg-primary/5 p-3 grid gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="font-bold text-sm">مراجعة الحسابات المكررة بالذكاء الاصطناعي</div>
@@ -1322,6 +1323,7 @@ function CustomersPage() {
                 </ul>
               </div>
             ))}
+          </div>
           </div>
           {(() => {
             const norm = (s: string) => (s ?? "").replace(/\s+/g, " ").trim().toLowerCase();
