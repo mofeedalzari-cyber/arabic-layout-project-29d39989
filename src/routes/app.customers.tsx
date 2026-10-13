@@ -1324,6 +1324,7 @@ function CustomersPage() {
               </div>
             ))}
           </div>
+          </div>
           {(() => {
             const norm = (s: string) => (s ?? "").replace(/\s+/g, " ").trim().toLowerCase();
             const groups = new Map<string, any[]>();
