@@ -36,6 +36,13 @@
       "when": 1791806128701,
       "tag": "0004_include_deleted_card_sales",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791892755930,
+      "tag": "0005_customer_uniqueness_and_credit_limit",
+      "breakpoints": true
     }
   ]
 }
