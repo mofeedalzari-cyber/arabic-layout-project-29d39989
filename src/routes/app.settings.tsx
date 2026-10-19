@@ -44,6 +44,8 @@ export const Route = createFileRoute("/app/settings")({
       { name: "description", content: "إعدادات الحساب والنسخ الاحتياطي والاستعادة لشبكتك." },
       { property: "og:title", content: "الإعدادات — كرتي" },
       { property: "og:description", content: "إعدادات الحساب والنسخ الاحتياطي والاستعادة لشبكتك." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SettingsPage });
