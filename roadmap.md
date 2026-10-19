@@ -1,0 +1,2 @@
+- [ ] Make network reset financial-only with ownership checks.
+- [ ] Update confirmation and verify financial reset preservation.
