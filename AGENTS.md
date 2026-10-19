@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Network restores must verify the caller's admin role and owned network before calling any destructive RPC, so missing ownership cannot start a partial restore.
