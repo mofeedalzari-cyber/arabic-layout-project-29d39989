@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertNetworkRestoreAccess } from "./network-restore-access";
 
 /**
  * Restore a previously downloaded backup JSON into the caller's own network.
@@ -22,6 +23,16 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
     if (!payload.network || typeof payload.network !== "object") {
       throw new Error("الملف لا يحتوي بيانات شبكة");
     }
+
+    // Check ownership without mutating anything: an admin role alone is not
+    // enough when the original network has been removed.
+    const [roleResult, networkResult] = await Promise.all([
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+      supabase.from("networks").select("id").eq("owner_id", userId).maybeSingle(),
+    ]);
+    if (roleResult.error) throw new Error(roleResult.error.message);
+    if (networkResult.error) throw new Error(networkResult.error.message);
+    assertNetworkRestoreAccess(roleResult.data === true, networkResult.data?.id ?? null);
 
     // Bind to the client — a detached supabase.rpc loses `this` and throws
     // "Cannot read properties of undefined (reading 'rest')".
