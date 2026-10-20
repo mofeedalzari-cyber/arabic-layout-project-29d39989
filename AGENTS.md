@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Network restores must verify the caller's admin role and owned network before calling any destructive RPC, so missing ownership cannot start a partial restore.
+- Agents recreated during network restore bypass public signup checks only via the transaction-local `app.restore_agent` flag set inside `restore_create_agent`; signup metadata must never be trusted to skip those checks.
