@@ -43,6 +43,13 @@
       "when": 1791892755930,
       "tag": "0005_customer_uniqueness_and_credit_limit",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792525176870,
+      "tag": "0006_restore_agent_skip_signup_checks",
+      "breakpoints": true
     }
   ]
 }
