@@ -138,6 +138,10 @@ function CustomersPage() {
   const [newName, setNewName] = useState("");
   const [newWhats, setNewWhats] = useState("");
   const [addBusy, setAddBusy] = useState(false);
+  const [editFor, setEditFor] = useState<Customer | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editWhats, setEditWhats] = useState("");
+  const [editBusy, setEditBusy] = useState(false);
   const [payFor, setPayFor] = useState<Customer | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payNote, setPayNote] = useState("");
@@ -669,6 +673,43 @@ function CustomersPage() {
       qc.invalidateQueries({ queryKey: ["customers-page"] });
     } finally {
       setAddBusy(false);
+    }
+  }
+
+  function openEditCustomer(c: Customer) {
+    setEditFor(c);
+    setEditName(c.name);
+    setEditWhats(localYemenDigits(c.whatsapp ?? ""));
+  }
+
+  async function handleEditCustomer() {
+    if (!editFor) return;
+    const name = editName.trim();
+    const whatsapp = normalizeWa(editWhats);
+    if (!name) {
+      toast.error("أدخل اسم الزبون");
+      return;
+    }
+    if (whatsapp.length < 10) {
+      toast.error("رقم واتساب غير صحيح");
+      return;
+    }
+    setEditBusy(true);
+    try {
+      const { error } = await supabase
+        .from("customers")
+        .update({ name, whatsapp })
+        .eq("id", editFor.id);
+      if (error) {
+        toast.error("تعذر التعديل: " + error.message);
+        return;
+      }
+      toast.success("تم تعديل بيانات الزبون");
+      setEditFor(null);
+      qc.invalidateQueries({ queryKey: ["customers-page"] });
+      qc.invalidateQueries({ queryKey: ["network-customers"] });
+    } finally {
+      setEditBusy(false);
     }
   }
 
@@ -1926,6 +1967,15 @@ function CustomersPage() {
                 <Plus className="h-4 w-4 ml-1" />
                 إضافة مبلغ
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                title="تعديل الاسم والرقم"
+                aria-label="تعديل الزبون"
+                onClick={() => openEditCustomer(c as any)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
               <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(c as any)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -2014,6 +2064,16 @@ function CustomersPage() {
                     >
                       <FileText className="h-4 w-4 ml-1" />
                       {sendingId === c.id ? "جاري..." : "كشف واتساب"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      title="تعديل الاسم والرقم"
+                      aria-label="تعديل الزبون"
+                      onClick={() => openEditCustomer(c as any)}
+                    >
+                      <Pencil className="h-4 w-4 ml-1" />
+                      تعديل
                     </Button>
                     <Button
                       size="sm"
@@ -2417,6 +2477,57 @@ function CustomersPage() {
             </Button>
             <Button onClick={handleAddCustomer} disabled={addBusy}>
               {addBusy ? "جاري..." : "إضافة"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!editFor}
+        onOpenChange={(o) => {
+          if (!editBusy && !o) setEditFor(null);
+        }}
+      >
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل بيانات الزبون</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>اسم الزبون</Label>
+              <Input
+                aria-label="اسم الزبون"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="مثال: مفيد الزري"
+              />
+            </div>
+            <div>
+              <Label>رقم الواتساب</Label>
+              <div
+                className="flex items-stretch rounded-md border border-input overflow-hidden"
+                dir="ltr"
+              >
+                <span className="px-3 flex items-center text-sm font-mono bg-muted text-muted-foreground border-l border-input select-none">
+                  +967
+                </span>
+                <Input
+                  aria-label="7XXXXXXXX"
+                  value={localYemenDigits(editWhats)}
+                  onChange={(e) => setEditWhats(localYemenDigits(e.target.value))}
+                  placeholder="7XXXXXXXX"
+                  inputMode="tel"
+                  className="flex-1 rounded-none border-0 font-mono"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditFor(null)} disabled={editBusy}>
+              إلغاء
+            </Button>
+            <Button onClick={handleEditCustomer} disabled={editBusy}>
+              {editBusy ? "جاري..." : "حفظ التعديل"}
             </Button>
           </DialogFooter>
         </DialogContent>
