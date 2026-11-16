@@ -486,8 +486,8 @@ function PackagesPage() {
                     className="rounded-2xl p-5 text-white"
                     style={{
                       background: requestPkg.color
-                    ? `linear-gradient(135deg, ${requestPkg.color}, ${requestPkg.color}dd)`
-                    : "var(--muted)",
+                    ? `linear-gradient(135deg, rgba(0,0,0,0.45), rgba(0,0,0,0.55)), linear-gradient(135deg, ${requestPkg.color}, ${requestPkg.color})`
+                     : "linear-gradient(135deg, var(--primary), var(--primary))",
                     }}
                   >
                     <div className="opacity-80 text-sm">{net?.name ?? ""}</div>
@@ -545,9 +545,10 @@ function PackagesPage() {
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        onClick={() => setReqPayment("CASH")}
-                        className={`rounded-xl h-11 font-semibold border-2 transition ${reqPayment === "CASH" ? "border-success bg-success/10 text-success" : "border-muted bg-muted/40 text-muted-foreground"}`}
-                      >
+                        disabled
+                        title="الطلب النقدي غير متاح حاليًا"
+                        className="rounded-xl h-11 font-semibold border-2 transition border-muted bg-muted/40 text-muted-foreground opacity-50 cursor-not-allowed"
+                       >
                         نقد
                       </button>
                       <button
