@@ -4,7 +4,7 @@ import { config as loadEnv } from "dotenv";
 // تحميل متغيرات .env لأن Capacitor CLI لا يحمّلها تلقائياً
 loadEnv();
 
-const PRODUCTION_APP_URL = "https://arabic-layout-project-g2h5.onrender.com";
+const PRODUCTION_APP_URL = "https://tanstack-start-ts.zarymofeed.workers.dev";
 
 function getAppUrl(): string {
   const configuredUrl = process.env['VITE_APP_URL']?.trim();
@@ -34,6 +34,8 @@ const config: CapacitorConfig = {
     cleartext: true,
     allowNavigation: [
       appHostname,
+      "zarymofeed.workers.dev",
+      "*.workers.dev",
       "*.onrender.com",
       "*.supabase.co",
       "*.lovable.app",

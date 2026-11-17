@@ -75,8 +75,12 @@ Write-Step "5/6 - مزامنة Capacitor مع Android (npx cap sync android)"
 Invoke-CommandWithCheck -Command "npx" -Arguments "cap sync android"
 
 # 6) ضمان تسجيل إضافة جهات الاتصال وأذوناتها في Android
-Write-Step "6/6 - تجهيز إضافة جهات الاتصال لأندرويد"
+Write-Step "6/7 - تجهيز إضافة جهات الاتصال لأندرويد"
 Invoke-CommandWithCheck -Command "node" -Arguments "scripts/ensure-capacitor-contacts.mjs"
+
+# 7) تجهيز Firebase لإشعارات Push (google-services.json + الأذونات + App Links)
+Write-Step "7/7 - تجهيز Firebase لإشعارات Android"
+Invoke-CommandWithCheck -Command "node" -Arguments "scripts/setup-android-firebase.mjs"
 
 Write-Step "اكتمل البناء بنجاح"
 Write-Host "يمكنك الآن فتح المشروع في Android Studio بتشغيل:" -ForegroundColor Green

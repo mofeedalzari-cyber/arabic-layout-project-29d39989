@@ -7,6 +7,16 @@ type ServiceAccount = {
   private_key: string;
 };
 
+export type FcmResult = {
+  sent: number;
+  failed: number;
+  skipped?: string;
+  /** عدد الرموز المحذوفة من قاعدة البيانات لأنها لم تعد صالحة */
+  staleDeleted?: number;
+  /** أول رسالة خطأ أعادها Firebase (لمعرفة السبب الحقيقي عند الفشل) */
+  error?: string;
+};
+
 function b64url(input: ArrayBuffer | string): string {
   const bytes =
     typeof input === "string" ? new TextEncoder().encode(input) : new Uint8Array(input);
@@ -37,6 +47,18 @@ function readServiceAccount(): ServiceAccount | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * هل هذا الخطأ يعني أن رمز الجهاز لم يعد صالحًا؟
+ * UNREGISTERED = مسح المستخدم بيانات التطبيق أو عطّل الإشعارات.
+ * INVALID_ARGUMENT = رمز تالف أو من مشروع آخر.
+ * في الحالتين لا فائدة من الاحتفاظ به، بل يُحذف حتى لا تتكرر المحاولة.
+ */
+export function isStaleFcmError(status: number, body: string): boolean {
+  if (status === 404) return true;
+  if (status === 400) return /UNREGISTERED|INVALID_ARGUMENT/i.test(body);
+  return false;
 }
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
@@ -86,21 +108,46 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
   return cachedToken.value;
 }
 
+async function deleteStaleTokens(tokens: string[]): Promise<number> {
+  if (tokens.length === 0) return 0;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("device_tokens").delete().in("token", tokens);
+    if (error) return 0;
+    return tokens.length;
+  } catch {
+    return 0;
+  }
+}
+
 export async function sendFcmToTokens(
   tokens: string[],
   payload: { title: string; body: string; path?: string; tag?: string },
-): Promise<{ sent: number; failed: number; skipped?: string }> {
+): Promise<FcmResult> {
   const unique = Array.from(new Set(tokens.filter(Boolean)));
   if (unique.length === 0) return { sent: 0, failed: 0, skipped: "no-tokens" };
 
   const sa = readServiceAccount();
   if (!sa) return { sent: 0, failed: 0, skipped: "not-configured" };
 
-  const accessToken = await getAccessToken(sa);
+  let accessToken: string;
+  try {
+    accessToken = await getAccessToken(sa);
+  } catch (error) {
+    return {
+      sent: 0,
+      failed: unique.length,
+      error: error instanceof Error ? error.message : "تعذّر التحقق من حساب Firebase",
+    };
+  }
+
   const url = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
 
   let sent = 0;
   let failed = 0;
+  let firstError = "";
+  const stale: string[] = [];
+
   await Promise.all(
     unique.map(async (token) => {
       try {
@@ -114,7 +161,12 @@ export async function sendFcmToTokens(
             message: {
               token,
               notification: { title: payload.title, body: payload.body },
-              data: { path: payload.path ?? "/app", tag: payload.tag ?? "karti", body: payload.body },
+              data: {
+                path: payload.path ?? "/app",
+                tag: payload.tag ?? "karti",
+                body: payload.body,
+                title: payload.title,
+              },
               android: {
                 priority: "HIGH",
                 notification: {
@@ -130,12 +182,29 @@ export async function sendFcmToTokens(
             },
           }),
         });
-        if (res.ok) sent++;
-        else failed++;
-      } catch {
+
+        if (res.ok) {
+          sent++;
+          return;
+        }
+
+        const body = await res.text().catch(() => "");
         failed++;
+        if (isStaleFcmError(res.status, body)) stale.push(token);
+        else if (!firstError) firstError = `Firebase [${res.status}] ${body.slice(0, 300)}`;
+      } catch (error) {
+        failed++;
+        if (!firstError) firstError = error instanceof Error ? error.message : "فشل الإرسال";
       }
     }),
   );
-  return { sent, failed };
+
+  const staleDeleted = await deleteStaleTokens(stale);
+
+  return {
+    sent,
+    failed,
+    ...(staleDeleted ? { staleDeleted } : {}),
+    ...(firstError ? { error: firstError } : {}),
+  };
 }

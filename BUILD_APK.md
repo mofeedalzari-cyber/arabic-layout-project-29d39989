@@ -168,6 +168,34 @@ npx @capacitor/assets generate --android
 
 ---
 
+## 🔔 إشعارات Push (Firebase / FCM)
+
+### لماذا تحتاج خطوة إضافية؟
+سكربتات البناء (`build-android.ps1` و`build-android.cmd`) **تحذف مجلد `android/` وتعيد إنشاءه من الصفر** في كل مرة. لذلك أي ملف `google-services.json` يُوضع داخل `android/` يدويًا يضيع، وتفشل الإشعارات برسالة مثل *"Firebase not initialized"* قبل `PushNotifications.register()`.
+
+### الخطوة المطلوبة (مرة واحدة)
+1. افتح [Firebase Console](https://console.firebase.google.com) وأنشئ مشروعًا (أو استخدم مشروعك الحالي).
+2. **Project settings → Your apps → Add app → Android**.
+3. اكتب اسم الحزمة تمامًا كما في `android/app/build.gradle`: `com.mofeed.karti`.
+4. نزّل ملف `google-services.json`.
+5. ضعه في: `resources/firebase/google-services.json`
+
+عند التشغيل التالي لسكربت البناء سيقوم `scripts/setup-android-firebase.mjs` تلقائيًا بـ:
+- نسخ الملف إلى `android/app/google-services.json`
+- التحقق أن اسم الحزمة في الملف مطابق لـ `applicationId`
+- تفعيل إضافة `com.google.gms.google-services` في `build.gradle` (الجذر والتطبيق)
+- إضافة إذن `POST_NOTIFICATIONS` وقناة الإشعارات `karti_requests` إلى `AndroidManifest.xml`
+- إعادة إضافة روابط App Links بنفس رابط الإنتاج الموجود في `capacitor.config.ts`
+
+إذا كان الملف مفقودًا يتوقف البناء برسالة توضّح مكان وضعه.
+
+### التحقق
+- بعد `npx cap sync android` تأكد أن `android/app/google-services.json` موجود.
+- افتح التطبيق، واسحب شاشة الإشعارات: يجب أن تصل رسالة "طلب سحب جديد" أو "عملية بيع جديدة".
+- إذا لم تصل: راجع `getPushDiagnostics()` — تُظهر سبب الفشل (إذن مرفوض، أو رمز غير مسجّل).
+
+---
+
 ## 🔗 Deep Links (فتح صفحات محددة من روابط خارجية)
 
 يدعم التطبيق نوعين من الروابط:
@@ -176,7 +204,7 @@ npx @capacitor/assets generate --android
 مثال: `wificards://app/cabin` سيفتح صفحة كبينة البيع مباشرة.
 
 ### 2) App Links (HTTPS)
-مثال: `https://arabic-layout-project-29d39989.onrender.com/app/cabin`
+مثال: `https://tanstack-start-ts.zarymofeed.workers.dev/app/cabin`
 
 **خطوة إضافية مطلوبة** — بعد `npx cap add android`، افتح الملف:
 `android/app/src/main/AndroidManifest.xml`
@@ -192,13 +220,13 @@ npx @capacitor/assets generate --android
     <data android:scheme="wificards" />
 </intent-filter>
 
-<!-- App Links: https://arabic-layout-project-29d39989.onrender.com/... -->
+<!-- App Links: https://tanstack-start-ts.zarymofeed.workers.dev/... -->
 <intent-filter android:autoVerify="true">
     <action android:name="android.intent.action.VIEW" />
     <category android:name="android.intent.category.DEFAULT" />
     <category android:name="android.intent.category.BROWSABLE" />
     <data android:scheme="https"
-          android:host="arabic-layout-project-29d39989.onrender.com" />
+          android:host="tanstack-start-ts.zarymofeed.workers.dev" />
 </intent-filter>
 ```
 

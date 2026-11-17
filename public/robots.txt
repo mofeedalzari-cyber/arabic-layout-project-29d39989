@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /app/
 
-Sitemap: https://arabic-layout-project.lovable.app/sitemap.xml
+Sitemap: https://tanstack-start-ts.zarymofeed.workers.dev/sitemap.xml

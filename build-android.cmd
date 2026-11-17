@@ -69,9 +69,16 @@ if errorlevel 1 goto failed
 
 echo.
 echo ========================================
-echo 6/6 - تجهيز إضافة جهات الاتصال لأندرويد
+echo 6/7 - تجهيز إضافة جهات الاتصال لأندرويد
 echo ========================================
 call node scripts\ensure-capacitor-contacts.mjs
+if errorlevel 1 goto failed
+
+echo.
+echo ========================================
+echo 7/7 - تجهيز Firebase لإشعارات Android
+echo ========================================
+call node scripts\setup-android-firebase.mjs
 if errorlevel 1 goto failed
 
 echo.
