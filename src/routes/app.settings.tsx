@@ -372,7 +372,8 @@ function BackupCard() {
     onSuccess: (res: any) => {
       const s = res?.stats ?? {};
       toast.success(
-        `تم الاستعادة — مناديب: ${s.profiles ?? 0}, باقات: ${s.packages ?? 0}, كروت: ${s.cards ?? 0}, مبيعات: ${s.sales ?? 0}`,
+        `${res?.created_network ? "تم إنشاء الشبكة وربطها بحسابك واستعادة بياناتها بنجاح" : "تمت الاستعادة بنجاح"} — مناديب: ${s.profiles ?? 0}، باقات: ${s.packages ?? 0}، كروت: ${s.cards ?? 0}، مبيعات: ${s.sales ?? 0}، طلبات: ${s.card_requests ?? 0}، مدفوعات: ${s.request_payments ?? 0}`,
+        { duration: 8000 },
       );
       setPendingPayload(null);
       setPendingName("");

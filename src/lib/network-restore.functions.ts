@@ -32,7 +32,40 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
     ]);
     if (roleResult.error) throw new Error(roleResult.error.message);
     if (networkResult.error) throw new Error(networkResult.error.message);
-    assertNetworkRestoreAccess(roleResult.data === true, networkResult.data?.id ?? null);
+
+    let isAdmin = roleResult.data === true;
+    let ownedNetworkId: string | null = networkResult.data?.id ?? null;
+    let createdNetwork = false;
+
+    // No owned network: create one from the backup and bind it to this account.
+    if (!ownedNetworkId) {
+      const net = payload.network;
+      const baseName = String(net.name ?? "").trim() || "شبكة مستعادة";
+      let lastErr = "";
+      for (let i = 0; i < 5 && !ownedNetworkId; i++) {
+        const name = i === 0 ? baseName : `${baseName} (${i + 1})`;
+        const { data: newId, error } = await supabase.rpc("create_my_network", { _name: name });
+        if (!error && newId) {
+          ownedNetworkId = String(newId);
+          break;
+        }
+        lastErr = error?.message ?? "";
+        if (!lastErr.includes("NETWORK_NAME_TAKEN")) break;
+      }
+      if (!ownedNetworkId) throw new Error(`تعذر إنشاء الشبكة من النسخة: ${lastErr}`);
+      createdNetwork = true;
+      const extra: Record<string, any> = {};
+      for (const k of ["description", "currency", "primary_color", "secondary_color", "logo_url", "cover_url"]) {
+        if (net[k] != null) extra[k] = net[k];
+      }
+      if (Object.keys(extra).length) {
+        await supabase.from("networks").update(extra).eq("id", ownedNetworkId);
+      }
+      const { data: roleAfter } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+      isAdmin = roleAfter === true;
+    }
+
+    assertNetworkRestoreAccess(isAdmin, ownedNetworkId);
 
     // Bind to the client — a detached supabase.rpc loses `this` and throws
     // "Cannot read properties of undefined (reading 'rest')".
@@ -296,6 +329,6 @@ export const restoreMyNetwork = createServerFn({ method: "POST" })
       })),
     );
 
-    return { network_id: networkId, stats };
+    return { network_id: networkId, stats, created_network: createdNetwork };
 
   });
