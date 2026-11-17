@@ -491,7 +491,8 @@ function PackagesPage() {
           <SheetHeader>
             <SheetTitle>طلب كروت من المدير</SheetTitle>
             <SheetDescription>
-              اختر الكمية المطلوبة — سيتم تنزيل الكروت إلى كبينتك بعد الموافقة.
+              اختر الكمية المطلوبة — سيتم تنزيل الكروت إلى كبينتك بعد الموافقة. الطلب يُحفظ بطريقة
+              آجل.
             </SheetDescription>
           </SheetHeader>
           {requestPkg && (
@@ -550,8 +551,13 @@ function PackagesPage() {
 
               <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">القيمة الإجمالية</span>
-                <span className="font-extrabold text-primary text-base">
-                  {fmtMoney(Number(requestPkg.price) * reqQty)}
+                <span className="flex items-center gap-2">
+                  <span className="inline-flex items-center rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-warning">
+                    آجل
+                  </span>
+                  <span className="font-extrabold text-primary text-base">
+                    {fmtMoney(Number(requestPkg.price) * reqQty)}
+                  </span>
                 </span>
               </div>
               <div>
