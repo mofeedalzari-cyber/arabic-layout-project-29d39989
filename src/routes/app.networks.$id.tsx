@@ -171,7 +171,6 @@ function PackagesPage() {
   const [requestPkg, setRequestPkg] = useState<any>(null);
   const [reqQty, setReqQty] = useState<number>(10);
   const [reqNotes, setReqNotes] = useState("");
-  const [reqPayment, setReqPayment] = useState<"CREDIT" | "CASH">("CREDIT");
   const [reqBusy, setReqBusy] = useState(false);
 
   async function submitRequest() {
@@ -186,7 +185,8 @@ function PackagesPage() {
       _package_id: requestPkg.id,
       _quantity: reqQty,
       _notes: reqNotes,
-      _payment_method: reqPayment,
+      // Every new request is credit-only; the payment-method choice was removed from the form.
+      _payment_method: "CREDIT",
     });
     setReqBusy(false);
     if (error) {
@@ -206,7 +206,6 @@ function PackagesPage() {
     setRequestPkg(null);
     setReqQty(10);
     setReqNotes("");
-    setReqPayment("CREDIT");
     qc.invalidateQueries({ queryKey: ["my-requests"] });
     qc.invalidateQueries({ queryKey: ["card-requests"] });
   }

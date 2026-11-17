@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, X, Clock, Inbox, Wallet, Banknote, Trash2, ArrowLeftRight } from "lucide-react";
+import { Check, X, Clock, Inbox, Wallet, Banknote, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUserNames } from "@/lib/use-user-names";
@@ -206,21 +206,6 @@ function RequestList({ status, isAdmin, query }: { status: string; isAdmin: bool
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const switchMethod = useMutation({
-    mutationFn: async ({ id, method }: { id: string; method: "CASH" | "CREDIT" }) => {
-      const { error } = await supabase
-        .from("card_requests")
-        .update({ payment_method: method })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("تم تغيير نوع الدفع");
-      qc.invalidateQueries({ queryKey: ["card-requests"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
   const pay = useMutation({
     mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
       const { data, error } = await supabase.rpc("record_request_payment", {
@@ -340,9 +325,16 @@ function RequestList({ status, isAdmin, query }: { status: string; isAdmin: bool
                     <span className="text-muted-foreground text-xs">عدد الكروت: </span>
                     <b>{qty}</b>
                   </div>
-                  <div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-muted-foreground text-xs">القيمة الإجمالية: </span>
                     <b className="text-primary">{fmtMoney(total)}</b>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        isCash ? "bg-success/10 text-success" : "bg-warning/15 text-warning"
+                      }`}
+                    >
+                      {isCash ? "نقد" : "آجل"}
+                    </span>
                   </div>
                   <div>
                     <span className="text-muted-foreground text-xs">المدفوع / المتبقي: </span>
@@ -378,20 +370,6 @@ function RequestList({ status, isAdmin, query }: { status: string; isAdmin: bool
                   )}
                   {isCash ? "نقد" : "آجل"}
                 </div>
-                {isAdmin && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={switchMethod.isPending}
-                    className="rounded-lg h-9 px-3"
-                    onClick={() =>
-                      switchMethod.mutate({ id: r.id, method: isCash ? "CREDIT" : "CASH" })
-                    }
-                  >
-                    <ArrowLeftRight className="h-3.5 w-3.5 ml-1" />
-                    {isCash ? "تحويل إلى آجل" : "تحويل إلى نقد"}
-                  </Button>
-                )}
                 {isAdmin && r.status === "PENDING" && (
                   <>
                     <Button
