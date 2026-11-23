@@ -27,6 +27,8 @@ export type PushDiagnostics = {
 };
 
 let started = false;
+let authWatchersStarted = false;
+let resumeWatcherStarted = false;
 let cachedDeviceToken: string | null = null;
 let state: PushDiagnostics = {
   phase: "idle",
@@ -82,7 +84,7 @@ async function showLocalNotification(payload: {
           id: Math.floor(Date.now() % 1_000_000_000),
           title: payload.title || "كرتي",
           body: payload.body || "",
-          smallIcon: "ic_stat_icon_configured",
+          channelId: CHANNEL_ID,
           extra: { path: payload.path || "/app" },
         },
       ],
@@ -100,10 +102,13 @@ export async function initPushNotifications(router?: Router<any, any>) {
     return;
   }
   started = true;
+  state = { ...state, phase: "idle" };
 
   // Subscribe before native registration: restored and refreshed sessions also need a save.
   // Defer auth calls outside onAuthStateChange to avoid holding the auth client's lock.
-  supabase.auth.onAuthStateChange((event) => {
+  if (!authWatchersStarted) {
+    authWatchersStarted = true;
+    supabase.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_OUT") state = { ...state, tokenSaved: false };
     if (["INITIAL_SESSION", "SIGNED_IN", "TOKEN_REFRESHED"].includes(event)) {
       setTimeout(() => {
@@ -114,9 +119,28 @@ export async function initPushNotifications(router?: Router<any, any>) {
   window.addEventListener("online", () => {
     if (cachedDeviceToken) void saveToken(cachedDeviceToken);
   });
+  }
 
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
+
+    // Retry permission/registration after returning from Android settings, even if
+    // the first permission request was denied.
+    const { App } = await import("@capacitor/app");
+    if (!resumeWatcherStarted) {
+      resumeWatcherStarted = true;
+      await App.addListener("resume", async () => {
+      const permission = await PushNotifications.checkPermissions().catch(() => null);
+      if (permission?.receive !== "granted") return;
+      if (cachedDeviceToken) void saveToken(cachedDeviceToken);
+      if (state.phase === "permission-denied") {
+        started = false;
+        void initPushNotifications(router);
+        return;
+      }
+      PushNotifications.register().catch(() => {});
+      });
+    }
 
     let perm = await PushNotifications.checkPermissions();
     if (perm.receive !== "granted") {
@@ -158,7 +182,7 @@ export async function initPushNotifications(router?: Router<any, any>) {
       /* متابعة بدون تتبع الحالة */
     }
 
-    PushNotifications.addListener("registration", (t) => {
+    await PushNotifications.addListener("registration", (t) => {
       if (t?.value) {
         cachedDeviceToken = t.value;
         state = { ...state, phase: "registered", message: "رمز الجهاز جاهز." };
@@ -166,7 +190,7 @@ export async function initPushNotifications(router?: Router<any, any>) {
       }
     });
 
-    PushNotifications.addListener("registrationError", (err) => {
+    await PushNotifications.addListener("registrationError", () => {
       state = {
         ...state,
         phase: "registration-error",
@@ -176,7 +200,7 @@ export async function initPushNotifications(router?: Router<any, any>) {
       console.warn("push registration failed");
     });
 
-    PushNotifications.addListener("pushNotificationReceived", (notification) => {
+    await PushNotifications.addListener("pushNotificationReceived", (notification) => {
       if (!appActive) return; // في الخلفية يتكفّل النظام بالعرض
       const data = (notification?.data ?? {}) as Record<string, string>;
       void showLocalNotification({
@@ -187,9 +211,9 @@ export async function initPushNotifications(router?: Router<any, any>) {
     });
 
     // فتح الصفحة المناسبة عند الضغط على الإشعار
-    PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+    await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
       const path = (action?.notification?.data as any)?.path as string | undefined;
-      if (!path) return;
+      if (!path || (!path.startsWith("/app") && path !== "/auth") || path.startsWith("//")) return;
       try {
         router?.navigate({ to: path as any });
       } catch {
@@ -197,18 +221,15 @@ export async function initPushNotifications(router?: Router<any, any>) {
       }
     });
 
+    const { LocalNotifications } = await import("@capacitor/local-notifications");
+    await LocalNotifications.addListener("localNotificationActionPerformed", (action) => {
+      const path: unknown = action.notification.extra?.path;
+      if (typeof path !== "string" || (!path.startsWith("/app") && path !== "/auth") || path.startsWith("//")) return;
+      void router?.navigate({ to: path as any });
+    });
+
     await PushNotifications.register();
 
-    // عند رجوع التطبيق للأمام نعيد التسجيل حتى لا تتقادم الرموز
-    try {
-      const { App } = await import("@capacitor/app");
-      void App.addListener("resume", () => {
-        if (cachedDeviceToken) void saveToken(cachedDeviceToken);
-        PushNotifications.register().catch(() => {});
-      });
-    } catch {
-      /* غير متاح */
-    }
   } catch (error) {
     state = {
       ...state,

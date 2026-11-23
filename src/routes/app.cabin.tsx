@@ -1,3 +1,4 @@
+import { reportPushDelivery } from "@/lib/push-delivery";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -300,7 +301,7 @@ function CabinPage() {
       sale.buyer_name = selCustomer.name;
     }
     if (profile?.network_id) {
-      void notifyNewSale({
+      void reportPushDelivery(notifyNewSale({
         data: {
           networkId: profile.network_id,
           saleId: sale?.sale_id ?? undefined,
@@ -309,7 +310,7 @@ function CabinPage() {
           price: Number(confirmPkg.price) || undefined,
           customerName: selCustomer?.name ?? undefined,
         },
-      }).catch(() => {});
+      }));
     }
     setSelling(false);
     setConfirmPkg(null);

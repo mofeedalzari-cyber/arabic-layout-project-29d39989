@@ -1,3 +1,4 @@
+import { reportPushDelivery } from "@/lib/push-delivery";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -196,14 +197,14 @@ function PackagesPage() {
       return;
     }
     toast.success("تم إرسال الطلب — بانتظار موافقة المدير", { duration: 2000 });
-    void notifyNewCardRequest({
+    void reportPushDelivery(notifyNewCardRequest({
       data: {
         networkId,
         agentName: profile?.full_name || profile?.username || undefined,
         packageName: requestPkg.name ?? undefined,
         quantity: reqQty,
       },
-    }).catch(() => {});
+    }));
 
     setRequestPkg(null);
     setReqQty(10);
@@ -231,7 +232,7 @@ function PackagesPage() {
     }
     const sale: any = Array.isArray(data) ? data[0] : data;
     if (networkId) {
-      void notifyNewSale({
+      void reportPushDelivery(notifyNewSale({
         data: {
           networkId,
           saleId: sale?.sale_id ?? undefined,
@@ -239,7 +240,7 @@ function PackagesPage() {
           packageName: confirmPkg.name ?? undefined,
           price: Number(confirmPkg.price) || undefined,
         },
-      }).catch(() => {});
+      }));
     }
     setConfirmPkg(null);
     setSaleResult(sale);

@@ -1,3 +1,4 @@
+import { reportPushDelivery } from "@/lib/push-delivery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Bike, Share2 } from "lucide-react";
@@ -101,9 +102,9 @@ function AgentRegisterPage() {
       return toast.error(error.message);
     }
 
-    void notifyNewJoinRequest({
+    void reportPushDelivery(notifyNewJoinRequest({
       data: { networkName: regNet.trim(), username, fullName: regName.trim() },
-    }).catch(() => {});
+    }));
 
     toast.success("تم إنشاء الحساب! سيتم تفعيله من قبل مدير الشبكة قبل البدء.");
     navigate({ to: "/auth" });

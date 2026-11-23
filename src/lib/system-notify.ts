@@ -2,6 +2,7 @@
 // 1) تطبيق الأندرويد عبر Capacitor LocalNotifications
 // 2) المتصفح/PWA عبر Service Worker Notification
 // آمنة تمامًا في SSR.
+import { toast } from "sonner";
 
 let nativeChannelReady = false;
 let webPermissionAsked = false;
@@ -22,7 +23,6 @@ export async function ensureNotificationPermission(): Promise<boolean> {
       if (perm.display !== "granted") perm = await LocalNotifications.requestPermissions();
       if (perm.display !== "granted") return false;
       if (!nativeChannelReady) {
-        nativeChannelReady = true;
         try {
           await LocalNotifications.createChannel({
             id: "karti_alerts",
@@ -33,6 +33,7 @@ export async function ensureNotificationPermission(): Promise<boolean> {
             vibration: true,
             sound: "default",
           });
+          nativeChannelReady = true;
         } catch {
           /* ignore */
         }
@@ -44,6 +45,7 @@ export async function ensureNotificationPermission(): Promise<boolean> {
   }
 
   if (!("Notification" in window)) return false;
+  if (window.top !== window.self) return false;
   if (Notification.permission === "granted") return true;
   if (Notification.permission === "denied") return false;
   if (webPermissionAsked) return false;
@@ -84,13 +86,12 @@ export async function systemNotify({ title, body, largeBody, path, tag }: System
             largeBody: largeBody || body || undefined,
             summaryText: "كرتي",
             channelId: "karti_alerts",
-            smallIcon: "ic_stat_icon_config_sample",
             extra: { path },
           },
         ],
       });
     } catch {
-      /* ignore */
+      toast.warning("تعذّر عرض إشعار الجهاز.", { id: "karti-local-notification-warning" });
     }
     return;
   }
@@ -112,6 +113,6 @@ export async function systemNotify({ title, body, largeBody, path, tag }: System
       new Notification(title, options);
     }
   } catch {
-    /* ignore */
+    toast.warning("تعذّر عرض إشعار الجهاز.", { id: "karti-local-notification-warning" });
   }
 }

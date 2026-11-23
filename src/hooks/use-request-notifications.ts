@@ -384,15 +384,19 @@ export function useRequestNotifications() {
             .from("join_requests")
             .select("id, agent_full_name, agent_username")
             .eq("network_id", networkId)
-            .gt("created_at", since)
+            .gt("requested_at", since)
             .limit(20),
           supabase
             .from("sales")
             .select("id, agent_full_name, agent_username, package_name, price, buyer_name")
             .eq("network_id", networkId)
-            .gt("created_at", since)
+            .gt("sold_at", since)
             .limit(20),
         ]);
+
+        if (reqs.error || joins.error || sls.error) {
+          console.warn("Notification fallback read failed; live subscriptions remain active.");
+        }
 
         for (const row of (reqs.data ?? []) as any[]) {
           if (seenAdmin.current.has(row.id)) continue;

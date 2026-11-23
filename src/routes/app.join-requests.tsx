@@ -1,3 +1,4 @@
+import { reportPushDelivery } from "@/lib/push-delivery";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,9 +98,9 @@ function JoinList({ status }: { status: string }) {
     onSuccess: (id: string) => {
       const row = (rows ?? []).find((x: any) => x.id === id);
       if (row?.agent_id) {
-        void notifyJoinDecision({
+        void reportPushDelivery(notifyJoinDecision({
           data: { agentId: row.agent_id, status: "APPROVED" },
-        }).catch(() => {});
+        }));
       }
       toast.success("تم قبول المندوب وتفعيل حسابه");
       qc.invalidateQueries({ queryKey: ["join-requests"] });
@@ -116,9 +117,9 @@ function JoinList({ status }: { status: string }) {
     onSuccess: (_d, vars: { id: string; r: string }) => {
       const row = (rows ?? []).find((x: any) => x.id === vars.id);
       if (row?.agent_id) {
-        void notifyJoinDecision({
+        void reportPushDelivery(notifyJoinDecision({
           data: { agentId: row.agent_id, status: "REJECTED", reason: vars.r || undefined },
-        }).catch(() => {});
+        }));
       }
       toast.success("تم رفض الطلب");
       setRejectFor(null);

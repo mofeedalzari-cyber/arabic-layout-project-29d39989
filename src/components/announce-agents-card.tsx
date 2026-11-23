@@ -10,6 +10,7 @@ import { BellRing, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { notifyNetworkAgents } from "@/lib/push.functions";
+import { reportPushDelivery } from "@/lib/push-delivery";
 
 /** بطاقة إرسال رسالة تنبيه من مدير الشبكة إلى كل المناديب */
 export function AnnounceAgentsCard() {
@@ -34,10 +35,10 @@ export function AnnounceAgentsCard() {
       });
       if (error) throw error;
 
-      await notifyNetworkAgents({ data: { networkId, title: t, body: b } }).catch(() => null);
+      return reportPushDelivery(notifyNetworkAgents({ data: { networkId, title: t, body: b } }));
     },
-    onSuccess: () => {
-      toast.success("تم إرسال التنبيه لجميع المناديب");
+    onSuccess: (accepted) => {
+      toast.success(accepted ? "تم حفظ التنبيه وقبلت خدمة الإشعارات إرساله" : "تم حفظ التنبيه داخل التطبيق فقط");
       setBody("");
     },
     onError: (e: Error) => toast.error(e.message),

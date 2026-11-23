@@ -6,3 +6,4 @@
 - [ ] Match Firebase sender to installed Android app (awaiting google-services.json and correct secure sender credential).
 - [ ] Verify external Worker configuration (awaiting access to its owner's Cloudflare account; no deployment authorized).
 - [ ] Confirm request/approval and closed-app delivery (awaiting matched Firebase configuration and user-selected Android device/account).
+- [ ] Sweep all push callers and local/background paths; fix hidden failures and report coverage.

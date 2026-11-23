@@ -1,3 +1,4 @@
+import { reportPushDelivery } from "@/lib/push-delivery";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -257,14 +258,14 @@ function PackagesPage() {
       return;
     }
     toast.success("تم إرسال الطلب — بانتظار موافقة المدير", { duration: 2000 });
-    void notifyNewCardRequest({
+    void reportPushDelivery(notifyNewCardRequest({
       data: {
         networkId: requestPkg.network_id,
         agentName: profile?.full_name || profile?.username || undefined,
         packageName: requestPkg.name ?? undefined,
         quantity: reqQty,
       },
-    }).catch(() => {});
+    }));
 
     setRequestPkg(null);
     setReqQty(10);

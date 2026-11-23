@@ -1,3 +1,4 @@
+import { reportPushDelivery } from "@/lib/push-delivery";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -168,14 +169,14 @@ function RequestList({ status, isAdmin, query }: { status: string; isAdmin: bool
       );
       const row = (rows ?? []).find((x: any) => x.id === id);
       if (row?.agent_id) {
-        void notifyRequestDecision({
+        void reportPushDelivery(notifyRequestDecision({
           data: {
             agentId: row.agent_id,
             status: "APPROVED",
             packageName: row.package_name ?? undefined,
             quantity: Number(r.approved ?? row.quantity) || undefined,
           },
-        }).catch(() => {});
+        }));
       }
       qc.invalidateQueries({ queryKey: ["card-requests"] });
       qc.invalidateQueries({ queryKey: ["agent-cabin"] });
@@ -192,14 +193,14 @@ function RequestList({ status, isAdmin, query }: { status: string; isAdmin: bool
       toast.success("تم الرفض");
       const row = (rows ?? []).find((x: any) => x.id === vars.id);
       if (row?.agent_id) {
-        void notifyRequestDecision({
+        void reportPushDelivery(notifyRequestDecision({
           data: {
             agentId: row.agent_id,
             status: "REJECTED",
             packageName: row.package_name ?? undefined,
             reason: vars.r || undefined,
           },
-        }).catch(() => {});
+        }));
       }
       setRejectFor(null);
       setReason("");
