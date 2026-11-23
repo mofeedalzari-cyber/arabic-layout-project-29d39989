@@ -14,3 +14,4 @@
 - Push-token persistence must check both the auth session and RPC errors; self-only FCM diagnostics use validate_only and never delete tokens or return credentials.
 - Remove a device's token under its user's RLS session before local sign-out; retain tokens on generic provider payload/project errors.
 - All push callers use shared delivery reporting; distinguish provider acceptance from actual device display and never repeat an already saved transaction on notification failure.
+- Customer repayments use an explicit payment category and a locked, authorized RPC; legacy unclassified repayments remain included in the combined balance without guessed classification.

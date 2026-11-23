@@ -1,3 +1,4 @@
+- [x] Separate customer added-amount repayments from sale repayments; preserve legacy entries and verify totals and actual repayment readback; temporary test entries removed.
 - [ ] Make network reset financial-only with ownership checks.
 - [ ] Update confirmation and verify financial reset preservation.
 - [x] Audit FCM token registration and RLS; confirm existing Worker responds.

@@ -50,6 +50,13 @@
       "when": 1792525176870,
       "tag": "0006_restore_agent_skip_signup_checks",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795459909287,
+      "tag": "0007_separate_customer_repayment_categories",
+      "breakpoints": true
     }
   ]
 }

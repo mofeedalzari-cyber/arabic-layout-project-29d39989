@@ -223,6 +223,7 @@ export type Database = {
           id: string
           network_id: string | null
           note: string | null
+          payment_kind: string | null
         }
         Insert: {
           agent_id: string
@@ -232,6 +233,7 @@ export type Database = {
           id?: string
           network_id?: string | null
           note?: string | null
+          payment_kind?: string | null
         }
         Update: {
           agent_id?: string
@@ -241,6 +243,7 @@ export type Database = {
           id?: string
           network_id?: string | null
           note?: string | null
+          payment_kind?: string | null
         }
         Relationships: [
           {
@@ -1282,6 +1285,19 @@ export type Database = {
         Returns: {
           created: number
           total_value: number
+        }[]
+      }
+      record_customer_repayment: {
+        Args: {
+          _amount: number
+          _customer_id: string
+          _note?: string
+          _payment_kind: string
+        }
+        Returns: {
+          agent_applied: number
+          customer_balance: number
+          customer_paid: number
         }[]
       }
       record_external_sale: {

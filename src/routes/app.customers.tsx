@@ -70,6 +70,7 @@ import { shareInvoiceImageOnWhatsApp } from "@/lib/customer-invoice-image";
 import { pickContact } from "@/lib/pick-contact";
 import { toast } from "sonner";
 import { RevealText } from "@/components/reveal-text";
+import { customerPaymentTotals, paymentKindLabel, type PaymentKind } from "@/lib/customer-payment-totals";
 
 
 function localYemenDigits(v: string) {
@@ -148,6 +149,7 @@ function CustomersPage() {
   const [payAmount, setPayAmount] = useState("");
   const [payNote, setPayNote] = useState("");
   const [payBusy, setPayBusy] = useState(false);
+  const [paymentKind, setPaymentKind] = useState<PaymentKind | "">("");
   const [chargeFor, setChargeFor] = useState<Customer | null>(null);
   const [chargeAmount, setChargeAmount] = useState("");
   const [chargeNote, setChargeNote] = useState("");
@@ -464,15 +466,17 @@ function CustomersPage() {
       toast.error("أدخل مبلغاً صحيحاً");
       return;
     }
+    if (!paymentKind) { toast.error("اختر نوع التسديد"); return; }
     setSettleBusy(true);
     try {
-      const { data, error } = await supabase.rpc("admin_settle_customer_via_agent" as any, {
+      const { data, error } = await supabase.rpc("record_customer_repayment", {
         _customer_id: settleFor.id,
+        _payment_kind: paymentKind,
         _amount: amount,
-        _note: settleNote.trim() || null,
+        ...(settleNote.trim() ? { _note: settleNote.trim() } : {}),
       });
       if (error) {
-        toast.error("تعذر التسديد: " + error.message);
+        toast.error(error.message.includes("PAYMENT_EXCEEDS_BALANCE") ? "المبلغ أكبر من المتبقي لهذا النوع من السداد" : "تعذر التسديد: " + error.message);
         return;
       }
       const r = (Array.isArray(data) ? data[0] : data) as any;
@@ -770,24 +774,60 @@ function CustomersPage() {
 
 
   const { data: payments } = useQuery({
-    queryKey: ["customer-payments", user?.id],
+    queryKey: ["customer-payments", user?.id, isAdmin, isAdmin ? netCustomers?.map((c) => c.id) : null],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customer_payments")
-        .select("id, customer_id, amount, note, created_at")
-        .eq("agent_id", user!.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as {
-        id: string;
-        customer_id: string;
-        amount: number;
-        note: string | null;
-        created_at: string;
-      }[];
+      if (!user?.id) return [];
+      const ids = (netCustomers ?? []).map((c) => c.id);
+      if (isAdmin && !ids.length) return [];
+      const result: { id: string; customer_id: string; amount: number; payment_kind: string | null; note: string | null; created_at: string }[] = [];
+      for (let offset = 0; ; offset += 1000) {
+        let query = supabase.from("customer_payments")
+          .select("id, customer_id, amount, payment_kind, note, created_at")
+          .order("created_at", { ascending: false }).order("id")
+          .range(offset, offset + 999);
+        query = isAdmin ? query.in("customer_id", ids) : query.eq("agent_id", user.id);
+        const { data, error } = await query;
+        if (error) throw error;
+        result.push(...(data ?? []));
+        if ((data?.length ?? 0) < 1000) break;
+      }
+      return result;
     },
   });
+
+  const repaymentTotals = useMemo(() => customerPaymentTotals(
+    isAdmin ? (payments ?? []).filter((p) => netRows.some((c) => c.id === p.customer_id)) : payments ?? [],
+  ), [payments, isAdmin, netRows]);
+  const selectedRepayments = customerPaymentTotals(selected ? (payments ?? []).filter((p) => p.customer_id === selected.id) : []);
+  const paymentCustomer = payFor ?? settleFor;
+  const formRepayments = customerPaymentTotals((payments ?? []).filter((p) => p.customer_id === paymentCustomer?.id));
+  const formSales = isAdmin ? Number(settleFor?.sales_total ?? 0) : (sales ?? []).filter((s) => s.customer_id === payFor?.id).reduce((a, s) => a + Number(s.price), 0);
+  const formCharges = isAdmin ? Number(settleFor?.charges ?? 0) : formRepayments.charges;
+  const formBalance = Math.max(formSales + formCharges - formRepayments.paid, 0);
+  const formCategoryBalance = paymentKind ? Math.min(formBalance, Math.max(paymentKind === "SALE" ? formSales - formRepayments.salePaid : formCharges - formRepayments.addedPaid, 0)) : formBalance;
+  const repaymentSelector = (
+    <div className="space-y-2">
+      <Label>نوع التسديد</Label>
+      <Select value={paymentKind} onValueChange={(value) => {
+        if (value !== "SALE" && value !== "ADDED") return;
+        setPaymentKind(value);
+        const remaining = Math.min(formBalance, Math.max(value === "SALE" ? formSales - formRepayments.salePaid : formCharges - formRepayments.addedPaid, 0));
+        if (isAdmin) setSettleAmount(String(remaining)); else setPayAmount(String(remaining));
+      }}>
+        <SelectTrigger><SelectValue placeholder="اختر نوع التسديد" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="SALE">سداد البيع</SelectItem>
+          <SelectItem value="ADDED">سداد المبلغ المضاف</SelectItem>
+        </SelectContent>
+      </Select>
+      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+        <span>المسدد من البيع: {fmtMoney(formRepayments.salePaid)}</span>
+        <span>المسدد من المضاف: {fmtMoney(formRepayments.addedPaid)}</span>
+      </div>
+      {formRepayments.unclassifiedPaid > 0 && <div className="text-xs text-muted-foreground">مسدد غير مصنف: {fmtMoney(formRepayments.unclassifiedPaid)}</div>}
+    </div>
+  );
 
   const { data: packages } = useQuery({
     queryKey: ["customers-page-packages", user?.id],
@@ -897,22 +937,17 @@ function CustomersPage() {
       toast.error("أدخل مبلغاً صحيحاً");
       return;
     }
+    if (!paymentKind) { toast.error("اختر نوع التسديد"); return; }
     setPayBusy(true);
     try {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("network_id")
-        .eq("id", user.id)
-        .maybeSingle();
-      const { error } = await supabase.from("customer_payments").insert({
-        customer_id: payFor.id,
-        agent_id: user.id,
-        network_id: prof?.network_id ?? null,
-        amount,
-        note: payNote.trim() || null,
+      const { error } = await supabase.rpc("record_customer_repayment", {
+        _customer_id: payFor.id,
+        _amount: amount,
+        _payment_kind: paymentKind,
+        ...(payNote.trim() ? { _note: payNote.trim() } : {}),
       });
       if (error) {
-        toast.error("تعذر التسديد: " + error.message);
+        toast.error(error.message.includes("PAYMENT_EXCEEDS_BALANCE") ? "المبلغ أكبر من المتبقي لهذا النوع من السداد" : "تعذر التسديد: " + error.message);
         return;
       }
       toast.success(`تم تسديد ${fmtMoney(amount)}`);
@@ -1081,7 +1116,7 @@ function CustomersPage() {
           const d = new Date(p.created_at);
           return {
             amount: Number(p.amount) || 0,
-            note: p.note || (Number(p.amount) < 0 ? "مبلغ مضاف" : "تسديد"),
+            note: Number(p.amount) < 0 ? (p.note || "مبلغ مضاف") : `${paymentKindLabel(p.payment_kind)}${p.note ? " — " + p.note : ""}`,
             dateStr: `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`,
           };
         });
@@ -1101,7 +1136,9 @@ function CustomersPage() {
         `${c.name}\n\n` +
         `التاريخ : ${dateStr}\n\n` +
         `إجمالي المستحق : ${fmtMoney(total)}\n` +
-        `إجمالي المسدد : ${fmtMoney(paidTotal)}\n\n` +
+        `إجمالي سداد البيع : ${fmtMoney(customerPaymentTotals(custPayments).salePaid)}\n` +
+        `إجمالي المسدد من المضاف : ${fmtMoney(customerPaymentTotals(custPayments).addedPaid)}\n` +
+        `المسدد غير المصنف : ${fmtMoney(customerPaymentTotals(custPayments).unclassifiedPaid)}\n\n` +
         `*(فاتورة بيع آجـــل)*\n\n` +
         `الرصيد عليكم ${fmtMoney(balance)}.\n\n` +
         `مع خالص التقدير والاحترام،\n\n` +
@@ -1188,28 +1225,24 @@ function CustomersPage() {
               : totals.active,
           )}
         />
-        <StatCard
+        {!isAdmin && <StatCard
           icon={<ShoppingBag className="h-4 w-4" />}
-          label={isAdmin ? "إجمالي المسدد" : "عمليات البيع"}
-          value={isAdmin ? fmtMoney(netTotals.paid) : String(totals.sales)}
-        />
+          label="عمليات البيع"
+          value={String(totals.sales)}
+        />}
         <StatCard
           icon={<Receipt className="h-4 w-4" />}
           label="إجمالي المبيعات"
-          value={fmtMoney(isAdmin ? netTotals.sales : totals.revenue)}
+          value={fmtMoney(isAdmin ? netTotals.sales - netTotals.charges : totals.revenue)}
         />
         <StatCard
           icon={<Plus className="h-4 w-4" />}
           label="إجمالي المبلغ المضاف"
           value={fmtMoney(isAdmin ? netTotals.charges : totals.charges)}
         />
-        {!isAdmin && (
-          <StatCard
-            icon={<Wallet className="h-4 w-4" />}
-            label="إجمالي المسدد"
-            value={fmtMoney(totals.paid)}
-          />
-        )}
+        <StatCard icon={<Wallet className="h-4 w-4" />} label="إجمالي سداد البيع" value={fmtMoney(repaymentTotals.salePaid)} />
+        <StatCard icon={<Wallet className="h-4 w-4" />} label="إجمالي المسدد من المضاف" value={fmtMoney(repaymentTotals.addedPaid)} />
+        {repaymentTotals.unclassifiedPaid > 0 && <StatCard icon={<Wallet className="h-4 w-4" />} label="المسدد غير المصنف" value={fmtMoney(repaymentTotals.unclassifiedPaid)} />}
       </div>
 
       <div className="flex gap-2 mb-4 items-center">
@@ -1239,7 +1272,7 @@ function CustomersPage() {
               زبائن الشبكة
               <span className="text-[11px] text-muted-foreground font-normal">
                 ({netTotals.count}) — مبيعات الزبائن: {fmtMoney(netTotals.sales)} • المبلغ المضاف: {fmtMoney(netTotals.charges)} •
-                المسدد: {fmtMoney(netTotals.paid)} • المتبقي: {fmtMoney(netTotals.balance)}
+                سداد البيع: {fmtMoney(repaymentTotals.salePaid)} • سداد المضاف: {fmtMoney(repaymentTotals.addedPaid)} • غير مصنف: {fmtMoney(repaymentTotals.unclassifiedPaid)} • المتبقي: {fmtMoney(netTotals.balance)}
               </span>
               <Button
                 size="sm"
@@ -1455,6 +1488,7 @@ function CustomersPage() {
                     className="bg-success hover:bg-success/90 text-white"
                     disabled={Number(c.balance) <= 0}
                     onClick={() => {
+                      setPaymentKind("");
                       setSettleFor(c);
                       setSettleAmount(String(Number(c.balance)));
                       setSettleNote("");
@@ -1508,6 +1542,7 @@ function CustomersPage() {
               المتبقي: {fmtMoney(Number(settleFor?.balance ?? 0))}
             </div>
 
+            {repaymentSelector}
             <div>
               <Label>المبلغ</Label>
               <Input
@@ -1526,7 +1561,7 @@ function CustomersPage() {
               />
             </div>
             <div className="text-[11px] text-muted-foreground">
-              سيتم تصفير/تقليل رصيد الزبون وخصم نفس المبلغ من حساب المندوب.
+              سداد البيع يُخصم من حساب المندوب؛ سداد المضاف يخص حساب الزبون فقط.
             </div>
           </div>
           <DialogFooter>
@@ -1535,7 +1570,7 @@ function CustomersPage() {
             </Button>
             <Button
               className="bg-success hover:bg-success/90 text-white"
-              disabled={settleBusy}
+              disabled={settleBusy || !paymentKind}
               onClick={handleAdminSettle}
             >
               {settleBusy ? "جاري..." : "تأكيد التسديد"}
@@ -1920,6 +1955,7 @@ function CustomersPage() {
                     مضاف: {fmtMoney(c.charges)}
                   </div>
                 )}
+                <div className="text-[11px] text-success">{(() => { const split = customerPaymentTotals((payments ?? []).filter((p) => p.customer_id === c.id)); return <>سداد البيع: {fmtMoney(split.salePaid)}<br />سداد المضاف: {fmtMoney(split.addedPaid)}</>; })()}</div>
                 <div
                   className={`text-[11px] font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}
                 >
@@ -1948,6 +1984,7 @@ function CustomersPage() {
                 className="flex-1 min-w-[100px] bg-success hover:bg-success/90 text-white"
                 disabled={c.balance <= 0}
                 onClick={() => {
+                  setPaymentKind("");
                   setPayFor(c as any);
                   setPayAmount(String(c.balance));
                   setPayNote("");
@@ -1999,7 +2036,7 @@ function CustomersPage() {
               <TableHead className="text-right">عدد العمليات</TableHead>
               <TableHead className="text-right">إجمالي المبيعات</TableHead>
               <TableHead className="text-right">المبلغ المضاف</TableHead>
-              <TableHead className="text-right">المدفوع</TableHead>
+              <TableHead className="text-right">سداد البيع / المضاف</TableHead>
               <TableHead className="text-right">الرصيد</TableHead>
               <TableHead className="text-right">آخر عملية</TableHead>
               <TableHead className="text-right">إجراءات</TableHead>
@@ -2015,7 +2052,7 @@ function CustomersPage() {
                 <TableCell>{c.count}</TableCell>
                 <TableCell className="text-primary font-bold">{fmtMoney(c.total)}</TableCell>
                 <TableCell className="text-warning font-bold">{fmtMoney(c.charges)}</TableCell>
-                <TableCell className="text-success font-bold">{fmtMoney(c.paid)}</TableCell>
+                <TableCell className="text-success text-xs">{(() => { const split = customerPaymentTotals((payments ?? []).filter((p) => p.customer_id === c.id)); return <><div>بيع: {fmtMoney(split.salePaid)}</div><div>مضاف: {fmtMoney(split.addedPaid)}</div>{split.unclassifiedPaid > 0 && <div>غير مصنف: {fmtMoney(split.unclassifiedPaid)}</div>}</>; })()}</TableCell>
                 <TableCell
                   className={`font-bold ${c.balance > 0 ? "text-warning" : "text-success"}`}
                 >
@@ -2031,7 +2068,8 @@ function CustomersPage() {
                       className="bg-success hover:bg-success/90 text-white"
                       disabled={c.balance <= 0}
                       onClick={() => {
-                        setPayFor(c as any);
+                        setPaymentKind("");
+                  setPayFor(c as any);
                         setPayAmount(String(c.balance));
                         setPayNote("");
                       }}
@@ -2131,11 +2169,13 @@ function CustomersPage() {
                   </div>
                   <div className="rounded-xl bg-primary/10 p-3 text-center">
                     <div className="text-[11px] text-muted-foreground">إجمالي المبيعات</div>
-                    <div className="font-bold text-lg text-primary">{fmtMoney(selectedTotal)}</div>
+                    <div className="font-bold text-lg text-primary">{fmtMoney(selectedSalesTotal)}</div>
                   </div>
                   <div className="rounded-xl bg-success/10 p-3 text-center">
-                    <div className="text-[11px] text-muted-foreground">المدفوع</div>
-                    <div className="font-bold text-lg text-success">{fmtMoney(selectedPaid)}</div>
+                    <div className="text-[11px] text-muted-foreground">سداد البيع</div>
+                    <div className="font-bold text-lg text-success">{fmtMoney(selectedRepayments.salePaid)}</div>
+                    <div className="text-[11px] text-muted-foreground mt-2">سداد المضاف: {fmtMoney(selectedRepayments.addedPaid)}</div>
+                    {selectedRepayments.unclassifiedPaid > 0 && <div className="text-[11px] text-muted-foreground">غير مصنف: {fmtMoney(selectedRepayments.unclassifiedPaid)}</div>}
                   </div>
                   <div
                     className={`rounded-xl p-3 text-center ${selectedBalance > 0 ? "bg-warning/10" : "bg-success/10"}`}
@@ -2158,6 +2198,7 @@ function CustomersPage() {
                     className="flex-1 min-w-[110px] bg-success hover:bg-success/90 text-white"
                     disabled={selectedBalance <= 0}
                     onClick={() => {
+                      setPaymentKind("");
                       setPayFor(selected);
                       setPayAmount(String(selectedBalance));
                       setPayNote("");
@@ -2232,7 +2273,7 @@ function CustomersPage() {
                                     ) : (
                                       <Wallet className="h-3 w-3" />
                                     )}
-                                    {isCharge ? "مبلغ مضاف" : "تسديد"}
+                                    {isCharge ? "مبلغ مضاف" : paymentKindLabel(p.payment_kind)}
                                   </span>
                                 </TableCell>
                                 <TableCell className="text-[11px] whitespace-nowrap">
@@ -2271,7 +2312,9 @@ function CustomersPage() {
                             </TableCell>
                             <TableCell className="whitespace-nowrap">
                               <div className="text-success text-[11px]">
-                                مسدد: {fmtMoney(selectedPaid)}
+                                سداد البيع: {fmtMoney(selectedRepayments.salePaid)}<br />
+                                سداد المضاف: {fmtMoney(selectedRepayments.addedPaid)}<br />
+                                غير مصنف: {fmtMoney(selectedRepayments.unclassifiedPaid)}
                               </div>
                               <div className="text-warning text-[11px]">
                                 مضاف: {fmtMoney(selectedCharges)}
@@ -2557,7 +2600,7 @@ function CustomersPage() {
                 last: null,
               };
               const paid = paidByCustomer.get(payFor.id) ?? 0;
-              const remaining = Math.max(custStats.total - paid, 0);
+              const remaining = formCategoryBalance;
               return (
                 <div className="space-y-3">
                   <div className="text-sm">
@@ -2568,7 +2611,7 @@ function CustomersPage() {
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div className="rounded-xl bg-primary/10 p-2">
                       <div className="font-extrabold text-primary text-sm">
-                        {fmtMoney(custStats.total)}
+                        {fmtMoney(custStats.total + formCharges)}
                       </div>
                       <div className="text-[10px] text-muted-foreground">الإجمالي</div>
                     </div>
@@ -2583,6 +2626,7 @@ function CustomersPage() {
                       <div className="text-[10px] text-muted-foreground">المتبقي</div>
                     </div>
                   </div>
+                  {repaymentSelector}
                   <div>
                     <Label className="text-xs mb-1.5 block">مبلغ التسديد</Label>
                     <Input
@@ -2595,20 +2639,20 @@ function CustomersPage() {
                       autoFocus
                     />
                     <div className="flex gap-1.5 mt-2">
-                      <button
-                        type="button"
+                      <Button
+                        type="button" variant="secondary" size="sm"
                         onClick={() => setPayAmount(String(remaining))}
                         className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70"
                       >
                         كامل المتبقي
-                      </button>
-                      <button
-                        type="button"
+                      </Button>
+                      <Button
+                        type="button" variant="secondary" size="sm"
                         onClick={() => setPayAmount(String(remaining / 2))}
                         className="text-xs px-2.5 py-1 rounded-full bg-muted hover:bg-muted/70"
                       >
                         نصف
-                      </button>
+                      </Button>
                     </div>
                   </div>
                   <div>
@@ -2628,7 +2672,7 @@ function CustomersPage() {
             </Button>
             <Button
               onClick={handleCustomerPayment}
-              disabled={payBusy}
+              disabled={payBusy || !paymentKind}
               className="bg-success hover:bg-success/90 text-white"
             >
               {payBusy ? "جاري..." : "تأكيد التسديد"}
