@@ -24,6 +24,8 @@ import { Navigate } from "@tanstack/react-router";
 export const Route = createFileRoute("/app/cards")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "رفع الكروت — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "رفع الكروت من ملفات PDF أو النص واستخراج أرقام الكروت تلقائياً." },

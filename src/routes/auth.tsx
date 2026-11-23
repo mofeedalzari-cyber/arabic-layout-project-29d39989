@@ -40,6 +40,7 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
+      { name: "twitter:card", content: "summary" },
       { title: "تسجيل الدخول — كرتي لإدارة كروت الإنترنت" },
       {
         name: "description",

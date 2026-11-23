@@ -22,6 +22,8 @@ import { notifyRequestDecision } from "@/lib/push.functions";
 export const Route = createFileRoute("/app/requests")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "طلبات الكروت — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "متابعة طلبات الكروت من المناديب والموافقة على تسليم الباقات." },

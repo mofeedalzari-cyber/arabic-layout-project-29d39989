@@ -27,6 +27,7 @@ export const Route = createFileRoute("/register-agent")({
   component: AgentRegisterPage,
   head: () => ({
     meta: [
+      { name: "twitter:card", content: "summary" },
       { title: `إنشاء حساب مندوب توزيع — ${APP_NAME}` },
       {
         name: "description",

@@ -16,6 +16,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/app/logs")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "سجل العمليات — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "متابعة سجل عمليات الشبكة والتغييرات التي أجراها المناديب والمدير." },

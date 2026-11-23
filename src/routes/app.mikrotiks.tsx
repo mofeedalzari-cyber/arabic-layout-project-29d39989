@@ -86,6 +86,8 @@ import {
 export const Route = createFileRoute("/app/mikrotiks")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "أجهزة مايكروتك — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "ربط أجهزة مايكروتك بالشبكة وإدارة اتصالها وسحب الكروت." },

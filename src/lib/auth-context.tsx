@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAuthStorageReady, clearNativeAuthStorage } from "@/lib/auth-persistence";
+import { clearPushTokenForSignOut } from "@/lib/push-notifications";
+import { toast } from "sonner";
 
 export type Role = "admin" | "agent" | "superadmin" | "user";
 
@@ -257,6 +259,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
       signOut: async () => {
+        try {
+          await clearPushTokenForSignOut();
+        } catch {
+          toast.error("تعذّر إلغاء تسجيل الإشعارات؛ اتصل بالإنترنت وحاول تسجيل الخروج مجددًا.");
+          return;
+        }
         // Clear local state first so UI updates immediately
         setSession(null);
         setUser(null);

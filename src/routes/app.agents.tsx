@@ -44,6 +44,8 @@ import {
 export const Route = createFileRoute("/app/agents")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "إدارة المناديب — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "إدارة حسابات المناديب وأرصدتهم وتسديد الديون ومتابعة مبيعاتهم." },

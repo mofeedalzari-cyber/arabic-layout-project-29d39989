@@ -66,6 +66,8 @@ import {
 export const Route = createFileRoute("/app/cabin")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "كبينة البيع — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "بيع كروت الإنترنت للزبائن بسرعة وإرسال الكرت عبر واتساب." },

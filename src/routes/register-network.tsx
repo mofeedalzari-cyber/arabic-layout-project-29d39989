@@ -25,6 +25,7 @@ export const Route = createFileRoute("/register-network")({
   component: NetworkRegisterPage,
   head: () => ({
     meta: [
+      { name: "twitter:card", content: "summary" },
       { title: `إنشاء حساب مدير شبكة — ${APP_NAME}` },
       {
         name: "description",

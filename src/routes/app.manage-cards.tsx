@@ -48,6 +48,8 @@ import { printAssignedCards } from "@/lib/card-print";
 export const Route = createFileRoute("/app/manage-cards")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "إدارة الكروت — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "إدارة كروت الشبكة: تحديد وطباعة وحذف ونقل الكروت بين المناديب." },

@@ -19,6 +19,8 @@ import { displayPhone, fmtArabicDateTime } from "@/lib/format";
 export const Route = createFileRoute("/app/join-requests")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "طلبات الانضمام — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "مراجعة طلبات انضمام المناديب إلى شبكتك والموافقة عليها أو رفضها." },

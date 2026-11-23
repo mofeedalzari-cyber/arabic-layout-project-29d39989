@@ -58,6 +58,8 @@ export const Route = createFileRoute("/app/")({
   component: DashboardPage,
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "لوحة التحكم — كرتي" },
       {
         name: "description",

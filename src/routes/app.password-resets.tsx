@@ -7,6 +7,8 @@ import { ResetRequestsPanel } from "@/components/reset-requests-panel";
 export const Route = createFileRoute("/app/password-resets")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "استعادة كلمة المرور — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "إدارة طلبات استعادة كلمة المرور لمدير التطبيق." },

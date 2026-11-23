@@ -25,6 +25,8 @@ import { z } from "zod";
 export const Route = createFileRoute("/app/networks/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "الشبكات — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "عرض شبكات الإنترنت وإدارة بياناتها وباقاتها." },

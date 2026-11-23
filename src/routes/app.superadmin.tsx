@@ -61,6 +61,8 @@ import { superadminBackupNetwork } from "@/lib/superadmin-backup.functions";
 export const Route = createFileRoute("/app/superadmin")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "لوحة مدير التطبيق — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "إدارة كل الشبكات والمناديب والباقات والكروت من لوحة مدير التطبيق." },

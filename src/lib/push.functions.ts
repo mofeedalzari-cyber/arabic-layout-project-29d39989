@@ -2,6 +2,30 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/** Self-only, non-delivering check. Never returns device tokens or credentials. */
+export const checkMyPushConfiguration = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: rows, error } = await context.supabase.from("device_tokens")
+      .select("token").eq("user_id", context.userId);
+    if (error) throw new Error("PUSH_DIAGNOSTICS_ACCESS_FAILED");
+    const { getFcmProjectId, sendFcmToTokens } = await import("./fcm.server");
+    const projectId = getFcmProjectId();
+    const tokens = (rows ?? []).map((row) => row.token);
+    const validation = await sendFcmToTokens(tokens, {
+      title: "فحص إعدادات كرتي", body: "فحص غير مرسل إلى الجهاز.",
+    }, { validateOnly: true });
+    const alternateRaw = process.env["FIREBASE_SERVICE_ACCOUNT_JSON"];
+    let alternateProjectId: string | null = null;
+    try {
+      const parsed: unknown = alternateRaw ? JSON.parse(alternateRaw) : null;
+      if (parsed && typeof parsed === "object" && "project_id" in parsed && typeof parsed.project_id === "string") {
+        alternateProjectId = parsed.project_id;
+      }
+    } catch { /* invalid alternate config; never expose its contents */ }
+    return { projectId, alternateProjectId, tokenCount: tokens.length, validateOnly: true, validation };
+  });
+
 /** إشعار لمديري الشبكة عند وصول طلب كروت جديد */
 export const notifyNewCardRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

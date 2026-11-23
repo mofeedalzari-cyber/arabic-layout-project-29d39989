@@ -7,6 +7,7 @@
 
 import type { Router } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { persistPushToken } from "./push-token-registration";
 
 const CHANNEL_ID = "karti_requests";
 
@@ -26,6 +27,7 @@ export type PushDiagnostics = {
 };
 
 let started = false;
+let cachedDeviceToken: string | null = null;
 let state: PushDiagnostics = {
   phase: "idle",
   message: "",
@@ -46,11 +48,21 @@ async function saveToken(token: string) {
   try {
     const { Capacitor } = await import("@capacitor/core");
     const platform = Capacitor.getPlatform();
-    await supabase.rpc("register_device_token", { _token: token, _platform: platform });
-    state = { ...state, tokenSaved: true };
+    const saved = await persistPushToken(supabase, token, platform);
+    state = { ...state, tokenSaved: saved, message: saved ? "تم تسجيل الجهاز للإشعارات." : "بانتظار تسجيل الدخول لحفظ رمز الجهاز." };
   } catch {
-    /* الرمز يبقى محليًا حتى المحاولة القادمة */
+    state = { ...state, tokenSaved: false, message: "تعذّر حفظ تسجيل الإشعارات؛ ستتم إعادة المحاولة عند الاتصال أو تسجيل الدخول." };
   }
+}
+
+export async function clearPushTokenForSignOut() {
+  if (!cachedDeviceToken) return;
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) return;
+  const { error } = await supabase.from("device_tokens").delete()
+    .eq("token", cachedDeviceToken).eq("user_id", data.session.user.id);
+  if (error) throw new Error("تعذّر إلغاء تسجيل الإشعارات؛ حاول تسجيل الخروج مجددًا.");
+  state = { ...state, tokenSaved: false };
 }
 
 async function showLocalNotification(payload: {
@@ -88,6 +100,20 @@ export async function initPushNotifications(router?: Router<any, any>) {
     return;
   }
   started = true;
+
+  // Subscribe before native registration: restored and refreshed sessions also need a save.
+  // Defer auth calls outside onAuthStateChange to avoid holding the auth client's lock.
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === "SIGNED_OUT") state = { ...state, tokenSaved: false };
+    if (["INITIAL_SESSION", "SIGNED_IN", "TOKEN_REFRESHED"].includes(event)) {
+      setTimeout(() => {
+        if (cachedDeviceToken) void saveToken(cachedDeviceToken);
+      }, 0);
+    }
+  });
+  window.addEventListener("online", () => {
+    if (cachedDeviceToken) void saveToken(cachedDeviceToken);
+  });
 
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
@@ -134,6 +160,7 @@ export async function initPushNotifications(router?: Router<any, any>) {
 
     PushNotifications.addListener("registration", (t) => {
       if (t?.value) {
+        cachedDeviceToken = t.value;
         state = { ...state, phase: "registered", message: "رمز الجهاز جاهز." };
         void saveToken(t.value);
       }
@@ -144,10 +171,9 @@ export async function initPushNotifications(router?: Router<any, any>) {
         ...state,
         phase: "registration-error",
         message:
-          (err as { message?: string })?.message ||
           "تعذّر تسجيل الجهاز في Firebase. تأكد من وجود android/app/google-services.json",
       };
-      console.warn("push registrationError:", err);
+      console.warn("push registration failed");
     });
 
     PushNotifications.addListener("pushNotificationReceived", (notification) => {
@@ -173,17 +199,11 @@ export async function initPushNotifications(router?: Router<any, any>) {
 
     await PushNotifications.register();
 
-    // إعادة تسجيل الرمز عند تسجيل الدخول بحساب آخر
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") {
-        PushNotifications.register().catch(() => {});
-      }
-    });
-
     // عند رجوع التطبيق للأمام نعيد التسجيل حتى لا تتقادم الرموز
     try {
       const { App } = await import("@capacitor/app");
       void App.addListener("resume", () => {
+        if (cachedDeviceToken) void saveToken(cachedDeviceToken);
         PushNotifications.register().catch(() => {});
       });
     } catch {

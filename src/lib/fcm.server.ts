@@ -51,14 +51,21 @@ function readServiceAccount(): ServiceAccount | null {
 
 /**
  * هل هذا الخطأ يعني أن رمز الجهاز لم يعد صالحًا؟
- * UNREGISTERED = مسح المستخدم بيانات التطبيق أو عطّل الإشعارات.
- * INVALID_ARGUMENT = رمز تالف أو من مشروع آخر.
- * في الحالتين لا فائدة من الاحتفاظ به، بل يُحذف حتى لا تتكرر المحاولة.
+ * Delete only an explicit UNREGISTERED error, never a generic 400/404.
+ * Invalid payloads and missing projects do not prove the device token is stale.
  */
 export function isStaleFcmError(status: number, body: string): boolean {
-  if (status === 404) return true;
-  if (status === 400) return /UNREGISTERED|INVALID_ARGUMENT/i.test(body);
-  return false;
+  if (status !== 404 && status !== 400) return false;
+  try {
+    const parsed = JSON.parse(body) as { error?: { status?: string; details?: { errorCode?: string; "@type"?: string }[] } };
+    return parsed.error?.status === "UNREGISTERED" || !!parsed.error?.details?.some(
+      (detail) => detail["@type"] === "type.googleapis.com/google.firebase.fcm.v1.FcmError" && detail.errorCode === "UNREGISTERED",
+    );
+  } catch { return false; }
+}
+
+export function getFcmProjectId(): string | null {
+  return readServiceAccount()?.project_id ?? null;
 }
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
@@ -123,6 +130,7 @@ async function deleteStaleTokens(tokens: string[]): Promise<number> {
 export async function sendFcmToTokens(
   tokens: string[],
   payload: { title: string; body: string; path?: string; tag?: string },
+  options: { validateOnly?: boolean } = {},
 ): Promise<FcmResult> {
   const unique = Array.from(new Set(tokens.filter(Boolean)));
   if (unique.length === 0) return { sent: 0, failed: 0, skipped: "no-tokens" };
@@ -158,6 +166,7 @@ export async function sendFcmToTokens(
             "content-type": "application/json",
           },
           body: JSON.stringify({
+            ...(options.validateOnly ? { validate_only: true } : {}),
             message: {
               token,
               notification: { title: payload.title, body: payload.body },
@@ -191,7 +200,7 @@ export async function sendFcmToTokens(
         const body = await res.text().catch(() => "");
         failed++;
         if (isStaleFcmError(res.status, body)) stale.push(token);
-        else if (!firstError) firstError = `Firebase [${res.status}] ${body.slice(0, 300)}`;
+        else if (!firstError) firstError = `Firebase [${res.status}] ${body.replaceAll(token, "[redacted]").slice(0, 300)}`;
       } catch (error) {
         failed++;
         if (!firstError) firstError = error instanceof Error ? error.message : "فشل الإرسال";
@@ -199,7 +208,7 @@ export async function sendFcmToTokens(
     }),
   );
 
-  const staleDeleted = await deleteStaleTokens(stale);
+  const staleDeleted = options.validateOnly ? 0 : await deleteStaleTokens(stale);
 
   return {
     sent,

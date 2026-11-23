@@ -11,3 +11,5 @@
 
 - Network restores must verify the caller's admin role and owned network before calling any destructive RPC, so missing ownership cannot start a partial restore.
 - Agents recreated during network restore bypass public signup checks only via the transaction-local `app.restore_agent` flag set inside `restore_create_agent`; signup metadata must never be trusted to skip those checks.
+- Push-token persistence must check both the auth session and RPC errors; self-only FCM diagnostics use validate_only and never delete tokens or return credentials.
+- Remove a device's token under its user's RLS session before local sign-out; retain tokens on generic provider payload/project errors.

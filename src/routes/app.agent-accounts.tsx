@@ -32,6 +32,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export const Route = createFileRoute("/app/agent-accounts")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "حسابات المناديب — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "متابعة حسابات المناديب المالية والمبيعات والمسدد والمتبقي." },

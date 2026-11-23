@@ -86,6 +86,8 @@ function normalizeWa(v: string) {
 export const Route = createFileRoute("/app/customers")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "الزبائن — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "إدارة حسابات الزبائن وأرصدتهم وكشوف الحساب والتسديدات." },

@@ -54,6 +54,8 @@ import { fmtMoney } from "@/lib/format";
 export const Route = createFileRoute("/app/packages")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "الباقات — كرتي" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "إنشاء وتعديل باقات الكروت وأسعارها وألوانها وطلب الكروت." },

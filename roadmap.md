@@ -1,2 +1,8 @@
 - [ ] Make network reset financial-only with ownership checks.
 - [ ] Update confirmation and verify financial reset preservation.
+- [x] Audit FCM token registration and RLS; confirm existing Worker responds.
+- [x] Fix token persistence and unsafe stale-token detection; six regression tests passed.
+- [x] Validate FCM safely and report results without secrets (403 SENDER_ID_MISMATCH).
+- [ ] Match Firebase sender to installed Android app (awaiting google-services.json and correct secure sender credential).
+- [ ] Verify external Worker configuration (awaiting access to its owner's Cloudflare account; no deployment authorized).
+- [ ] Confirm request/approval and closed-app delivery (awaiting matched Firebase configuration and user-selected Android device/account).
